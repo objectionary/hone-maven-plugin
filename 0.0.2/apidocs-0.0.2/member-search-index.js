@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"org.eolang.hone","c":"OptimizeMojo","l":"execute()"},{"p":"org.eolang.hone","c":"OptimizeMojo","l":"OptimizeMojo()","url":"%3Cinit%3E()"}]

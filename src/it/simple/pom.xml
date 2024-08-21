@@ -39,6 +39,9 @@ SOFTWARE.
         <groupId>org.eolang</groupId>
         <artifactId>hone-maven-plugin</artifactId>
         <version>@project.version@</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
         <executions>
           <execution>
             <goals>

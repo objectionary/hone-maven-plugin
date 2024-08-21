@@ -41,23 +41,39 @@ import org.apache.maven.plugins.annotations.Parameter;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
+     * Skip the execution, if set to TRUE.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skip", defaultValue = "false")
+    private boolean skip;
+
+    /**
      * The "target/" directory of Maven project.
      *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(defaultValue = "${project.build.directory}")
+    @Parameter(
+        property = "hone.target",
+        defaultValue = "${project.build.directory}"
+    )
     private File target;
 
     @Override
     public void execute() throws MojoExecutionException {
+        if (this.skip) {
+            Logger.info(this, "Execution skipped");
+            return;
+        }
         final ProcessBuilder builder = new ProcessBuilder(
             "docker", "run",
             "--rm",
             "--env", String.format("TARGET=%s", this.target),
             "yegor256/hone-maven-plugin"
         );
-        try (final VerboseProcess proc = new VerboseProcess(builder)) {
+        try (VerboseProcess proc = new VerboseProcess(builder)) {
             final VerboseProcess.Result ret = proc.waitFor();
             if (ret.code() != 0) {
                 throw new MojoExecutionException(

@@ -27,7 +27,6 @@ name: codecov
       - master
 jobs:
   codecov:
-    name: Upload coverage reports to Codecov
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +40,7 @@ jobs:
           key: maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             maven-
-      - run: mvn clean install -Pqulice --errors --batch-mode
+      - run: mvn clean install -Pjacoco --errors --batch-mode
       - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

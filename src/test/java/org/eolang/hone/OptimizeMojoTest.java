@@ -23,6 +23,7 @@
  */
 package org.eolang.hone;
 
+import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -43,6 +44,29 @@ final class OptimizeMojoTest {
             "Should work!",
             "Hello",
             Matchers.equalTo("Hello")
+        );
+    }
+
+    @Test
+    void optimizesSimpleApp(@TempDir final Path dir) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.files()
+                    .file("src/main/java/Hello.java")
+                    .write("class Hello {}");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize");
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    Matchers.containsString("SUCCESS")
+                );
+            }
         );
     }
 }

@@ -41,13 +41,18 @@ declare -a temps=(
 )
 for t in "${opts[@]}"; do
   if [ -e "${TARGET}/${t}" ]; then
-    echo "The directory ${TARGET}/${t} already exists, which means \
+    echo "The directory '${TARGET}/${t}' already exists, which means \
 that this project have already been optimized. Try to run 'mvn clean' and then \
 compile and package the project again."
     exit 1
   fi
 done
 
+if [ ! -e "${TARGET}/classes" ]; then
+  echo "There is no '${TARGET}/classes' directory, which most probably means \
+that the project hasn't been compiled yet."
+  exit 1
+fi
 # In order to save them "as is", just in case:
 cp -R "${TARGET}/classes" "${TARGET}/classes-before-hone"
 

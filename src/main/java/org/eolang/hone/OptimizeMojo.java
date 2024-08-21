@@ -24,13 +24,13 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
+import com.jcabi.log.VerboseProcess;
 import java.io.File;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 
 /**
  * Converts Bytecode to Bytecode.
@@ -41,39 +41,33 @@ import org.apache.maven.project.MavenProject;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
-     * Maven project.
+     * The "target/" directory of Maven project.
      *
-     * @since 0.2
-     */
-    @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    private MavenProject project;
-
-    /**
-     * Directory with .class binaries.
-     *
-     * @since 0.2.0
+     * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(
-        property = "jeo.assemble.beforeDir",
-        defaultValue = "${project.build.outputDirectory}"
-    )
-    private File beforeDir;
-
-    /**
-     * Target directory, with new .class binaries.
-     *
-     * @since 0.2.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(
-        property = "jeo.assemble.afterDir",
-        defaultValue = "${project.build.directory}/after-hone"
-    )
-    private File afterDir;
+    @Parameter(defaultValue = "${project.build.directory}")
+    private File target;
 
     @Override
     public void execute() throws MojoExecutionException {
+        final ProcessBuilder builder = new ProcessBuilder(
+            "docker", "run",
+            "--rm",
+            "--env", String.format("TARGET=%s", this.target),
+            "yegor256/hone-maven-plugin"
+        );
+        try (final VerboseProcess proc = new VerboseProcess(builder)) {
+            final VerboseProcess.Result ret = proc.waitFor();
+            if (ret.code() != 0) {
+                throw new MojoExecutionException(
+                    String.format("Failed to optimize, code=%d", ret.code())
+                );
+            }
+        } catch (final InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new MojoExecutionException(ex);
+        }
         Logger.info(this, "Done!");
     }
 }

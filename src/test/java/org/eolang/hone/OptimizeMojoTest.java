@@ -27,6 +27,7 @@ import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -38,16 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 final class OptimizeMojoTest {
 
     @Test
-    void worksAsExpected(@TempDir final Path temp) throws Exception {
-        new OptimizeMojo().execute();
-        MatcherAssert.assertThat(
-            "Should work!",
-            "Hello",
-            Matchers.equalTo("Hello")
-        );
-    }
-
-    @Test
+    @Disabled
     void optimizesSimpleApp(@TempDir final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

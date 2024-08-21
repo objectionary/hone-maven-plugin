@@ -27,7 +27,7 @@ SHELL := /bin/bash
 
 all: verify rmi
 
-target/image.txt: src/docker/Dockerfile src/docker/entry.sh
+target/image.txt: target src/docker/Dockerfile src/docker/entry.sh
 	sudo docker build -t hone-maven-plugin "$$(pwd)/src/docker"
 	sudo docker build -t hone-maven-plugin -q "$$(pwd)/src/docker" > "$@"
 
@@ -49,3 +49,6 @@ rmi: target/image.txt
 	img=$$(cat $<)
 	sudo docker rmi "$${img}"
 	rm "$<"
+
+target:
+	mkdir target

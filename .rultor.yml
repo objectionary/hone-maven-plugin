@@ -28,6 +28,7 @@ assets:
   settings.xml: yegor256/objectionary-secrets#settings.xml
   pubring.gpg: yegor256/objectionary-secrets#pubring.gpg
   secring.gpg: yegor256/objectionary-secrets#secring.gpg
+  docker-password: yegor256/objectionary-secrets#docker-password
 merge:
   script: mvn clean install -Pqulice -e -B -Dstyle.color=never
 release:
@@ -38,3 +39,15 @@ release:
     git commit -am "${tag}"
     mvn clean install -Pqulice -e -B -Dinvoker.skip -DskipITs
     mvn clean deploy -Pobjectionary -Psonatype -e --settings ../settings.xml
+
+    sed -i -e "s/0.0.0/${tag}/" src/docker/Dockerfile
+    sed -i -e "s/0.0.0/${tag}/" src/docker/entry.sh
+    git add src/docker/Dockerfile
+    git add src/docker/entry.sh
+    git commit -m "version set to ${tag}"
+    repo=objectionary/hone-maven-plugin
+    sudo docker build "$(pwd)/src/docker" --tag "${repo}:${tag}"
+    sudo docker build "$(pwd)/src/docker" --tag "${repo}:latest"
+    cat ../docker-password | sudo docker login --password-stdin -u yegor256
+    sudo docker push "${repo}:${tag}"
+    sudo docker push "${repo}:latest"

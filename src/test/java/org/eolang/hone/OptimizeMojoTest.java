@@ -23,7 +23,6 @@
  */
 package org.eolang.hone;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -38,7 +37,8 @@ import org.junit.jupiter.api.io.TempDir;
 final class OptimizeMojoTest {
 
     @Test
-    void worksAsExpected(@TempDir final Path temp) throws IOException {
+    void worksAsExpected(@TempDir final Path temp) throws Exception {
+        new OptimizeMojo().execute();
         MatcherAssert.assertThat(
             "Should work!",
             "Hello",

@@ -28,10 +28,10 @@ name: markdown-lint
   pull_request:
     branches:
       - master
-    paths-ignore: [ 'paper/**', 'sandbox/**' ]
+    paths-ignore: ['paper/**', 'sandbox/**']
 jobs:
   markdown-lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: articulate/actions-markdownlint@v1

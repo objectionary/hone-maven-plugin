@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ---
-name: mvn
+name: make
 'on':
   push:
     branches:
@@ -29,23 +29,18 @@ name: mvn
     branches:
       - master
 jobs:
-  mvn:
-    strategy:
-      matrix:
-        os: [ubuntu-24.04, windows-2022, macos-12]
-        java: [11, 20]
-    runs-on: ${{ matrix.os }}
+  make:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: ${{ matrix.java }}
+          java-version: 17
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           # yamllint disable-line rule:line-length
-          key: ${{ runner.os }}-jdk-${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
-      - run: mvn clean install -P"qulice,long" --errors --batch-mode
+          key: jdk-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: jdk-maven-
+      - run: make

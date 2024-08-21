@@ -20,33 +20,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM eclipse-temurin:21
+.ONESHELL:
+.PHONY: clean all rmi verify
+.SHELLFLAGS := -e -o pipefail -c
+SHELL := /bin/bash
 
-LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
-LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+all: verify rmi
 
-# Installing Maven:
-ENV MAVEN_VERSION 3.9.6
-ENV M2_HOME "/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}"
-RUN echo "export M2_HOME=/usr/local/apache-maven/apache-maven-\${MAVEN_VERSION}" >> /root/.profile \
-  && wget --quiet "https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \
-  && mkdir -p /usr/local/apache-maven \
-  && mv "apache-maven-${MAVEN_VERSION}-bin.tar.gz" /usr/local/apache-maven \
-  && tar xzvf "/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}-bin.tar.gz" -C /usr/local/apache-maven/ \
-  && update-alternatives --install /usr/bin/mvn mvn "${M2_HOME}/bin/mvn" 1 \
-  && update-alternatives --config mvn \
-  && mvn -version \
-  && bash -c '[[ "$(mvn --version)" =~ "${MAVEN_VERSION}" ]]'
+target/image.txt: src/docker/Dockerfile src/docker/entry.sh
+	sudo docker build -t hone-maven-plugin "$$(pwd)/src/docker"
+	sudo docker build -t hone-maven-plugin -q "$$(pwd)/src/docker" > "$@"
 
-WORKDIR /hone
-COPY pom.xml /hone
+target/entry.exit: target/image.txt target/classes
+	img=$$(cat $<)
+	docker run --rm -v "$$(realpath "$$(pwd)/target"):/target" \
+		-e "target=/target" \
+		"$${img}"
+	echo "$$?" > "$@"
 
-# Warming up Maven cache:
-RUN mvn -f /hone eo:help
-#RUN mvn -f /hone opeo:help
-#RUN mvn -f /hone jeo:help
+target/classes:
+	mvn compile
 
-COPY entry.sh /hone
+verify: target/entry.exit
+	e=$$(cat $<)
+	test "$${e}" = "0"
 
-ENTRYPOINT ["/hone/entry.sh"]
+rmi: target/image.txt
+	img=$$(cat $<)
+	sudo docker rmi "$${img}"
+	rm "$<"

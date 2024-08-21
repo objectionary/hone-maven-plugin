@@ -33,7 +33,7 @@ SOFTWARE.
     <eo.version>0.39.0</eo.version>
     <jeo.version>0.3.0</jeo.version>
     <opeo.version>0.1.10</opeo.version>
-    <ineo.version>0.2.0</ineo.version>
+    <ineo.version>0.3.2</ineo.version>
   </properties>
   <build>
     <pluginManagement>

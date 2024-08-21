@@ -45,7 +45,7 @@ release:
     git add src/docker/Dockerfile
     git add src/docker/entry.sh
     git commit -m "version set to ${tag}"
-    repo=objectionary/hone-maven-plugin
+    repo=yegor256/hone
     sudo docker build "$(pwd)/src/docker" --tag "${repo}:${tag}"
     sudo docker build "$(pwd)/src/docker" --tag "${repo}:latest"
     cat ../docker-password | sudo docker login --password-stdin -u yegor256

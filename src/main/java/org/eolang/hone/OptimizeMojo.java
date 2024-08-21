@@ -38,8 +38,8 @@ import org.apache.maven.project.MavenProject;
  *
  * @since 0.1.0
  */
-@Mojo(name = "hone", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public final class HoneMojo extends AbstractMojo {
+@Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * Maven project.

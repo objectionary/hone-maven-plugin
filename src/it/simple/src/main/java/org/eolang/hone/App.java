@@ -23,31 +23,12 @@
  */
 package org.eolang.hone;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.eolang.jeo.representation.bytecode.BytecodeClass;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 /**
- * Test case for {@link HoneMojo}.
- *
- * @since 0.1.0
+ * App.
+ * @since 0.1
  */
-final class HoneMojoTest {
-
-    @Test
-    void worksAsExpected(@TempDir final Path temp) throws IOException {
-        MatcherAssert.assertThat(
-            String.format("Objects were not retrieved, we expected '%d' objects", expected),
-            new XmirRepresentations(temp).all(),
-            Matchers.hasSize(expected)
-        );
+public class App {
+    public static void main(String[] args) throws Exception {
+        System.out.println("Hello, world!");
     }
 }

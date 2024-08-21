@@ -19,7 +19,6 @@ it works faster. Just add this to your `pom.xml` file:
       <version>0.0.0</version>
       <executions>
         <execution>
-          <id>optimize</id>
           <goals>
             <goal>optimize</goal>
           </goals>

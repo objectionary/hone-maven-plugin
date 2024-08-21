@@ -37,10 +37,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          # yamllint disable-line rule:line-length
-          key: ${{ runner.os }}-jdk-${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
+          key: jdk-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: jdk-maven-
       - run: mvn clean site -Psite
       - uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:

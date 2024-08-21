@@ -42,8 +42,7 @@ jobs:
       - uses: peter-evans/create-pull-request@v6
         with:
           branch: version-up
-          commit-message: 'chore: new version in README'
+          commit-message: 'new version in README'
           delete-branch: true
-          title: 'chore: New version in README'
-          assignees: volodya-lombrozo
+          title: 'New version in README'
           base: master

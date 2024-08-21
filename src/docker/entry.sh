@@ -24,38 +24,73 @@
 set -ex
 set -o pipefail
 
-if [ -z "${target}" ]; then
-  echo "The \$TARGET environment variable is not set!"
-  echo "Make sure you do 'docker run' with the '-e TARGET=...' parameter,"
-  echo "which points to the target/ directory of a Maven project."
+if [ -z "${TARGET}" ]; then
+  echo "The \$TARGET environment variable is not set! Make sure you do \
+'docker run' with the '-e TARGET=...' parameter, which points to the \
+TARGET/ TARGET of a Maven project."
   exit 1
 fi
 
-declare -a opts=('--update-snapshots' '--fail-fast' '--errors')
+declare -a temps=(
+  'classes-before-hone'
+  'generated-sources/jeo-disassemble'
+  'generated-sources/opeo-decompile'
+  'generated-sources/phi'
+  'generated-sources/phi-optimized'
+  'generated-sources/unphi'
+)
+for t in "${opts[@]}"; do
+  if [ -e "${TARGET}/${t}" ]; then
+    echo "The directory ${TARGET}/${t} already exists, which means \
+that this project have already been optimized. Try to run 'mvn clean' and then \
+compile and package the project again."
+    exit 1
+  fi
+done
 
-mvn "${gopts[@]}" \
+# In order to save them "as is", just in case:
+cp -R "${TARGET}/classes" "${TARGET}/classes-before-hone"
+
+# Maven options for all steps:
+declare -a opts=(
+  '--update-snapshots'
+  '--fail-fast'
+  '--strict-checksums'
+  '--errors'
+  '--batch-mode'
+  "--file=$(dirname $0)/pom.xml"
+)
+
+mvn "${opts[@]}" \
   jeo:disassemble \
-  "-Djeo.disassemble.sourcesDir=${target}/classes" \
-  "-Djeo.disassemble.outputDir=${target}/generated-sources/jeo-disassemble"
+  "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
+  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble"
 
-# opeo:decompile
-# -Dopeo.decompile.sourcesDir=${directory}/generated-sources/jeo-disassemble
-# -Dopeo.decompile.outputDir=${directory}/generated-sources/opeo-decompile
+mvn "${opts[@]}" \
+  opeo:decompile \
+  "-Dopeo.decompile.sourcesDir=${TARGET}/generated-sources/jeo-disassemble" \
+  "-Dopeo.decompile.outputDir=${TARGET}/generated-sources/opeo-decompile"
 
-# eo:xmir-to-phi
-# -Deo.phiInputDir=${directory}/generated-sources/opeo-decompile
-# -Deo.phiOutputDir=${directory}/generated-sources/phi
+mvn "${opts[@]}" \
+  eo:xmir-to-phi \
+  "-Deo.phiInputDir=${TARGET}/generated-sources/opeo-decompile" \
+  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
-# normalizer
+# Instead of this copying we should do the proper optimization here:
+cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
 
-# eo:phi-to-xmir
-# -DunphiInputDir=${directory}/generated-sources/phi
-# -DunphiOutputDir=${directory}/generated-sources/unphi
+mvn "${opts[@]}" \
+  eo:phi-to-xmir \
+  "-DunphiInputDir=${TARGET}/generated-sources/phi-optimized" \
+  "-DunphiOutputDir=${TARGET}/generated-sources/unphi"
 
-# opeo:compile
-# -Dopeo.compile.sourcesDir=${directory}/generated-sources/ineo-staticize
-# -Dopeo.compile.outputDir=${directory}/generated-sources/opeo-compile
+mvn "${opts[@]}" \
+  opeo:compile \
+  "-Dopeo.compile.sourcesDir=${TARGET}/generated-sources/unphi" \
+  "-Dopeo.compile.outputDir=${TARGET}/generated-sources/opeo-compile"
 
-# jeo:assemble
-# -Djeo.assemble.sourcesDir=${directory}/generated-sources/opeo-compile
-# -Djeo.assemble.outputDir=${directory}/classes
+rm -rf "${TARGET}/classes"
+mvn "${opts[@]}" \
+  jeo:assemble \
+  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/opeo-compile" \
+  "-Djeo.assemble.outputDir=${TARGET}/classes"

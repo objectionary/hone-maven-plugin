@@ -43,3 +43,12 @@ mvn clean install -Pqulice
 ```
 
 You will need [Maven 3.3+](https://maven.apache.org) and Java 11+ installed.
+
+You may also want to run this:
+
+```bash
+make quick
+```
+
+This will do exactly what is happening in Docker container, but without
+Docker. This may be a faster way to check how the pipeline works.

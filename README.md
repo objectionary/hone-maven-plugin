@@ -10,7 +10,7 @@
 
 This [Apache Maven](https://maven.apache.org/) plugin _may_ optimize
 your [Bytecode](https://en.wikipedia.org/wiki/Java_bytecode)
-after compilation to make it work faster.
+after compilation, to make it work faster.
 Just add this to your `pom.xml` file
 (you must have [Docker](https://docs.docker.com/engine/install/) installed too):
 

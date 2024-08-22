@@ -25,6 +25,7 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import com.jcabi.log.VerboseProcess;
+import com.yegor256.Jaxec;
 import java.io.File;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -67,6 +68,10 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Execution skipped");
             return;
         }
+        new Jaxec("docker", "--version")
+            .withCheck(true)
+            .withRedirect(true)
+            .exec();
         final ProcessBuilder builder = new ProcessBuilder(
             "docker", "run",
             "--rm",

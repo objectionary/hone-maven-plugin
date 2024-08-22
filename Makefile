@@ -64,3 +64,6 @@ target/make/classes/Hello.class: Makefile
 	mkdir -p target/make/src
 	echo "class Hello { double foo() { return Math.sin(42); } }" > target/make/src/Hello.java
 	javac -d target/make/classes target/make/src/Hello.java
+
+clean:
+	rm -rf target

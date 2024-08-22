@@ -38,8 +38,9 @@ declare -a temps=(
   'generated-sources/phi'
   'generated-sources/phi-optimized'
   'generated-sources/unphi'
+  'generated-sources/opeo-compile'
 )
-for t in "${opts[@]}"; do
+for t in "${temps[@]}"; do
   if [ -e "${TARGET}/${t}" ]; then
     echo "The directory '${TARGET}/${t}' already exists, which means \
 that this project have already been optimized. Try to run 'mvn clean' and then \

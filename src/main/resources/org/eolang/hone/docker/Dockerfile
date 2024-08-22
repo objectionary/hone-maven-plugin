@@ -43,9 +43,7 @@ WORKDIR /hone
 COPY in-docker-pom.xml /hone/pom.xml
 
 # Warming up Maven cache:
-RUN mvn -f /hone eo:help
-RUN mvn -f /hone opeo:help
-RUN mvn -f /hone jeo:help
+RUN mvn -f /hone eo:help opeo:help jeo:help
 
 COPY entry.sh /hone
 

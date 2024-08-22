@@ -71,7 +71,7 @@ public final class OptimizeMojo extends AbstractMojo {
             "docker", "run",
             "--rm",
             "--env", String.format("TARGET=%s", this.target),
-            "yegor256/hone-maven-plugin"
+            "yegor256/hone"
         );
         try (VerboseProcess proc = new VerboseProcess(builder)) {
             final VerboseProcess.Result ret = proc.waitFor();

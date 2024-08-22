@@ -52,6 +52,7 @@ final class Mktemp implements Closeable {
 
     /**
      * Return the path.
+     * @return Path of the directory
      */
     public Path path() {
         return this.dir;
@@ -59,7 +60,7 @@ final class Mktemp implements Closeable {
 
     @Override
     public void close() throws IOException {
-        try (final var stream = Files.walk(this.dir)) {
+        try (var stream = Files.walk(this.dir)) {
             stream
                 .map(Path::toFile)
                 .sorted(Comparator.reverseOrder())

@@ -24,7 +24,6 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
-import java.io.File;
 import java.io.IOException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -37,18 +36,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
-     * Skip the execution, if set to TRUE.
-     *
-     * @since 0.1.0
-     */
-    @Parameter(property = "hone.skip", defaultValue = "false")
-    private boolean skip;
-
-    /**
      * Docker image to use.
      *
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
+     * @checkstyle VisibilityModifierCheck (5 lines)
      */
     @Parameter(property = "hone.image", defaultValue = "yegor256/hone")
     protected String image;
@@ -57,20 +48,19 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * Use "sudo" for "docker".
      *
      * @since 0.1.0
+     * @checkstyle VisibilityModifierCheck (5 lines)
      */
     @Parameter(property = "hone.sudo", defaultValue = "false")
     protected boolean sudo;
 
     /**
-     * The "target/" directory of Maven project.
+     * Skip the execution, if set to TRUE.
      *
      * @since 0.1.0
+     * @checkstyle VisibilityModifierCheck (5 lines)
      */
-    @Parameter(
-        property = "hone.target",
-        defaultValue = "${project.build.directory}"
-    )
-    private File target;
+    @Parameter(property = "hone.skip", defaultValue = "false")
+    private boolean skip;
 
     @Override
     public final void execute() throws MojoExecutionException {

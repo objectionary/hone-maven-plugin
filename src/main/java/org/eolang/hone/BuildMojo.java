@@ -27,6 +27,11 @@ import com.jcabi.log.Logger;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.cactoos.io.OutputTo;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.io.TeeInput;
+import org.cactoos.scalar.IoChecked;
+import org.cactoos.scalar.LengthOf;
 
 /**
  * Build Docker image.
@@ -39,6 +44,17 @@ public final class BuildMojo extends AbstractMojo {
     @Override
     public void exec() throws IOException {
         try (Mktemp temp = new Mktemp()) {
+            final String[] files = {"Dockerfile", "entry.sh", "in-docker-pom.xml"};
+            for (final String file : files) {
+                new IoChecked<>(
+                    new LengthOf(
+                        new TeeInput(
+                            new ResourceOf(String.format("org/eolang/hone/docker/%s", file)),
+                            new OutputTo(temp.path().resolve(file))
+                        )
+                    )
+                ).value();
+            }
             new Docker(this.sudo).exec(
                 "build",
                 "--tag", this.image,

@@ -23,7 +23,6 @@
  */
 package org.eolang.hone;
 
-import com.jcabi.log.Logger;
 import com.jcabi.log.VerboseProcess;
 import java.io.IOException;
 import java.util.Arrays;
@@ -91,7 +90,6 @@ final class Docker {
             Thread.currentThread().interrupt();
             throw new IOException(ex);
         }
-        Logger.info(this, "Done!");
     }
 
 }

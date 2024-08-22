@@ -41,10 +41,12 @@ SOFTWARE.
         <version>@project.version@</version>
         <configuration>
           <skip>true</skip>
+          <image>simple-hone:local</image>
         </configuration>
         <executions>
           <execution>
             <goals>
+              <goal>build</goal>
               <goal>optimize</goal>
             </goals>
           </execution>

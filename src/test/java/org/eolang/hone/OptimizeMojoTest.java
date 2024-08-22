@@ -39,6 +39,28 @@ import org.junit.jupiter.api.io.TempDir;
 final class OptimizeMojoTest {
 
     @Test
+    void skipsOptimizationOnFlag(@TempDir final Path dir) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("skip", true);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the optimization step must be skipped",
+                    f.log(),
+                    Matchers.containsString("SUCCESS")
+                );
+            }
+        );
+    }
+
+    @Test
     @Disabled
     void optimizesSimpleApp(@TempDir final Path dir) throws Exception {
         new Farea(dir).together(

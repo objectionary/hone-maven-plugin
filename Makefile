@@ -30,7 +30,7 @@ all: verify rmi
 quick: target/make
 	TARGET=$(realpath $<) ./src/docker/entry.sh
 
-target/image.txt: target src/docker/Dockerfile src/docker/entry.sh
+target/image.txt: target/make src/docker/Dockerfile src/docker/entry.sh
 	sudo docker build -t hone-maven-plugin "$$(pwd)/src/docker"
 	sudo docker build -t hone-maven-plugin -q "$$(pwd)/src/docker" > "$@"
 

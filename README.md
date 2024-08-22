@@ -87,9 +87,11 @@ before sending us your pull request please run full Maven build:
 mvn clean install -Pqulice
 ```
 
-You will need [Maven 3.3+](https://maven.apache.org) and Java 11+ installed.
+You will need [Maven 3.3+](https://maven.apache.org), Java 11+,
+and [Docker](https://docs.docker.com/engine/install/) installed.
 
-You may also want to run this:
+You may also want to run this (having
+[GNU Make](https://www.gnu.org/software/make/) installed):
 
 ```bash
 make quick

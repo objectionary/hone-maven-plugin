@@ -24,7 +24,7 @@ FROM eclipse-temurin:21
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+LABEL "version"="0.0.4"
 
 # Installing Maven:
 ENV MAVEN_VERSION 3.9.6

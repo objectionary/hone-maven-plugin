@@ -68,7 +68,7 @@ final class OptimizeMojoTest {
             f -> {
                 f.files()
                     .file("src/main/java/Hello.java")
-                    .write("class Hello { int foo() { return 42; } }");
+                    .write("@Deprecated class Hello { int foo() { return 42; } }");
                 f.build()
                     .plugins()
                     .appendItself()

@@ -94,7 +94,7 @@ SOFTWARE.
     <dependency>
       <groupId>com.jcabi</groupId>
       <artifactId>jcabi-log</artifactId>
-      <!-- version from parent POM -->
+      <version>0.24.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -131,11 +131,6 @@ SOFTWARE.
       <artifactId>farea</artifactId>
       <version>0.0.17</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.yegor256</groupId>
-      <artifactId>jaxec</artifactId>
-      <version>0.3.1</version>
     </dependency>
   </dependencies>
   <build>

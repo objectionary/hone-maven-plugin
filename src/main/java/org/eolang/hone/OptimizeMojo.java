@@ -23,15 +23,11 @@
  */
 package org.eolang.hone;
 
-import com.jcabi.log.Logger;
-import com.jcabi.log.VerboseProcess;
-import com.yegor256.Jaxec;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -43,26 +39,6 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 public final class OptimizeMojo extends AbstractMojo {
-
-    /**
-     * Skip the execution, if set to TRUE.
-     *
-     * @since 0.1.0
-     */
-    @Parameter(property = "hone.skip", defaultValue = "false")
-    private boolean skip;
-
-    /**
-     * Docker image to use.
-     *
-     * <p>If you want to us to build a Docker image for you, use the
-     * name that ends with ":local", for example: "hone:local".</p>
-     *
-     * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.image", defaultValue = "yegor256/hone")
-    private String image;
 
     /**
      * EO version to use.
@@ -103,50 +79,10 @@ public final class OptimizeMojo extends AbstractMojo {
     private File target;
 
     @Override
-    public void execute() throws MojoExecutionException {
-        if (this.skip) {
-            Logger.info(this, "Execution skipped");
-            return;
-        }
-        new Jaxec("docker", "--version")
-            .withCheck(true)
-            .withRedirect(true)
-            .exec();
-        if (this.image.endsWith(":local")) {
-            Logger.info(
-                this,
-                "The name of the Docker image '%s' ends with ':local', that's why we will now try to build it",
-                this.image
-            );
-            new Jaxec(
-                "docker", "build",
-                "src/docker",
-                "--tag", this.image
-            ).withCheck(true).withRedirect(true).exec();
-        }
-        final ProcessBuilder bldr = this.builder();
-        try (VerboseProcess proc = new VerboseProcess(bldr)) {
-            final VerboseProcess.Result ret = proc.waitFor();
-            if (ret.code() != 0) {
-                throw new MojoExecutionException(
-                    String.format("Failed to optimize, code=%d", ret.code())
-                );
-            }
-        } catch (final InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new MojoExecutionException(ex);
-        }
-        Logger.info(this, "Done!");
-    }
-
-    /**
-     * The builder for Docker run.
-     * @return Builder
-     */
-    private ProcessBuilder builder() {
-        final List<String> command = new LinkedList<>(
+    public void exec() throws IOException {
+        final Collection<String> command = new LinkedList<>(
             Arrays.asList(
-                "docker", "run",
+                "run",
                 "--rm",
                 "--volume", String.format("%s:/target", this.target),
                 "--env", "TARGET=/target"
@@ -174,6 +110,6 @@ public final class OptimizeMojo extends AbstractMojo {
             );
         }
         command.add(this.image);
-        return new ProcessBuilder(command);
+        new Docker(this.sudo).exec(command);
     }
 }

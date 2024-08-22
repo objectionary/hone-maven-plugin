@@ -27,6 +27,9 @@ import com.jcabi.log.Logger;
 import com.jcabi.log.VerboseProcess;
 import com.yegor256.Jaxec;
 import java.io.File;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -55,7 +58,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.eo-version", defaultValue = "0.39.0")
+    @Parameter(property = "hone.eo-version")
     private String eoVersion;
 
     /**
@@ -64,7 +67,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.jeo-version", defaultValue = "0.5.4")
+    @Parameter(property = "hone.jeo-version")
     private String jeoVersion;
 
     /**
@@ -73,7 +76,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.opeo-version", defaultValue = "0.3.3")
+    @Parameter(property = "hone.opeo-version")
     private String opeoVersion;
 
     /**
@@ -97,18 +100,9 @@ public final class OptimizeMojo extends AbstractMojo {
             .withCheck(true)
             .withRedirect(true)
             .exec();
-        final ProcessBuilder builder = new ProcessBuilder(
-            "docker", "run",
-            "--rm",
-            "--volume", String.format("%s:/target", this.target),
-            "--env", "TARGET=/target",
-            "--env", String.format("EO_VERSION=%s", this.eoVersion),
-            "--env", String.format("JEO_VERSION=%s", this.jeoVersion),
-            "--env", String.format("OPEO_VERSION=%s", this.opeoVersion),
-            "yegor256/hone"
-        );
-        Logger.info(this, "+ %s", String.join(" ", builder.command()));
-        try (VerboseProcess proc = new VerboseProcess(builder)) {
+        final ProcessBuilder bldr = this.builder();
+        Logger.info(this, "+ %s", String.join(" ", bldr.command()));
+        try (VerboseProcess proc = new VerboseProcess(bldr)) {
             final VerboseProcess.Result ret = proc.waitFor();
             if (ret.code() != 0) {
                 throw new MojoExecutionException(
@@ -120,5 +114,43 @@ public final class OptimizeMojo extends AbstractMojo {
             throw new MojoExecutionException(ex);
         }
         Logger.info(this, "Done!");
+    }
+
+    /**
+     * The builder for Docker run.
+     * @return Builder
+     */
+    private ProcessBuilder builder() {
+        final List<String> command = new LinkedList<>(
+            Arrays.asList(
+                "docker", "run",
+                "--rm",
+                "--volume", String.format("%s:/target", this.target),
+                "--env", "TARGET=/target"
+            )
+        );
+        if (this.eoVersion != null) {
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("EO_VERSION=%s", this.eoVersion)
+                )
+            );
+        }
+        if (this.jeoVersion != null) {
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
+                )
+            );
+        }
+        if (this.opeoVersion != null) {
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("OPEO_VERSION=%s", this.opeoVersion)
+                )
+            );
+        }
+        command.add("yegor256/hone");
+        return new ProcessBuilder(command);
     }
 }

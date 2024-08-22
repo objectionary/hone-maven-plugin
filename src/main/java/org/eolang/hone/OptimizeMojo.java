@@ -45,12 +45,29 @@ import org.apache.maven.plugins.annotations.Parameter;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
+     * Default Docker image.
+     */
+    private static final String DEFAULT_IMAGE = "yegor256/hone";
+
+    /**
      * Skip the execution, if set to TRUE.
      *
      * @since 0.1.0
      */
     @Parameter(property = "hone.skip", defaultValue = "false")
     private boolean skip;
+
+    /**
+     * Docker image to use.
+     *
+     * <p>If you want to us to build a Docker image for you, use the
+     * name that ends with ":local", for example: "hone:local".</p>
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.image", defaultValue = OptimizeMojo.DEFAULT_IMAGE)
+    private String image;
 
     /**
      * EO version to use.
@@ -100,8 +117,14 @@ public final class OptimizeMojo extends AbstractMojo {
             .withCheck(true)
             .withRedirect(true)
             .exec();
+        if (this.image.endsWith(":local")) {
+            new Jaxec(
+                "docker", "build",
+                "src/docker",
+                "--tag", this.image
+            ).withCheck(true).withRedirect(true).exec();
+        }
         final ProcessBuilder bldr = this.builder();
-        Logger.info(this, "+ %s", String.join(" ", bldr.command()));
         try (VerboseProcess proc = new VerboseProcess(bldr)) {
             final VerboseProcess.Result ret = proc.waitFor();
             if (ret.code() != 0) {
@@ -150,7 +173,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
-        command.add("yegor256/hone");
+        command.add(this.image);
         return new ProcessBuilder(command);
     }
 }

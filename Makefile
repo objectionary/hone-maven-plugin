@@ -32,9 +32,9 @@ all: verify rmi
 quick: target/make/classes/Hello.class
 	TARGET=$(realpath target/make) ./src/docker/entry.sh
 
-target/image.txt: target/make/classes/Hello.class src/docker/Dockerfile src/docker/entry.sh
-	sudo docker build -t hone-maven-plugin "$$(pwd)/src/docker"
-	sudo docker build -t hone-maven-plugin -q "$$(pwd)/src/docker" > "$@"
+target/image.txt: target/make/classes/Hello.class src/main/resources/org/eolang/hone/docker/Dockerfile src/main/resources/org/eolang/hone/docker/entry.sh
+	sudo docker build -t hone-maven-plugin "$$(pwd)/src/main/resources/org/eolang/hone/docker"
+	sudo docker build -t hone-maven-plugin -q "$$(pwd)/src/main/resources/org/eolang/hone/docker" > "$@"
 
 target/entry.exit: target/image.txt target/make/classes/Hello.class
 	img=$$(cat $<)

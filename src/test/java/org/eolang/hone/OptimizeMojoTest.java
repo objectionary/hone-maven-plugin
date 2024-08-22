@@ -73,7 +73,9 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("optimize");
+                    .goals("optimize")
+                    .configuration()
+                    .set("image", "hone:local");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",

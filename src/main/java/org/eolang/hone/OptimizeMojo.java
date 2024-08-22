@@ -45,11 +45,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
-     * Default Docker image.
-     */
-    private static final String DEFAULT_IMAGE = "yegor256/hone";
-
-    /**
      * Skip the execution, if set to TRUE.
      *
      * @since 0.1.0
@@ -66,7 +61,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.image", defaultValue = OptimizeMojo.DEFAULT_IMAGE)
+    @Parameter(property = "hone.image", defaultValue = "yegor256/hone")
     private String image;
 
     /**

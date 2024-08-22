@@ -25,6 +25,12 @@
 .SHELLFLAGS := -e -o pipefail -c
 SHELL := /bin/bash
 
+EO_VERSION=0.39.0
+JEO_VERSION=0.5.4
+OPEO_VERSION=0.3.3
+
+export
+
 all: verify rmi
 
 quick: target/make/classes/Hello.class
@@ -38,6 +44,9 @@ target/entry.exit: target/image.txt target/make/classes/Hello.class
 	img=$$(cat $<)
 	docker run --rm -v "$$(realpath "$$(pwd)/target/make"):/target" \
 		-e "TARGET=/target" \
+		-e "EO_VERSION=${EO_VERSION}" \
+		-e "JEO_VERSION=${JEO_VERSION}" \
+		-e "OPEO_VERSION=${OPEO_VERSION}" \
 		"$${img}"
 	echo "$$?" > "$@"
 

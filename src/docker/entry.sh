@@ -64,6 +64,9 @@ declare -a opts=(
   '--errors'
   '--batch-mode'
   "--file=$(dirname $0)/pom.xml"
+  "-Deo.version=${EO_VERSION}"
+  "-Djeo.version=${JEO_VERSION}"
+  "-Dopeo.version=${OPEO_VERSION}"
 )
 
 mvn "${opts[@]}" \

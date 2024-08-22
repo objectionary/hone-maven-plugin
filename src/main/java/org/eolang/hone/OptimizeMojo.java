@@ -45,16 +45,41 @@ public final class OptimizeMojo extends AbstractMojo {
      * Skip the execution, if set to TRUE.
      *
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.skip", defaultValue = "false")
     private boolean skip;
 
     /**
-     * The "target/" directory of Maven project.
+     * EO version to use.
      *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.eo-version", defaultValue = "0.39.0")
+    private String eoVersion;
+
+    /**
+     * JEO version to use.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.jeo-version", defaultValue = "0.5.4")
+    private String jeoVersion;
+
+    /**
+     * OPEO version to use.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.opeo-version", defaultValue = "0.3.3")
+    private String opeoVersion;
+
+    /**
+     * The "target/" directory of Maven project.
+     *
+     * @since 0.1.0
      */
     @Parameter(
         property = "hone.target",
@@ -77,6 +102,9 @@ public final class OptimizeMojo extends AbstractMojo {
             "--rm",
             "--volume", String.format("%s:/target", this.target),
             "--env", "TARGET=/target",
+            "--env", String.format("EO_VERSION=%s", this.eoVersion),
+            "--env", String.format("JEO_VERSION=%s", this.jeoVersion),
+            "--env", String.format("OPEO_VERSION=%s", this.opeoVersion),
             "yegor256/hone"
         );
         Logger.info(this, "+ %s", String.join(" ", builder.command()));

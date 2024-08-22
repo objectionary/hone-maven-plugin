@@ -113,6 +113,11 @@ public final class OptimizeMojo extends AbstractMojo {
             .withRedirect(true)
             .exec();
         if (this.image.endsWith(":local")) {
+            Logger.info(
+                this,
+                "The name of the Docker image '%s' ends with ':local', that's why we will now try to build it",
+                this.image
+            );
             new Jaxec(
                 "docker", "build",
                 "src/docker",

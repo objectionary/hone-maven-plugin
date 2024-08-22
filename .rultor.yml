@@ -36,9 +36,9 @@ release:
   script: |-
     [[ "${tag}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit -1
     mvn versions:set "-DnewVersion=${tag}"
+    sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt
     git commit -am "${tag}"
-    mvn clean install -Pqulice -e -B -Dinvoker.skip -DskipITs
-    mvn clean deploy -Pobjectionary -Psonatype -e --settings ../settings.xml
+    mvn clean deploy -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
 
     sed -i -e "s/0.0.0/${tag}/" src/docker/Dockerfile
     sed -i -e "s/0.0.0/${tag}/" src/docker/entry.sh

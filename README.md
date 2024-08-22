@@ -8,27 +8,72 @@
 ![Lines of code](https://sloc.xyz/github/objectionary/hone-maven-plugin)
 [![codecov](https://codecov.io/gh/objectionary/hone-maven-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/objectionary/hone-maven-plugin)
 
-This Maven plugin may optimize your Bytecode after compilation so that
-it works faster. Just add this to your `pom.xml` file:
+This [Apache Maven](https://maven.apache.org/) plugin _may_ optimize
+your [Bytecode](https://en.wikipedia.org/wiki/Java_bytecode)
+after compilation to make it work faster.
+Just add this to your `pom.xml` file
+(you must have [Docker](https://docs.docker.com/engine/install/) installed too):
 
 ```xml
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.eolang</groupId>
-      <artifactId>hone-maven-plugin</artifactId>
-      <version>0.0.2</version>
-      <executions>
-        <execution>
-          <goals>
-            <goal>optimize</goal>
-          </goals>
-        </execution>
-      </executions>
-    </plugin>
-  </plugins>
-</build>
+<project>
+  [..]
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eolang</groupId>
+        <artifactId>hone-maven-plugin</artifactId>
+        <version>0.0.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>optimize</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
 ```
+
+The plugin will do exactly the following:
+
+1. Take Bytecode `.class` files from the `target/classes/` directory and copy
+all of them to the `target/classes-before-hone/` directory (as a backup).
+1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
+transform `.class` files to
+`.xmir` [format](https://news.eolang.org/2022-11-25-xmir-guide.html),
+which is [EO](https://www.eolang.org) in XML, and place them into
+the `target/generated-sources/jeo-disassemble/` directory.
+1. Using [opeo-maven-plugin](https://github.com/objectionary/opeo-maven-plugin),
+modify `.xmir` files such that they have more objects and less `opcode`
+atoms and place new `.xmir` files into
+the `target/generated-sources/opeo-decompile/` directory.
+1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
+convert `.xmir` files to `.phi` files
+with [𝜑-calculus](https://arxiv.org/abs/2111.13384) expressions,
+and place them into the `target/generated-sources/phi/` directory.
+1. Using [normalizer](https://github.com/objectionary/normalizer),
+apply a number of optimizations to 𝜑-calculus expressions in the `.phi` files
+and place new `.phi` files into
+the `target/generated-sources/phi-optimized/` directory.
+1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
+convert `.phi` files back to `.xmir` files and
+placing them into the `target/generated-sources/unphi/` directory.
+1. Using [opeo-maven-plugin](https://github.com/objectionary/opeo-maven-plugin),
+transform `.xmir` files such that they have only `opcode`
+atoms and place new `.xmir` files into
+the `target/generated-sources/opeo-compile/` directory.
+1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
+transform `.xmir` files to Bytecode and place `.class` files into
+the `target/classes/` directory.
+
+The effect of the plugin should be performance-positive (your code should
+work faster), along with no functionality degradation (your code should work
+exactly the same as it worked before optimizations). If any of these
+is not true,
+[submit a ticket](https://github.com/objectionary/hone-maven-plugin/issues),
+we will try to fix.
 
 ## How to Contribute
 

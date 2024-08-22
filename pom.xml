@@ -121,6 +121,12 @@ SOFTWARE.
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>net.sf.saxon</groupId>
+      <artifactId>Saxon-HE</artifactId>
+      <version>12.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.yegor256</groupId>
       <artifactId>farea</artifactId>
       <version>0.0.17</version>

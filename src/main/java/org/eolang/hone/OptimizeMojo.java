@@ -75,9 +75,11 @@ public final class OptimizeMojo extends AbstractMojo {
         final ProcessBuilder builder = new ProcessBuilder(
             "docker", "run",
             "--rm",
-            "--env", String.format("TARGET=%s", this.target),
+            "--volume", String.format("%s:/target", this.target),
+            "--env", "TARGET=/target",
             "yegor256/hone"
         );
+        Logger.info(this, "+ %s", String.join(" ", builder.command()));
         try (VerboseProcess proc = new VerboseProcess(builder)) {
             final VerboseProcess.Result ret = proc.waitFor();
             if (ret.code() != 0) {

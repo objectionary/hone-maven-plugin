@@ -27,8 +27,9 @@ import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -61,7 +62,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Disabled
+    @DisabledOnOs(OS.MAC)
     void optimizesSimpleApp(@TempDir final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

@@ -32,7 +32,7 @@ SOFTWARE.
   <properties>
     <eo.version>0.39.0</eo.version>
     <jeo.version>0.5.4</jeo.version>
-    <opeo.version>0.3.3</opeo.version>
+    <opeo.version>0.3.4</opeo.version>
   </properties>
   <build>
     <pluginManagement>

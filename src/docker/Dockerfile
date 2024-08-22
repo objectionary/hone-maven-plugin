@@ -40,11 +40,11 @@ RUN echo "export M2_HOME=/usr/local/apache-maven/apache-maven-\${MAVEN_VERSION}"
   && bash -c '[[ "$(mvn --version)" =~ "${MAVEN_VERSION}" ]]'
 
 WORKDIR /hone
-COPY pom.xml /hone
+COPY src/docker/pom.xml /hone
 
 # Warming up Maven cache:
 RUN mvn -f /hone eo:help
-#RUN mvn -f /hone opeo:help
+RUN mvn -f /hone opeo:help
 #RUN mvn -f /hone jeo:help
 
 COPY entry.sh /hone

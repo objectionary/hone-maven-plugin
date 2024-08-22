@@ -26,10 +26,6 @@ LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
 LABEL "version"="0.0.0"
 
-ENV EO_VERSION 0.39.0
-ENV JEO_VERSION 0.5.4
-ENV OPEO_VERSION 0.3.3
-
 # Installing Maven:
 ENV MAVEN_VERSION 3.9.6
 ENV M2_HOME "/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}"

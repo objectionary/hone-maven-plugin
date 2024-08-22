@@ -65,10 +65,16 @@ declare -a opts=(
   '--errors'
   '--batch-mode'
   "--file=$(dirname $0)/pom.xml"
-  "-Deo.version=${EO_VERSION}"
-  "-Djeo.version=${JEO_VERSION}"
-  "-Dopeo.version=${OPEO_VERSION}"
 )
+if [ -n "${EO_VERSION}" ]; then
+  opts+=("-Deo.version=${EO_VERSION}")
+fi
+if [ -n "${JEO_VERSION}" ]; then
+  opts+=("-Djeo.version=${JEO_VERSION}")
+fi
+if [ -n "${OPEO_VERSION}" ]; then
+  opts+=("-Dopeo.version=${OPEO_VERSION}")
+fi
 
 mvn "${opts[@]}" \
   jeo:disassemble \

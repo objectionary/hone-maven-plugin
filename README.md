@@ -59,17 +59,17 @@ and place new `.phi` files into
 the `target/generated-sources/phi-optimized/` directory.
 1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
 convert `.phi` files back to `.xmir` files and
-placing them into the `target/generated-sources/unphi/` directory.
+place them into the `target/generated-sources/unphi/` directory.
 1. Using [opeo-maven-plugin](https://github.com/objectionary/opeo-maven-plugin),
 transform `.xmir` files such that they have only `opcode`
 atoms and place new `.xmir` files into
 the `target/generated-sources/opeo-compile/` directory.
 1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
-transform `.xmir` files to Bytecode and place `.class` files into
+transform `.xmir` files back to Bytecode and place `.class` files into
 the `target/classes/` directory.
 
 The effect of the plugin should be performance-positive (your code should
-work faster), along with no functionality degradation (your code should work
+work faster) along with no functionality degradation (your code should work
 exactly the same as it worked before optimizations). If any of these
 is not true,
 [submit a ticket](https://github.com/objectionary/hone-maven-plugin/issues),

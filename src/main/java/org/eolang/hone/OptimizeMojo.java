@@ -23,6 +23,7 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -111,5 +112,6 @@ public final class OptimizeMojo extends AbstractMojo {
         }
         command.add(this.image);
         new Docker(this.sudo).exec(command);
+        Logger.info(this, "Bytecode optimized in '%s'", this.target);
     }
 }

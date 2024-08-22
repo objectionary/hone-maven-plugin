@@ -27,41 +27,21 @@ import com.jcabi.log.Logger;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.cactoos.io.OutputTo;
-import org.cactoos.io.ResourceOf;
-import org.cactoos.io.TeeInput;
-import org.cactoos.scalar.IoChecked;
-import org.cactoos.scalar.LengthOf;
 
 /**
- * Build Docker image.
+ * Remove Docker image.
  *
  * @since 0.1.0
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
-public final class BuildMojo extends AbstractMojo {
+@Mojo(name = "rmi", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+public final class RmiMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        try (Mktemp temp = new Mktemp()) {
-            final String[] files = {"Dockerfile", "entry.sh", "in-docker-pom.xml"};
-            for (final String file : files) {
-                new IoChecked<>(
-                    new LengthOf(
-                        new TeeInput(
-                            new ResourceOf(String.format("org/eolang/hone/docker/%s", file)),
-                            new OutputTo(temp.path().resolve(file))
-                        )
-                    )
-                ).value();
-            }
-            temp.path().resolve("entry.sh").toFile().setExecutable(true);
-            new Docker(this.sudo).exec(
-                "build",
-                "--tag", this.image,
-                temp.path().toString()
-            );
-        }
-        Logger.info(this, "Docker image '%s' build", this.image);
+        new Docker(this.sudo).exec(
+            "rmi",
+            this.image
+        );
+        Logger.info(this, "Docker image '%s' removed", this.image);
     }
 }

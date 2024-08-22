@@ -29,6 +29,8 @@ package org.eolang.hone;
  */
 public class App {
     public static void main(String[] args) {
-        System.out.println("Hello, world!");
+        double angle = 42.0;
+        double sin = Math.sin(angle);
+        System.out.printf("sin(%f) = %f\n", angle, sin);
     }
 }

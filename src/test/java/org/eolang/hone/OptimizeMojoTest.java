@@ -29,6 +29,8 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -36,6 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
  *
  * @since 0.1.0
  */
+@EnabledOnOs(OS.LINUX)
 final class OptimizeMojoTest {
 
     @Test

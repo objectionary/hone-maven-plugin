@@ -27,14 +27,14 @@ SHELL := /bin/bash
 
 all: verify rmi
 
-quick: target/make
-	TARGET=$(realpath $<) ./src/docker/entry.sh
+quick: target/make/classes/Hello.class
+	TARGET=$(realpath target/make) ./src/docker/entry.sh
 
 target/image.txt: target/make src/docker/Dockerfile src/docker/entry.sh
 	sudo docker build -t hone-maven-plugin "$$(pwd)/src/docker"
 	sudo docker build -t hone-maven-plugin -q "$$(pwd)/src/docker" > "$@"
 
-target/entry.exit: target/image.txt target/make
+target/entry.exit: target/image.txt target/make/classes/Hello.class
 	img=$$(cat $<)
 	docker run --rm -v "$$(realpath "$$(pwd)/target/make"):/target" \
 		-e "TARGET=/target" \
@@ -50,6 +50,8 @@ rmi: target/image.txt
 	sudo docker rmi "$${img}"
 	rm "$<"
 
-target/make:
+target/make/classes/Hello.class: Makefile
 	mkdir -p target/make/classes
-	javac -d target/make/classes src/it/simple/src/main/java/org/eolang/hone/App.java
+	mkdir -p target/make/src
+	echo "class Hello { double foo() { return Math.sin(42); } }" > target/make/src/Hello.java
+	javac -d target/make/classes target/make/src/Hello.java

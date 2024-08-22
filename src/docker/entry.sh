@@ -86,8 +86,8 @@ cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimiz
 
 mvn "${opts[@]}" \
   eo:phi-to-xmir \
-  "-DunphiInputDir=${TARGET}/generated-sources/phi-optimized" \
-  "-DunphiOutputDir=${TARGET}/generated-sources/unphi"
+  "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
+  "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi"
 
 mvn "${opts[@]}" \
   opeo:compile \

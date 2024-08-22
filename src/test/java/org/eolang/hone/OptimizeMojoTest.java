@@ -85,4 +85,24 @@ final class OptimizeMojoTest {
             }
         );
     }
+
+    @Test
+    void printsHelp(@TempDir final Path dir) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.files()
+                    .file("src/main/java/Hello.java")
+                    .write("class Hello { double foo() { return Math.sin(42); } }");
+                f.build()
+                    .plugins()
+                    .appendItself();
+                f.exec("hone:help");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    Matchers.containsString("Display help information on hone-maven-plugin")
+                );
+            }
+        );
+    }
 }

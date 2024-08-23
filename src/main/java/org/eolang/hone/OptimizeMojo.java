@@ -112,6 +112,6 @@ public final class OptimizeMojo extends AbstractMojo {
         }
         command.add(this.image);
         new Docker(this.sudo).exec(command);
-        Logger.info(this, "Bytecode optimized in '%s'", this.target);
+        Logger.info(this, "Bytecode was optimized in '%s'", this.target);
     }
 }

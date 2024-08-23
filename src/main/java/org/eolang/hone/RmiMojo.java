@@ -42,6 +42,6 @@ public final class RmiMojo extends AbstractMojo {
             "rmi",
             this.image
         );
-        Logger.info(this, "Docker image '%s' removed", this.image);
+        Logger.info(this, "Docker image '%s' was removed", this.image);
     }
 }

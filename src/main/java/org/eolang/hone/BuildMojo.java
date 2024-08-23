@@ -62,6 +62,6 @@ public final class BuildMojo extends AbstractMojo {
                 temp.path().toString()
             );
         }
-        Logger.info(this, "Docker image '%s' build", this.image);
+        Logger.info(this, "Docker image '%s' was built", this.image);
     }
 }

@@ -99,3 +99,5 @@ make quick
 
 This will do exactly what is happening in Docker container, but without
 Docker. This may be a faster way to check how the pipeline works.
+
+The versions of EO, JEO, and OPEO are defined in the `in-docker-pom.xml` file.

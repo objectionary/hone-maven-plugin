@@ -30,7 +30,10 @@ export
 all: verify rmi
 
 quick: target/make/classes/Hello.class
-	TARGET=$(realpath target/make) ./src/docker/entry.sh
+	export TARGET=$(realpath target/make)
+	cp ./src/main/resources/org/eolang/hone/docker/in-docker-pom.xml "$${TARGET}/pom.xml"
+	cp ./src/main/resources/org/eolang/hone/docker/entry.sh "$${TARGET}"
+	"$${TARGET}/entry.sh"
 
 target/image.txt: target/make/classes/Hello.class src/main/resources/org/eolang/hone/docker/Dockerfile src/main/resources/org/eolang/hone/docker/entry.sh
 	sudo docker build -t hone-maven-plugin "$$(pwd)/src/main/resources/org/eolang/hone/docker"

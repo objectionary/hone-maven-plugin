@@ -39,7 +39,6 @@ RUN apt-get update \
     libffi-dev=* \
     libgmp-dev=* \
     libnuma-dev=* \
-    libtinfo-dev=* \
     make=* \
     netbase=* \
     xz-utils=* \

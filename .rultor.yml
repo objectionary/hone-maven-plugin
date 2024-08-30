@@ -38,16 +38,18 @@ release:
     mvn versions:set "-DnewVersion=${tag}"
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
     git commit -am "${tag}"
-    mvn clean deploy -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
+    mvn clean deploy -DskipTests -Dinvoker.skip \
+      -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
 
-    sed -i -e "s/0.0.0/${tag}/" src/docker/Dockerfile
-    sed -i -e "s/0.0.0/${tag}/" src/docker/entry.sh
-    git add src/docker/Dockerfile
-    git add src/docker/entry.sh
+    cd src/main/resources/org/eolang/hone/docker/
+    sed -i -e "s/0.0.0/${tag}/" Dockerfile
+    sed -i -e "s/0.0.0/${tag}/" entry.sh
+    git add Dockerfile
+    git add entry.sh
     git commit -m "version set to ${tag}"
     repo=yegor256/hone
-    sudo docker build "$(pwd)/src/docker" --tag "${repo}:${tag}"
-    sudo docker build "$(pwd)/src/docker" --tag "${repo}:latest"
+    sudo docker build "$(pwd)" --tag "${repo}:${tag}"
+    sudo docker build "$(pwd)" --tag "${repo}:latest"
     cat ../docker-password | sudo docker login --password-stdin -u yegor256
     sudo docker push "${repo}:${tag}"
     sudo docker push "${repo}:latest"

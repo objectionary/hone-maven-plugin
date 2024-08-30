@@ -25,6 +25,11 @@
 
 set -ex
 
+if ghc --version; then
+  echo "GHC already installed"
+  exit
+fi
+
 cd /tmp
 ARCH="$(dpkg-architecture --query DEB_BUILD_GNU_CPU)"
 GHC_URL="https://downloads.haskell.org/~ghc/$GHC/ghc-$GHC-$ARCH-deb11-linux.tar.xz"
@@ -50,3 +55,5 @@ tar xf ghc.tar.xz
 cd "ghc-$GHC-$ARCH-unknown-linux"
 ./configure --prefix "/opt/ghc/$GHC"
 make install
+
+ghc --version

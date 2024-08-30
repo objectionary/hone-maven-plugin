@@ -25,6 +25,11 @@
 
 set -ex
 
+if stack --version; then
+  echo "Stack already installed"
+  exit
+fi
+
 cd /tmp
 ARCH="$(dpkg-architecture --query DEB_BUILD_GNU_CPU)"
 STACK_URL="https://github.com/commercialhaskell/stack/releases/download/v${STACK}/stack-${STACK}-linux-$ARCH.tar.gz"
@@ -47,3 +52,5 @@ gpg --batch --keyserver keyserver.ubuntu.com --receive-keys "$STACK_RELEASE_KEY"
 gpg --batch --verify stack.tar.gz.asc stack.tar.gz
 gpgconf --kill all
 tar -xf stack.tar.gz -C /usr/local/bin --strip-components=1 "stack-$STACK-linux-$ARCH/stack"
+
+stack --version

@@ -57,14 +57,12 @@ COPY install-ghc.sh .
 RUN chmod a+x install-ghc.sh \
   && ./install-ghc.sh
 ENV PATH /root/.cabal/bin:/root/.local/bin:/opt/ghc/${GHC}/bin:$PATH
-RUN ghc --version
 
 ENV STACK 2.15.7
 ENV STACK_RELEASE_KEY C5705533DA4F78D8664B5DC0575159689BEFB442
 COPY install-stack.sh .
 RUN chmod a+x install-stack.sh \
   && ./install-stack.sh \
-  && stack --version \
   && stack config set system-ghc --global true
 
 ENV NORMALIZER 1.0.0

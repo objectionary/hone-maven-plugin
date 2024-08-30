@@ -24,6 +24,8 @@
 set -ex
 set -o pipefail
 
+SELF=$(dirname $0)
+
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set! Make sure you do \
 'docker run' with the '-e TARGET=...' parameter, which points to the \
@@ -96,8 +98,12 @@ mvn "${opts[@]}" \
 #  "-Deo.phiInputDir=${TARGET}/generated-sources/opeo-decompile" \
 #  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
-# Instead of this copying we should do the proper optimization here:
-cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
+from=${TARGET}/generated-sources/phi
+to=${TARGET}/generated-sources/phi-optimized
+mkdir -p "${to}"
+while IFS= read -r f; do
+    normalizer transform --rules "${SELF}/simple.yml" "${from}/${f}" --single -o "${to}/${f}"
+done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
 
 mvn "${opts[@]}" \
   eo:phi-to-xmir \

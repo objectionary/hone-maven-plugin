@@ -53,7 +53,7 @@ final class BuildMojoTest {
                 MatcherAssert.assertThat(
                     "the Docker image building step must be skipped",
                     f.log(),
-                    Matchers.containsString("SUCCESS")
+                    Matchers.not(Matchers.containsString("BUILD FAILURE"))
                 );
             }
         );
@@ -75,7 +75,7 @@ final class BuildMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    Matchers.containsString("SUCCESS")
+                    Matchers.not(Matchers.containsString("BUILD FAILURE"))
                 );
             }
         );

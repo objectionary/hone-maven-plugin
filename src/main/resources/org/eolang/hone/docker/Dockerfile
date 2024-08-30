@@ -63,7 +63,8 @@ RUN chmod a+x install-stack.sh && ./install-stack.sh
 RUN stack --version
 RUN stack config set system-ghc --global true
 
-RUN stack update && stack install eo-phi-normalizer
+ENV NORMALIZER 1.0.0
+RUN stack update && stack install eo-phi-normalizer-${NORMALIZER}
 
 WORKDIR /hone
 COPY in-docker-pom.xml /hone/pom.xml
@@ -72,5 +73,6 @@ COPY in-docker-pom.xml /hone/pom.xml
 RUN mvn -f /hone eo:help opeo:help jeo:help
 
 COPY entry.sh /hone
+COPY simple.yml /hone
 
 ENTRYPOINT ["/hone/entry.sh"]

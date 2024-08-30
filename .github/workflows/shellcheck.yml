@@ -19,13 +19,22 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-log4j.rootLogger=WARN, CONSOLE
-
-log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
-log4j.appender.CONSOLE.layout=com.jcabi.log.MulticolorLayout
-log4j.appender.CONSOLE.layout.ConversionPattern=%d{HH:mm:ss} [%p] %c: %m%n
-
-log4j.logger.org.eolang=INFO
-log4j.logger.com.yegor256.farea=DEBUG
-log4j.logger.com.jcabi.log.VerboseProcess=INFO
+---
+name: shellcheck
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+concurrency:
+  group: shellcheck-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ludeeus/action-shellcheck@master

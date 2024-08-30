@@ -49,13 +49,21 @@ RUN apt-get update \
 COPY install-maven.sh .
 RUN chmod a+x install-maven.sh && ./install-maven.sh
 
-ENV STACK 2.15.7
-ENV STACK_RELEASE_KEY C5705533DA4F78D8664B5DC0575159689BEFB442
 ENV GHC 9.10.1
 ENV GHC_RELEASE_KEY FFEB7CE81E16A36B3E2DED6F2DE04D4E97DB64AD
+COPY install-ghc.sh .
+RUN chmod a+x install-ghc.sh && ./install-ghc.sh
+ENV PATH /root/.cabal/bin:/root/.local/bin:/opt/ghc/${GHC}/bin:$PATH
+RUN ghc --version
+
+ENV STACK 2.15.7
+ENV STACK_RELEASE_KEY C5705533DA4F78D8664B5DC0575159689BEFB442
 COPY install-stack.sh .
 RUN chmod a+x install-stack.sh && ./install-stack.sh
-ENV PATH /root/.cabal/bin:/root/.local/bin:/opt/ghc/${GHC}/bin:$PATH
+RUN stack --version
+RUN stack config set system-ghc --global true
+
+RUN stack update && stack install eo-phi-normalizer
 
 WORKDIR /hone
 COPY in-docker-pom.xml /hone/pom.xml

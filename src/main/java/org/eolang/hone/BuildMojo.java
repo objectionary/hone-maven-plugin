@@ -46,7 +46,7 @@ public final class BuildMojo extends AbstractMojo {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
                 "Dockerfile", "entry.sh", "in-docker-pom.xml",
-                "install-maven.sh", "install-stack.sh",
+                "install-ghc.sh", "install-maven.sh", "install-stack.sh",
             };
             for (final String file : files) {
                 new IoChecked<>(

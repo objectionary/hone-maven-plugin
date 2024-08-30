@@ -141,12 +141,6 @@ SOFTWARE.
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-invoker-plugin</artifactId>
-        <configuration>
-          <skipInvocation>true</skipInvocation>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -164,24 +158,6 @@ SOFTWARE.
     </plugins>
   </build>
   <profiles>
-    <profile>
-      <id>invoker</id>
-      <activation>
-        <os>
-          <family>linux</family>
-        </os>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-invoker-plugin</artifactId>
-            <configuration>
-              <skipInvocation>false</skipInvocation>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>qulice</id>
       <build>

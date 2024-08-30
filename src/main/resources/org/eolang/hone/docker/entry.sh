@@ -82,9 +82,9 @@ mvn "${opts[@]}" \
   "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble"
 
 mvn "${opts[@]}" \
-  eo:phi \
+  eo:xmir-to-phi \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
-  "-Deo.phiOutputDir=${TARGET}/generated-sources/jeo-disassemble-as-phi"
+  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
 #mvn "${opts[@]}" \
 #  opeo:decompile \

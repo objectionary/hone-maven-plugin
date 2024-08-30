@@ -39,7 +39,7 @@ release:
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
     git commit -am "${tag}"
     mvn clean deploy -DskipTests -Dinvoker.skip \
-      -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
+    -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
 
     cd src/main/resources/org/eolang/hone/docker/
     sed -i -e "s/0.0.0/${tag}/" Dockerfile

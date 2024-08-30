@@ -1,3 +1,4 @@
+#!/bin/bash
 # The MIT License (MIT)
 #
 # Copyright (c) 2024 Objectionary.com
@@ -20,49 +21,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM eclipse-temurin:21
+set -ex
 
-LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
-LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+MAVEN_VERSION=3.9.6
+M2_HOME="/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}"
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    dpkg-dev \
-    git \
-    gcc \
-    gnupg \
-    g++ \
-    libc6-dev \
-    libffi-dev \
-    libgmp-dev \
-    libnuma-dev \
-    libtinfo-dev \
-    make \
-    netbase \
-    xz-utils \
-    zlib1g-dev \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY install-maven.sh .
-RUN chmod a+x install-maven.sh && ./install-maven.sh
-
-ENV STACK 2.15.7
-ENV STACK_RELEASE_KEY C5705533DA4F78D8664B5DC0575159689BEFB442
-ENV GHC 9.10.1
-ENV GHC_RELEASE_KEY FFEB7CE81E16A36B3E2DED6F2DE04D4E97DB64AD
-COPY install-stack.sh .
-RUN chmod a+x install-stack.sh && ./install-stack.sh
-ENV PATH /root/.cabal/bin:/root/.local/bin:/opt/ghc/${GHC}/bin:$PATH
-
-WORKDIR /hone
-COPY in-docker-pom.xml /hone/pom.xml
-
-# Warming up Maven cache:
-RUN mvn -f /hone eo:help opeo:help jeo:help
-
-COPY entry.sh /hone
-
-ENTRYPOINT ["/hone/entry.sh"]
+echo "export M2_HOME=/usr/local/apache-maven/apache-maven-\${MAVEN_VERSION}" >> /root/.profile
+wget --quiet "https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+mkdir -p /usr/local/apache-maven
+mv "apache-maven-${MAVEN_VERSION}-bin.tar.gz" /usr/local/apache-maven
+tar xzvf "/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}-bin.tar.gz" -C /usr/local/apache-maven/
+update-alternatives --install /usr/bin/mvn mvn "${M2_HOME}/bin/mvn" 1
+update-alternatives --config mvn
+mvn -version
+bash -c '[[ "$(mvn --version)" =~ "${MAVEN_VERSION}" ]]'

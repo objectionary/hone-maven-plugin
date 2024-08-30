@@ -44,7 +44,10 @@ public final class BuildMojo extends AbstractMojo {
     @Override
     public void exec() throws IOException {
         try (Mktemp temp = new Mktemp()) {
-            final String[] files = {"Dockerfile", "entry.sh", "in-docker-pom.xml"};
+            final String[] files = {
+                "Dockerfile", "entry.sh", "in-docker-pom.xml",
+                "install-maven.sh", "install-stack.sh",
+            };
             for (final String file : files) {
                 new IoChecked<>(
                     new LengthOf(

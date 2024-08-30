@@ -82,14 +82,19 @@ mvn "${opts[@]}" \
   "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble"
 
 mvn "${opts[@]}" \
-  opeo:decompile \
-  "-Dopeo.decompile.sourcesDir=${TARGET}/generated-sources/jeo-disassemble" \
-  "-Dopeo.decompile.outputDir=${TARGET}/generated-sources/opeo-decompile"
+  eo:phi \
+  "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
+  "-Deo.phiOutputDir=${TARGET}/generated-sources/jeo-disassemble-as-phi"
 
-mvn "${opts[@]}" \
-  eo:xmir-to-phi \
-  "-Deo.phiInputDir=${TARGET}/generated-sources/opeo-decompile" \
-  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
+#mvn "${opts[@]}" \
+#  opeo:decompile \
+#  "-Dopeo.decompile.sourcesDir=${TARGET}/generated-sources/jeo-disassemble" \
+#  "-Dopeo.decompile.outputDir=${TARGET}/generated-sources/opeo-decompile"
+
+#mvn "${opts[@]}" \
+#  eo:xmir-to-phi \
+#  "-Deo.phiInputDir=${TARGET}/generated-sources/opeo-decompile" \
+#  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
 # Instead of this copying we should do the proper optimization here:
 cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
@@ -99,13 +104,13 @@ mvn "${opts[@]}" \
   "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
   "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi"
 
-mvn "${opts[@]}" \
-  opeo:compile \
-  "-Dopeo.compile.sourcesDir=${TARGET}/generated-sources/unphi" \
-  "-Dopeo.compile.outputDir=${TARGET}/generated-sources/opeo-compile"
+#mvn "${opts[@]}" \
+#  opeo:compile \
+#  "-Dopeo.compile.sourcesDir=${TARGET}/generated-sources/unphi" \
+#  "-Dopeo.compile.outputDir=${TARGET}/generated-sources/opeo-compile"
 
 rm -rf "${TARGET}/classes"
 mvn "${opts[@]}" \
   jeo:assemble \
-  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/opeo-compile" \
+  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
   "-Djeo.assemble.outputDir=${TARGET}/classes"

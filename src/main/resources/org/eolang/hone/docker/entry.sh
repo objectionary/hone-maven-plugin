@@ -24,7 +24,7 @@
 set -ex
 set -o pipefail
 
-SELF=$(dirname $0)
+SELF=$(dirname "$0")
 
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set! Make sure you do \
@@ -66,7 +66,7 @@ declare -a opts=(
   '--strict-checksums'
   '--errors'
   '--batch-mode'
-  "--file=$(dirname $0)/pom.xml"
+  "--file=$(dirname "$0")/pom.xml"
 )
 if [ -n "${EO_VERSION}" ]; then
   opts+=("-Deo.version=${EO_VERSION}")

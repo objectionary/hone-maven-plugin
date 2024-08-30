@@ -56,4 +56,4 @@ cd "ghc-$GHC-$ARCH-unknown-linux"
 ./configure --prefix "/opt/ghc/$GHC"
 make install
 
-ghc --version
+"/opt/ghc/$GHC/bin/ghc" --version

@@ -28,5 +28,5 @@ rules:
       ⟦ !τ ↦ !b, !B ⟧.!τ
     result: |
       !b
-    when: []
-    tests: []
+    when: [ ]
+    tests: [ ]

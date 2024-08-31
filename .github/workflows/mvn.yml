@@ -32,8 +32,8 @@ jobs:
   mvn:
     strategy:
       matrix:
-        os: [ubuntu-24.04]
-        java: [11, 20]
+        os: [ ubuntu-24.04 ]
+        java: [ 11, 20 ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,6 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          # yamllint disable-line rule:line-length
           key: ${{ runner.os }}-jdk-${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-jdk-${{ matrix.java }}-maven-

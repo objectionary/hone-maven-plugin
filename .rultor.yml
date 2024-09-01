@@ -42,6 +42,7 @@ release:
     git commit -am "${tag}"
     mvn clean deploy -DskipTests -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
 
+    cat ../docker-password | sudo docker login --password-stdin -u yegor256
     cd src/main/resources/org/eolang/hone/docker/
     sed -i -e "s/0.0.0/${tag}/" Dockerfile
     sed -i -e "s/0.0.0/${tag}/" entry.sh
@@ -51,6 +52,5 @@ release:
     repo=yegor256/hone
     sudo docker build "$(pwd)" --tag "${repo}:${tag}"
     sudo docker build "$(pwd)" --tag "${repo}:latest"
-    cat ../docker-password | sudo docker login --password-stdin -u yegor256
     sudo docker push "${repo}:${tag}"
     sudo docker push "${repo}:latest"

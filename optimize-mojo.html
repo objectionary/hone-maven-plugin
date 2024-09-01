@@ -61,13 +61,13 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.0.4</strong>
+                                    <strong itemprop="version">0.0.8</strong>
                                 </li>
                                 <li>
                                     
-                                    <time itemprop="datePublished" datetime="2024-08-22T07:56:45Z">
+                                    <time itemprop="datePublished" datetime="2024-09-01T06:28:17Z">
                                         
-                                        22-Aug-2024
+                                        01-Sep-2024
                                     </time>
                                 </li>
                                 <li class="menu-button">menu</li>
@@ -81,7 +81,7 @@
                             <section>
 <h2><a name="hone:optimize"></a>hone:optimize</h2><a name="hone:optimize"></a>
 <p><strong>Full name</strong>:</p>
-<p>org.eolang:hone-maven-plugin:0.0.4:optimize</p>
+<p>org.eolang:hone-maven-plugin:0.0.8:optimize</p>
 <p><strong>Description</strong>:</p>
 <p>Converts Bytecode to Bytecode.</p>
 <p><strong>Attributes</strong>:</p>
@@ -103,20 +103,30 @@
 <td><code>0.1.0</code></td>
 <td>EO version to use.<br /><strong>User Property</strong>: <code>hone.eo-version</code></td></tr>
 <tr class="a">
+<td align="left"><a href="#image"><code>&lt;image&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.1.0</code></td>
+<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
+<tr class="b">
 <td align="left"><a href="#jeoVersion"><code>&lt;jeoVersion&gt;</code></a></td>
 <td><code>String</code></td>
 <td><code>0.1.0</code></td>
 <td>JEO version to use.<br /><strong>User Property</strong>: <code>hone.jeo-version</code></td></tr>
-<tr class="b">
+<tr class="a">
 <td align="left"><a href="#opeoVersion"><code>&lt;opeoVersion&gt;</code></a></td>
 <td><code>String</code></td>
 <td><code>0.1.0</code></td>
 <td>OPEO version to use.<br /><strong>User Property</strong>: <code>hone.opeo-version</code></td></tr>
-<tr class="a">
+<tr class="b">
 <td align="left"><a href="#skip"><code>&lt;skip&gt;</code></a></td>
 <td><code>boolean</code></td>
 <td><code>0.1.0</code></td>
 <td>Skip the execution, if set to TRUE.<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.skip</code></td></tr>
+<tr class="a">
+<td align="left"><a href="#sudo"><code>&lt;sudo&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.1.0</code></td>
+<td>Use "sudo" for "docker".<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.sudo</code></td></tr>
 <tr class="b">
 <td align="left"><a href="#target"><code>&lt;target&gt;</code></a></td>
 <td><code>File</code></td>
@@ -129,7 +139,15 @@
 <li><strong>Type</strong>: <code>java.lang.String</code></li>
 <li><strong>Since</strong>: <code>0.1.0</code></li>
 <li><strong>Required</strong>: <code>No</code></li>
-<li><strong>User Property</strong>: <code>hone.eo-version</code></li></ul><hr /></section><a name="jeoVersion"></a><section>
+<li><strong>User Property</strong>: <code>hone.eo-version</code></li></ul><hr /></section><a name="image"></a><section>
+<h4><a name="a.3Cimage.3E"></a>&lt;image&gt;</h4><a name="a.3Cimage.3E"></a>
+<div>Docker image to use.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.image</code></li>
+<li><strong>Default</strong>: <code>yegor256/hone</code></li></ul><hr /></section><a name="jeoVersion"></a><section>
 <h4><a name="a.3CjeoVersion.3E"></a>&lt;jeoVersion&gt;</h4><a name="a.3CjeoVersion.3E"></a>
 <div>JEO version to use.</div>
 <ul>
@@ -151,6 +169,14 @@
 <li><strong>Since</strong>: <code>0.1.0</code></li>
 <li><strong>Required</strong>: <code>No</code></li>
 <li><strong>User Property</strong>: <code>hone.skip</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a name="sudo"></a><section>
+<h4><a name="a.3Csudo.3E"></a>&lt;sudo&gt;</h4><a name="a.3Csudo.3E"></a>
+<div>Use "sudo" for "docker".</div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.sudo</code></li>
 <li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a name="target"></a><section>
 <h4><a name="a.3Ctarget.3E"></a>&lt;target&gt;</h4><a name="a.3Ctarget.3E"></a>
 <div>The "target/" directory of Maven project.</div>

@@ -24,7 +24,7 @@ FROM eclipse-temurin:21
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+LABEL "version"="0.0.8"
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \

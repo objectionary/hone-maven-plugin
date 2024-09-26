@@ -24,8 +24,6 @@
 set -ex
 set -o pipefail
 
-SELF=$(dirname "$0")
-
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set! Make sure you do \
 'docker run' with the '-e TARGET=...' parameter, which points to the \

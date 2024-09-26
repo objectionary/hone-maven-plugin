@@ -30,9 +30,8 @@ SOFTWARE.
   <version>0.0.0</version>
   <name>hone</name>
   <properties>
-    <eo.version>0.39.0</eo.version>
-    <jeo.version>0.5.7</jeo.version>
-    <opeo.version>0.3.5</opeo.version>
+    <eo.version>0.39.1</eo.version>
+    <jeo.version>0.6.0</jeo.version>
   </properties>
   <build>
     <pluginManagement>
@@ -46,11 +45,6 @@ SOFTWARE.
           <groupId>org.eolang</groupId>
           <artifactId>jeo-maven-plugin</artifactId>
           <version>${jeo.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.eolang</groupId>
-          <artifactId>opeo-maven-plugin</artifactId>
-          <version>${opeo.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>

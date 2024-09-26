@@ -36,11 +36,9 @@ fi
 declare -a temps=(
   'classes-before-hone'
   'generated-sources/jeo-disassemble'
-  'generated-sources/opeo-decompile'
   'generated-sources/phi'
   'generated-sources/phi-optimized'
   'generated-sources/unphi'
-  'generated-sources/opeo-compile'
 )
 for t in "${temps[@]}"; do
   if [ -e "${TARGET}/${t}" ]; then
@@ -74,9 +72,6 @@ fi
 if [ -n "${JEO_VERSION}" ]; then
   opts+=("-Djeo.version=${JEO_VERSION}")
 fi
-if [ -n "${OPEO_VERSION}" ]; then
-  opts+=("-Dopeo.version=${OPEO_VERSION}")
-fi
 
 mvn "${opts[@]}" \
   jeo:disassemble \
@@ -88,34 +83,19 @@ mvn "${opts[@]}" \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
-#mvn "${opts[@]}" \
-#  opeo:decompile \
-#  "-Dopeo.decompile.sourcesDir=${TARGET}/generated-sources/jeo-disassemble" \
-#  "-Dopeo.decompile.outputDir=${TARGET}/generated-sources/opeo-decompile"
-
-#mvn "${opts[@]}" \
-#  eo:xmir-to-phi \
-#  "-Deo.phiInputDir=${TARGET}/generated-sources/opeo-decompile" \
-#  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
-
 cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
 
-#from=${TARGET}/generated-sources/phi
-#to=${TARGET}/generated-sources/phi-optimized
-#mkdir -p "${to}"
-#while IFS= read -r f; do
+# from=${TARGET}/generated-sources/phi
+# to=${TARGET}/generated-sources/phi-optimized
+# mkdir -p "${to}"
+# while IFS= read -r f; do
 #    normalizer transform --rules "${SELF}/simple.yml" "${from}/${f}" --single -o "${to}/${f}"
-#done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
+# done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
 
 mvn "${opts[@]}" \
   eo:phi-to-xmir \
   "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
   "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi"
-
-#mvn "${opts[@]}" \
-#  opeo:compile \
-#  "-Dopeo.compile.sourcesDir=${TARGET}/generated-sources/unphi" \
-#  "-Dopeo.compile.outputDir=${TARGET}/generated-sources/opeo-compile"
 
 rm -rf "${TARGET}/classes"
 mvn "${opts[@]}" \

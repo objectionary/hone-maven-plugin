@@ -72,7 +72,7 @@ RUN stack update \
 COPY in-docker-pom.xml pom.xml
 
 # Warming up Maven cache:
-RUN mvn eo:help opeo:help jeo:help
+RUN mvn eo:help jeo:help
 
 COPY entry.sh .
 COPY simple.yml .

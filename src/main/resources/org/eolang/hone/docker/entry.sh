@@ -81,14 +81,15 @@ mvn "${opts[@]}" \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
-cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
+#cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
 
-# from=${TARGET}/generated-sources/phi
-# to=${TARGET}/generated-sources/phi-optimized
-# mkdir -p "${to}"
-# while IFS= read -r f; do
-#    normalizer transform --rules "${SELF}/simple.yml" "${from}/${f}" --single -o "${to}/${f}"
-# done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
+SELF=$(dirname "$0")
+from=${TARGET}/generated-sources/phi
+to=${TARGET}/generated-sources/phi-optimized
+mkdir -p "${to}"
+while IFS= read -r f; do
+  normalizer transform --rules "${SELF}/simple.yml" "${from}/${f}" --single -o "${to}/${f}"
+done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
 
 mvn "${opts[@]}" \
   eo:phi-to-xmir \

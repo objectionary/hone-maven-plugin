@@ -54,7 +54,10 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the optimization step must be skipped",
                     f.log(),
-                    Matchers.not(Matchers.containsString("BUILD FAILURE"))
+                    Matchers.allOf(
+                        Matchers.containsString("BUILD SUCCESS"),
+                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
+                    )
                 );
             }
         );
@@ -81,7 +84,10 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    Matchers.not(Matchers.containsString("BUILD FAILURE"))
+                    Matchers.allOf(
+                        Matchers.containsString("BUILD SUCCESS"),
+                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
+                    )
                 );
             }
         );

@@ -60,15 +60,6 @@ public final class OptimizeMojo extends AbstractMojo {
     private String jeoVersion;
 
     /**
-     * OPEO version to use.
-     *
-     * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.opeo-version")
-    private String opeoVersion;
-
-    /**
      * The "target/" directory of Maven project.
      *
      * @since 0.1.0
@@ -100,13 +91,6 @@ public final class OptimizeMojo extends AbstractMojo {
             command.addAll(
                 Arrays.asList(
                     "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
-                )
-            );
-        }
-        if (this.opeoVersion != null) {
-            command.addAll(
-                Arrays.asList(
-                    "--env", String.format("OPEO_VERSION=%s", this.opeoVersion)
                 )
             );
         }

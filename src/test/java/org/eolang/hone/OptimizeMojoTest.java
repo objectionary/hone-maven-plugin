@@ -55,6 +55,7 @@ final class OptimizeMojoTest {
                     "the optimization step must be skipped",
                     f.log(),
                     Matchers.allOf(
+                        Matchers.containsString("Execution skipped"),
                         Matchers.containsString("BUILD SUCCESS"),
                         Matchers.not(Matchers.containsString("BUILD FAILURE"))
                     )

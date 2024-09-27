@@ -34,6 +34,7 @@ RUN apt-get update \
     curl=* \
     wget=* \
     dpkg-dev=* \
+    openjdk-21-jdk-headless=* \
     git=* \
     gcc=* \
     gnupg=* \

@@ -134,7 +134,7 @@ SOFTWARE.
     <dependency>
       <groupId>com.yegor256</groupId>
       <artifactId>farea</artifactId>
-      <version>0.0.17</version>
+      <version>0.0.18</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

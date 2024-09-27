@@ -28,6 +28,8 @@ LABEL "version"="0.0.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ENV LC_ALL=C.UTF-8
+
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates=* \
@@ -71,7 +73,7 @@ RUN chmod a+x install-stack.sh \
 
 ENV NORMALIZER 1.0.0
 RUN stack update \
-  && stack install eo-phi-normalizer-${NORMALIZER}
+  && stack install --resolver lts-22.16 eo-phi-normalizer-${NORMALIZER}
 
 COPY in-docker-pom.xml pom.xml
 

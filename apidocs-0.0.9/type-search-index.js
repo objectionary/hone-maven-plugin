@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.eolang.hone","l":"BuildMojo"},{"p":"org.eolang.hone","l":"OptimizeMojo"},{"p":"org.eolang.hone","l":"RmiMojo"}]

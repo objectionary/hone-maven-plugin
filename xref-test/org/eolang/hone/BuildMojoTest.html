@@ -61,34 +61,40 @@
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>                  MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>                      <span class="jxr_string">"the Docker image building step must be skipped"</span>,
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>                      f.log(),
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>                      Matchers.not(Matchers.containsString(<span class="jxr_string">"BUILD FAILURE"</span>))
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>                  );
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>              }
-<a class="jxr_linenumber" name="L59" href="#L59">59</a>          );
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>      }
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>  
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>      @Test
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>      <strong class="jxr_keyword">void</strong> buildsDockerImage(@TempDir <strong class="jxr_keyword">final</strong> Path dir) <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>          <strong class="jxr_keyword">new</strong> Farea(dir).together(
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>              f -&gt; {
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>                  f.build()
-<a class="jxr_linenumber" name="L67" href="#L67">67</a>                      .plugins()
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>                      .appendItself()
-<a class="jxr_linenumber" name="L69" href="#L69">69</a>                      .execution(<span class="jxr_string">"default"</span>)
-<a class="jxr_linenumber" name="L70" href="#L70">70</a>                      .phase(<span class="jxr_string">"generate-resources"</span>)
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>                      .goals(<span class="jxr_string">"build"</span>)
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>                      .configuration()
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>                      .set(<span class="jxr_string">"image"</span>, <span class="jxr_string">"hone:local"</span>);
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>                  f.exec(<span class="jxr_string">"generate-resources"</span>);
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>                  MatcherAssert.assertThat(
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>                      <span class="jxr_string">"the build must be successful"</span>,
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>                      f.log(),
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>                      Matchers.not(Matchers.containsString(<span class="jxr_string">"BUILD FAILURE"</span>))
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>                  );
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>              }
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>          );
-<a class="jxr_linenumber" name="L82" href="#L82">82</a>      }
-<a class="jxr_linenumber" name="L83" href="#L83">83</a>  }
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>                      Matchers.allOf(
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>                          Matchers.containsString(<span class="jxr_string">"BUILD SUCCESS"</span>),
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>                          Matchers.not(Matchers.containsString(<span class="jxr_string">"BUILD FAILURE"</span>))
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>                      )
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>                  );
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>              }
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>          );
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>      }
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>      @Test
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      <strong class="jxr_keyword">void</strong> buildsDockerImage(@TempDir <strong class="jxr_keyword">final</strong> Path dir) <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>          <strong class="jxr_keyword">new</strong> Farea(dir).together(
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>              f -&gt; {
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>                  f.build()
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>                      .plugins()
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>                      .appendItself()
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>                      .execution(<span class="jxr_string">"default"</span>)
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>                      .phase(<span class="jxr_string">"generate-resources"</span>)
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>                      .goals(<span class="jxr_string">"build"</span>)
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>                      .configuration()
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>                      .set(<span class="jxr_string">"image"</span>, <span class="jxr_string">"hone:local"</span>);
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>                  f.exec(<span class="jxr_string">"generate-resources"</span>);
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>                  MatcherAssert.assertThat(
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>                      <span class="jxr_string">"the build must be successful"</span>,
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>                      f.log(),
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>                      Matchers.allOf(
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>                          Matchers.containsString(<span class="jxr_string">"BUILD SUCCESS"</span>),
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>                          Matchers.not(Matchers.containsString(<span class="jxr_string">"BUILD FAILURE"</span>))
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>                      )
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>                  );
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>              }
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>          );
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>      }
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024 <a href="https://github.com/objectionary">Objectionary</a>. All rights reserved.</div>

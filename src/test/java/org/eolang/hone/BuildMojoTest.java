@@ -49,7 +49,7 @@ final class BuildMojoTest {
                     .goals("build")
                     .configuration()
                     .set("skip", true);
-                f.exec("test");
+                f.exec("test", "--debug");
                 MatcherAssert.assertThat(
                     "the Docker image building step must be skipped",
                     f.log(),
@@ -74,7 +74,7 @@ final class BuildMojoTest {
                     .goals("build")
                     .configuration()
                     .set("image", "hone:local");
-                f.exec("generate-resources");
+                f.exec("generate-resources", "--debug");
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),

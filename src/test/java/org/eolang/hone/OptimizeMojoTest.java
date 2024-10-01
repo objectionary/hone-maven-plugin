@@ -50,7 +50,7 @@ final class OptimizeMojoTest {
                     .goals("optimize")
                     .configuration()
                     .set("skip", true);
-                f.exec("test");
+                f.exec("test", "--debug");
                 MatcherAssert.assertThat(
                     "the optimization step must be skipped",
                     f.log(),
@@ -81,7 +81,7 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize", "rmi")
                     .configuration()
                     .set("image", "hone:local");
-                f.exec("test");
+                f.exec("test", "--debug");
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),

@@ -45,10 +45,6 @@ transform `.class` files to
 `.xmir` [format](https://news.eolang.org/2022-11-25-xmir-guide.html),
 which is [EO](https://www.eolang.org) in XML, and place them into
 the `target/generated-sources/jeo-disassemble/` directory.
-1. Using [opeo-maven-plugin](https://github.com/objectionary/opeo-maven-plugin),
-modify `.xmir` files such that they have more objects and less `opcode`
-atoms and place new `.xmir` files into
-the `target/generated-sources/opeo-decompile/` directory.
 1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
 convert `.xmir` files to `.phi` files
 with [𝜑-calculus](https://arxiv.org/abs/2111.13384) expressions,
@@ -60,10 +56,6 @@ the `target/generated-sources/phi-optimized/` directory.
 1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
 convert `.phi` files back to `.xmir` files and
 place them into the `target/generated-sources/unphi/` directory.
-1. Using [opeo-maven-plugin](https://github.com/objectionary/opeo-maven-plugin),
-transform `.xmir` files such that they have only `opcode`
-atoms and place new `.xmir` files into
-the `target/generated-sources/opeo-compile/` directory.
 1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
 transform `.xmir` files back to Bytecode and place `.class` files into
 the `target/classes/` directory.

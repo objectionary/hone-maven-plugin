@@ -27,6 +27,7 @@ import com.jcabi.log.Logger;
 import java.io.IOException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.slf4j.impl.StaticLoggerBinder;
 
 /**
  * Abstract mojo.
@@ -64,6 +65,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     @Override
     public final void execute() throws MojoExecutionException {
+        StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
         if (this.skip) {
             Logger.info(this, "Execution skipped");
             return;

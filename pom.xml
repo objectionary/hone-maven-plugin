@@ -97,6 +97,28 @@ SOFTWARE.
       <version>0.24.2</version>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-reload4j</artifactId>
+      <version>2.0.16</version>
+      <scope>provided</scope>
+      <!-- This dependency must precede jcabi-maven-slf4j in order
+      to enable configurable Log4j logging during testing -->
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.reload4j</groupId>
+      <artifactId>reload4j</artifactId>
+      <version>1.2.25</version>
+      <scope>runtime</scope>
+      <!-- This dependency must precede jcabi-maven-slf4j in order
+      to enable configurable Log4j logging during testing -->
+    </dependency>
+    <dependency>
+      <groupId>com.jcabi</groupId>
+      <artifactId>jcabi-maven-slf4j</artifactId>
+      <version>0.12.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.cactoos</groupId>
       <artifactId>cactoos</artifactId>
       <version>0.55.0</version>
@@ -166,6 +188,30 @@ SOFTWARE.
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>self</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.eolang</groupId>
+            <artifactId>hone-maven-plugin</artifactId>
+            <version>0.0.9</version>
+            <executions>
+              <execution>
+                <configuration>
+                </configuration>
+                <goals>
+                  <goal>process-classes</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>qulice</id>
       <build>

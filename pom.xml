@@ -190,9 +190,6 @@ SOFTWARE.
   <profiles>
     <profile>
       <id>self</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <build>
         <plugins>
           <plugin>
@@ -202,9 +199,12 @@ SOFTWARE.
             <executions>
               <execution>
                 <configuration>
+                  <image>self-hone:local</image>
                 </configuration>
                 <goals>
-                  <goal>process-classes</goal>
+                  <goal>build</goal>
+                  <goal>optimize</goal>
+                  <goal>rmi</goal>
                 </goals>
               </execution>
             </executions>

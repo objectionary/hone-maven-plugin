@@ -57,7 +57,7 @@
 <a class="jxr_linenumber" name="L49" href="#L49">49</a>                      .goals(<span class="jxr_string">"build"</span>)
 <a class="jxr_linenumber" name="L50" href="#L50">50</a>                      .configuration()
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>                      .set(<span class="jxr_string">"skip"</span>, <strong class="jxr_keyword">true</strong>);
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>                  f.exec(<span class="jxr_string">"test"</span>);
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>                  f.exec(<span class="jxr_string">"test"</span>, <span class="jxr_string">"--debug"</span>);
 <a class="jxr_linenumber" name="L53" href="#L53">53</a>                  MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>                      <span class="jxr_string">"the Docker image building step must be skipped"</span>,
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>                      f.log(),
@@ -82,7 +82,7 @@
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>                      .goals(<span class="jxr_string">"build"</span>)
 <a class="jxr_linenumber" name="L75" href="#L75">75</a>                      .configuration()
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>                      .set(<span class="jxr_string">"image"</span>, <span class="jxr_string">"hone:local"</span>);
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>                  f.exec(<span class="jxr_string">"generate-resources"</span>);
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>                  f.exec(<span class="jxr_string">"generate-resources"</span>, <span class="jxr_string">"--debug"</span>);
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>                  MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L79" href="#L79">79</a>                      <span class="jxr_string">"the build must be successful"</span>,
 <a class="jxr_linenumber" name="L80" href="#L80">80</a>                      f.log(),

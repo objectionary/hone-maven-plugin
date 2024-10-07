@@ -71,7 +71,7 @@ RUN chmod a+x install-stack.sh \
   && ./install-stack.sh \
   && stack config set system-ghc --global true
 
-ENV NORMALIZER 1.0.0
+ENV NORMALIZER 1.1.0
 RUN stack update \
   && stack install --resolver lts-22.16 eo-phi-normalizer-${NORMALIZER}
 

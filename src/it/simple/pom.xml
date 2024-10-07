@@ -40,7 +40,6 @@ SOFTWARE.
         <artifactId>hone-maven-plugin</artifactId>
         <version>@project.version@</version>
         <configuration>
-          <skip>true</skip>
           <image>simple-hone:local</image>
         </configuration>
         <executions>

@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * Docker runner.
@@ -79,7 +80,7 @@ final class Docker {
         command.add("docker");
         command.addAll(args);
         final ProcessBuilder bldr = new ProcessBuilder(command);
-        try (VerboseProcess proc = new VerboseProcess(bldr)) {
+        try (VerboseProcess proc = new VerboseProcess(bldr, Level.FINE, Level.FINE)) {
             final VerboseProcess.Result ret = proc.waitFor();
             if (ret.code() != 0) {
                 throw new IOException(

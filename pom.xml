@@ -185,33 +185,28 @@ SOFTWARE.
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.eolang</groupId>
+        <artifactId>hone-maven-plugin</artifactId>
+        <!-- <version>0.0.10</version> -->
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <configuration>
+              <image>self-hone:local</image>
+              <skip>true</skip>
+            </configuration>
+            <goals>
+              <goal>build</goal>
+              <goal>optimize</goal>
+              <goal>rmi</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <profiles>
-    <profile>
-      <id>self</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.eolang</groupId>
-            <artifactId>hone-maven-plugin</artifactId>
-            <version>0.0.10</version>
-            <executions>
-              <execution>
-                <configuration>
-                  <image>self-hone:local</image>
-                </configuration>
-                <goals>
-                  <goal>build</goal>
-                  <goal>optimize</goal>
-                  <goal>rmi</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>qulice</id>
       <build>

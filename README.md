@@ -26,7 +26,9 @@ Just add this to your `pom.xml` file
         <executions>
           <execution>
             <goals>
+              <goal>build</goal>
               <goal>optimize</goal>
+              <goal>rmi</goal>
             </goals>
           </execution>
         </executions>

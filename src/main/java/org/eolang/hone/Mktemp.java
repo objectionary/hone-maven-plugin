@@ -67,5 +67,4 @@ final class Mktemp implements Closeable {
                 .forEach(File::delete);
         }
     }
-
 }

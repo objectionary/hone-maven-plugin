@@ -23,6 +23,7 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
 import com.jcabi.log.VerboseProcess;
 import java.io.IOException;
 import java.util.Arrays;
@@ -79,9 +80,15 @@ final class Docker {
         }
         command.add("docker");
         command.addAll(args);
+        final long start = System.currentTimeMillis();
         final ProcessBuilder bldr = new ProcessBuilder(command);
         try (VerboseProcess proc = new VerboseProcess(bldr, Level.FINE, Level.FINE)) {
             final VerboseProcess.Result ret = proc.waitFor();
+            Logger.info(
+                this, "+ %s -> %d in %[msec]s",
+                String.join(" ", command), ret.code(),
+                System.currentTimeMillis() - start
+            );
             if (ret.code() != 0) {
                 throw new IOException(
                     String.format("Failed to optimize, code=%d", ret.code())

@@ -23,7 +23,6 @@
  */
 package org.eolang.hone;
 
-import com.jcabi.log.Logger;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -66,6 +65,5 @@ public final class BuildMojo extends AbstractMojo {
                 temp.path().toString()
             );
         }
-        Logger.info(this, "Docker image '%s' was built", this.image);
     }
 }

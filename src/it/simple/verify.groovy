@@ -24,5 +24,6 @@
 
 String log = new File(basedir, 'build.log').text;
 assert log.contains("BUILD SUCCESS")
+assert log.contains("sin(42.000000) = -0.916522")
 
 true

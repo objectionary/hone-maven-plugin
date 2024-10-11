@@ -81,8 +81,6 @@ mvn "${opts[@]}" \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
-#cp -R "${TARGET}/generated-sources/phi" "${TARGET}/generated-sources/phi-optimized"
-
 SELF=$(dirname "$0")
 from=${TARGET}/generated-sources/phi
 to=${TARGET}/generated-sources/phi-optimized

@@ -23,10 +23,10 @@
 title: "simple"
 rules:
   - name: simple
-    description: 'just a simple one, to test'
+    description: 'change 33 double to 42 double'
     pattern: |
-      ⟦ !τ ↦ !b, !B ⟧.!τ
+      Φ.org.eolang.bytes ( Δ ⤍ 40-40-80-00-00-00-00-00 )
     result: |
-      !b
+      Φ.org.eolang.bytes ( Δ ⤍ 40-45-00-00-00-00-00-00 )
     when: [ ]
     tests: [ ]

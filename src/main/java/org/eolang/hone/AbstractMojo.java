@@ -75,7 +75,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         } catch (final IOException ex) {
             throw new MojoExecutionException(ex);
         }
-        Logger.info(this, "Done!");
     }
 
     /**

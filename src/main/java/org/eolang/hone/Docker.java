@@ -82,10 +82,10 @@ final class Docker {
         command.addAll(args);
         final long start = System.currentTimeMillis();
         final ProcessBuilder bldr = new ProcessBuilder(command);
-        try (VerboseProcess proc = new VerboseProcess(bldr, Level.FINE, Level.FINE)) {
+        try (VerboseProcess proc = new VerboseProcess(bldr, Level.INFO, Level.INFO)) {
             final VerboseProcess.Result ret = proc.waitFor();
             Logger.info(
-                this, "+ %s -> %d in %[msec]s",
+                this, "+ %s -> %d in %[ms]s",
                 String.join(" ", command), ret.code(),
                 System.currentTimeMillis() - start
             );

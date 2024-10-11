@@ -58,7 +58,7 @@
 <a class="jxr_linenumber" name="L50" href="#L50">50</a>                      .goals(<span class="jxr_string">"optimize"</span>)
 <a class="jxr_linenumber" name="L51" href="#L51">51</a>                      .configuration()
 <a class="jxr_linenumber" name="L52" href="#L52">52</a>                      .set(<span class="jxr_string">"skip"</span>, <strong class="jxr_keyword">true</strong>);
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>                  f.exec(<span class="jxr_string">"test"</span>, <span class="jxr_string">"--debug"</span>);
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>                  f.exec(<span class="jxr_string">"test"</span>);
 <a class="jxr_linenumber" name="L54" href="#L54">54</a>                  MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L55" href="#L55">55</a>                      <span class="jxr_string">"the optimization step must be skipped"</span>,
 <a class="jxr_linenumber" name="L56" href="#L56">56</a>                      f.log(),
@@ -89,7 +89,7 @@
 <a class="jxr_linenumber" name="L81" href="#L81">81</a>                      .goals(<span class="jxr_string">"build"</span>, <span class="jxr_string">"optimize"</span>, <span class="jxr_string">"rmi"</span>)
 <a class="jxr_linenumber" name="L82" href="#L82">82</a>                      .configuration()
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>                      .set(<span class="jxr_string">"image"</span>, <span class="jxr_string">"hone:local"</span>);
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>                  f.exec(<span class="jxr_string">"test"</span>, <span class="jxr_string">"--debug"</span>);
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>                  f.exec(<span class="jxr_string">"test"</span>);
 <a class="jxr_linenumber" name="L85" href="#L85">85</a>                  MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>                      <span class="jxr_string">"the build must be successful"</span>,
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>                      f.log(),

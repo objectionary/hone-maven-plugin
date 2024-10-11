@@ -188,7 +188,6 @@ SOFTWARE.
       <plugin>
         <groupId>org.eolang</groupId>
         <artifactId>hone-maven-plugin</artifactId>
-        <!-- <version>0.0.10</version> -->
         <version>${project.version}</version>
         <executions>
           <execution>

@@ -25,7 +25,6 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import com.jcabi.log.VerboseProcess;
-import com.sun.security.auth.module.UnixSystem;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,14 +79,6 @@ final class Docker {
             command.add("sudo");
         }
         command.add("docker");
-        command.add("--user");
-        command.add(
-            String.format(
-                "%d:%d",
-                new UnixSystem().getUid(),
-                new UnixSystem().getGid()
-            )
-        );
         command.addAll(args);
         final long start = System.currentTimeMillis();
         final ProcessBuilder bldr = new ProcessBuilder(command);
@@ -100,7 +91,7 @@ final class Docker {
             );
             if (ret.code() != 0) {
                 throw new IOException(
-                    String.format("Failed to optimize, code=%d", ret.code())
+                    String.format("Failed to execute docker, code=%d", ret.code())
                 );
             }
         } catch (final InterruptedException ex) {

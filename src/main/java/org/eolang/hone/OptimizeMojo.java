@@ -24,6 +24,7 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
+import com.sun.security.auth.module.UnixSystem;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -94,6 +95,14 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
+        command.add("--user");
+        command.add(
+            String.format(
+                "%d:%d",
+                new UnixSystem().getUid(),
+                new UnixSystem().getGid()
+            )
+        );
         command.add(this.image);
         new Docker(this.sudo).exec(command);
         Logger.info(this, "Bytecode was optimized in '%s'", this.target);

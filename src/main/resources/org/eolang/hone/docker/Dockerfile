@@ -73,11 +73,13 @@ RUN chmod a+x install-stack.sh \
 
 ENV NORMALIZER 1.1.0
 RUN stack update \
-  && stack install --resolver lts-22.16 eo-phi-normalizer-${NORMALIZER}
+  && stack install --resolver lts-22.16 eo-phi-normalizer-${NORMALIZER} \
+  && cp /root/.local/bin/normalizer /usr/local/bin/normalizer
 
 COPY in-docker-pom.xml pom.xml
 
 # Warming up Maven cache:
+ENV MAVEN_OPTS="-Dmaven.repo.local=/tmp/m2"
 RUN mvn eo:help jeo:help
 
 COPY entry.sh ./

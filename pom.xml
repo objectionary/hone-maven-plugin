@@ -189,7 +189,7 @@ SOFTWARE.
   </build>
   <profiles>
     <profile>
-      <id>hone</id>
+      <id>self</id>
       <build>
         <plugins>
           <plugin>

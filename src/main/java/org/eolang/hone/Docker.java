@@ -62,24 +62,36 @@ final class Docker {
     /**
      * Run this one.
      * @param args Arguments.
+     * @return Exit code
      * @throws IOException If fails
      */
-    public void exec(final String... args) throws IOException {
-        this.exec(Arrays.asList(args));
+    public int exec(final String... args) throws IOException {
+        return this.exec(Arrays.asList(args));
     }
 
     /**
      * Run this one.
-     * @param args Arguments.
+     * @param args Arguments
+     * @return Exit code
      * @throws IOException If fails
      */
-    public void exec(final Collection<String> args) throws IOException {
+    public int exec(final Collection<String> args) throws IOException {
         final List<String> command = new LinkedList<>();
         if (this.sudo) {
             command.add("sudo");
         }
         command.add("docker");
         command.addAll(args);
+        return this.fire(command);
+    }
+
+    /**
+     * Run this one.
+     * @param command The command with args
+     * @return Exit code
+     * @throws IOException If fails
+     */
+    private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         final ProcessBuilder bldr = new ProcessBuilder(command);
         try (VerboseProcess proc = new VerboseProcess(bldr, Level.INFO, Level.INFO)) {
@@ -98,6 +110,7 @@ final class Docker {
             Thread.currentThread().interrupt();
             throw new IOException(ex);
         }
+        return 0;
     }
 
 }

@@ -26,11 +26,13 @@ package org.eolang.hone;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.cactoos.Scalar;
 import org.cactoos.io.OutputTo;
 import org.cactoos.io.ResourceOf;
 import org.cactoos.io.TeeInput;
 import org.cactoos.scalar.IoChecked;
 import org.cactoos.scalar.LengthOf;
+import org.cactoos.scalar.Retry;
 
 /**
  * Build Docker image.
@@ -59,11 +61,15 @@ public final class BuildMojo extends AbstractMojo {
                 ).value();
             }
             temp.path().resolve("entry.sh").toFile().setExecutable(true);
-            new Docker(this.sudo).exec(
-                "build",
-                "--tag", this.image,
-                temp.path().toString()
-            );
+            new IoChecked<>(
+                new Retry<>(
+                    (Scalar<Object>) () -> new Docker(this.sudo).exec(
+                        "build",
+                        "--tag", this.image,
+                        temp.path().toString()
+                    )
+                )
+            ).value();
         }
     }
 }

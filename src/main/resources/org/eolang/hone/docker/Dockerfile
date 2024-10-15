@@ -80,7 +80,7 @@ COPY in-docker-pom.xml pom.xml
 
 # Warming up Maven cache:
 ENV MAVEN_OPTS="-Dmaven.repo.local=/tmp/m2"
-RUN mvn eo:help jeo:help
+RUN mvn --update-snapshots --batch-mode --errors eo:help jeo:help
 
 COPY entry.sh ./
 COPY simple.yml ./

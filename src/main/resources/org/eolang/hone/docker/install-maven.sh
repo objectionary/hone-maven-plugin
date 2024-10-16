@@ -23,7 +23,7 @@
 
 set -ex
 
-if mvn --version; then
+if mvn --version 2>/dev/null; then
   echo "Maven already installed"
   exit
 fi

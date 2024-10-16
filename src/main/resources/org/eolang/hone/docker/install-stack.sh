@@ -25,7 +25,7 @@
 
 set -ex
 
-if stack --version; then
+if stack --version 2>/dev/null; then
   echo "Stack already installed"
   exit
 fi
@@ -41,16 +41,16 @@ case "$ARCH" in \
     'x86_64') \
         STACK_SHA256='4e635d6168f7578a5694a0d473c980c3c7ed35d971acae969de1fd48ef14e030'; \
         ;; \
-    *) echo >&2 "error: unsupported architecture '$ARCH'" ; exit 1 ;; \
+    *) echo >&2 "error: unsupported architecture '${ARCH}'" ; exit 1 ;; \
 esac
-curl -sSL "$STACK_URL" -o stack.tar.gz
-echo "$STACK_SHA256 stack.tar.gz" | sha256sum --strict --check
+curl -sSL "${STACK_URL}" -o stack.tar.gz
+echo "${STACK_SHA256} stack.tar.gz" | sha256sum --strict --check
 
-curl -sSL "$STACK_URL.asc" -o stack.tar.gz.asc
+curl -sSL "${STACK_URL}.asc" -o stack.tar.gz.asc
 GNUPGHOME="$(mktemp -d)"; export GNUPGHOME
-gpg --batch --keyserver keyserver.ubuntu.com --receive-keys "$STACK_RELEASE_KEY"
+gpg --batch --keyserver keyserver.ubuntu.com --receive-keys "${STACK_RELEASE_KEY}"
 gpg --batch --verify stack.tar.gz.asc stack.tar.gz
 gpgconf --kill all
-tar -xf stack.tar.gz -C /usr/local/bin --strip-components=1 "stack-$STACK-linux-$ARCH/stack"
+tar -xf stack.tar.gz -C /usr/local/bin --strip-components=1 "stack-${STACK}-linux-${ARCH}/stack"
 
 stack --version

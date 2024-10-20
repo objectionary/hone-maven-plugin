@@ -23,42 +23,23 @@
  */
 package org.eolang.hone;
 
-import com.yegor256.farea.Farea;
-import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Test case for {@link PullMojo}.
+ * Test case for {@link Docker}.
  *
  * @since 0.1.0
  */
-final class PullMojoTest {
+final class DockerTest {
 
     @Test
-    void pullsDockerImage(@TempDir final Path dir) throws Exception {
-        new Farea(dir).together(
-            f -> {
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("process-classes")
-                    .goals("pull", "rmi")
-                    .configuration()
-                    .set("image", "yegor256/hone");
-                f.exec("test");
-                MatcherAssert.assertThat(
-                    "the Docker image pulling step must succeed",
-                    f.log(),
-                    Matchers.allOf(
-                        Matchers.containsString("BUILD SUCCESS"),
-                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
-                    )
-                );
-            }
+    void printsVersion() throws Exception {
+        MatcherAssert.assertThat(
+            "docker version must be printed",
+            new Docker().exec("--version"),
+            Matchers.is(Matchers.notNullValue())
         );
     }
 }

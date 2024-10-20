@@ -81,14 +81,18 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--env", "TARGET=/target"
             )
         );
-        if (this.eoVersion != null) {
+        if (this.eoVersion == null) {
+            Logger.debug(this, "EO version is not set, will use the default one");
+        } else {
             command.addAll(
                 Arrays.asList(
                     "--env", String.format("EO_VERSION=%s", this.eoVersion)
                 )
             );
         }
-        if (this.jeoVersion != null) {
+        if (this.jeoVersion == null) {
+            Logger.debug(this, "JEO version is not set, will use the default one");
+        } else {
             command.addAll(
                 Arrays.asList(
                     "--env", String.format("JEO_VERSION=%s", this.jeoVersion)

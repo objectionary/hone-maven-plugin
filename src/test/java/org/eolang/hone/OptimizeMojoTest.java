@@ -26,6 +26,7 @@ package org.eolang.hone;
 import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -80,7 +81,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize", "rmi")
                     .configuration()
-                    .set("image", "hone:local");
+                    .set("image", Float.toHexString(new SecureRandom().nextFloat()));
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",

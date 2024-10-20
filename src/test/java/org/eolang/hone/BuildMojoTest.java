@@ -25,6 +25,7 @@ package org.eolang.hone;
 
 import com.yegor256.farea.Farea;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -71,9 +72,9 @@ final class BuildMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("generate-resources")
-                    .goals("build")
+                    .goals("build", "rmi")
                     .configuration()
-                    .set("image", "hone:local");
+                    .set("image", Float.toHexString(new SecureRandom().nextFloat()));
                 f.exec("generate-resources");
                 MatcherAssert.assertThat(
                     "the build must be successful",

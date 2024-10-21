@@ -71,7 +71,7 @@
                                                                     </ul>
                                                     </li>
                                                                                                                         <li >
-                            <span>                        <a href="apidocs-0.0.13/index.html" title="Javadoc">Javadoc</a>
+                            <span>                        <a href="apidocs-0.0.14/index.html" title="Javadoc">Javadoc</a>
         </span>
                                                                                                                                                                 <ul>
                                                                     </ul>
@@ -111,13 +111,13 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.0.13</strong>
+                                    <strong itemprop="version">0.0.14</strong>
                                 </li>
                                 <li>
                                     
-                                    <time itemprop="datePublished" datetime="2024-10-20T02:23:28Z">
+                                    <time itemprop="datePublished" datetime="2024-10-21T09:41:38Z">
                                         
-                                        20-Oct-2024
+                                        21-Oct-2024
                                     </time>
                                 </li>
                                 <li class="menu-button">menu</li>
@@ -139,7 +139,9 @@
 <th>Description</th></tr>
 <tr class="b">
 <td align="left"><a href="./build-mojo.html">hone:build</a></td>
-<td>Build Docker image.</td></tr>
+<td>Build Docker image. 
+<p>This goal must be used only if you want to build a local custom Docker image for your project. This may be useful when you don't have network access to Docker Hub. In most cases, you have it and that's why don't need this goal. Instead, just use the <tt>pull</tt> goal, which will simply pull a required Docker image from the Hub.</p>
+<p>This goal is mostly for testing and CI/CD.</p></td></tr>
 <tr class="a">
 <td align="left"><a href="./help-mojo.html">hone:help</a></td>
 <td>Display help information on hone-maven-plugin.
@@ -147,13 +149,17 @@
  Call <code>mvn hone:help -Ddetail=true -Dgoal=&lt;goal-name&gt;</code> to display parameter details.</td></tr>
 <tr class="b">
 <td align="left"><a href="./optimize-mojo.html">hone:optimize</a></td>
-<td>Converts Bytecode to Bytecode.</td></tr>
+<td>Converts Bytecode to Bytecode in order to make it faster. 
+<p>This goal takes every <tt>.class</tt> file from the <tt>target/classes/</tt> directory, converts it to <tt>.xmir</tt> format (which is XML representation of <a href="https://www.eolang.org">EO</a>), then converts <tt>.xmir</tt> to <tt>.phi</tt> (which is <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>), then optimizes it via <a href="https://github.com/objectionary/eo-phi-normalizer">eo-phi-normalizer</a>, and then back to <tt>.xmir</tt> and to <tt>.class</tt>. As a result, you obtain optimized Bytecode in the <tt>target/classes/</tt> directory, which supposedly works faster than before.</p>
+<p>The entire optimization pipeline happens inside Docker container, which is run from the image specified in the <tt>image</tt> parameter. The image may either be pulled or built locally. We recommend pulling it from the Docker Hub with the help of the <tt>pull</tt> goal. Also, we recommend deleting the image after optimization is done, with the help of the <tt>rmi</tt> goal.</p></td></tr>
 <tr class="a">
 <td align="left"><a href="./pull-mojo.html">hone:pull</a></td>
-<td>Pull Docker image.</td></tr>
+<td>Pull Docker image from Docker Hub. 
+<p>This goal pulls Docker image from <a href="https://hub.docker.com">Docker Hub</a> to your machine. You may skip this goal and simply use the <tt>optimize</tt> goal, which will automatically pull the image from the Hub. However, it would be cleaner to use <tt>pull</tt>, then <tt>optimize</tt>, and then <tt>rmi</tt> (which deletes the image from your machine).</p></td></tr>
 <tr class="b">
 <td align="left"><a href="./rmi-mojo.html">hone:rmi</a></td>
-<td>Remove Docker image.</td></tr></table></section><section>
+<td>Remove Docker image. 
+<p>This goal deletes Docker image from your machine, in order to save space and simply clean up after the optimization step. You may not use this goal at all, but we recommend to use it.</p></td></tr></table></section><section>
 <h3><a name="System_Requirements"></a>System Requirements</h3><a name="System_Requirements"></a>
 <p>The following specifies the minimum requirements to run this Maven plugin:</p>
 <table border="0" class="bodyTable">
@@ -171,7 +177,7 @@
 <th>Maven</th>
 <th>JDK</th></tr>
 <tr class="b">
-<td align="left">from 0.0.1 to 0.0.13</td>
+<td align="left">from 0.0.1 to 0.0.14</td>
 <td>-</td>
 <td>11</td></tr></table></section><section>
 <h3><a name="Usage"></a>Usage</h3><a name="Usage"></a>
@@ -186,7 +192,7 @@
         &lt;plugin&gt;
           &lt;groupId&gt;org.eolang&lt;/groupId&gt;
           &lt;artifactId&gt;hone-maven-plugin&lt;/artifactId&gt;
-          &lt;version&gt;0.0.13&lt;/version&gt;
+          &lt;version&gt;0.0.14&lt;/version&gt;
         &lt;/plugin&gt;
         ...
       &lt;/plugins&gt;

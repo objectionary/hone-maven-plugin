@@ -31,7 +31,7 @@ SOFTWARE.
   <name>hone</name>
   <properties>
     <eo.version>0.39.1</eo.version>
-    <jeo.version>0.6.8</jeo.version>
+    <jeo.version>0.6.9</jeo.version>
   </properties>
   <build>
     <pluginManagement>

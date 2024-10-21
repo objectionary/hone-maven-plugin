@@ -58,29 +58,27 @@ RUN chmod a+x install-maven.sh \
   && ./install-maven.sh
 
 ENV GHC=9.10.1
-ENV GHC_RELEASE_KEY="FFEB7CE81E16A36B3E2DED6F2DE04D4E97DB64AD"
 COPY install-ghc.sh ./
 RUN chmod a+x install-ghc.sh \
   && ./install-ghc.sh
-ENV PATH="/root/.cabal/bin:/root/.local/bin:/opt/ghc/${GHC}/bin:$PATH"
+ENV PATH="/opt/ghc/${GHC}/bin:$PATH"
 
 ENV STACK=2.15.7
-ENV STACK_RELEASE_KEY="C5705533DA4F78D8664B5DC0575159689BEFB442"
 COPY install-stack.sh ./
 RUN chmod a+x install-stack.sh \
   && ./install-stack.sh \
   && stack config set system-ghc --global true
 
 ENV NORMALIZER=1.1.0
-RUN stack update \
-  && stack install --resolver lts-22.16 "eo-phi-normalizer-${NORMALIZER}" \
-  && cp /root/.local/bin/normalizer /usr/local/bin/normalizer
+COPY install-normalizer.sh ./
+RUN chmod a+x install-normalizer.sh \
+  && ./install-normalizer.sh
 
 COPY in-docker-pom.xml pom.xml
 
 # Warming up Maven cache:
 ENV MAVEN_OPTS="-Dmaven.repo.local=/tmp/m2"
-RUN mvn --update-snapshots --batch-mode --errors eo:help jeo:help
+RUN mvn --update-snapshots --batch-mode --strict-checksums --errors eo:help jeo:help
 
 COPY entry.sh ./
 COPY simple.yml ./

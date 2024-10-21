@@ -31,25 +31,10 @@ TARGET/ TARGET of a Maven project."
   exit 1
 fi
 
-declare -a temps=(
-  'classes-before-hone'
-  'generated-sources/jeo-disassemble'
-  'generated-sources/phi'
-  'generated-sources/phi-optimized'
-  'generated-sources/unphi'
-)
-for t in "${temps[@]}"; do
-  if [ -e "${TARGET}/${t}" ]; then
-    echo "The directory '${TARGET}/${t}' already exists, which means \
-that this project have already been optimized. Try to run 'mvn clean' and then \
-compile and package the project again."
-    exit 1
-  fi
-done
-
 if [ ! -e "${TARGET}/classes" ]; then
   echo "There is no '${TARGET}/classes' directory, which most probably means \
-that the project hasn't been compiled yet."
+that the project hasn't been compiled yet. Make sure you use 'hone-maven-plugin' \
+after the 'compile' phase is finished."
   exit 1
 fi
 # In order to save them "as is", just in case:

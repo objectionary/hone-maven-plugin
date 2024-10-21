@@ -30,7 +30,11 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.slf4j.impl.StaticLoggerBinder;
 
 /**
- * Abstract mojo.
+ * Abstract Mojo.
+ *
+ * <p>This one is used by all other Mojos in the plugin, for the
+ * sake of code reuse. Unfortunately, this is the best we can do
+ * in Maven Plugin API design.</p>
  *
  * @since 0.1.0
  */

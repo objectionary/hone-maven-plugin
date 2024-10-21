@@ -31,6 +31,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 /**
  * Remove Docker image.
  *
+ * <p>This goal deletes Docker image from your machine, in order to
+ * save space and simply clean up after the optimization step. You
+ * may not use this goal at all, but we recommend to use it.</p>
+ *
  * @since 0.1.0
  */
 @Mojo(name = "rmi", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
@@ -40,6 +44,7 @@ public final class RmiMojo extends AbstractMojo {
     public void exec() throws IOException {
         new Docker(this.sudo).exec(
             "rmi",
+            "--no-prune",
             this.image
         );
         Logger.info(this, "Docker image '%s' was removed", this.image);

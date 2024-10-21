@@ -37,6 +37,15 @@ import org.cactoos.scalar.Retry;
 /**
  * Build Docker image.
  *
+ * <p>This goal must be used only if you want to build a local custom
+ * Docker image for your project. This may be useful when you don't have
+ * network access to Docker Hub. In most cases, you have it and that's
+ * why don't need this goal.
+ * Instead, just use the <tt>pull</tt> goal, which will simply pull
+ * a required Docker image from the Hub.</p>
+ *
+ * <p>This goal is mostly for testing and CI/CD.</p>
+ *
  * @since 0.1.0
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
@@ -48,6 +57,7 @@ public final class BuildMojo extends AbstractMojo {
             final String[] files = {
                 "Dockerfile", "entry.sh", "in-docker-pom.xml",
                 "install-ghc.sh", "install-maven.sh", "install-stack.sh",
+                "install-normalizer.sh",
                 "simple.yml",
             };
             for (final String file : files) {
@@ -65,6 +75,7 @@ public final class BuildMojo extends AbstractMojo {
                 new Retry<>(
                     (Scalar<Object>) () -> new Docker(this.sudo).exec(
                         "build",
+                        "--pull",
                         "--tag", this.image,
                         temp.path().toString()
                     )

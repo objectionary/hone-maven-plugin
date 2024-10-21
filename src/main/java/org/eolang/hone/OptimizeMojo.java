@@ -35,7 +35,25 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Converts Bytecode to Bytecode.
+ * Converts Bytecode to Bytecode in order to make it faster.
+ *
+ * <p>This goal takes every <tt>.class</tt> file from the
+ * <tt>target/classes/</tt> directory, converts it to <tt>.xmir</tt>
+ * format (which is XML representation of <a href="https://www.eolang.org">EO</a>),
+ * then converts <tt>.xmir</tt> to <tt>.phi</tt> (which is
+ * <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>),
+ * then optimizes it via
+ * <a href="https://github.com/objectionary/eo-phi-normalizer">eo-phi-normalizer</a>,
+ * and then back to <tt>.xmir</tt> and to <tt>.class</tt>. As a result,
+ * you obtain optimized Bytecode in the <tt>target/classes/</tt> directory,
+ * which supposedly works faster than before.</p>
+ *
+ * <p>The entire optimization pipeline happens inside Docker container,
+ * which is run from the image specified in the <tt>image</tt> parameter.
+ * The image may either be pulled or built locally. We recommend pulling
+ * it from the Docker Hub with the help of the <tt>pull</tt> goal. Also,
+ * we recommend deleting the image after optimization is done, with the help
+ * of the <tt>rmi</tt> goal.</p>
  *
  * @since 0.1.0
  */

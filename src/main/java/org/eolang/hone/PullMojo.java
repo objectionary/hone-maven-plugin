@@ -29,7 +29,14 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
- * Pull Docker image.
+ * Pull Docker image from Docker Hub.
+ *
+ * <p>This goal pulls Docker image from
+ * <a href="https://hub.docker.com">Docker Hub</a> to your machine. You
+ * may skip this goal and simply use the <tt>optimize</tt> goal, which
+ * will automatically pull the image from the Hub. However, it would be
+ * cleaner to use <tt>pull</tt>, then <tt>optimize</tt>, and
+ * then <tt>rmi</tt> (which deletes the image from your machine).</p>
  *
  * @since 0.1.0
  */

@@ -96,6 +96,45 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void optimizesTwice(@TempDir final Path dir) throws Exception {
+        final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
+            .resolve("simple-app-twice");
+        new Farea(home).together(
+            f -> {
+                f.files()
+                    .file("src/main/java/Hello.java")
+                    .write("class Hello { double foo() { return Math.sin(42); } }");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .configuration()
+                    .set("image", Float.toHexString(new SecureRandom().nextFloat()));
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("first")
+                    .phase("process-classes")
+                    .goals("build", "optimize");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("second")
+                    .phase("process-classes")
+                    .goals("optimize", "rmi");
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    Matchers.allOf(
+                        Matchers.containsString("BUILD SUCCESS"),
+                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
+                    )
+                );
+            }
+        );
+    }
+
+    @Test
     void printsHelp(@TempDir final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

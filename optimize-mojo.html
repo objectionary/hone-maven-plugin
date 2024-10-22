@@ -61,13 +61,13 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.0.14</strong>
+                                    <strong itemprop="version">0.0.16</strong>
                                 </li>
                                 <li>
                                     
-                                    <time itemprop="datePublished" datetime="2024-10-21T09:41:38Z">
+                                    <time itemprop="datePublished" datetime="2024-10-22T02:45:34Z">
                                         
-                                        21-Oct-2024
+                                        22-Oct-2024
                                     </time>
                                 </li>
                                 <li class="menu-button">menu</li>
@@ -81,7 +81,7 @@
                             <section>
 <h2><a name="hone:optimize"></a>hone:optimize</h2><a name="hone:optimize"></a>
 <p><strong>Full name</strong>:</p>
-<p>org.eolang:hone-maven-plugin:0.0.14:optimize</p>
+<p>org.eolang:hone-maven-plugin:0.0.16:optimize</p>
 <p><strong>Description</strong>:</p>
 <p>Converts Bytecode to Bytecode in order to make it faster. 
 <p>This goal takes every <tt>.class</tt> file from the <tt>target/classes/</tt> directory, converts it to <tt>.xmir</tt> format (which is XML representation of <a href="https://www.eolang.org">EO</a>), then converts <tt>.xmir</tt> to <tt>.phi</tt> (which is <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>), then optimizes it via <a href="https://github.com/objectionary/eo-phi-normalizer">eo-phi-normalizer</a>, and then back to <tt>.xmir</tt> and to <tt>.class</tt>. As a result, you obtain optimized Bytecode in the <tt>target/classes/</tt> directory, which supposedly works faster than before.</p>

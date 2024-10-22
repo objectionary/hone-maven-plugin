@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ---
-name: mvn
+name: self
 'on':
   push:
     branches:
@@ -29,26 +29,19 @@ name: mvn
     branches:
       - master
 jobs:
-  mvn:
-    strategy:
-      matrix:
-        os: [ ubuntu-24.04 ]
-        java: [ 11, 21 ]
-    runs-on: ${{ matrix.os }}
+  self:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          brew install docker
-          colima start
-        if: runner.os == 'macos'
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: ${{ matrix.java }}
+          java-version: 21
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-jdk-${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
-      - run: mvn clean install --errors --batch-mode
+            ubuntu-jdk-21-maven-
+      - run: mvn clean install -DskipTests -Dinvoker.skip --errors --batch-mode
+      - run: mvn clean install -Pself --errors --batch-mode

@@ -26,10 +26,10 @@ package org.eolang.hone;
 import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.SecureRandom;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -37,6 +37,7 @@ import org.junit.jupiter.api.io.TempDir;
  *
  * @since 0.1.0
  */
+@ExtendWith(RandomImageResolver.class)
 final class OptimizeMojoTest {
 
     @Test
@@ -66,14 +67,54 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void optimizesSimpleApp(@TempDir final Path dir) throws Exception {
+    void optimizesSimpleApp(@TempDir final Path dir,
+        @RandomImage final String image) throws Exception {
         final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
             .resolve("simple-app");
         new Farea(home).together(
             f -> {
                 f.files()
-                    .file("src/main/java/Hello.java")
-                    .write("class Hello { double foo() { return Math.sin(42); } }");
+                    .file("src/main/java/foo/Parent.java")
+                    .write(
+                        """
+                            package foo;
+                            abstract class Parent {
+                                abstract double foo();
+                            }
+                        """
+                    );
+                f.files()
+                    .file("src/main/java/foo/Kid.java")
+                    .write(
+                        """
+                        package foo;
+                        class Kid extends Parent {
+                            @Override
+                            double foo() {
+                                return Math.sin(42);
+                            }
+                        }
+                        """
+                    );
+                f.files()
+                    .file("src/test/java/foo/KidTest.java")
+                    .write(
+                        """
+                        package foo;
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class KidTest {
+                            @Test
+                            void worksAfterOptimization() {
+                                Assertions.assertEquals(-0.9165215479156338, new Kid().foo());
+                            }
+                        }
+                        """
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
                 f.build()
                     .plugins()
                     .appendItself()
@@ -81,7 +122,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize", "rmi")
                     .configuration()
-                    .set("image", Float.toHexString(new SecureRandom().nextFloat()));
+                    .set("image", image);
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",
@@ -96,7 +137,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void optimizesTwice(@TempDir final Path dir) throws Exception {
+    void optimizesTwice(@TempDir final Path dir,
+        @RandomImage final String image) throws Exception {
         final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
             .resolve("simple-app-twice");
         new Farea(home).together(
@@ -108,7 +150,7 @@ final class OptimizeMojoTest {
                     .plugins()
                     .appendItself()
                     .configuration()
-                    .set("image", Float.toHexString(new SecureRandom().nextFloat()));
+                    .set("image", image);
                 f.build()
                     .plugins()
                     .appendItself()

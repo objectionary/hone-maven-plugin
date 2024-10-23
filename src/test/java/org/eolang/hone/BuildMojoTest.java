@@ -25,10 +25,10 @@ package org.eolang.hone;
 
 import com.yegor256.farea.Farea;
 import java.nio.file.Path;
-import java.security.SecureRandom;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -36,6 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
  *
  * @since 0.1.0
  */
+@ExtendWith(RandomImageResolver.class)
 final class BuildMojoTest {
 
     @Test
@@ -64,7 +65,8 @@ final class BuildMojoTest {
     }
 
     @Test
-    void buildsDockerImage(@TempDir final Path dir) throws Exception {
+    void buildsDockerImage(@TempDir final Path dir,
+        @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.build()
@@ -74,7 +76,7 @@ final class BuildMojoTest {
                     .phase("generate-resources")
                     .goals("build", "rmi")
                     .configuration()
-                    .set("image", Float.toHexString(new SecureRandom().nextFloat()));
+                    .set("image", image);
                 f.exec("generate-resources");
                 MatcherAssert.assertThat(
                     "the build must be successful",

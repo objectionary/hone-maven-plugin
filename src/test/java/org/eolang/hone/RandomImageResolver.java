@@ -23,32 +23,29 @@
  */
 package org.eolang.hone;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Test;
+import java.security.SecureRandom;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * Test case for {@link Docker}.
+ * Resolver of String arguments with random image names.
  *
  * @since 0.1.0
  */
-final class DockerTest {
+public final class RandomImageResolver implements ParameterResolver {
 
-    @Test
-    void printsVersion() throws Exception {
-        MatcherAssert.assertThat(
-            "docker version must be printed",
-            new Docker().exec("--version"),
-            Matchers.is(Matchers.notNullValue())
-        );
+    @Override
+    public boolean supportsParameter(final ParameterContext context,
+        final ExtensionContext ext) {
+        return context.getParameter().getType() == String.class
+            && context.isAnnotated(RandomImage.class);
     }
 
-    @Target(ElementType.PARAMETER)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface RandomImage {
+    @Override
+    public Object resolveParameter(final ParameterContext context,
+        final ExtensionContext ext) {
+        return Float.toHexString(new SecureRandom().nextFloat());
     }
+
 }

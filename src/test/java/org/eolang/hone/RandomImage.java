@@ -27,28 +27,13 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Test;
 
 /**
  * Test case for {@link Docker}.
  *
  * @since 0.1.0
  */
-final class DockerTest {
-
-    @Test
-    void printsVersion() throws Exception {
-        MatcherAssert.assertThat(
-            "docker version must be printed",
-            new Docker().exec("--version"),
-            Matchers.is(Matchers.notNullValue())
-        );
-    }
-
-    @Target(ElementType.PARAMETER)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface RandomImage {
-    }
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RandomImage {
 }

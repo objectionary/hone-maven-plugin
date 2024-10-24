@@ -40,6 +40,7 @@ release:
     mvn versions:set "-DnewVersion=${tag}"
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
     git commit -am "${tag}"
+    export MAVEN_OPTS="--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
     mvn clean deploy -DskipTests -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
 
     cat ../docker-password | sudo docker login --password-stdin -u yegor256

@@ -44,4 +44,4 @@ jobs:
           restore-keys: |
             ubuntu-jdk-21-maven-
       - run: mvn clean install -DskipTests -Dinvoker.skip --errors --batch-mode
-      - run: mvn clean install -Pself --errors --batch-mode
+      - run: mvn clean install -Pself --errors --batch-mode -Dhone.jeo-version=0.6.11

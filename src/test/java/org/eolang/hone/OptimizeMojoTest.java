@@ -74,12 +74,12 @@ final class OptimizeMojoTest {
         new Farea(home).together(
             f -> {
                 f.files()
-                    .file("src/main/java/foo/Parent.java")
+                    .file("src/main/java/foo/AbstractParent.java")
                     .write(
                         """
                             package foo;
-                            abstract class Parent {
-                                abstract double foo();
+                            abstract class AbstractParent {
+                                abstract byte[] foo();
                             }
                         """
                     );
@@ -88,10 +88,10 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         package foo;
-                        class Kid extends Parent {
+                        class Kid extends AbstractParent {
                             @Override
-                            double foo() {
-                                return Math.sin(42);
+                            byte[] foo() {
+                                return new byte[] {(byte) 0x01, (byte) 0x02};
                             }
                         }
                         """
@@ -106,7 +106,7 @@ final class OptimizeMojoTest {
                         class KidTest {
                             @Test
                             void worksAfterOptimization() {
-                                Assertions.assertEquals(-0.9165215479156338, new Kid().foo());
+                                Assertions.assertEquals(2, new Kid().foo().length);
                             }
                         }
                         """

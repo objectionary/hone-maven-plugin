@@ -29,7 +29,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Test case for {@link Docker}.
+ * This annotation is used in unit tests in order to signal
+ * to JUnit that a certain method argument must be generated
+ * through the {@link RandomImageResolver}.
  *
  * @since 0.1.0
  */

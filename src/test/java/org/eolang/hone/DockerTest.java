@@ -23,19 +23,17 @@
  */
 package org.eolang.hone;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Test case for {@link Docker}.
  *
  * @since 0.1.0
  */
+@ExtendWith(RandomImageResolver.class)
 final class DockerTest {
 
     @Test
@@ -47,8 +45,12 @@ final class DockerTest {
         );
     }
 
-    @Target(ElementType.PARAMETER)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface RandomImage {
+    @Test
+    void makesNiceImageName(@RandomImage final String image) {
+        MatcherAssert.assertThat(
+            "random image name is in a proper format",
+            image,
+            Matchers.matchesPattern("x[a-z0-9]+")
+        );
     }
 }

@@ -24,17 +24,17 @@
 package org.eolang.larger;
 
 class Book implements Material {
-    private final String title;
-    private byte[] data;
+    private final String мойTitle;
+    private byte[] мойData;
     Book(String t, byte[] d) {
-        this.title = t;
-        this.data = d;
+        мойTitle = t;
+        мойData = d;
     }
     @Override
     public String итог() {
-        return String.format("%s %s", this.title, new String(this.data));
+        return String.format("%s %s", мойTitle, new String(мойData));
     }
     void setData(byte[] d) {
-        this.data = d;
+        мойData = d;
     }
 }

@@ -21,12 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.eolang.hone;
+package org.eolang.larger;
 
-public class App {
-    public static void main(String[] args) {
-        double angle = 33.0;
-        double sin = Math.sin(angle);
-        System.out.printf("sin(%f) = %f\n", angle, sin);
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+final class BookTest {
+
+    @Test
+    void printsItself() throws Exception {
+        Material m = new Book(
+            "Object Thinking",
+            new byte[]{ (byte) 0x00 }
+        );
+        ((Book) m).setData(new byte[]{ (byte) 0x41, (byte) 0x42, (byte) 0x43 });
+        String s = m.итог();
+        Assertions.assertTrue(s.contains("ABC"), s);
     }
 }

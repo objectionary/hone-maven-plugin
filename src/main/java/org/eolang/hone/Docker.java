@@ -97,7 +97,7 @@ final class Docker {
         try (VerboseProcess proc = new VerboseProcess(bldr, Level.INFO, Level.INFO)) {
             final VerboseProcess.Result ret = proc.waitFor();
             Logger.info(
-                this, "+ %s -> %d in %[ms]s",
+                this, "+ %s -> 0x%04x in %[ms]s",
                 String.join(" ", command), ret.code(),
                 System.currentTimeMillis() - start
             );

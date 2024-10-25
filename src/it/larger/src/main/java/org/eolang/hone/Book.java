@@ -24,14 +24,17 @@
 package org.eolang.hone;
 
 class Book implements Material {
-    private String title;
+    private final String title;
     private byte[] data;
-    Book(final String t, final byte[] d) {
+    Book(String t, byte[] d) {
         this.title = t;
         this.data = d;
     }
     @Override
     public String summary() {
         return String.format("%s %s", this.title, new String(this.data));
+    }
+    void setData(byte[] d) {
+        this.data = d;
     }
 }

@@ -32,8 +32,9 @@ final class BookTest {
     void printsItself() throws Exception {
         Material m = new Book(
             "Object Thinking",
-            new byte[]{ (byte) 0x41, (byte) 0x42, (byte) 0x43 }
+            new byte[]{ (byte) 0x00 }
         );
+        ((Book) m).setData(new byte[]{ (byte) 0x41, (byte) 0x42, (byte) 0x43 });
         String s = m.summary();
         Assertions.assertTrue(s.contains("ABC"), s);
     }

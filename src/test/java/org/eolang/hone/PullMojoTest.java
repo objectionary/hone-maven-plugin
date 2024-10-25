@@ -48,7 +48,7 @@ final class PullMojoTest {
                     .phase("process-classes")
                     .goals("pull", "rmi")
                     .configuration()
-                    .set("image", "yegor256/hone");
+                    .set("image", "yegor256/hone:0.0.17");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the Docker image pulling step must succeed",

@@ -25,7 +25,7 @@ SOFTWARE.
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.eolang.hone-it</groupId>
-  <artifactId>simple</artifactId>
+  <artifactId>larger</artifactId>
   <version>@project.version@</version>
   <packaging>jar</packaging>
   <properties>
@@ -33,6 +33,18 @@ SOFTWARE.
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.10.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>5.10.2</version>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
       <plugin>
@@ -40,7 +52,7 @@ SOFTWARE.
         <artifactId>hone-maven-plugin</artifactId>
         <version>@project.version@</version>
         <configuration>
-          <image>simple-hone:local</image>
+          <image>larger-hone:local</image>
         </configuration>
         <executions>
           <execution>
@@ -51,22 +63,6 @@ SOFTWARE.
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
-        <executions>
-          <execution>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>java</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <mainClass>org.eolang.simple.App</mainClass>
-        </configuration>
       </plugin>
     </plugins>
   </build>

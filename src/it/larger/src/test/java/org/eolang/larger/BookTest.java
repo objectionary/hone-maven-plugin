@@ -21,33 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.eolang.hone;
+package org.eolang.larger;
 
-import java.security.SecureRandom;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-/**
- * This class is instantiated and then called by JUnit when
- * an argument of a test method is marked with the {@link RandomImage}
- * annotation.
- *
- * @since 0.1.0
- */
-public final class RandomImageResolver implements ParameterResolver {
+final class BookTest {
 
-    @Override
-    public boolean supportsParameter(final ParameterContext context,
-        final ExtensionContext ext) {
-        return context.getParameter().getType() == String.class
-            && context.isAnnotated(RandomImage.class);
+    @Test
+    void printsItself() throws Exception {
+        Material m = new Book(
+            "Object Thinking",
+            new byte[]{ (byte) 0x00 }
+        );
+        ((Book) m).setData(new byte[]{ (byte) 0x41, (byte) 0x42, (byte) 0x43 });
+        String s = m.итог();
+        Assertions.assertTrue(s.contains("ABC"), s);
     }
-
-    @Override
-    public Object resolveParameter(final ParameterContext context,
-        final ExtensionContext ext) {
-        return String.format("x%x", Double.doubleToLongBits(new SecureRandom().nextDouble()));
-    }
-
 }

@@ -35,6 +35,10 @@ jobs:
         os: [ ubuntu-24.04 ]
         java: [ 17, 21 ]
     runs-on: ${{ matrix.os }}
+    env:
+      LC_ALL: C
+      LANG: C
+      LANGUAGE: C
     steps:
       - uses: actions/checkout@v4
       - run: |

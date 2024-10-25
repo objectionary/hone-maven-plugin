@@ -46,7 +46,6 @@ final class BookTest {
         for (Field f : m.getClass().getDeclaredFields()) {
             String n = f.getName();
             Assertions.assertTrue(n.startsWith("мой"), n);
-
         }
     }
 }

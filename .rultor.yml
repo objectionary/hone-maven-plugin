@@ -32,7 +32,7 @@ assets:
   secring.gpg: yegor256/objectionary-secrets#secring.gpg
   docker-password: yegor256/objectionary-secrets#docker-password
 merge:
-  script: mvn clean install -Pqulice -e -B -Dstyle.color=never
+  script: mvn clean install -DskipTests -Dinvoker.skip -Pqulice -e -B -Dstyle.color=never
 release:
   pre: false
   script: |

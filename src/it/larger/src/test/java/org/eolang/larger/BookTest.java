@@ -41,7 +41,7 @@ final class BookTest {
     }
 
     @Test
-    void keepsAttributeNames() throws Exception {
+    void keepsUnicodeAttributeNames() throws Exception {
         Material m = new Book("x", new byte[] {});
         for (Field f : m.getClass().getDeclaredFields()) {
             String n = f.getName();

@@ -31,7 +31,7 @@ class Book implements Material {
         this.data = d;
     }
     @Override
-    public String summary() {
+    public String итог() {
         return String.format("%s %s", this.title, new String(this.data));
     }
     void setData(byte[] d) {

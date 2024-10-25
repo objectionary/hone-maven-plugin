@@ -35,7 +35,7 @@ final class BookTest {
             new byte[]{ (byte) 0x00 }
         );
         ((Book) m).setData(new byte[]{ (byte) 0x41, (byte) 0x42, (byte) 0x43 });
-        String s = m.summary();
+        String s = m.итог();
         Assertions.assertTrue(s.contains("ABC"), s);
     }
 }

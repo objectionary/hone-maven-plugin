@@ -24,5 +24,5 @@
 package org.eolang.hone;
 
 interface Material {
-    String summary();
+    String итог();
 }

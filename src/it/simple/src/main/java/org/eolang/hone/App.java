@@ -23,10 +23,6 @@
  */
 package org.eolang.hone;
 
-/**
- * App.
- * @since 0.1
- */
 public class App {
     public static void main(String[] args) {
         double angle = 33.0;

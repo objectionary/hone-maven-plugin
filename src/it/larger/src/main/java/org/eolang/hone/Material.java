@@ -23,15 +23,6 @@
  */
 package org.eolang.hone;
 
-class Book implements Material {
-    private String title;
-    private byte[] data;
-    Book(final String t, final byte[] d) {
-        this.title = t;
-        this.data = d;
-    }
-    @Override
-    public String summary() {
-        return String.format("%s %s", this.title, new String(this.data));
-    }
+interface Material {
+    String summary();
 }

@@ -26,19 +26,15 @@ package org.eolang.hone;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-/**
- * Test case.
- *
- * @since 0.1.0
- */
 final class BookTest {
 
     @Test
     void printsItself() throws Exception {
-        String sum = new Book(
+        Material m = new Book(
             "Object Thinking",
             new byte[]{ (byte) 0x41, (byte) 0x42, (byte) 0x43 }
-        ).printed();
-        Assertions.assertTrue(sum.contains("ABC"), sum);
+        );
+        String s = m.summary();
+        Assertions.assertTrue(s.contains("ABC"), s);
     }
 }

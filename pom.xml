@@ -121,7 +121,7 @@ SOFTWARE.
     <dependency>
       <groupId>org.cactoos</groupId>
       <artifactId>cactoos</artifactId>
-      <version>0.56.0</version>
+      <version>0.56.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -156,7 +156,7 @@ SOFTWARE.
     <dependency>
       <groupId>com.yegor256</groupId>
       <artifactId>farea</artifactId>
-      <version>0.0.20</version>
+      <version>0.1.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -24,6 +24,8 @@
 set -ex
 set -o pipefail
 
+SELF=$(dirname "$0")
+
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set! Make sure you do \
 'docker run' with the '-e TARGET=...' parameter, which points to the \
@@ -66,12 +68,24 @@ mvn "${opts[@]}" \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
 
+if [ -z "${RULES}" ]; then
+  RULES=$(find "${SELF}/rules" -name '*.yml' -exec basename {} \;)
+fi
+for rule in ${RULES}; do
+  if [ ! -e "${SELF}/rules/${rule}" ]; then
+    echo "YAML rule file doesn't exist: ${SELF}/rules/${rule}"
+    tree "${SELF}"
+    exit 1
+  fi
+done
 SELF=$(dirname "$0")
 from=${TARGET}/generated-sources/phi
 to=${TARGET}/generated-sources/phi-optimized
 mkdir -p "${to}"
 while IFS= read -r f; do
-  normalizer transform --rules "${SELF}/simple.yml" "${from}/${f}" --single -o "${to}/${f}"
+  for rule in ${RULES}; do
+    normalizer transform --rules "${SELF}/rules/${rule}" "${from}/${f}" --single -o "${to}/${f}"
+  done
 done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
 
 mvn "${opts[@]}" \

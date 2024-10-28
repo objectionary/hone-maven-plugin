@@ -58,18 +58,18 @@ public final class BuildMojo extends AbstractMojo {
                 "Dockerfile", "entry.sh", "in-docker-pom.xml",
                 "install-ghc.sh", "install-maven.sh", "install-stack.sh",
                 "install-normalizer.sh",
-                "simple.yml",
             };
             for (final String file : files) {
                 new IoChecked<>(
                     new LengthOf(
                         new TeeInput(
-                            new ResourceOf(String.format("org/eolang/hone/docker/%s", file)),
+                            new ResourceOf(String.format("org/eolang/hone/scaffolding/%s", file)),
                             new OutputTo(temp.path().resolve(file))
                         )
                     )
                 ).value();
             }
+            new Rules().copyTo(temp.path().resolve("rules"));
             temp.path().resolve("entry.sh").toFile().setExecutable(true);
             new IoChecked<>(
                 new Retry<>(

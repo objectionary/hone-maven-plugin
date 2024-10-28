@@ -44,7 +44,7 @@ jobs:
       - run: |
           brew install docker
           colima start
-        if: runner.os == 'macos'
+        if: runner.os == 'macos-13'
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'

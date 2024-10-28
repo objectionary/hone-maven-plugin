@@ -24,5 +24,5 @@
 package org.eolang.larger;
 
 interface Material {
-    String итог();
+    String итог() throws Exception;
 }

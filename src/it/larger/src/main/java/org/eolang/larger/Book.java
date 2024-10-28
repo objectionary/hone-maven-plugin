@@ -23,7 +23,9 @@
  */
 package org.eolang.larger;
 
+import org.cactoos.io.ResourceOf;
 import org.cactoos.text.Capitalized;
+import org.cactoos.text.TextOf;
 
 class Book implements Material {
     private final String мойTitle;
@@ -35,7 +37,12 @@ class Book implements Material {
     @Override
     public String итог() throws Exception {
         return new Capitalized(
-            String.format("%s %s", мойTitle, new String(мойData))
+            String.format(
+                "%s %s %s",
+                мойTitle,
+                new String(мойData),
+                new TextOf(new ResourceOf("org/eolang/larger/book.txt"))
+            )
         ).asString();
     }
     void setData(byte[] d) {

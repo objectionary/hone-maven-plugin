@@ -43,7 +43,6 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           brew install docker
-          colima start
         if: runner.os == 'macos-13'
       - uses: actions/setup-java@v4
         with:

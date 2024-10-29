@@ -34,19 +34,20 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates=* \
     curl=* \
-    wget=* \
     dpkg-dev=* \
-    openjdk-21-jdk-headless=* \
-    git=* \
-    gcc=* \
-    gnupg=* \
     g++=* \
+    gcc=* \
+    git=* \
+    gnupg=* \
     libc6-dev=* \
     libffi-dev=* \
     libgmp-dev=* \
     libnuma-dev=* \
     make=* \
     netbase=* \
+    openjdk-21-jdk-headless=* \
+    tree=* \
+    wget=* \
     xz-utils=* \
     zlib1g-dev=* \
   && rm -rf /var/lib/apt/lists/*
@@ -81,6 +82,6 @@ ENV MAVEN_OPTS="-Dmaven.repo.local=/tmp/m2"
 RUN mvn --update-snapshots --batch-mode --strict-checksums --errors eo:help jeo:help
 
 COPY entry.sh ./
-COPY simple.yml ./
+COPY rules/ ./rules/
 
 ENTRYPOINT ["/hone/entry.sh"]

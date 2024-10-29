@@ -61,6 +61,20 @@ import org.apache.maven.plugins.annotations.Parameter;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
+     * List of rules to use for optimizations.
+     *
+     * <p>For example, "<tt>simple,b*,!abc</tt>" would include
+     * the <tt>simple</tt> rule, all rules that start
+     * with the <tt>b</tt> character, and exclude the <tt>abc</tt>
+     * rule.</p>
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.rules", defaultValue = "*")
+    private String rules;
+
+    /**
      * EO version to use.
      *
      * @since 0.1.0
@@ -123,6 +137,14 @@ public final class OptimizeMojo extends AbstractMojo {
                 "%d:%d",
                 new UnixSystem().getUid(),
                 new UnixSystem().getGid()
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env",
+                String.format(
+                    "RULES=%s", String.join(" ", new Rules(this.rules).yamls())
+                )
             )
         );
         command.add(this.image);

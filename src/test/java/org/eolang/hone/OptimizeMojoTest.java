@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Test case for {@link OptimizeMojo}.
@@ -42,10 +41,11 @@ import org.junit.jupiter.api.io.TempDir;
  * @since 0.1.0
  */
 @ExtendWith(RandomImageResolver.class)
+@ExtendWith(MktmpResolver.class)
 final class OptimizeMojoTest {
 
     @Test
-    void skipsOptimizationOnFlag(@TempDir final Path dir) throws Exception {
+    void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.build()
@@ -68,7 +68,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    void optimizesSimpleApp(@TempDir final Path dir,
+    void optimizesSimpleApp(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
             .resolve("simple-app");
@@ -122,7 +122,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    void optimizesTwice(@TempDir final Path dir,
+    void optimizesTwice(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
             .resolve("simple-app-twice");
@@ -159,7 +159,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void printsHelp(@TempDir final Path dir) throws Exception {
+    void printsHelp(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.files()

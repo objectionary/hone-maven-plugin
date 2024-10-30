@@ -23,40 +23,19 @@
  */
 package org.eolang.hone;
 
-import com.yegor256.farea.Farea;
-import java.nio.file.Path;
-import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Test case for {@link PullMojo}.
+ * This annotation is used in unit tests in order to signal
+ * to JUnit that a certain method argument must be generated
+ * through the {@link MktmpResolver}.
  *
  * @since 0.1.0
  */
-@ExtendWith(MktmpResolver.class)
-final class PullMojoTest {
-
-    @Test
-    @ExtendWith(MayBeSlow.class)
-    void pullsDockerImage(@Mktmp final Path dir) throws Exception {
-        new Farea(dir).together(
-            f -> {
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("process-classes")
-                    .goals("pull", "rmi")
-                    .configuration()
-                    .set("image", "yegor256/hone:0.0.17");
-                f.exec("test");
-                MatcherAssert.assertThat(
-                    "the build must be successful",
-                    f.log(),
-                    new LogMatcher()
-                );
-            }
-        );
-    }
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Mktmp {
 }

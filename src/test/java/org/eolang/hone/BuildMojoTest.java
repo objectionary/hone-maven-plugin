@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Test case for {@link BuildMojo}.
@@ -36,10 +35,11 @@ import org.junit.jupiter.api.io.TempDir;
  * @since 0.1.0
  */
 @ExtendWith(RandomImageResolver.class)
+@ExtendWith(MktmpResolver.class)
 final class BuildMojoTest {
 
     @Test
-    void skipsOptimizationOnFlag(@TempDir final Path dir) throws Exception {
+    void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.build()
@@ -62,7 +62,7 @@ final class BuildMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    void buildsDockerImage(@TempDir final Path dir,
+    void buildsDockerImage(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {

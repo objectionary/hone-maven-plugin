@@ -103,7 +103,7 @@ final class Docker {
             );
             if (ret.code() != 0) {
                 throw new IOException(
-                    String.format("Failed to execute docker, code=%d", ret.code())
+                    String.format("Failed to execute docker, code=0x%04x", ret.code())
                 );
             }
         } catch (final InterruptedException ex) {

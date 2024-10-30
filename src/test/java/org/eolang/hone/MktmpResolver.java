@@ -23,40 +23,36 @@
  */
 package org.eolang.hone;
 
-import com.yegor256.farea.Farea;
 import java.nio.file.Path;
-import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import java.nio.file.Paths;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * Test case for {@link PullMojo}.
+ * This class is instantiated and then called by JUnit when
+ * an argument of a test method is marked with the {@link Mktemp}
+ * annotation.
  *
  * @since 0.1.0
  */
-@ExtendWith(MktmpResolver.class)
-final class PullMojoTest {
+public final class MktmpResolver implements ParameterResolver {
 
-    @Test
-    @ExtendWith(MayBeSlow.class)
-    void pullsDockerImage(@Mktmp final Path dir) throws Exception {
-        new Farea(dir).together(
-            f -> {
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("process-classes")
-                    .goals("pull", "rmi")
-                    .configuration()
-                    .set("image", "yegor256/hone:0.0.17");
-                f.exec("test");
-                MatcherAssert.assertThat(
-                    "the build must be successful",
-                    f.log(),
-                    new LogMatcher()
-                );
-            }
-        );
+    @Override
+    public boolean supportsParameter(final ParameterContext context,
+        final ExtensionContext ext) {
+        return context.getParameter().getType() == Path.class
+            && context.isAnnotated(Mktmp.class);
     }
+
+    @Override
+    public Object resolveParameter(final ParameterContext context,
+        final ExtensionContext ext) {
+        final Path path = Paths.get(
+            String.format("target/tmp/%08x", System.nanoTime())
+        );
+        path.toFile().mkdirs();
+        return path;
+    }
+
 }

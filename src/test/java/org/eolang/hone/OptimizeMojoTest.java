@@ -29,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -180,7 +179,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Disabled
-    void optimizesJnaClasses(@TempDir final Path dir,
+    void optimizesJnaClasses(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {
@@ -265,10 +264,7 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "the build must be successful",
             farea.log(),
-            Matchers.allOf(
-                Matchers.containsString("BUILD SUCCESS"),
-                Matchers.not(Matchers.containsString("BUILD FAILURE"))
-            )
+            new LogMatcher()
         );
         return true;
     }

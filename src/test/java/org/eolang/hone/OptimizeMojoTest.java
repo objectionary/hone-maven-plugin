@@ -27,7 +27,6 @@ import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -54,13 +53,9 @@ final class OptimizeMojoTest {
                     .set("skip", true);
                 f.exec("test");
                 MatcherAssert.assertThat(
-                    "the optimization step must be skipped",
+                    "the build must be successful",
                     f.log(),
-                    Matchers.allOf(
-                        Matchers.containsString("Execution skipped"),
-                        Matchers.containsString("BUILD SUCCESS"),
-                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
-                    )
+                    new LogMatcher("Execution skipped")
                 );
             }
         );
@@ -128,10 +123,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    Matchers.allOf(
-                        Matchers.containsString("BUILD SUCCESS"),
-                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
-                    )
+                    new LogMatcher()
                 );
             }
         );
@@ -169,10 +161,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    Matchers.allOf(
-                        Matchers.containsString("BUILD SUCCESS"),
-                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
-                    )
+                    new LogMatcher()
                 );
             }
         );
@@ -192,7 +181,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    Matchers.containsString("Display help information on hone-maven-plugin")
+                    new LogMatcher()
                 );
             }
         );

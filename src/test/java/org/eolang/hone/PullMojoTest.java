@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 final class PullMojoTest {
 
     @Test
+    @ExtendWith(MayBeSlow.class)
     void pullsDockerImage(@TempDir final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

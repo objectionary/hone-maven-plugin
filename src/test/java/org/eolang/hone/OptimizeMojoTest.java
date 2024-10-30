@@ -67,6 +67,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @ExtendWith(MayBeSlow.class)
     void optimizesSimpleApp(@TempDir final Path dir,
         @RandomImage final String image) throws Exception {
         final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
@@ -137,6 +138,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @ExtendWith(MayBeSlow.class)
     void optimizesTwice(@TempDir final Path dir,
         @RandomImage final String image) throws Exception {
         final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))

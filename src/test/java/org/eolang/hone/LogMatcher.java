@@ -78,6 +78,14 @@ final class LogMatcher extends BaseMatcher<String> {
 
     @Override
     public void describeTo(final Description desc) {
-        desc.appendValue(this.seen);
+        desc.appendText("Maven log with SUCCESS inside and no FAILURE");
+        for (final String ext : this.extras) {
+            desc.appendText(String.format(", also with %s", ext));
+        }
+    }
+
+    @Override
+    public void describeMismatch(final Object log, final Description desc) {
+        desc.appendText("\n").appendText(this.seen);
     }
 }

@@ -26,7 +26,6 @@ package org.eolang.hone;
 import com.yegor256.farea.Farea;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -53,12 +52,9 @@ final class BuildMojoTest {
                     .set("skip", true);
                 f.exec("test");
                 MatcherAssert.assertThat(
-                    "the Docker image building step must be skipped",
+                    "the build must be successful",
                     f.log(),
-                    Matchers.allOf(
-                        Matchers.containsString("BUILD SUCCESS"),
-                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
-                    )
+                    new LogMatcher()
                 );
             }
         );
@@ -82,10 +78,7 @@ final class BuildMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    Matchers.allOf(
-                        Matchers.containsString("BUILD SUCCESS"),
-                        Matchers.not(Matchers.containsString("BUILD FAILURE"))
-                    )
+                    new LogMatcher()
                 );
             }
         );

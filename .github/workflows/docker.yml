@@ -33,4 +33,4 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: docker build src/main/resources/org/eolang/hone/docker -t hone
+      - run: docker build src/main/resources/org/eolang/hone/scaffolding -t hone

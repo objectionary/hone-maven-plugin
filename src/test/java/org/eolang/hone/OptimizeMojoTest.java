@@ -82,7 +82,7 @@ final class OptimizeMojoTest {
                             abstract class AbstractParent {
                                 abstract byte[] foo();
                             }
-                        """
+                        """.getBytes()
                     );
                 f.files()
                     .file("src/main/java/foo/Kid.java")
@@ -95,7 +95,7 @@ final class OptimizeMojoTest {
                                 return new byte[] {(byte) 0x01, (byte) 0x02};
                             }
                         }
-                        """
+                        """.getBytes()
                     );
                 f.files()
                     .file("src/test/java/foo/KidTest.java")
@@ -110,7 +110,7 @@ final class OptimizeMojoTest {
                                 Assertions.assertEquals(2, new Kid().foo().length);
                             }
                         }
-                        """
+                        """.getBytes()
                     );
                 f.dependencies()
                     .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
@@ -147,7 +147,7 @@ final class OptimizeMojoTest {
             f -> {
                 f.files()
                     .file("src/main/java/Hello.java")
-                    .write("class Hello { double foo() { return Math.sin(42); } }");
+                    .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
                 f.build()
                     .plugins()
                     .appendItself()
@@ -184,7 +184,7 @@ final class OptimizeMojoTest {
             f -> {
                 f.files()
                     .file("src/main/java/Hello.java")
-                    .write("class Hello { double foo() { return Math.sin(42); } }");
+                    .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
                 f.build()
                     .plugins()
                     .appendItself();

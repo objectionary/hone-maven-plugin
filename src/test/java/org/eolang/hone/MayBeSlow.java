@@ -47,9 +47,10 @@ public final class MayBeSlow implements BeforeEachCallback, AfterEachCallback {
         new Runnable() {
             @Override
             public void run() {
+                long cycle = 0L;
                 while (true) {
                     try {
-                        Thread.sleep(5_000L);
+                        Thread.sleep(Math.min(5_000L * cycle, 60_000L));
                     } catch (final InterruptedException ex) {
                         break;
                     }
@@ -58,6 +59,7 @@ public final class MayBeSlow implements BeforeEachCallback, AfterEachCallback {
                         "We're still running the test (%[ms]s), please wait...",
                         System.currentTimeMillis() - MayBeSlow.this.start
                     );
+                    ++cycle;
                 }
             }
         }

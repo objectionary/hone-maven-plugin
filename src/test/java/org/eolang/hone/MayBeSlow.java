@@ -47,7 +47,7 @@ public final class MayBeSlow implements BeforeEachCallback, AfterEachCallback {
         new Runnable() {
             @Override
             public void run() {
-                long cycle = 0L;
+                long cycle = 1L;
                 while (true) {
                     try {
                         Thread.sleep(Math.min(5_000L * cycle, 60_000L));

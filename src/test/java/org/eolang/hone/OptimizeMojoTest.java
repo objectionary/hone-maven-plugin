@@ -186,7 +186,6 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Disabled
     @ExtendWith(MayBeSlow.class)
     void optimizesJnaClasses(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {

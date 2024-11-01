@@ -24,6 +24,7 @@
 package org.eolang.hone;
 
 import com.yegor256.farea.Farea;
+import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,6 +48,7 @@ final class OptimizeMojoTest {
     void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.build()
                     .plugins()
                     .appendItself()
@@ -59,7 +61,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher("Execution skipped")
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
@@ -71,6 +73,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("src/main/java/foo/AbstractParent.java")
                     .write(
@@ -125,7 +128,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
                 MatcherAssert.assertThat(
                     "optimized .xmir must be present",
@@ -142,6 +145,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("src/main/java/Hello.java")
                     .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
@@ -166,7 +170,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
@@ -181,6 +185,7 @@ final class OptimizeMojoTest {
     void printsHelp(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("src/main/java/Hello.java")
                     .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
@@ -191,7 +196,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
@@ -204,6 +209,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 final String[] classes = {
                     "Pointer.class", "Library.class", "Native.class",
                     "Version.class", "Callback$UncaughtExceptionHandler.class",
@@ -231,6 +237,7 @@ final class OptimizeMojoTest {
                         """
                         import com.sun.jna.Library;
                         import com.sun.jna.Native;
+                        import com.sun.jna.Pointer;
                         import org.junit.jupiter.api.Test;
                         class GoTest {
                             interface Foo extends Library {
@@ -259,7 +266,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
@@ -271,6 +278,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("target/classes/com/sun/jna/Pointer.class")
                     .write(
@@ -299,7 +307,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );

@@ -24,6 +24,7 @@
 package org.eolang.hone;
 
 import com.yegor256.farea.Farea;
+import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,7 @@ final class PullMojoTest {
     void pullsDockerImage(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.build()
                     .plugins()
                     .appendItself()
@@ -54,7 +56,7 @@ final class PullMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );

@@ -24,13 +24,12 @@
 package org.eolang.hone;
 
 import com.yegor256.farea.Farea;
-import java.io.IOException;
+import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +48,7 @@ final class OptimizeMojoTest {
     void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.build()
                     .plugins()
                     .appendItself()
@@ -61,7 +61,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher("Execution skipped")
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
@@ -73,6 +73,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("src/main/java/foo/AbstractParent.java")
                     .write(
@@ -111,9 +112,23 @@ final class OptimizeMojoTest {
                         }
                         """.getBytes()
                     );
-                Assertions.assertTrue(
-                    OptimizeMojoTest.optimizeAndTest(f, image),
-                    "must optimize without mistakes"
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize", "rmi")
+                    .configuration()
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
                 );
                 MatcherAssert.assertThat(
                     "optimized .xmir must be present",
@@ -130,6 +145,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("src/main/java/Hello.java")
                     .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
@@ -154,7 +170,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
@@ -169,6 +185,7 @@ final class OptimizeMojoTest {
     void printsHelp(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("src/main/java/Hello.java")
                     .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
@@ -179,7 +196,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
@@ -191,6 +208,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 final String[] classes = {
                     "Pointer.class", "Library.class", "Native.class",
                     "Version.class", "Callback$UncaughtExceptionHandler.class",
@@ -218,6 +236,7 @@ final class OptimizeMojoTest {
                         """
                         import com.sun.jna.Library;
                         import com.sun.jna.Native;
+                        import com.sun.jna.Pointer;
                         import org.junit.jupiter.api.Test;
                         class GoTest {
                             interface Foo extends Library {
@@ -230,9 +249,23 @@ final class OptimizeMojoTest {
                         }
                         """.getBytes()
                     );
-                Assertions.assertTrue(
-                    OptimizeMojoTest.optimizeAndTest(f, image),
-                    "must optimize without mistakes"
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize", "rmi")
+                    .configuration()
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
@@ -244,6 +277,7 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
             f -> {
+                f.clean();
                 f.files()
                     .file("target/classes/com/sun/jna/Pointer.class")
                     .write(
@@ -272,39 +306,9 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
-                    new LogMatcher()
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );
-    }
-
-    /**
-     * Run optimization.
-     * @param farea The farea
-     * @param image The image name
-     * @return TRUE if success
-     * @throws IOException If fails
-     */
-    private static boolean optimizeAndTest(final Farea farea,
-        final String image) throws IOException {
-        farea.dependencies()
-            .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
-        farea.dependencies()
-            .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
-        farea.build()
-            .plugins()
-            .appendItself()
-            .execution("default")
-            .phase("process-classes")
-            .goals("build", "optimize", "rmi")
-            .configuration()
-            .set("image", image);
-        farea.exec("test");
-        MatcherAssert.assertThat(
-            "the build must be successful",
-            farea.log(),
-            new LogMatcher()
-        );
-        return true;
     }
 }

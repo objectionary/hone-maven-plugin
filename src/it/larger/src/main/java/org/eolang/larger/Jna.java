@@ -25,7 +25,6 @@ package org.eolang.larger;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
-import com.sun.jna.Pointer;
 
 interface Jna extends Library {
     Jna INSTANCE = Native.load("c", Jna.class);

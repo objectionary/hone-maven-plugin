@@ -24,9 +24,13 @@
 package org.eolang.hone;
 
 import com.yegor256.farea.Farea;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -107,23 +111,9 @@ final class OptimizeMojoTest {
                         }
                         """.getBytes()
                     );
-                f.dependencies()
-                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
-                f.dependencies()
-                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("process-classes")
-                    .goals("build", "optimize", "rmi")
-                    .configuration()
-                    .set("image", image);
-                f.exec("test");
-                MatcherAssert.assertThat(
-                    "the build must be successful",
-                    f.log(),
-                    new LogMatcher()
+                Assertions.assertTrue(
+                    OptimizeMojoTest.optimizeIt(f, image),
+                    "must optimize without mistakes"
                 );
             }
         );
@@ -185,5 +175,98 @@ final class OptimizeMojoTest {
                 );
             }
         );
+    }
+
+    @Test
+    @Disabled
+    @ExtendWith(MayBeSlow.class)
+    void optimizesJnaClasses(@Mktmp final Path dir,
+        @RandomImage final String image) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                final String[] classes = {
+                    "Pointer.class", "Library.class", "Native.class",
+                    "Version.class", "Callback$UncaughtExceptionHandler.class",
+                    "Native$7.class", "Native$1.class", "Native$5.class",
+                    "FromNativeContext.class", "MethodResultContext.class",
+                    "FunctionResultContext.class", "Platform.class",
+                    "darwin-aarch64/libjnidispatch.jnilib",
+                    "darwin-x86-64/libjnidispatch.jnilib",
+                };
+                for (final String cls : classes) {
+                    f.files()
+                        .file(String.format("target/classes/com/sun/jna/%s", cls))
+                        .write(
+                            Files.readAllBytes(
+                                Paths.get(System.getProperty("target.directory"))
+                                    .resolve("jna-classes")
+                                    .resolve("com/sun/jna")
+                                    .resolve(cls)
+                            )
+                        );
+                }
+                f.files()
+                    .file("target/classes/Pointer.class")
+                    .write(
+                        Files.readAllBytes(
+                            Paths.get(System.getProperty("target.directory"))
+                                .resolve("jna-classes")
+                                .resolve("com/sun/jna/Pointer.class")
+                        )
+                    );
+                f.files()
+                    .file("src/test/java/GoTest.java")
+                    .write(
+                        """
+                        import com.sun.jna.Library;
+                        import com.sun.jna.Native;
+                        import org.junit.jupiter.api.Test;
+                        class GoTest {
+                            interface Foo extends Library {
+                                void bar();
+                            }
+                            @Test
+                            void worksAfterOptimization() {
+                                Native.load("c", Foo.class);
+                            }
+                        }
+                        """.getBytes()
+                    );
+                Assertions.assertTrue(
+                    OptimizeMojoTest.optimizeIt(f, image),
+                    "must optimize without mistakes"
+                );
+            }
+        );
+    }
+
+    /**
+     * Run optimization.
+     * @param farea The farea
+     * @param image The image name
+     * @return TRUE if success
+     * @throws IOException If fails
+     */
+    private static boolean optimizeIt(final Farea farea,
+        final String image) throws IOException {
+        farea.dependencies()
+            .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+        farea.dependencies()
+            .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+        farea.build()
+            .plugins()
+            .appendItself()
+            .execution("default")
+            .phase("process-classes")
+            .goals("build", "optimize", "rmi")
+            .configuration()
+            .set("image", image);
+        farea.exec("test");
+        MatcherAssert.assertThat(
+            "the build must be successful",
+            farea.log(),
+            new LogMatcher()
+        );
+        return true;
     }
 }

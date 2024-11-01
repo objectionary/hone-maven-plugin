@@ -47,7 +47,7 @@ final class PullMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("pull", "rmi")
+                    .goals("pull")
                     .configuration()
                     .set("image", "yegor256/hone:0.0.17");
                 f.exec("test");

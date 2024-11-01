@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -68,10 +69,8 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    void optimizesSimpleApp(@Mktmp final Path dir,
+    void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
-        final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
-            .resolve("simple-app");
         new Farea(home).together(
             f -> {
                 f.files()
@@ -116,16 +115,19 @@ final class OptimizeMojoTest {
                     OptimizeMojoTest.optimizeAndTest(f, image),
                     "must optimize without mistakes"
                 );
+                MatcherAssert.assertThat(
+                    "optimized .xmir must be present",
+                    f.files().file("target/generated-sources/unphi/foo/Kid.xmir").exists(),
+                    Matchers.is(true)
+                );
             }
         );
     }
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    void optimizesTwice(@Mktmp final Path dir,
+    void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
-        final Path home = Paths.get(System.getProperty("target.directory", dir.toString()))
-            .resolve("simple-app-twice");
         new Farea(home).together(
             f -> {
                 f.files()
@@ -153,6 +155,11 @@ final class OptimizeMojoTest {
                     "the build must be successful",
                     f.log(),
                     new LogMatcher()
+                );
+                MatcherAssert.assertThat(
+                    "optimized .phi must be present",
+                    f.files().file("target/generated-sources/phi-optimized/Hello.phi").exists(),
+                    Matchers.is(true)
                 );
             }
         );
@@ -256,6 +263,13 @@ final class OptimizeMojoTest {
                     .configuration()
                     .set("image", image);
                 f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "optimized large .xmir must be present",
+                    f.files().file(
+                        "target/generated-sources/unphi/com/sun/jna/Pointer.xmir"
+                    ).exists(),
+                    Matchers.is(true)
+                );
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),

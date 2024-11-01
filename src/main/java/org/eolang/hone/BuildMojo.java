@@ -55,7 +55,7 @@ public final class BuildMojo extends AbstractMojo {
     public void exec() throws IOException {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
-                "Dockerfile", "entry.sh", "in-docker-pom.xml",
+                "Dockerfile", "entry.sh", "in-docker-pom.xml", "normalize.sh",
                 "install-ghc.sh", "install-maven.sh", "install-stack.sh",
                 "install-normalizer.sh",
             };
@@ -70,7 +70,9 @@ public final class BuildMojo extends AbstractMojo {
                 ).value();
             }
             new Rules().copyTo(temp.path().resolve("rules"));
-            temp.path().resolve("entry.sh").toFile().setExecutable(true);
+            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+                temp.path().resolve(file).toFile().setExecutable(true);
+            }
             new IoChecked<>(
                 new Retry<>(
                     (Scalar<Object>) () -> new Docker(this.sudo).exec(

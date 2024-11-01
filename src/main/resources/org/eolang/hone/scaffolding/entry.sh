@@ -58,14 +58,6 @@ if [ -n "${JEO_VERSION}" ]; then
   opts+=("-Djeo.version=${JEO_VERSION}")
 fi
 
-mvn "${opts[@]}" \
-  jeo:disassemble \
-  "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
-  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
-  eo:xmir-to-phi \
-  "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
-  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
-
 if [ -z "${RULES}" ]; then
   RULES=$(find "${SELF}/rules" -name '*.yml' -exec basename {} \;)
 fi
@@ -76,15 +68,19 @@ for rule in ${RULES}; do
     exit 1
   fi
 done
-SELF=$(dirname "$0")
-from=${TARGET}/generated-sources/phi
-to=${TARGET}/generated-sources/phi-optimized
-mkdir -p "${to}"
-while IFS= read -r f; do
-  for rule in ${RULES}; do
-    normalizer transform --rules "${SELF}/rules/${rule}" "${from}/${f}" --single -o "${to}/${f}"
-  done
-done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
+
+mvn "${opts[@]}" \
+  jeo:disassemble \
+  "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
+  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
+  eo:xmir-to-phi \
+  "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
+  "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
+
+"${SELF}/normalize.sh" \
+  "${RULES}" \
+  "${TARGET}/generated-sources/phi" \
+  "${TARGET}/generated-sources/phi-optimized"
 
 mvn "${opts[@]}" \
   eo:phi-to-xmir \

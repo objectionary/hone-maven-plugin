@@ -83,6 +83,9 @@ RUN mkdir /tmp/m2 \
   && mvn --update-snapshots --batch-mode --strict-checksums --errors eo:help jeo:help
 
 COPY entry.sh ./
+RUN chmod a+x entry.sh
+COPY normalize.sh ./
+RUN chmod a+x normalize.sh
 COPY rules/ ./rules/
 
 ENTRYPOINT ["/hone/entry.sh"]

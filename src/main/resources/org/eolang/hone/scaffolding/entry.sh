@@ -61,9 +61,7 @@ fi
 mvn "${opts[@]}" \
   jeo:disassemble \
   "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
-  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble"
-
-mvn "${opts[@]}" \
+  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
   eo:xmir-to-phi \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi"
@@ -91,14 +89,10 @@ done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --rel
 mvn "${opts[@]}" \
   eo:phi-to-xmir \
   "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
-  "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi"
-
-mvn "${opts[@]}" \
+  "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi" \
   jeo:unroll-phi \
   "-Djeo.unroll-phi.sourcesDir=${TARGET}/generated-sources/unphi" \
-  "-Djeo.unroll-phi.outputDir=${TARGET}/generated-sources/unrolled"
-
-mvn "${opts[@]}" \
+  "-Djeo.unroll-phi.outputDir=${TARGET}/generated-sources/unrolled" \
   jeo:assemble \
   "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unrolled" \
   "-Djeo.assemble.outputDir=${TARGET}/classes"

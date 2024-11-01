@@ -41,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 final class OptimizeMojoTest {
 
     @Test
@@ -112,7 +113,7 @@ final class OptimizeMojoTest {
                         """.getBytes()
                     );
                 Assertions.assertTrue(
-                    OptimizeMojoTest.optimizeIt(f, image),
+                    OptimizeMojoTest.optimizeAndTest(f, image),
                     "must optimize without mistakes"
                 );
             }
@@ -206,15 +207,6 @@ final class OptimizeMojoTest {
                         );
                 }
                 f.files()
-                    .file("target/classes/Pointer.class")
-                    .write(
-                        Files.readAllBytes(
-                            Paths.get(System.getProperty("target.directory"))
-                                .resolve("jna-classes")
-                                .resolve("com/sun/jna/Pointer.class")
-                        )
-                    );
-                f.files()
                     .file("src/test/java/GoTest.java")
                     .write(
                         """
@@ -233,8 +225,41 @@ final class OptimizeMojoTest {
                         """.getBytes()
                     );
                 Assertions.assertTrue(
-                    OptimizeMojoTest.optimizeIt(f, image),
+                    OptimizeMojoTest.optimizeAndTest(f, image),
                     "must optimize without mistakes"
+                );
+            }
+        );
+    }
+
+    @Test
+    @ExtendWith(MayBeSlow.class)
+    void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
+        @RandomImage final String image) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.files()
+                    .file("target/classes/com/sun/jna/Pointer.class")
+                    .write(
+                        Files.readAllBytes(
+                            Paths.get(System.getProperty("target.directory"))
+                                .resolve("jna-classes")
+                                .resolve("com/sun/jna/Pointer.class")
+                        )
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize", "rmi")
+                    .configuration()
+                    .set("image", image);
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    new LogMatcher()
                 );
             }
         );
@@ -247,7 +272,7 @@ final class OptimizeMojoTest {
      * @return TRUE if success
      * @throws IOException If fails
      */
-    private static boolean optimizeIt(final Farea farea,
+    private static boolean optimizeAndTest(final Farea farea,
         final String image) throws IOException {
         farea.dependencies()
             .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");

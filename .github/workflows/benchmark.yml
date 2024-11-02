@@ -43,13 +43,13 @@ jobs:
       - run: mvn clean test -Dtest=OptimizeMojoTest#optimizesJustOneLargeJnaClass --errors --batch-mode
       - run: |
           set -x
-          summary=$(
+          export sum=$(
             cat target/jna-summary.txt
             echo "Uname: $(uname -a)"
             echo "When: $(date +'%Y-%m-%d')"
             echo "GitHub run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           )
-          perl -i -pe "s/<!-- benchmark_begin -->.*<!-- benchmark_end -->/${summary}/g" README.md
+          perl -i -0777 -pe 's/<!-- benchmark_begin -->.*<!-- benchmark_end -->/$ENV{sum}/gs;' README.md
       - uses: peter-evans/create-pull-request@v7
         with:
           branch: benchmark

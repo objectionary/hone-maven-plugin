@@ -80,19 +80,19 @@ Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
 Size of .xmir: 6Mb (6Mb bytes, 156806 lines)
 Size of .phi: 2Mb (2Mb bytes, 42165 lines)
-Optimization time: 4min (211623 ms)
+Optimization time: 4min (210662 ms)
 Available CPUs: 4
 
-jeo-maven-plugin:assemble 0.563
-eo-maven-plugin:xmir-to-phi 84.403
-jeo-maven-plugin:unroll-phi 108.527
-jeo-maven-plugin:disassemble 2.130
-eo-maven-plugin:phi-to-xmir 11.434
-exec-maven-plugin:exec 1.006
+jeo-maven-plugin:unroll-phi 106.653
+eo-maven-plugin:xmir-to-phi 84.875
+eo-maven-plugin:phi-to-xmir 11.929
+jeo-maven-plugin:disassemble 2.194
+exec-maven-plugin:exec 1.007
+jeo-maven-plugin:assemble 0.660
 ```
-The results were calculated in 
-[this GHA run][benchmark-gha]
-on 2024-11-02 at 16:00, on Linux fv-az1934-374 6.8.0-1015-azure #17-Ubuntu SMP Mon Sep  2 14:54:06 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux.
+The results were calculated
+on 2024-11-02 at 16:46,
+on Linux.
 <!-- benchmark_end -->
 
 ## How to Contribute
@@ -122,4 +122,4 @@ Docker. This may be a faster way to check how the pipeline works.
 
 The versions of EO, JEO, and OPEO are defined in the `in-docker-pom.xml` file.
 
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11643922024
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11644143437

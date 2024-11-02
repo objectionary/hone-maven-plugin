@@ -58,7 +58,7 @@ jobs:
             printf "\n\n"
             tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';' | sort -g -k 2 | tac
             printf "\`\`\`\n"
-            echo "The results were calculated"
+            echo "The results were calculated in [this GHA job][benchmark-gha]"
             echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"
             echo "on $(uname)."
           )

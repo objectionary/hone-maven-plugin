@@ -71,7 +71,8 @@ we will try to fix.
 
 ## Benchmark
 
-Here is the result of the latest processing of a large Java class:
+Here is the result of the latest processing of a large Java class
+from [JNA](https://github.com/java-native-access/jna):
 
 <!-- benchmark_begin -->
 ```text
@@ -90,7 +91,7 @@ eo-maven-plugin:phi-to-xmir 11.434
 exec-maven-plugin:exec 1.006
 ```
 The results were calculated in 
-[this GHA run](https://github.com/objectionary/hone-maven-plugin/actions/runs/11643922024)
+[this GHA run][benchmark-gha]
 on 2024-11-02 at 16:00, on Linux fv-az1934-374 6.8.0-1015-azure #17-Ubuntu SMP Mon Sep  2 14:54:06 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux.
 <!-- benchmark_end -->
 
@@ -120,3 +121,5 @@ This will do exactly what is happening in Docker container, but without
 Docker. This may be a faster way to check how the pipeline works.
 
 The versions of EO, JEO, and OPEO are defined in the `in-docker-pom.xml` file.
+
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11643922024

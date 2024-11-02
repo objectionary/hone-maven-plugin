@@ -26,6 +26,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -327,6 +328,9 @@ final class OptimizeMojoTest {
                     String.format("timing must exist in [%s]", timing),
                     mtc.find(), Matchers.is(true)
                 );
+                final Path phi = f.files().file(
+                    "target/generated-sources/phi/com/sun/jna/Pointer.phi"
+                ).path();
                 final long msec = Long.parseLong(mtc.group("msec"));
                 Files.write(
                     target.resolve("jna-summary.txt"),
@@ -338,14 +342,14 @@ final class OptimizeMojoTest {
                             bin.toFile().length()
                         ),
                         Logger.format(
-                            "Size of .xmir: %[size]s (%1$s bytes)",
-                            xmir.toFile().length()
+                            "Size of .xmir: %[size]s (%1$s bytes, %d lines)",
+                            xmir.toFile().length(),
+                            Files.readString(xmir, StandardCharsets.UTF_8).split("\n").length
                         ),
                         Logger.format(
-                            "Size of .phi: %[size]s (%1$s bytes)",
-                            f.files().file(
-                                "target/generated-sources/phi/com/sun/jna/Pointer.phi"
-                            ).path().toFile().length()
+                            "Size of .phi: %[size]s (%1$s bytes, %d lines)",
+                            phi.toFile().length(),
+                            Files.readString(phi, StandardCharsets.UTF_8).split("\n").length
                         ),
                         Logger.format(
                             "Optimization time: %[ms]s (%d ms)",

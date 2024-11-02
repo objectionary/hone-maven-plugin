@@ -57,6 +57,10 @@ fi
 if [ -n "${JEO_VERSION}" ]; then
   opts+=("-Djeo.version=${JEO_VERSION}")
 fi
+opts+=(
+  "-Dbuildtime.output.csv=true"
+  "-Dbuildtime.output.csv.file=${TARGET}/timings.csv"
+)
 
 if [ -z "${RULES}" ]; then
   RULES=$(find "${SELF}/rules" -name '*.yml' -exec basename {} \;)

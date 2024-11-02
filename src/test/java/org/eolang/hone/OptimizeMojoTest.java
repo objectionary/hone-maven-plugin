@@ -138,6 +138,11 @@ final class OptimizeMojoTest {
                     f.files().file("target/generated-sources/unphi/foo/Kid.xmir").exists(),
                     Matchers.is(true)
                 );
+                MatcherAssert.assertThat(
+                    "the file with timings is created",
+                    f.files().file("target/timings.csv").exists(),
+                    Matchers.is(true)
+                );
             }
         );
     }

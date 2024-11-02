@@ -85,6 +85,7 @@ RUN mvn --update-snapshots --batch-mode --strict-checksums --errors \
   exec:help \
   && chmod a+w -R /tmp/m2
 
+COPY extensions.xml ./.mvn/
 COPY entry.sh ./
 RUN chmod a+x entry.sh
 COPY normalize.sh ./

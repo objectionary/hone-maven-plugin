@@ -47,7 +47,6 @@ jobs:
       - run: |
           set -x
           sum=$(
-            echo
             echo "\`\`\`"
             cat target/jna-summary.txt
             echo
@@ -58,10 +57,9 @@ jobs:
             echo
             echo "The results were calculated in [this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
             echo "on $(date +'%Y-%m-%d') at $(date +'%h:%M')."
-            echo
           )
           export sum
-          perl -i -0777 -pe 's/(?<=<!-- benchmark_begin -->).*(?=<!-- benchmark_end -->)/$ENV{sum}/gs;' README.md
+          perl -i -0777 -pe 's/(?<=<!-- benchmark_begin -->).*(?=<!-- benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md
       - uses: peter-evans/create-pull-request@v7
         with:
           branch: benchmark

@@ -23,35 +23,39 @@
  */
 package org.eolang.hone;
 
-import com.jcabi.log.Logger;
-import java.io.IOException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
 
 /**
- * Pull Docker image from Docker Hub.
- *
- * <p>This goal pulls Docker image from
- * <a href="https://hub.docker.com">Docker Hub</a> to your machine. You
- * may skip this goal and simply use the <tt>optimize</tt> goal, which
- * will automatically pull the image from the Hub. However, it would be
- * cleaner to use <tt>pull</tt>, then <tt>optimize</tt>, and
- * then <tt>rmi</tt> (which deletes the image from your machine).</p>
+ * Test case for {@link Timings}.
  *
  * @since 0.1.0
  */
-@Mojo(name = "pull", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public final class PullMojo extends AbstractMojo {
+final class TimingsTest {
 
-    @Override
-    public void exec() throws IOException {
-        this.timings.through(
-            "pull",
-            () -> new Docker(this.sudo).exec(
-                "pull",
-                this.image
-            )
-        );
-        Logger.info(this, "Docker image '%s' was pulled", this.image);
+    @Test
+    void savesTime() throws Exception {
+        try (Mktemp temp = new Mktemp()) {
+            final Path file = temp.path().resolve("foo.csv");
+            final Timings timings = new Timings(file);
+            timings.through("foo", () -> { });
+            MatcherAssert.assertThat(
+                "file must be written",
+                file.toFile().exists(),
+                Matchers.is(true)
+            );
+            timings.through("bar", () -> { });
+            MatcherAssert.assertThat(
+                "file must have two lines",
+                new String(Files.readAllBytes(file)),
+                Matchers.allOf(
+                    Matchers.containsString("foo,"),
+                    Matchers.containsString("\nbar,")
+                )
+            );
+        }
     }
 }

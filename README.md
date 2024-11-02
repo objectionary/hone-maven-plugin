@@ -69,6 +69,14 @@ is not true,
 [submit a ticket](https://github.com/objectionary/hone-maven-plugin/issues),
 we will try to fix.
 
+## Benchmark
+
+Here is the result of the latest processing of a large Java class:
+
+<!-- benchmark_begin -->
+...
+<!-- benchmark_end -->
+
 ## How to Contribute
 
 Fork repository, make changes, then send us

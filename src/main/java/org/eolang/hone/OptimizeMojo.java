@@ -25,7 +25,6 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import com.sun.security.auth.module.UnixSystem;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,17 +91,6 @@ public final class OptimizeMojo extends AbstractMojo {
     @Parameter(property = "hone.jeo-version")
     private String jeoVersion;
 
-    /**
-     * The "target/" directory of Maven project.
-     *
-     * @since 0.1.0
-     */
-    @Parameter(
-        property = "hone.target",
-        defaultValue = "${project.build.directory}"
-    )
-    private File target;
-
     @Override
     public void exec() throws IOException {
         final Collection<String> command = new LinkedList<>(
@@ -148,7 +136,10 @@ public final class OptimizeMojo extends AbstractMojo {
             )
         );
         command.add(this.image);
-        new Docker(this.sudo).exec(command);
+        this.timings.through(
+            "optimize",
+            () -> new Docker(this.sudo).exec(command)
+        );
         Logger.info(this, "Bytecode was optimized in '%s'", this.target);
     }
 }

@@ -23,11 +23,14 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Disabled;
@@ -276,18 +279,16 @@ final class OptimizeMojoTest {
     @ExtendWith(MayBeSlow.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
+        final String path = "com/sun/jna/Pointer.class";
+        final Path bin = Paths.get(System.getProperty("target.directory"))
+            .resolve("jna-classes")
+            .resolve(path);
         new Farea(dir).together(
             f -> {
                 f.clean();
                 f.files()
-                    .file("target/classes/com/sun/jna/Pointer.class")
-                    .write(
-                        Files.readAllBytes(
-                            Paths.get(System.getProperty("target.directory"))
-                                .resolve("jna-classes")
-                                .resolve("com/sun/jna/Pointer.class")
-                        )
-                    );
+                    .file(String.format("target/classes/%s", path))
+                    .write(Files.readAllBytes(bin));
                 f.build()
                     .plugins()
                     .appendItself()
@@ -297,17 +298,48 @@ final class OptimizeMojoTest {
                     .configuration()
                     .set("image", image);
                 f.exec("process-classes");
+                final Path xmir = f.files().file(
+                    "target/generated-sources/unphi/com/sun/jna/Pointer.xmir"
+                ).path();
                 MatcherAssert.assertThat(
                     "optimized large .xmir must be present",
-                    f.files().file(
-                        "target/generated-sources/unphi/com/sun/jna/Pointer.xmir"
-                    ).exists(),
+                    xmir.toFile().exists(),
                     Matchers.is(true)
                 );
                 MatcherAssert.assertThat(
                     "the build must be successful",
                     f.log(),
                     RequisiteMatcher.SUCCESS
+                );
+                final String timing = f.files().file("target/hone-timings.csv").content();
+                final Matcher mtc = Pattern.compile("optimize,(?<msec>[0-9]+)\n").matcher(timing);
+                MatcherAssert.assertThat(
+                    String.format("timing must exist in [%s]", timing),
+                    mtc.find(), Matchers.is(true)
+                );
+                final long msec = Long.parseLong(mtc.group("msec"));
+                Files.write(
+                    Paths.get(System.getProperty("target.directory"))
+                        .resolve("jna-summary.txt"),
+                    String.join(
+                        "\n",
+                        String.format("Input: %s", path),
+                        Logger.format(
+                            "Size of .class: %[size]s (%1$s bytes)",
+                            bin.toFile().length()
+                        ),
+                        Logger.format(
+                            "Size of .xmir: %[size]s (%1$s bytes)",
+                            xmir.toFile().length()
+                        ),
+                        Logger.format(
+                            "Size of .phi: %[size]s (%1$s bytes)",
+                            f.files().file(
+                                "target/generated-sources/phi/com/sun/jna/Pointer.phi"
+                            ).path().toFile().length()
+                        ),
+                        Logger.format("Optimization time: %[ms]s (%d ms)", msec, msec)
+                    ).getBytes()
                 );
             }
         );

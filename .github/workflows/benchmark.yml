@@ -55,8 +55,9 @@ jobs:
             echo
             echo "Uname: $(uname -a)"
             echo "When: $(date +'%Y-%m-%d')"
-            echo "GitHub run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "```"
+            echo
+            echo "The results were calculated in [this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
             echo
           )
           export sum

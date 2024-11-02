@@ -47,13 +47,19 @@ jobs:
       - run: |
           set -x
           sum=$(
+            echo
+            echo "```"
             cat target/jna-summary.txt
+            echo
+            cat target/timings.csv | tail -n +2 | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';'
             echo "Uname: $(uname -a)"
             echo "When: $(date +'%Y-%m-%d')"
             echo "GitHub run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "```"
+            echo
           )
           export sum
-          perl -i -0777 -pe 's/<!-- benchmark_begin -->.*<!-- benchmark_end -->/$ENV{sum}/gs;' README.md
+          perl -i -0777 -pe 's/(?<=<!-- benchmark_begin -->).*(?=<!-- benchmark_end -->)/$ENV{sum}/gs;' README.md
       - uses: peter-evans/create-pull-request@v7
         with:
           branch: benchmark

@@ -316,6 +316,11 @@ final class OptimizeMojoTest {
                     f.log(),
                     RequisiteMatcher.SUCCESS
                 );
+                final Path target = Paths.get(System.getProperty("target.directory"));
+                Files.copy(
+                    f.files().file("target/timings.csv").path(),
+                    target.resolve("timings.csv")
+                );
                 final String timing = f.files().file("target/hone-timings.csv").content();
                 final Matcher mtc = Pattern.compile("optimize,(?<msec>[0-9]+)\n").matcher(timing);
                 MatcherAssert.assertThat(
@@ -324,8 +329,7 @@ final class OptimizeMojoTest {
                 );
                 final long msec = Long.parseLong(mtc.group("msec"));
                 Files.write(
-                    Paths.get(System.getProperty("target.directory"))
-                        .resolve("jna-summary.txt"),
+                    target.resolve("jna-summary.txt"),
                     String.join(
                         "\n",
                         String.format("Input: %s", path),

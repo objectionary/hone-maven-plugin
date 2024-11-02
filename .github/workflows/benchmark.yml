@@ -25,6 +25,7 @@ name: benchmark
   push:
     branches:
       - master
+    paths-ignore: [ 'README.md', '.github' ]
 concurrency:
   group: benchmark-${{ github.ref }}
   cancel-in-progress: true
@@ -41,8 +42,13 @@ jobs:
         with:
           path: ~/.m2/repository
           key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ubuntu-jdk-21-maven-
+          restore-keys: ubuntu-jdk-21-maven-
+      - uses: actions/cache@v4
+        with:
+          path: /var/lib/docker
+          key: ubuntu-docker-21
+          restore-keys: ubuntu-docker-21
+      - run: docker pull yegor256/hone:0.0.21
       - run: mvn clean test -Dtest=OptimizeMojoTest#optimizesJustOneLargeJnaClass --errors --batch-mode
       - run: |
           set -x
@@ -50,11 +56,11 @@ jobs:
             echo "\`\`\`"
             cat target/jna-summary.txt
             echo
-            cat target/timings.csv | tail -n +2 | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';'
+            tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';'
             echo "\`\`\`"
             echo
             echo "The results were calculated in [this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
-            echo "on $(date +'%Y-%m-%d') at $(date +'%h:%M'), on $(uname -a)."
+            echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'), on $(uname -a)."
           )
           export sum
           perl -i -0777 -pe 's/(?<=<!-- benchmark_begin -->).*(?=<!-- benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md

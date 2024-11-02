@@ -74,7 +74,23 @@ we will try to fix.
 Here is the result of the latest processing of a large Java class:
 
 <!-- benchmark_begin -->
-...
+```
+Input: com/sun/jna/Pointer.class
+Size of .class: 22Kb (22Kb bytes)
+Size of .xmir: 6Mb (6Mb bytes, 156806 lines)
+Size of .phi: 2Mb (2Mb bytes, 42165 lines)
+Optimization time: 4min (211111 ms)
+Available CPUs: 4
+jeo-maven-plugin:assemble 0.614
+eo-maven-plugin:xmir-to-phi 83.479
+jeo-maven-plugin:unroll-phi 107.608
+jeo-maven-plugin:disassemble 2.111
+eo-maven-plugin:phi-to-xmir 11.674
+exec-maven-plugin:exec 0.982
+```
+
+The results were calculated in [this GHA run](https://github.com/objectionary/hone-maven-plugin/actions/runs/11643411532)
+on 2024-11-02 at Nov:36, on Linux fv-az1042-264 6.8.0-1015-azure #17-Ubuntu SMP Mon Sep  2 14:54:06 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux.
 <!-- benchmark_end -->
 
 ## How to Contribute

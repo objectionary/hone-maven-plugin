@@ -54,10 +54,10 @@ jobs:
             cat target/timings.csv | tail -n +2 | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';'
             echo
             echo "Uname: $(uname -a)"
-            echo "When: $(date +'%Y-%m-%d')"
             echo "```"
             echo
-            echo "The results were calculated in [this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})."
+            echo "The results were calculated in [this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+            echo "on $(date +'%Y-%m-%d') at $(date +'%h:%M')."
             echo
           )
           export sum

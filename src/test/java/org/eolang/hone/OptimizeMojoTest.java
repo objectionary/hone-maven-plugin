@@ -338,7 +338,14 @@ final class OptimizeMojoTest {
                                 "target/generated-sources/phi/com/sun/jna/Pointer.phi"
                             ).path().toFile().length()
                         ),
-                        Logger.format("Optimization time: %[ms]s (%d ms)", msec, msec)
+                        Logger.format(
+                            "Optimization time: %[ms]s (%d ms)",
+                            msec, msec
+                        ),
+                        Logger.format(
+                            "Available CPUs: %d",
+                            Runtime.getRuntime().availableProcessors()
+                        )
                     ).getBytes()
                 );
             }

@@ -56,11 +56,12 @@ jobs:
             printf "\`\`\`text\n"
             cat target/jna-summary.txt
             printf "\n\n"
-            tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';'
+            tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';' | sort -g -k 2
             printf "\`\`\`\n"
             echo "The results were calculated in "
             echo "[this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
-            echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'), on $(uname -a)."
+            echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"
+            echo "on $(uname)."
           )
           export sum
           perl -i -0777 -pe 's/(?<=<!-- benchmark_begin -->).*(?=<!-- benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md

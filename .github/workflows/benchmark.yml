@@ -25,6 +25,9 @@ name: benchmark
   push:
     branches:
       - master
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   benchmark:
     runs-on: ubuntu-24.04

@@ -44,23 +44,20 @@ public final class MayBeSlow implements BeforeEachCallback, AfterEachCallback {
      * Watcher.
      */
     private final Thread watch = new Thread(
-        new Runnable() {
-            @Override
-            public void run() {
-                long cycle = 1L;
-                while (true) {
-                    try {
-                        Thread.sleep(Math.min(5_000L * cycle, 60_000L));
-                    } catch (final InterruptedException ex) {
-                        break;
-                    }
-                    Logger.warn(
-                        this,
-                        "We're still running the test (%[ms]s), please wait...",
-                        System.currentTimeMillis() - MayBeSlow.this.start
-                    );
-                    ++cycle;
+        () -> {
+            long cycle = 1L;
+            while (true) {
+                try {
+                    Thread.sleep(Math.min(5_000L * cycle, 60_000L));
+                } catch (final InterruptedException ex) {
+                    break;
                 }
+                Logger.warn(
+                    MayBeSlow.class,
+                    "We're still running the test (%[ms]s), please wait...",
+                    System.currentTimeMillis() - this.start
+                );
+                ++cycle;
             }
         }
     );

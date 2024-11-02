@@ -59,7 +59,7 @@ jobs:
             tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';'
             printf "\`\`\`\n"
             echo "The results were calculated in "
-            echo [this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+            echo "[this GHA run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
             echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'), on $(uname -a)."
           )
           export sum

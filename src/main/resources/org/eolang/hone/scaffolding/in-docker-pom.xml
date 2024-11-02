@@ -49,6 +49,18 @@ SOFTWARE.
             <skipVerification>true</skipVerification>
           </configuration>
         </plugin>
+        <plugin>
+          <artifactId>exec-maven-plugin</artifactId>
+          <groupId>org.codehaus.mojo</groupId>
+          <configuration>
+            <executable>${exec.script}</executable>
+            <arguments>
+              <argument>${exec.rules}</argument>
+              <argument>${exec.from}</argument>
+              <argument>${exec.to}</argument>
+            </arguments>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>

@@ -79,8 +79,11 @@ COPY in-docker-pom.xml pom.xml
 
 # Warming up Maven cache:
 ENV MAVEN_OPTS="-Dmaven.repo.local=/tmp/m2"
-RUN mkdir /tmp/m2 \
-  && mvn --update-snapshots --batch-mode --strict-checksums --errors eo:help jeo:help
+RUN mvn --update-snapshots --batch-mode --strict-checksums --errors \
+  eo:help \
+  jeo:help \
+  exec:help \
+  && chmod a+w -R /tmp/m2
 
 COPY entry.sh ./
 RUN chmod a+x entry.sh

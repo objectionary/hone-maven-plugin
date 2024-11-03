@@ -362,7 +362,7 @@ final class OptimizeMojoTest {
                         Logger.format(
                             "Optimization time: %[ms]s (%d ms)",
                             msec, msec
-                        ),
+                        )
                     ).getBytes()
                 );
             }

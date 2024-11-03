@@ -60,7 +60,7 @@ jobs:
             printf "\`\`\`\n"
             echo "The results were calculated in [this GHA job][benchmark-gha]"
             echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"
-            echo "on $(uname)."
+            echo "on $(uname) with $(nproc --all) CPUs."
           )
           export sum
           perl -i -0777 -pe 's/(?<=<!-- benchmark_begin -->).*(?=<!-- benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md

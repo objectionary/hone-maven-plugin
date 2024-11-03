@@ -304,6 +304,9 @@ final class OptimizeMojoTest {
                     .configuration()
                     .set("image", image);
                 f.exec("process-classes");
+                final Path pre = f.files().file(
+                    "target/generated-sources/jeo-disassemble/com/sun/jna/Pointer.xmir"
+                ).path();
                 final Path xmir = f.files().file(
                     "target/generated-sources/unphi/com/sun/jna/Pointer.xmir"
                 ).path();
@@ -342,9 +345,9 @@ final class OptimizeMojoTest {
                             bin.toFile().length()
                         ),
                         Logger.format(
-                            "Size of .xmir: %[size]s (%1$s bytes, %d lines)",
-                            xmir.toFile().length(),
-                            Files.readString(xmir, StandardCharsets.UTF_8).split("\n").length
+                            "Size of .xmir after disassemble: %[size]s (%1$s bytes, %d lines)",
+                            pre.toFile().length(),
+                            Files.readString(pre, StandardCharsets.UTF_8).split("\n").length
                         ),
                         Logger.format(
                             "Size of .phi: %[size]s (%1$s bytes, %d lines)",
@@ -352,13 +355,14 @@ final class OptimizeMojoTest {
                             Files.readString(phi, StandardCharsets.UTF_8).split("\n").length
                         ),
                         Logger.format(
+                            "Size of .xmir after unphi: %[size]s (%1$s bytes, %d lines)",
+                            xmir.toFile().length(),
+                            Files.readString(xmir, StandardCharsets.UTF_8).split("\n").length
+                        ),
+                        Logger.format(
                             "Optimization time: %[ms]s (%d ms)",
                             msec, msec
                         ),
-                        Logger.format(
-                            "Available CPUs: %d",
-                            Runtime.getRuntime().availableProcessors()
-                        )
                     ).getBytes()
                 );
             }

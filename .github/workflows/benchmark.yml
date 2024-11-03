@@ -56,7 +56,7 @@ jobs:
             printf "\`\`\`text\n"
             cat target/jna-summary.txt
             printf "\n\n"
-            tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';' | sort -g -k 2 | tac
+            tail -n +2 < target/timings.csv | tr -d '"' | cut -d ';' -f2,3 | sed s/\(default-cli\)//g | tr -d ';' | sort -g -k 2 | tac | column -t
             printf "\`\`\`\n\n"
             echo "The results were calculated in [this GHA job][benchmark-gha]"
             echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"

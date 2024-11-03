@@ -80,18 +80,18 @@ Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
 Size of .xmir: 6Mb (6Mb bytes, 156806 lines)
 Size of .phi: 2Mb (2Mb bytes, 42165 lines)
-Optimization time: 4min (210662 ms)
+Optimization time: 4min (216330 ms)
 Available CPUs: 4
 
-jeo-maven-plugin:unroll-phi 106.653
-eo-maven-plugin:xmir-to-phi 84.875
-eo-maven-plugin:phi-to-xmir 11.929
-jeo-maven-plugin:disassemble 2.194
-exec-maven-plugin:exec 1.007
-jeo-maven-plugin:assemble 0.660
+jeo-maven-plugin:unroll-phi 110.557
+eo-maven-plugin:xmir-to-phi 86.600
+eo-maven-plugin:phi-to-xmir 11.866
+jeo-maven-plugin:disassemble 2.098
+exec-maven-plugin:exec 0.979
+jeo-maven-plugin:assemble 0.665
 ```
-The results were calculated
-on 2024-11-02 at 16:46,
+The results were calculated in [this GHA job][benchmark-gha]
+on 2024-11-02 at 17:35,
 on Linux.
 <!-- benchmark_end -->
 

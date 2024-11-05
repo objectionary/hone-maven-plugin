@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
@@ -323,7 +324,8 @@ final class OptimizeMojoTest {
                 final Path target = Paths.get(System.getProperty("target.directory"));
                 Files.copy(
                     f.files().file("target/timings.csv").path(),
-                    target.resolve("timings.csv")
+                    target.resolve("timings.csv"),
+                    StandardCopyOption.REPLACE_EXISTING
                 );
                 final String timing = f.files().file("target/hone-timings.csv").content();
                 final Matcher mtc = Pattern.compile("optimize,(?<msec>[0-9]+)\n").matcher(timing);

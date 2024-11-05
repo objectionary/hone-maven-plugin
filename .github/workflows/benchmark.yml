@@ -43,11 +43,6 @@ jobs:
           path: ~/.m2/repository
           key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ubuntu-jdk-21-maven-
-      - uses: actions/cache@v4
-        with:
-          path: /var/lib/docker
-          key: ubuntu-docker-21
-          restore-keys: ubuntu-docker-21
       - run: docker pull yegor256/hone:0.0.21
       - run: mvn clean test -Dtest=OptimizeMojoTest#optimizesJustOneLargeJnaClass --errors --batch-mode
       - run: |
@@ -75,4 +70,3 @@ jobs:
           title: 'New benchmarking results'
           assignees: yegor256
           base: master
-      - run: sudo chmod a+r -R /var/lib/docker && ls -al /var/lib/docker

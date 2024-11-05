@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 final class JnaTest {
 
     @Test
-    @Disabled
     void retrievesPid() throws Exception {
         Assertions.assertTrue(Jna.INSTANCE.getpid() > 0);
     }

@@ -25,9 +25,9 @@ name: self
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
+concurrency:
+  group: self-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   self:
     runs-on: ubuntu-24.04

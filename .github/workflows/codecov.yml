@@ -25,6 +25,7 @@ name: codecov
   push:
     branches:
       - master
+    paths-ignore: [ 'README.md' ]
 concurrency:
   group: codecov-${{ github.ref }}
   cancel-in-progress: true

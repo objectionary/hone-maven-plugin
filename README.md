@@ -98,6 +98,12 @@ on Linux with 4 CPUs.
 
 <!-- benchmark_end -->
 
+Here is the result of the latest optimization of itself:
+
+<!-- self_benchmark_begin -->
+...
+<!-- self_benchmark_end -->
+
 ## How to Contribute
 
 Fork repository, make changes, then send us
@@ -126,3 +132,4 @@ Docker. This may be a faster way to check how the pipeline works.
 The versions of EO, JEO, and OPEO are defined in the `in-docker-pom.xml` file.
 
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288

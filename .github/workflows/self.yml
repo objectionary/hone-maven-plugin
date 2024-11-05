@@ -45,3 +45,28 @@ jobs:
             ubuntu-jdk-21-maven-
       - run: mvn clean install -DskipTests -Dinvoker.skip --errors --batch-mode
       - run: mvn clean install -Pself --errors --batch-mode -Dhone.rules=none
+      - run: |
+          set -x
+          sum=$(
+            printf "\`\`\`text\n"
+            cat target/jna-summary.txt
+            printf "\n\n"
+            awk -F ',' '{ arr[$1]+=$2 } END { for (key in arr) printf("%s\t%s\n", key, arr[key])}' target/eo/xsl-measures.csv | sort -g -k 2 | tac | column -t
+            printf "\`\`\`\n\n"
+            echo "The results were calculated in [this GHA job][self-benchmark-gha]"
+            echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"
+            echo "on $(uname) with $(nproc --all) CPUs."
+          )
+          export sum
+          perl -i -0777 -pe 's/(?<=<!-- self_benchmark_begin -->).*(?=<!-- self_benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md
+          url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          export url
+          perl -i -0777 -pe 's/(?<=\[self-benchmark-gha\]: ).*(?=\n)/$ENV{url}/gs;' README.md
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: benchmark
+          commit-message: 'new benchmark results'
+          delete-branch: true
+          title: 'New benchmarking results'
+          assignees: yegor256
+          base: master

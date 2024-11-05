@@ -82,18 +82,18 @@ Size of .class: 22Kb (22Kb bytes)
 Size of .xmir after disassemble: 1Mb (1Mb bytes, 27879 lines)
 Size of .phi: 2Mb (2Mb bytes, 42165 lines)
 Size of .xmir after unphi: 6Mb (6Mb bytes, 156806 lines)
-Optimization time: 3min (204770 ms)
+Optimization time: 4min (213070 ms)
 
-jeo-maven-plugin:unroll-phi   104.448
-eo-maven-plugin:xmir-to-phi   82.185
-eo-maven-plugin:phi-to-xmir   11.030
-jeo-maven-plugin:disassemble  1.941
-exec-maven-plugin:exec        0.982
-jeo-maven-plugin:assemble     0.572
+jeo-maven-plugin:unroll-phi   112.564
+eo-maven-plugin:xmir-to-phi   81.059
+eo-maven-plugin:phi-to-xmir   11.269
+jeo-maven-plugin:disassemble  2.367
+exec-maven-plugin:exec        0.988
+jeo-maven-plugin:assemble     0.614
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2024-11-05 at 12:41,
+on 2024-11-05 at 13:35,
 on Linux with 4 CPUs.
 
 <!-- benchmark_end -->
@@ -125,4 +125,4 @@ Docker. This may be a faster way to check how the pipeline works.
 
 The versions of EO, JEO, and OPEO are defined in the `in-docker-pom.xml` file.
 
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11684105382
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288

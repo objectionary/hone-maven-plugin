@@ -119,17 +119,9 @@ mvn clean install -Pqulice
 You will need [Maven 3.3+](https://maven.apache.org), Java 11+,
 and [Docker](https://docs.docker.com/engine/install/) installed.
 
-You may also want to run this (having
-[GNU Make](https://www.gnu.org/software/make/) installed):
-
-```bash
-make quick
-```
-
-This will do exactly what is happening in Docker container, but without
-Docker. This may be a faster way to check how the pipeline works.
-
-The versions of EO, JEO, and OPEO are defined in the `in-docker-pom.xml` file.
+The versions of [EO](https://github.com/objectionary/eo) and 
+[JEO](https://github.com/objectionary/jeo-maven-plugin), 
+that we use, are defined in the `in-docker-pom.xml` file.
 
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288
 [self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288

@@ -80,6 +80,7 @@ public final class BuildMojo extends AbstractMojo {
                         (Scalar<Object>) () -> new Docker(this.sudo).exec(
                             "build",
                             "--pull",
+                            "--progress=plain",
                             "--tag", this.image,
                             temp.path().toString()
                         )

@@ -48,14 +48,16 @@ jobs:
       - run: |
           set -x
           sum=$(
+            max=16  
             printf "\`\`\`text\n"
             cat target/jna-summary.txt
             printf "\n\n"
-            awk -F ',' '{ arr[$1]+=$2 } END { for (key in arr) printf("%s\t%s\n", key, arr[key])}' target/eo/xsl-measures.csv | sort -g -k 2 | tac | column -t
+            awk -F ',' '{ a[$1]+=$2; s+=$2; } END { for (k in a) printf("%s\t%s\t%0.2f\n", k, a[k], 100 * a[k] / s)}' target/eo/xsl-measures.csv | sort -g -k 2 | tac | column -t | head "-${max}"
             printf "\`\`\`\n\n"
-            echo "The results were calculated in [this GHA job][self-benchmark-gha]"
+            echo "The results were calculated in [this GHA job][self-benchmark-gha],"
             echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"
             echo "on $(uname) with $(nproc --all) CPUs."
+            echo "For the sake of brevity, we show only the first ${max} lines."
           )
           export sum
           perl -i -0777 -pe 's/(?<=<!-- self_benchmark_begin -->).*(?=<!-- self_benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md

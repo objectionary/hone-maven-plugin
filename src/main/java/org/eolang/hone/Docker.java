@@ -60,7 +60,7 @@ final class Docker {
     }
 
     /**
-     * Run this one.
+     * Run this command and its arguments.
      * @param args Arguments.
      * @return Exit code
      * @throws IOException If fails
@@ -93,6 +93,7 @@ final class Docker {
      */
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
+        Logger.info(this, "+ %s ...", String.join(" ", command));
         final ProcessBuilder bldr = new ProcessBuilder(command);
         try (VerboseProcess proc = new VerboseProcess(bldr, Level.INFO, Level.INFO)) {
             final VerboseProcess.Result ret = proc.waitFor();

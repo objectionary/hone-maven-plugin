@@ -25,7 +25,9 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import com.sun.security.auth.module.UnixSystem;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -91,6 +93,15 @@ public final class OptimizeMojo extends AbstractMojo {
     @Parameter(property = "hone.jeo-version")
     private String jeoVersion;
 
+    /**
+     * EO cache directory.
+     * @checkstyle MemberNameCheck (7 lines)
+     * @checkstyle VisibilityModifierCheck (10 lines)
+     */
+    @Parameter(property = "hone.cache")
+    @SuppressWarnings("PMD.ImmutableField")
+    private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
+
     @Override
     public void exec() throws IOException {
         final Collection<String> command = new LinkedList<>(
@@ -98,11 +109,12 @@ public final class OptimizeMojo extends AbstractMojo {
                 "run",
                 "--rm",
                 "--volume", String.format("%s:/target", this.target),
+                "--volume", String.format("%s:/eo-cache", this.cache),
                 "--env", "TARGET=/target"
             )
         );
         if (this.eoVersion == null) {
-            Logger.debug(this, "EO version is not set, will use the default one");
+            Logger.debug(this, "EO version is not set, we use the default one");
         } else {
             command.addAll(
                 Arrays.asList(
@@ -111,7 +123,7 @@ public final class OptimizeMojo extends AbstractMojo {
             );
         }
         if (this.jeoVersion == null) {
-            Logger.debug(this, "JEO version is not set, will use the default one");
+            Logger.debug(this, "JEO version is not set, we use the default one");
         } else {
             command.addAll(
                 Arrays.asList(

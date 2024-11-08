@@ -33,7 +33,7 @@ if [ -z "${JAVA_HOME}" ]; then
   export JAVA_HOME
 fi
 
-MAVEN_VERSION=3.9.6
+MAVEN_VERSION=3.9.9
 M2_HOME="/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}"
 
 echo "export M2_HOME=/usr/local/apache-maven/apache-maven-\${MAVEN_VERSION}" >> /root/.profile

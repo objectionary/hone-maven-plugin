@@ -40,14 +40,16 @@ public final class RandomImageResolver implements ParameterResolver {
     @Override
     public boolean supportsParameter(final ParameterContext context,
         final ExtensionContext ext) {
-        return context.getParameter().getType() == String.class
+        return context.getParameter().getType().equals(String.class)
             && context.isAnnotated(RandomImage.class);
     }
 
     @Override
     public Object resolveParameter(final ParameterContext context,
         final ExtensionContext ext) {
-        return String.format("x%x", Double.doubleToLongBits(new SecureRandom().nextDouble()));
+        return String.format(
+            "x%x", Double.doubleToLongBits(new SecureRandom().nextDouble())
+        );
     }
 
 }

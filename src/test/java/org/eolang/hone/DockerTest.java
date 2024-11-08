@@ -23,8 +23,10 @@
  */
 package org.eolang.hone;
 
+import java.io.IOException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -42,6 +44,15 @@ final class DockerTest {
             "docker version must be printed",
             new Docker().exec("--version"),
             Matchers.is(Matchers.notNullValue())
+        );
+    }
+
+    @Test
+    void failsOnWrongMount() {
+        Assertions.assertThrows(
+            IOException.class,
+            () -> new Docker().exec("run", "--volume", "/the-path-is-absent:/test", "ubuntu"),
+            "docker can't mount this directory"
         );
     }
 

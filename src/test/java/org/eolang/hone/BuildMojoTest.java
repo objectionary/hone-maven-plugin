@@ -73,7 +73,7 @@ final class BuildMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("generate-resources")
-                    .goals("build", "rmi")
+                    .goals("build")
                     .configuration()
                     .set("image", image);
                 f.exec("generate-resources");

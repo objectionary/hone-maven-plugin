@@ -31,16 +31,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Test case for {@link PullMojo}.
+ * Test case for {@link RmiMojo}.
  *
  * @since 0.1.0
  */
 @ExtendWith(MktmpResolver.class)
-final class PullMojoTest {
+final class RmiMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    void pullsDockerImage(@Mktmp final Path dir) throws Exception {
+    void pullsAndRemovesDockerImage(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.clean();
@@ -49,9 +49,9 @@ final class PullMojoTest {
                     .appendItself()
                     .execution()
                     .phase("process-classes")
-                    .goals("pull")
+                    .goals("pull", "rmi")
                     .configuration()
-                    .set("image", "yegor256/hone:latest");
+                    .set("image", "hello-world");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",

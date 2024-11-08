@@ -28,7 +28,6 @@ if normalizer --help 2>/dev/null; then
   exit
 fi
 
-stack update
 stack install --resolver lts-22.16 "eo-phi-normalizer-${NORMALIZER}"
 cp /root/.local/bin/normalizer /usr/local/bin/normalizer
 

@@ -73,6 +73,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
+    @ExtendWith(StopIfStuck.class)
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -125,7 +126,7 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("build", "optimize", "rmi")
+                    .goals("build", "optimize")
                     .configuration()
                     .set("image", image);
                 f.exec("test");
@@ -150,6 +151,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
+    @ExtendWith(StopIfStuck.class)
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -174,7 +176,7 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("second")
                     .phase("process-classes")
-                    .goals("optimize", "rmi");
+                    .goals("optimize");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",
@@ -213,6 +215,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
+    @ExtendWith(StopIfStuck.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final String path = "com/sun/jna/Pointer.class";
@@ -230,7 +233,7 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("build", "optimize", "rmi")
+                    .goals("build", "optimize")
                     .configuration()
                     .set("image", image);
                 f.exec("process-classes");

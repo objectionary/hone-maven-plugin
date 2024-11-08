@@ -49,6 +49,7 @@ declare -a opts=(
   '--strict-checksums'
   '--errors'
   '--batch-mode'
+  '-Deo.cache=/eo-cache'
   "--file=$(dirname "$0")/pom.xml"
 )
 if [ -n "${EO_VERSION}" ]; then
@@ -61,6 +62,7 @@ opts+=(
   "-Dbuildtime.output.csv=true"
   "-Dbuildtime.output.csv.file=${TARGET}/timings.csv"
 )
+opts+=("-Deo.xslMeasuresFile=${TARGET}/xsl-measures.csv")
 
 if [ -z "${RULES}" ]; then
   RULES=$(find "${SELF}/rules" -name '*.yml' -exec basename {} \;)

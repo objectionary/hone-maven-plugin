@@ -24,16 +24,17 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
- * This class helps mark potentially slow test methods.
+ * This class helps stop tests that are stuck (run for too long).
  *
  * @since 0.1.0
  */
-public final class MayBeSlow implements BeforeEachCallback, AfterEachCallback {
+public final class StopIfStuck implements BeforeEachCallback, AfterEachCallback {
 
     /**
      * When we started.
@@ -41,45 +42,43 @@ public final class MayBeSlow implements BeforeEachCallback, AfterEachCallback {
     private final long start = System.currentTimeMillis();
 
     /**
+     * The thread in which the test is running.
+     */
+    private Thread main;
+
+    /**
      * Watcher.
      */
     private final Thread watch = new Thread(
         () -> {
-            long cycle = 1L;
             while (true) {
                 try {
-                    Thread.sleep(Math.min(5_000L * cycle, 60_000L));
+                    Thread.sleep(1_000L);
                 } catch (final InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     break;
                 }
-                Logger.warn(
-                    MayBeSlow.class,
-                    "We're still running the test (%[ms]s), please wait...",
-                    System.currentTimeMillis() - this.start
-                );
-                ++cycle;
+                if (System.currentTimeMillis() - this.start > TimeUnit.MINUTES.toMillis(15L)) {
+                    this.main.interrupt();
+                    Logger.warn(
+                        StopIfStuck.class,
+                        "Looks like the test is stuck (running for %[ms]s already), killing it...",
+                        System.currentTimeMillis() - this.start
+                    );
+                    break;
+                }
             }
         }
     );
 
     @Override
     public void beforeEach(final ExtensionContext ctx) {
-        Logger.warn(
-            this,
-            "The test %s may take longer than a minute; if you want to see the full output of it, set the logging level to \"DEBUG\" for the \"com.yegor256.farea\" logging facility, in the \"src/test/resources/log4j.properties\" file",
-            ctx.getDisplayName()
-        );
+        this.main = Thread.currentThread();
         this.watch.start();
     }
 
     @Override
     public void afterEach(final ExtensionContext ctx) {
         this.watch.interrupt();
-        Logger.warn(
-            this,
-            "Indeed, it took %[ms]s to run %s",
-            System.currentTimeMillis() - this.start, ctx.getDisplayName()
-        );
     }
 }

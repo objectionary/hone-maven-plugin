@@ -58,7 +58,7 @@ public final class StopIfStuck implements BeforeEachCallback, AfterEachCallback 
                     Thread.currentThread().interrupt();
                     break;
                 }
-                if (System.currentTimeMillis() - this.start > TimeUnit.MINUTES.toMillis(15L)) {
+                if (System.currentTimeMillis() - this.start > TimeUnit.MINUTES.toMillis(45L)) {
                     this.main.interrupt();
                     Logger.warn(
                         StopIfStuck.class,

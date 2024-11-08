@@ -48,7 +48,7 @@ jobs:
       - run: |
           set -x
           sum=$(
-            max=16  
+            max=16
             printf "\`\`\`text\n"
             cat target/jna-summary.txt
             printf "\n\n"

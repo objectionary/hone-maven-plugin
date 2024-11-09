@@ -50,7 +50,7 @@ jobs:
           sum=$(
             max=16
             printf "\`\`\`text\n"
-            awk -F ',' '{ a[$1]+=$2; s+=$2; } END { for (k in a) printf("%s\t%s\t%0.2f\n", k, a[k], 100 * a[k] / s)}' target/xsl-measures.csv | sort -g -k 2 | tac | column -t | head "-${max}"
+            awk -F ',' '{ a[$1]+=$2; s+=$2; } END { for (k in a) printf("%s\t%s\t%0.2f%%\n", k, a[k], 100 * a[k] / s)}' target/xsl-measures.csv | sort -g -k 2 | tac | column -t | head "-${max}"
             printf "\`\`\`\n\n"
             echo "The results were calculated in [this GHA job][self-benchmark-gha],"
             echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"

@@ -104,15 +104,15 @@ Here is the result of the latest optimization of itself:
 ```text
 Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
-Size of .xmir after disassemble: 1Mb (1Mb bytes, 27885 lines)
-Size of .phi: 2Mb (2Mb bytes, 42165 lines)
-Size of .xmir after unphi: 6Mb (6Mb bytes, 156806 lines)
-Optimization time: 3min (207363 ms)
+Size of .xmir after disassemble: 2Mb (2Mb bytes, 33668 lines)
+Size of .phi: 2Mb (2Mb bytes, 52462 lines)
+Size of .xmir after unphi: 6Mb (6Mb bytes, 149142 lines)
+Optimization time: 4min (237520 ms)
 
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2024-11-08 at 15:27,
+on 2024-11-09 at 08:02,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -137,4 +137,4 @@ The versions of [EO](https://github.com/objectionary/eo) and
 that we use, are defined in the `in-docker-pom.xml` file.
 
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11744002584
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11754373419

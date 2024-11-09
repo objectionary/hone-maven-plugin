@@ -75,27 +75,25 @@ Here is the result of the latest processing of a large Java class
 from [JNA](https://github.com/java-native-access/jna):
 
 <!-- benchmark_begin -->
-
 ```text
 Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
-Size of .xmir after disassemble: 1Mb (1Mb bytes, 27879 lines)
-Size of .phi: 2Mb (2Mb bytes, 42165 lines)
-Size of .xmir after unphi: 6Mb (6Mb bytes, 156806 lines)
-Optimization time: 4min (213070 ms)
+Size of .xmir after disassemble: 2Mb (2Mb bytes, 33674 lines)
+Size of .phi: 2Mb (2Mb bytes, 52462 lines)
+Size of .xmir after unphi: 6Mb (6Mb bytes, 149142 lines)
+Optimization time: 4min (240244 ms)
 
-jeo-maven-plugin:unroll-phi   112.564
-eo-maven-plugin:xmir-to-phi   81.059
-eo-maven-plugin:phi-to-xmir   11.269
-jeo-maven-plugin:disassemble  2.367
-exec-maven-plugin:exec        0.988
-jeo-maven-plugin:assemble     0.614
+jeo-maven-plugin:unroll-phi   113.218
+eo-maven-plugin:xmir-to-phi   108.524
+eo-maven-plugin:phi-to-xmir   12.182
+jeo-maven-plugin:disassemble  2.036
+exec-maven-plugin:exec        1.175
+jeo-maven-plugin:assemble     0.561
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2024-11-05 at 13:35,
+on 2024-11-09 at 08:58,
 on Linux with 4 CPUs.
-
 <!-- benchmark_end -->
 
 Here is the result of the latest optimization of itself:

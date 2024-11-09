@@ -100,17 +100,26 @@ Here is the result of the latest optimization of itself:
 
 <!-- self_benchmark_begin -->
 ```text
-Input: com/sun/jna/Pointer.class
-Size of .class: 22Kb (22Kb bytes)
-Size of .xmir after disassemble: 2Mb (2Mb bytes, 33668 lines)
-Size of .phi: 2Mb (2Mb bytes, 52462 lines)
-Size of .xmir after unphi: 6Mb (6Mb bytes, 149142 lines)
-Optimization time: 4min (237520 ms)
-
+add-refs                   10597  17.29
+to-phi                     10483  17.10
+same-line-names            8068   13.16
+stars-to-tuples            2477   4.04
+duplicate-names            2368   3.86
+set-locators               2195   3.58
+broken-refs                2004   3.27
+wrap-method-calls          1437   2.34
+duplicate-aliases          1051   1.71
+not-empty-atoms            1024   1.67
+broken-aliases             976    1.59
+vars-float-up              903    1.47
+resolve-aliases            897    1.46
+wrap-bytes                 877    1.43
+add-default-package        840    1.37
+self-naming                802    1.31
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2024-11-09 at 08:02,
+on 2024-11-09 at 09:33,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -130,8 +139,9 @@ mvn clean install -Pqulice
 You will need [Maven 3.3+](https://maven.apache.org), Java 11+,
 and [Docker](https://docs.docker.com/engine/install/) installed.
 
-The versions of [EO](https://github.com/objectionary/eo) and 
-[JEO](https://github.com/objectionary/jeo-maven-plugin), 
+The versions of [EO](https://github.com/objectionary/eo) and
+[JEO](https://github.com/objectionary/jeo-maven-plugin),
 that we use, are defined in the `in-docker-pom.xml` file.
 
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11754847314
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11754915025

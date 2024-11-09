@@ -9,7 +9,7 @@
 [![codecov](https://codecov.io/gh/objectionary/hone-maven-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/objectionary/hone-maven-plugin)
 
 This [Apache Maven](https://maven.apache.org/) plugin _may_ optimize
-your [Bytecode](https://en.wikipedia.org/wiki/Java_bytecode)
+your [Bytecode][bytecode]
 after compilation, to make it work faster.
 Just add this to your `pom.xml` file
 (you must have [Docker](https://docs.docker.com/engine/install/) installed too):
@@ -127,7 +127,7 @@ For the sake of brevity, we show only the first 16 lines.
 ## How to Contribute
 
 Fork repository, make changes, then send us
-a [pull request](https://www.yegor256.com/2014/04/15/github-guidelines.html).
+a [pull request][guidelines].
 We will review your changes and apply them to the `master` branch shortly,
 provided they don't violate our quality standards. To avoid frustration,
 before sending us your pull request please run full Maven build:
@@ -144,4 +144,6 @@ The versions of [EO](https://github.com/objectionary/eo) and
 that we use, are defined in the `in-docker-pom.xml` file.
 
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11685006288
+[bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
+[guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11754915025

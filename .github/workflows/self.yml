@@ -61,7 +61,7 @@ jobs:
           perl -i -0777 -pe 's/(?<=<!-- self_benchmark_begin -->).*(?=<!-- self_benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md
           url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           export url
-          perl -i -0777 -pe 's/(?<=\[self-benchmark-gha\]: ).*(?=\n)/$ENV{url}/gs;' README.md
+          perl -i -0777 -pe 's/(?<=\[self-benchmark-gha\]: )[^\n]+(?=\n)/$ENV{url}/gs;' README.md
       - uses: peter-evans/create-pull-request@v7
         with:
           branch: self-benchmark

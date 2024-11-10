@@ -25,6 +25,7 @@ name: self
   push:
     branches:
       - master
+    paths-ignore: [ 'README.md', '.github' ]
 concurrency:
   group: self-${{ github.ref }}
   cancel-in-progress: true

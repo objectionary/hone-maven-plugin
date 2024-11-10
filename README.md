@@ -100,26 +100,26 @@ Here is the result of the latest optimization of itself:
 
 <!-- self_benchmark_begin -->
 ```text
-to-phi                     10918  18.96%
-add-refs                   9660   16.77%
-same-line-names            8020   13.93%
-duplicate-names            2327   4.04%
-stars-to-tuples            2278   3.96%
-broken-refs                1730   3.00%
-set-locators               1690   2.93%
-wrap-method-calls          1360   2.36%
-broken-aliases             1045   1.81%
-not-empty-atoms            983    1.71%
-self-naming                886    1.54%
-duplicate-aliases          854    1.48%
-wrap-bytes                 844    1.47%
-resolve-aliases            826    1.43%
-vars-float-up              803    1.39%
-add-default-package        751    1.30%
+to-phi.xsl                     10220  17.38%
+add-refs.xsl                   9780   16.63%
+same-line-names.xsl            8645   14.70%
+stars-to-tuples.xsl            2399   4.08%
+duplicate-names.xsl            2332   3.97%
+broken-refs.xsl                2151   3.66%
+set-locators.xsl               1957   3.33%
+wrap-method-calls.xsl          1339   2.28%
+broken-aliases.xsl             1046   1.78%
+not-empty-atoms.xsl            1022   1.74%
+duplicate-aliases.xsl          938    1.60%
+wrap-bytes.xsl                 916    1.56%
+resolve-aliases.xsl            796    1.35%
+atoms-with-bound-attrs.xsl     795    1.35%
+global-nonames.xsl             794    1.35%
+self-naming.xsl                784    1.33%
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2024-11-09 at 23:27,
+on 2024-11-10 at 06:40,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -146,4 +146,4 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11762473552
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11760018976
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11762695182

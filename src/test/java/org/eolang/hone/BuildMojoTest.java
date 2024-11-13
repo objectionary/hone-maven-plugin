@@ -23,6 +23,8 @@
  */
 package org.eolang.hone;
 
+import com.yegor256.Mktmp;
+import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;

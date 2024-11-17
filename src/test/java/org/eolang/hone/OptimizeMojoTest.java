@@ -24,6 +24,7 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
+import com.yegor256.MayBeSlow;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;

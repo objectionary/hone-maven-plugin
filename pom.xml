@@ -165,6 +165,12 @@ SOFTWARE.
       <version>0.0.5</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.yegor256</groupId>
+      <artifactId>maybeslow</artifactId>
+      <version>0.0.3</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

@@ -100,26 +100,26 @@ Here is the result of the latest optimization of itself:
 
 <!-- self_benchmark_begin -->
 ```text
-to-phi.xsl                     10220  17.38%
-add-refs.xsl                   9780   16.63%
-same-line-names.xsl            8645   14.70%
-stars-to-tuples.xsl            2399   4.08%
-duplicate-names.xsl            2332   3.97%
-broken-refs.xsl                2151   3.66%
-set-locators.xsl               1957   3.33%
-wrap-method-calls.xsl          1339   2.28%
-broken-aliases.xsl             1046   1.78%
-not-empty-atoms.xsl            1022   1.74%
-duplicate-aliases.xsl          938    1.60%
-wrap-bytes.xsl                 916    1.56%
-resolve-aliases.xsl            796    1.35%
-atoms-with-bound-attrs.xsl     795    1.35%
-global-nonames.xsl             794    1.35%
-self-naming.xsl                784    1.33%
+to-phi.xsl                     10711  17.25%
+add-refs.xsl                   10214  16.45%
+same-line-names.xsl            9317   15.01%
+stars-to-tuples.xsl            2549   4.11%
+duplicate-names.xsl            2458   3.96%
+broken-refs.xsl                2039   3.28%
+set-locators.xsl               1988   3.20%
+wrap-method-calls.xsl          1435   2.31%
+broken-aliases.xsl             1186   1.91%
+not-empty-atoms.xsl            1164   1.87%
+duplicate-aliases.xsl          1078   1.74%
+vars-float-up.xsl              1008   1.62%
+self-naming.xsl                922    1.49%
+global-nonames.xsl             804    1.29%
+wrap-bytes.xsl                 796    1.28%
+add-probes.xsl                 785    1.26%
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2024-11-10 at 06:40,
+on 2024-11-19 at 06:24,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -146,4 +146,4 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11762695197
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11762695182
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11907039014

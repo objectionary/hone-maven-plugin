@@ -70,7 +70,7 @@ RUN chmod a+x install-stack.sh \
   && ./install-stack.sh \
   && stack config set system-ghc --global true
 
-ENV NORMALIZER=1.1.0
+ENV NORMALIZER=2.0.0
 COPY install-normalizer.sh ./
 RUN chmod a+x install-normalizer.sh \
   && ./install-normalizer.sh

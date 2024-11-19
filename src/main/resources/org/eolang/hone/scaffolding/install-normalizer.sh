@@ -23,12 +23,12 @@
 
 set -ex
 
-if normalizer --help 2>/dev/null; then
+if eo-phi-normalizer --help 2>/dev/null; then
   echo "Normalizer already installed"
   exit
 fi
 
 stack install --resolver lts-22.16 "eo-phi-normalizer-${NORMALIZER}"
-cp /root/.local/bin/normalizer /usr/local/bin/normalizer
+cp /root/.local/bin/eo-phi-normalizer /usr/local/bin/eo-phi-normalizer
 
-normalizer --help
+eo-phi-normalizer --help

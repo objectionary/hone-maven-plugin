@@ -65,7 +65,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      *
      * @since 0.1.0
      */
-    @Parameter(property = "hone.image", defaultValue = "yegor256/hone")
+    @Parameter(property = "hone.image", defaultValue = "yegor256/hone:latest")
     protected String image;
 
     /**

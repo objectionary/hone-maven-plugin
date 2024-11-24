@@ -306,7 +306,7 @@ final class OptimizeMojoTest {
                         title: "simple"
                         rules:
                             -   name: simple
-                                description: 'change 7777 double to 5555 double'
+                                description: 'change 7777 int to 5555 int'
                                 pattern: |
                                     Φ.org.eolang.bytes ( Δ ⤍ 00-00-00-00-00-00-1E-61 )
                                 result: |

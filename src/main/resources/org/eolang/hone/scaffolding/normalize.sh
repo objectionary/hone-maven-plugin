@@ -27,7 +27,6 @@ set -o pipefail
 rules=$1
 from=$2
 to=$3
-SELF=$(dirname "$0")
 
 mkdir -p "${to}"
 while IFS= read -r f; do

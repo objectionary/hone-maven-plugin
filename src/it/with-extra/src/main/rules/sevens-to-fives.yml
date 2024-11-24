@@ -20,34 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ---
-name: site
-'on':
-  push:
-    tags:
-      - '*'
-jobs:
-  site:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 17
-      - uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: jdk-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: jdk-maven-
-      - run: mvn clean site -Psite -Dinvoker.skip -DskipTests --errors --batch-mode
-      - uses: JamesIves/github-pages-deploy-action@v4.6.9
-        with:
-          branch: gh-pages
-          folder: target/site
-          target-folder: ${{ github.ref_name }}
-          clean: false
-      - uses: JamesIves/github-pages-deploy-action@v4.6.9
-        with:
-          branch: gh-pages
-          folder: target/site
-          clean: false
+title: "simple"
+rules:
+  - name: simple
+    description: 'change 7777 int to 5555 int'
+    pattern: |
+      Φ.org.eolang.bytes ( Δ ⤍ 00-00-00-00-00-00-1E-61 )
+    result: |
+      Φ.org.eolang.bytes ( Δ ⤍ 40-B5-B3-00-00-00-15-B3 )
+    when: [ ]
+    tests: [ ]

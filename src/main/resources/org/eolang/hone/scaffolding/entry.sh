@@ -69,7 +69,7 @@ if [ -z "${RULES}" ]; then
 fi
 for rule in ${RULES}; do
   if [ ! -e "${rule}" ]; then
-    echo "YAML rule file doesn't exist: ${SELF}/rules/${rule}"
+    echo "YAML rule file doesn't exist: ${rule}"
     tree "${SELF}"
     exit 1
   fi

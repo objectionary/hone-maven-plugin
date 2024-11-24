@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ---
-title: "simple"
+title: "forty-three"
 rules:
-  - name: simple
+  - name: forty-three
     description: 'change 33 double to 42 double'
     pattern: |
       Φ.org.eolang.bytes ( Δ ⤍ 40-40-80-00-00-00-00-00 )

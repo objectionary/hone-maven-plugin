@@ -65,15 +65,18 @@ opts+=(
 opts+=("-Deo.xslMeasuresFile=${TARGET}/xsl-measures.csv")
 
 if [ -z "${RULES}" ]; then
-  RULES=$(find "${SELF}/rules" -name '*.yml' -exec basename {} \;)
+  RULES=$(find "${SELF}/rules" -name '*.yml' -exec realpath {} \;)
 fi
 for rule in ${RULES}; do
-  if [ ! -e "${SELF}/rules/${rule}" ]; then
+  if [ ! -e "${rule}" ]; then
     echo "YAML rule file doesn't exist: ${SELF}/rules/${rule}"
     tree "${SELF}"
     exit 1
   fi
 done
+if [ -n "${EXTRA}" ]; then
+  RULES="${RULES} $(find "${EXTRA}" -name '*.yml' -exec realpath {} \;)"
+fi
 
 mvn "${opts[@]}" \
   jeo:disassemble \
@@ -83,10 +86,10 @@ mvn "${opts[@]}" \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi" \
   exec:exec \
-  "-Dexec.script=${SELF}/normalize.sh" \
-  "-Dexec.rules=${RULES}" \
-  "-Dexec.from=${TARGET}/generated-sources/phi" \
-  "-Dexec.to=${TARGET}/generated-sources/phi-optimized" \
+  "-Dexec.normalizer.script=${SELF}/normalize.sh" \
+  "-Dexec.normalizer.rules=${RULES}" \
+  "-Dexec.normalizer.from=${TARGET}/generated-sources/phi" \
+  "-Dexec.normalizer.to=${TARGET}/generated-sources/phi-optimized" \
   eo:phi-to-xmir \
   "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
   "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi" \

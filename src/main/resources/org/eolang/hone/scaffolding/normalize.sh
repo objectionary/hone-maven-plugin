@@ -32,6 +32,6 @@ SELF=$(dirname "$0")
 mkdir -p "${to}"
 while IFS= read -r f; do
   for rule in ${rules}; do
-    eo-phi-normalizer transform --rules "${SELF}/rules/${rule}" "${from}/${f}" --single -o "${to}/${f}"
+    eo-phi-normalizer transform --rules "${rule}" "${from}/${f}" --single -o "${to}/${f}"
   done
 done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)

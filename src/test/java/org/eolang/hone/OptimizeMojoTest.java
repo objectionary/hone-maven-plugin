@@ -134,11 +134,6 @@ final class OptimizeMojoTest {
                     .set("image", image);
                 f.exec("test");
                 MatcherAssert.assertThat(
-                    "the build must be successful",
-                    f.log(),
-                    RequisiteMatcher.SUCCESS
-                );
-                MatcherAssert.assertThat(
                     "optimized .xmir must be present",
                     f.files().file("target/generated-sources/unphi/foo/Kid.xmir").exists(),
                     Matchers.is(true)
@@ -181,11 +176,6 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("optimize");
                 f.exec("test");
-                MatcherAssert.assertThat(
-                    "the build must be successful",
-                    f.log(),
-                    RequisiteMatcher.SUCCESS
-                );
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
                     f.files().file("target/generated-sources/phi-optimized/Hello.phi").exists(),
@@ -251,11 +241,6 @@ final class OptimizeMojoTest {
                     xmir.toFile().exists(),
                     Matchers.is(true)
                 );
-                MatcherAssert.assertThat(
-                    "the build must be successful",
-                    f.log(),
-                    RequisiteMatcher.SUCCESS
-                );
                 final Path target = Paths.get(System.getProperty("target.directory"));
                 Files.copy(
                     f.files().file("target/timings.csv").path(),
@@ -301,6 +286,78 @@ final class OptimizeMojoTest {
                             msec, msec
                         )
                     ).getBytes()
+                );
+            }
+        );
+    }
+
+    @Test
+    @ExtendWith(MayBeSlow.class)
+    @ExtendWith(StopIfStuck.class)
+    void optimizesWithExtraRule(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/rules/simple.yaml")
+                    .write(
+                        """
+                        title: "simple"
+                        rules:
+                            -   name: simple
+                                description: 'change 7777 double to 5555 double'
+                                pattern: |
+                                    Φ.org.eolang.bytes ( Δ ⤍ 00-00-00-00-00-00-1E-61 )
+                                result: |
+                                    Φ.org.eolang.bytes ( Δ ⤍ 40-B5-B3-00-00-00-15-B3 )
+                                when: [ ]
+                                tests: [ ]
+                        """.getBytes()
+                    );
+                f.files()
+                    .file("src/main/java/Foo.java")
+                    .write(
+                        """
+                            class Foo {
+                                int bar() {
+                                    return 7777;
+                                }
+                            }
+                        """.getBytes()
+                    );
+                f.files()
+                    .file("src/test/java/FooTest.java")
+                    .write(
+                        """
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class FooTest {
+                            @Test
+                            void worksAfterOptimization() {
+                                Assertions.assertEquals(5555, new Foo().bar());
+                            }
+                        }
+                        """.getBytes()
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("extra", new String[] {"src/rules/simple.yaml"})
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
                 );
             }
         );

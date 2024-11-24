@@ -53,11 +53,11 @@ SOFTWARE.
           <artifactId>exec-maven-plugin</artifactId>
           <groupId>org.codehaus.mojo</groupId>
           <configuration>
-            <executable>${exec.script}</executable>
+            <executable>${exec.normalizer.script}</executable>
             <arguments>
-              <argument>${exec.rules}</argument>
-              <argument>${exec.from}</argument>
-              <argument>${exec.to}</argument>
+              <argument>${exec.normalizer.rules}</argument>
+              <argument>${exec.normalizer.from}</argument>
+              <argument>${exec.normalizer.to}</argument>
             </arguments>
           </configuration>
         </plugin>

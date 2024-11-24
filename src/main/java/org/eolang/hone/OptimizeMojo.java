@@ -27,13 +27,17 @@ import com.jcabi.log.Logger;
 import com.sun.security.auth.module.UnixSystem;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.cactoos.iterable.Mapped;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
@@ -59,6 +63,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @since 0.1.0
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
@@ -74,6 +79,16 @@ public final class OptimizeMojo extends AbstractMojo {
      */
     @Parameter(property = "hone.rules", defaultValue = "*")
     private String rules;
+
+    /**
+     * List of extra rules to use for optimizations, provided as
+     * YAML files.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.extra")
+    private List<String> extra;
 
     /**
      * EO version to use.
@@ -113,6 +128,32 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--env", "TARGET=/target"
             )
         );
+        Path extdir = this.target.toPath().resolve("hone-extra");
+        if (extdir.toFile().mkdirs()) {
+            Logger.debug(this, "Directory %[file]s created", extdir);
+        }
+        if (this.extra != null) {
+            final int sub = extdir.toFile().list().length + 1;
+            extdir = extdir.resolve(Integer.toString(sub));
+            if (extdir.toFile().mkdirs()) {
+                Logger.debug(this, "Directory %[file]s created", extdir);
+            }
+            final String fmt = String.format(
+                "%%0%dd.yml",
+                (int) Math.log10(this.extra.size()) + 1
+            );
+            for (int pos = 0; pos < this.extra.size(); ++pos) {
+                final Path src = Paths.get(this.extra.get(pos));
+                final Path dest = extdir.resolve(String.format(fmt, pos));
+                Files.copy(src, dest);
+                Logger.debug(this, "Extra rule %[file]s copied to %[file]s", src, dest);
+            }
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("EXTRA=/target/hone-extra/%d", sub)
+                )
+            );
+        }
         if (this.eoVersion == null) {
             Logger.debug(this, "EO version is not set, we use the default one");
         } else {
@@ -143,7 +184,14 @@ public final class OptimizeMojo extends AbstractMojo {
             Arrays.asList(
                 "--env",
                 String.format(
-                    "RULES=%s", String.join(" ", new Rules(this.rules).yamls())
+                    "RULES=%s",
+                    String.join(
+                        " ",
+                        new Mapped<>(
+                            p -> String.format("rules/%s", p),
+                            new Rules(this.rules).yamls()
+                        )
+                    )
                 )
             )
         );

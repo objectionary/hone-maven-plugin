@@ -201,7 +201,7 @@ SOFTWARE.
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-resource-one</id>
+            <id>copy-descriptor</id>
             <phase>process-classes</phase>
             <goals>
               <goal>copy-resources</goal>

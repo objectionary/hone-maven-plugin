@@ -53,13 +53,16 @@
 <a class="jxr_linenumber" name="L45" href="#L45">45</a>  
 <a class="jxr_linenumber" name="L46" href="#L46">46</a>      @Override
 <a class="jxr_linenumber" name="L47" href="#L47">47</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> exec() <strong class="jxr_keyword">throws</strong> IOException {
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>          <strong class="jxr_keyword">new</strong> <a name="Docker" href="../../../org/eolang/hone/Docker.html#Docker">Docker</a>(<strong class="jxr_keyword">this</strong>.sudo).exec(
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>          <strong class="jxr_keyword">this</strong>.timings.through(
 <a class="jxr_linenumber" name="L49" href="#L49">49</a>              <span class="jxr_string">"pull"</span>,
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>              <strong class="jxr_keyword">this</strong>.image
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>          );
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>          Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Docker image '%s' was pulled"</span>, <strong class="jxr_keyword">this</strong>.image);
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>      }
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>  }
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>              () -&gt; <strong class="jxr_keyword">new</strong> <a name="Docker" href="../../../org/eolang/hone/Docker.html#Docker">Docker</a>(<strong class="jxr_keyword">this</strong>.sudo).exec(
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>                  <span class="jxr_string">"pull"</span>,
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>                  <strong class="jxr_keyword">this</strong>.image
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>              )
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          );
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Docker image '%s' was pulled"</span>, <strong class="jxr_keyword">this</strong>.image);
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>      }
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024 <a href="https://github.com/objectionary">Objectionary</a>. All rights reserved.</div>

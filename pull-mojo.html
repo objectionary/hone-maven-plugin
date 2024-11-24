@@ -61,13 +61,13 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.0.18</strong>
+                                    <strong itemprop="version">0.0.27</strong>
                                 </li>
                                 <li>
                                     
-                                    <time itemprop="datePublished" datetime="2024-10-27T09:58:17Z">
+                                    <time itemprop="datePublished" datetime="2024-11-24T02:03:54Z">
                                         
-                                        27-Oct-2024
+                                        24-Nov-2024
                                     </time>
                                 </li>
                                 <li class="menu-button">menu</li>
@@ -81,7 +81,7 @@
                             <section>
 <h2><a name="hone:pull"></a>hone:pull</h2><a name="hone:pull"></a>
 <p><strong>Full name</strong>:</p>
-<p>org.eolang:hone-maven-plugin:0.0.18:pull</p>
+<p>org.eolang:hone-maven-plugin:0.0.27:pull</p>
 <p><strong>Description</strong>:</p>
 <p>Pull Docker image from Docker Hub. 
 <p>This goal pulls Docker image from <a href="https://hub.docker.com">Docker Hub</a> to your machine. You may skip this goal and simply use the <tt>optimize</tt> goal, which will automatically pull the image from the Hub. However, it would be cleaner to use <tt>pull</tt>, then <tt>optimize</tt>, and then <tt>rmi</tt> (which deletes the image from your machine).</p></p>
@@ -102,7 +102,7 @@
 <td align="left"><a href="#image"><code>&lt;image&gt;</code></a></td>
 <td><code>String</code></td>
 <td><code>0.1.0</code></td>
-<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
+<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone:latest</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
 <tr class="a">
 <td align="left"><a href="#skip"><code>&lt;skip&gt;</code></a></td>
 <td><code>boolean</code></td>
@@ -112,7 +112,12 @@
 <td align="left"><a href="#sudo"><code>&lt;sudo&gt;</code></a></td>
 <td><code>boolean</code></td>
 <td><code>0.1.0</code></td>
-<td>Use "sudo" for "docker".<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.sudo</code></td></tr></table></section><section>
+<td>Use "sudo" for "docker".<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.sudo</code></td></tr>
+<tr class="a">
+<td align="left"><a href="#target"><code>&lt;target&gt;</code></a></td>
+<td><code>File</code></td>
+<td><code>0.1.0</code></td>
+<td>The "target/" directory of Maven project.<br /><strong>Default</strong>: <code>${project.build.directory}</code><br /><strong>User Property</strong>: <code>hone.target</code></td></tr></table></section><section>
 <h3><a name="Parameter_Details"></a>Parameter Details</h3><a name="Parameter_Details"></a><a name="image"></a><section>
 <h4><a name="a.3Cimage.3E"></a>&lt;image&gt;</h4><a name="a.3Cimage.3E"></a>
 <div>Docker image to use.</div>
@@ -121,7 +126,7 @@
 <li><strong>Since</strong>: <code>0.1.0</code></li>
 <li><strong>Required</strong>: <code>No</code></li>
 <li><strong>User Property</strong>: <code>hone.image</code></li>
-<li><strong>Default</strong>: <code>yegor256/hone</code></li></ul><hr /></section><a name="skip"></a><section>
+<li><strong>Default</strong>: <code>yegor256/hone:latest</code></li></ul><hr /></section><a name="skip"></a><section>
 <h4><a name="a.3Cskip.3E"></a>&lt;skip&gt;</h4><a name="a.3Cskip.3E"></a>
 <div>Skip the execution, if set to TRUE.</div>
 <ul>
@@ -137,7 +142,15 @@
 <li><strong>Since</strong>: <code>0.1.0</code></li>
 <li><strong>Required</strong>: <code>No</code></li>
 <li><strong>User Property</strong>: <code>hone.sudo</code></li>
-<li><strong>Default</strong>: <code>false</code></li></ul></section></section></section>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a name="target"></a><section>
+<h4><a name="a.3Ctarget.3E"></a>&lt;target&gt;</h4><a name="a.3Ctarget.3E"></a>
+<div>The "target/" directory of Maven project.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.io.File</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.target</code></li>
+<li><strong>Default</strong>: <code>${project.build.directory}</code></li></ul></section></section></section>
                         </article>
                     </div>
                 </main>

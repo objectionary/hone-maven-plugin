@@ -362,4 +362,50 @@ final class OptimizeMojoTest {
             }
         );
     }
+
+    @Test
+    @ExtendWith(MayBeSlow.class)
+    @ExtendWith(StopIfStuck.class)
+    void normalizesCanonicalPhiExamples(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("initialize")
+                    .goals("build")
+                    .configuration()
+                    .set("image", image);
+                f.exec("initialize");
+                f.files().file("ex").save(
+                    Paths.get(System.getProperty("user.dir")).resolve("src/test/normalizer-tests")
+                );
+            }
+        );
+        MatcherAssert.assertThat(
+            "all .phi transformations pass correctly",
+            new Docker().exec(
+                "run", "--rm",
+                "--volume", String.format("%s:/ex", home.resolve("ex")),
+                "--entrypoint", "/bin/bash",
+                image,
+                "-c",
+                String.join(
+                    "\n",
+                    "set -ex",
+                    "eo-phi-normalizer --version",
+                    "mkdir -p parts",
+                    "for f in $(find /ex -name '*.phi' -type f -not -name '_*'); do",
+                    "  awk -v RS= '{print > (\"parts/\" NR \".phi\")}' \"${f}\"",
+                    "  cat parts/2.phi | tr -d '[:space:]' > parts/expected.phi",
+                    "  eo-phi-normalizer rewrite --single parts/1.phi | tr -d '[:space:]' > parts/output.phi",
+                    "  diff parts/output.phi parts/expected.phi",
+                    "done"
+                )
+            ),
+            Matchers.equalTo(0)
+        );
+    }
 }

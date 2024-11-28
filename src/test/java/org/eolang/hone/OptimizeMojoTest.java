@@ -313,7 +313,7 @@ final class OptimizeMojoTest {
                                     Φ.org.eolang.bytes ( Δ ⤍ 40-B5-B3-00-00-00-15-B3 )
                                 when: [ ]
                                 tests: [ ]
-                        """.getBytes()
+                        """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
                     .file("src/main/java/Foo.java")

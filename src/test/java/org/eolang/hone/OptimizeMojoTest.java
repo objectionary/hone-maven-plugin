@@ -90,7 +90,7 @@ final class OptimizeMojoTest {
                             abstract class AbstractParent {
                                 abstract byte[] foo();
                             }
-                        """.getBytes()
+                        """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
                     .file("src/main/java/foo/Kid.java")
@@ -103,7 +103,7 @@ final class OptimizeMojoTest {
                                 return new byte[] {(byte) 0x01, (byte) 0x02};
                             }
                         }
-                        """.getBytes()
+                        """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
                     .file("src/test/java/foo/KidTest.java")
@@ -118,7 +118,7 @@ final class OptimizeMojoTest {
                                 Assertions.assertEquals(2, new Kid().foo().length);
                             }
                         }
-                        """.getBytes()
+                        """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.dependencies()
                     .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
@@ -157,7 +157,13 @@ final class OptimizeMojoTest {
                 f.clean();
                 f.files()
                     .file("src/main/java/Hello.java")
-                    .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
+                    .write(
+                        String.join(
+                            "",
+                            "class Hello {",
+                            "double foo() { return Math.sin(42); } }"
+                        ).getBytes(StandardCharsets.UTF_8)
+                    );
                 f.build()
                     .plugins()
                     .appendItself()
@@ -192,7 +198,13 @@ final class OptimizeMojoTest {
                 f.clean();
                 f.files()
                     .file("src/main/java/Hello.java")
-                    .write("class Hello { double foo() { return Math.sin(42); } }".getBytes());
+                    .write(
+                        String.join(
+                            "",
+                            "class Hello {",
+                            "double foo() { return Math.sin(42); } }"
+                        ).getBytes(StandardCharsets.UTF_8)
+                    );
                 f.build()
                     .plugins()
                     .appendItself();
@@ -285,7 +297,7 @@ final class OptimizeMojoTest {
                             "Optimization time: %[ms]s (%d ms)",
                             msec, msec
                         )
-                    ).getBytes()
+                    ).getBytes(StandardCharsets.UTF_8)
                 );
             }
         );
@@ -324,7 +336,7 @@ final class OptimizeMojoTest {
                                     return 7777;
                                 }
                             }
-                        """.getBytes()
+                        """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
                     .file("src/test/java/FooTest.java")
@@ -338,7 +350,7 @@ final class OptimizeMojoTest {
                                 Assertions.assertEquals(5555, new Foo().bar());
                             }
                         }
-                        """.getBytes()
+                        """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.dependencies()
                     .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
@@ -397,7 +409,7 @@ final class OptimizeMojoTest {
                     "set -ex",
                     "eo-phi-normalizer --version",
                     "mkdir -p parts",
-                    "for f in $(find /ex -name '*.phi' -type f -not -name '_*'); do",
+                    "for f in $(find /ex -name '*.phi' -type f -not -name '_*' | sort); do",
                     "  awk -v RS= '{print > (\"parts/\" NR \".phi\")}' \"${f}\"",
                     "  cat parts/2.phi | tr -d '[:space:]' > parts/expected.phi",
                     "  eo-phi-normalizer rewrite --single parts/1.phi | tr -d '[:space:]' > parts/output.phi",

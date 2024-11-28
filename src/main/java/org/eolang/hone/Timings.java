@@ -26,6 +26,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -69,7 +70,7 @@ final class Timings {
                 this.path,
                 String.format(
                     "%s,%d\n", name, System.currentTimeMillis() - start
-                ).getBytes(),
+                ).getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.APPEND, StandardOpenOption.CREATE
             );
         }

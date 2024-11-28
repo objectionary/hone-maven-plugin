@@ -25,8 +25,8 @@ rules:
   - name: forty-three
     description: 'change 33 double to 42 double'
     pattern: |
-      Φ.org.eolang.bytes ( Δ ⤍ 40-40-80-00-00-00-00-00 )
+      Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )
     result: |
-      Φ.org.eolang.bytes ( Δ ⤍ 40-45-00-00-00-00-00-00 )
+      Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-45-00-00-00-00-00-00 ⟧ )
     when: [ ]
     tests: [ ]

@@ -308,9 +308,9 @@ final class OptimizeMojoTest {
                             -   name: simple
                                 description: 'change 7777 int to 5555 int'
                                 pattern: |
-                                    Φ.org.eolang.bytes ( Δ ⤍ 00-00-00-00-00-00-1E-61 )
+                                    Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 00-00-00-00-00-00-1E-61 ⟧ )
                                 result: |
-                                    Φ.org.eolang.bytes ( Δ ⤍ 40-B5-B3-00-00-00-15-B3 )
+                                    Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-B5-B3-00-00-00-15-B3 ⟧ )
                                 when: [ ]
                                 tests: [ ]
                         """.getBytes()

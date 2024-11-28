@@ -28,6 +28,8 @@ rules=$1
 from=$2
 to=$3
 
+eo-phi-normalizer --version
+
 mkdir -p "${to}"
 while IFS= read -r f; do
   for rule in ${rules}; do

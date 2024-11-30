@@ -409,19 +409,25 @@ final class OptimizeMojoTest {
                     "set -e",
                     "eo-phi-normalizer --version",
                     "mkdir -p parts",
+                    "errors=()",
                     "for f in $(find /ex -name '*.phi' -type f -not -name '_*' | sort); do",
                     "  awk -v RS= '{print > (\"parts/\" NR \".phi\")}' \"${f}\"",
                     "  cat parts/2.phi | tr -d '[:space:]' > parts/expected.phi",
                     "  eo-phi-normalizer rewrite --single parts/1.phi > parts/received.phi",
                     "  cat parts/received.phi | tr -d '[:space:]' > parts/output.phi",
-                    "  if ! diff parts/output.phi parts/expected.phi; then",
+                    "  if ! diff parts/expected.phi parts/output.phi; then",
                     "    echo \"Example ${f} failed\"",
                     "    echo 'Expected:'",
                     "    cat parts/2.phi",
                     "    echo 'Received:'",
                     "    cat parts/received.phi",
+                    "    errors+=(${f})",
                     "  fi",
-                    "done"
+                    "done",
+                    "if [ \"${#errors[@]}\" -gt 0 ]; then",
+                    "  echo \"${#errors[@]} examples failed: ${errors[@]}\"",
+                    "  exit 1",
+                    "fi"
                 )
             ),
             Matchers.equalTo(0)

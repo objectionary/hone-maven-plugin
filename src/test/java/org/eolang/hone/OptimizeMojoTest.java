@@ -413,7 +413,7 @@ final class OptimizeMojoTest {
                     "for f in $(find /ex -name '*.phi' -type f -not -name '_*' | sort); do",
                     "  awk -v RS= '{print > (\"parts/\" NR \".phi\")}' \"${f}\"",
                     "  cat parts/2.phi | tr -d '[:space:]' > parts/expected.phi",
-                    "  eo-phi-normalizer rewrite --single parts/1.phi > parts/received.phi",
+                    "  eo-phi-normalizer rewrite --max-depth=100 --single parts/1.phi > parts/received.phi",
                     "  cat parts/received.phi | tr -d '[:space:]' > parts/output.phi",
                     "  if ! diff parts/expected.phi parts/output.phi; then",
                     "    echo \"Example ${f} failed\"",

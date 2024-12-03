@@ -40,13 +40,13 @@ jobs:
           key: jdk-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: jdk-maven-
       - run: mvn clean site -Psite -Dinvoker.skip -DskipTests --errors --batch-mode
-      - uses: JamesIves/github-pages-deploy-action@v4.7.1
+      - uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
           branch: gh-pages
           folder: target/site
           target-folder: ${{ github.ref_name }}
           clean: false
-      - uses: JamesIves/github-pages-deploy-action@v4.7.1
+      - uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
           branch: gh-pages
           folder: target/site

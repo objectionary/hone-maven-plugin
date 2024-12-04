@@ -28,5 +28,4 @@ rules:
       ⟦ ⟧
     result: |
       ⟦ ⟧
-    when: [ ]
     tests: [ ]

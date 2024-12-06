@@ -23,7 +23,6 @@
  */
 package org.eolang.hone;
 
-import java.security.SecureRandom;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolver;
@@ -48,7 +47,8 @@ public final class RandomImageResolver implements ParameterResolver {
     public Object resolveParameter(final ParameterContext context,
         final ExtensionContext ext) {
         return String.format(
-            "x%x", Double.doubleToLongBits(new SecureRandom().nextDouble())
+            "hone-test:%s",
+            context.getParameter().getDeclaringExecutable().getName()
         );
     }
 

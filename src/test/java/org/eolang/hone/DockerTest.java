@@ -50,7 +50,7 @@ final class DockerTest {
         MatcherAssert.assertThat(
             "random image name is in a proper format",
             image,
-            Matchers.matchesPattern("x[a-z0-9]+")
+            Matchers.matchesPattern("[a-z-]+:[a-z][a-zA-Z0-9]+")
         );
     }
 }

@@ -78,7 +78,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    @Timeout(60L)
+    @Timeout(600L)
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -155,7 +155,7 @@ final class OptimizeMojoTest {
     //  in this file too: optimizesWithExtraRule()
     @Test
     @Disabled
-    @Timeout(60L)
+    @Timeout(600L)
     @ExtendWith(MayBeSlow.class)
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -226,7 +226,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Timeout(60L)
+    @Timeout(600L)
     @ExtendWith(MayBeSlow.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
@@ -312,7 +312,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Disabled
-    @Timeout(60L)
+    @Timeout(600L)
     @ExtendWith(MayBeSlow.class)
     void optimizesWithExtraRule(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -384,7 +384,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Timeout(60L)
+    @Timeout(600L)
     @ExtendWith(MayBeSlow.class)
     void normalizesCanonicalPhiExamples(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {

@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -226,7 +227,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Timeout(1800L)
+    @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {

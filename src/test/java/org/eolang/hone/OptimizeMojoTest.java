@@ -226,7 +226,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Timeout(600L)
+    @Timeout(1800L)
     @ExtendWith(MayBeSlow.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {

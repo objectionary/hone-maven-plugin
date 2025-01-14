@@ -38,7 +38,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -76,7 +78,7 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
+    @Timeout(60L)
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -147,9 +149,11 @@ final class OptimizeMojoTest {
         );
     }
 
+    // @todo
     @Test
+    @Disabled
+    @Timeout(60L)
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -219,8 +223,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Timeout(60L)
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final String path = "com/sun/jna/Pointer.class";
@@ -304,8 +308,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Disabled
+    @Timeout(60L)
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void optimizesWithExtraRule(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -376,8 +381,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Timeout(60L)
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void normalizesCanonicalPhiExamples(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(

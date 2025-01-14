@@ -414,7 +414,7 @@ final class OptimizeMojoTest {
                 "-c",
                 String.join(
                     "\n",
-                    "set -e",
+                    "set -ex",
                     "eo-phi-normalizer --version",
                     "mkdir -p parts",
                     "errors=()",

@@ -149,7 +149,10 @@ final class OptimizeMojoTest {
         );
     }
 
-    // @todo
+    // @todo #135:30min The test is disabled due to a bug in JEO,
+    //  which is already reported: jeo-maven-plugin#964 Once the
+    //  bug is fixed, try to enable this test. Also, another test
+    //  in this file too: optimizesWithExtraRule()
     @Test
     @Disabled
     @Timeout(60L)

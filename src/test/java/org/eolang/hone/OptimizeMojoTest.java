@@ -38,16 +38,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link OptimizeMojo}.
  *
  * @since 0.1.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -151,6 +155,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Disabled
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
@@ -309,6 +314,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Disabled
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)

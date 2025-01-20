@@ -31,8 +31,29 @@ name: deep
       - master
     paths-ignore: [ 'README.md' ]
 jobs:
+  start-instance:
+    runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.start.outputs.label }}
+      ec2-instance-id: ${{ steps.start.outputs.ec2-instance-id }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - id: start
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.GH_PAT }}
+          ec2-image-id: ${{ secrets.AWS_AMI }}
+          ec2-instance-type: t2.2xlarge
+          subnet-id: ${{ secrets.AWS_SUBNET }}
+          security-group-id: ${{ secrets.AWS_SGROUP }}
   deep:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -44,4 +65,23 @@ jobs:
           path: ~/.m2/repository
           key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ubuntu-jdk-21-maven-
-      - run: mvn clean install -Pqulice --errors --batch-mode -Dgroups=deep
+      - run: mvn clean install --errors --batch-mode -Dgroups=deep,!fast -Dinvoker.skip
+      - run: mvn clean install --errors --batch-mode -DskipTests
+  terminate-instance:
+    needs:
+      - start-instance
+      - deep
+    runs-on: ubuntu-24.04
+    if: ${{ always() }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.GH_PAT }}
+          label: ${{ needs.start-instance.outputs.label }}
+          ec2-instance-id: ${{ needs.start-instance.outputs.ec2-instance-id }}

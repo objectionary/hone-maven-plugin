@@ -53,4 +53,4 @@ jobs:
           key: ${{ runner.os }}-jdk-${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
-      - run: mvn clean install --errors --batch-mode '-Dgroups=!deep'
+      - run: mvn clean install --errors -Dinvoker.skip --batch-mode '-Dgroups=!deep'

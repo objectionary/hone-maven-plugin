@@ -49,7 +49,7 @@ jobs:
           aws-resource-tags: '[{"Key":"Name","Value":"hone-deep"}]'
           github-token: ${{ secrets.AWS_PAT }}
           ec2-image-id: ${{ secrets.AWS_AMI }}
-          ec2-instance-type: t2.4xlarge
+          ec2-instance-type: t3.2xlarge
           subnet-id: ${{ secrets.AWS_SUBNET }}
           security-group-id: ${{ secrets.AWS_SGROUP }}
   deep:

@@ -46,6 +46,7 @@ jobs:
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
+          aws-resource-tags: '[{"Key":"Name","Value":"hone-deep"}]'
           github-token: ${{ secrets.AWS_PAT }}
           ec2-image-id: ${{ secrets.AWS_AMI }}
           ec2-instance-type: t2.2xlarge
@@ -53,7 +54,7 @@ jobs:
           security-group-id: ${{ secrets.AWS_SGROUP }}
   deep:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

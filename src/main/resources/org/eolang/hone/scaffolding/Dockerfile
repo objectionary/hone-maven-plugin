@@ -68,7 +68,9 @@ ENV STACK=2.15.7
 COPY install-stack.sh ./
 RUN chmod a+x install-stack.sh \
   && ./install-stack.sh \
-  && stack config set system-ghc --global true
+  && stack config set system-ghc --global true \
+  && stack upgrade \
+  && stack update
 
 ENV NORMALIZER=3.2.0
 COPY install-normalizer.sh ./

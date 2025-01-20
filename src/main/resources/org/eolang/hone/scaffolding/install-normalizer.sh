@@ -28,10 +28,8 @@ if [ "$(eo-phi-normalizer --version)" == "${NORMALIZER}" ]; then
   exit
 fi
 
-stack update
 stack install --no-run-tests --no-run-benchmarks \
   --progress-bar count-only \
-  --resolver lts-22.16 \
   "eo-phi-normalizer-${NORMALIZER}"
 cp /root/.local/bin/eo-phi-normalizer /usr/local/bin/eo-phi-normalizer
 

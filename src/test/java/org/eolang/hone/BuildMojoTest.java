@@ -67,6 +67,7 @@ final class BuildMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
+    @DisabledWithoutDocker
     void buildsDockerImage(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(

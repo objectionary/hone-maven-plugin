@@ -38,7 +38,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -80,6 +79,7 @@ final class OptimizeMojoTest {
     @Test
     @ExtendWith(MayBeSlow.class)
     @Timeout(6000L)
+    @DisabledWithoutDocker
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -150,13 +150,9 @@ final class OptimizeMojoTest {
         );
     }
 
-    // @todo #135:30min The test is disabled due to a bug in JEO,
-    //  which is already reported: jeo-maven-plugin#964 Once the
-    //  bug is fixed, try to enable this test. Also, another test
-    //  in this file too: optimizesWithExtraRule()
     @Test
-    @Disabled
     @Timeout(6000L)
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -228,6 +224,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
@@ -312,8 +309,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Disabled
     @Timeout(6000L)
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesWithExtraRule(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -386,6 +383,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Timeout(6000L)
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void normalizesCanonicalPhiExamples(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {

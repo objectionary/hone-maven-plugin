@@ -23,8 +23,8 @@
 
 set -ex
 
-if eo-phi-normalizer --help 2>/dev/null; then
-  echo "Normalizer already installed"
+if [ "$(eo-phi-normalizer --version)" == "${NORMALIZER}" ]; then
+  echo "Normalizer ${NORMALIZER} already installed"
   exit
 fi
 

@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM ubuntu:24.04
+FROM yegor256/hone:latest
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"

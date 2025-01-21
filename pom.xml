@@ -175,6 +175,14 @@ SOFTWARE.
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-invoker-plugin</artifactId>
+        <configuration>
+          <pomExcludes>
+            <pomExclude>larger/pom.xml</pomExclude>
+          </pomExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <systemPropertyVariables>

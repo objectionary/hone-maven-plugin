@@ -45,7 +45,7 @@ jobs:
           restore-keys: |
             ubuntu-jdk-21-maven-
       - run: mvn clean install -DskipTests -Dinvoker.skip --errors --batch-mode
-      - run: mvn clean install -Pself --errors --batch-mode -Dhone.rules=none
+      - run: mvn clean install -DskipTests -Dinvoker.skip -Pself -Dhone.rules=none --errors --batch-mode
       - run: |
           set -x
           sum=$(

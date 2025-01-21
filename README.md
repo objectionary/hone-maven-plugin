@@ -78,21 +78,21 @@ from [JNA](https://github.com/java-native-access/jna):
 ```text
 Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
-Size of .xmir after disassemble: 2Mb (2Mb bytes, 37641 lines)
-Size of .phi: 2Mb (2Mb bytes, 52462 lines)
-Size of .xmir after unphi: 7Mb (7Mb bytes, 189330 lines)
-Optimization time: 3min (153311 ms)
+Size of .xmir after disassemble: 1Mb (1Mb bytes, 29560 lines)
+Size of .phi: 627Kb (627Kb bytes, 13496 lines)
+Size of .xmir after unphi: 5Mb (5Mb bytes, 130846 lines)
+Optimization time: 30min (1822015 ms)
 
-jeo-maven-plugin:unroll-phi   80.017  53.26%
-eo-maven-plugin:xmir-to-phi   51.476  34.26%
-eo-maven-plugin:phi-to-xmir   14.468  9.63%
-jeo-maven-plugin:disassemble  2.53    1.68%
-exec-maven-plugin:exec        1.101   0.73%
-jeo-maven-plugin:assemble     0.647   0.43%
+jeo-maven-plugin:unroll-phi   1665.12  91.54%
+eo-maven-plugin:xmir-to-phi   134.145  7.37%
+eo-maven-plugin:phi-to-xmir   15.254   0.84%
+jeo-maven-plugin:disassemble  2.343    0.13%
+exec-maven-plugin:exec        1.581    0.09%
+jeo-maven-plugin:assemble     0.565    0.03%
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2024-11-20 at 12:46,
+on 2025-01-21 at 11:14,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
@@ -144,7 +144,7 @@ The versions of [EO] and
 that we use, are defined in the `in-docker-pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11933394049
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/12885223408
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11933394045

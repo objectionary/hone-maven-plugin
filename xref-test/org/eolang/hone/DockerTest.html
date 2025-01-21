@@ -9,7 +9,7 @@
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
 <a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * The MIT License (MIT)</em>
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
-<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Copyright (c) 2024 Objectionary.com</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Copyright (c) 2024-2025 Objectionary.com</em>
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> *</em>
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * Permission is hereby granted, free of charge, to any person obtaining a copy</em>
 <a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> * of this software and associated documentation files (the "Software"), to deal</em>
@@ -45,25 +45,26 @@
 <a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a name="DockerTest" href="../../../org/eolang/hone/DockerTest.html#DockerTest">DockerTest</a> {
 <a class="jxr_linenumber" name="L38" href="#L38">38</a>  
 <a class="jxr_linenumber" name="L39" href="#L39">39</a>      @Test
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>      <strong class="jxr_keyword">void</strong> printsVersion() <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>          MatcherAssert.assertThat(
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>              <span class="jxr_string">"docker version must be printed"</span>,
-<a class="jxr_linenumber" name="L43" href="#L43">43</a>              <strong class="jxr_keyword">new</strong> Docker().exec(<span class="jxr_string">"--version"</span>),
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>              Matchers.is(Matchers.notNullValue())
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>          );
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>      }
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>  
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>      @Test
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>      <strong class="jxr_keyword">void</strong> makesNiceImageName(@RandomImage <strong class="jxr_keyword">final</strong> String image) {
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>          MatcherAssert.assertThat(
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>              <span class="jxr_string">"random image name is in a proper format"</span>,
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>              image,
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>              Matchers.matchesPattern(<span class="jxr_string">"x[a-z0-9]+"</span>)
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>          );
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>      }
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>  }
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>      @DisabledWithoutDocker
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>      <strong class="jxr_keyword">void</strong> printsVersion() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>          MatcherAssert.assertThat(
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>              <span class="jxr_string">"docker version must be printed"</span>,
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>              <strong class="jxr_keyword">new</strong> Docker().exec(<span class="jxr_string">"--version"</span>),
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>              Matchers.is(Matchers.notNullValue())
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>          );
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>      }
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>      @Test
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">void</strong> makesNiceImageName(@RandomImage <strong class="jxr_keyword">final</strong> String image) {
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>          MatcherAssert.assertThat(
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>              <span class="jxr_string">"random image name is in a proper format"</span>,
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>              image,
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>              Matchers.matchesPattern(<span class="jxr_string">"[a-z-]+:[a-z][a-zA-Z0-9]+"</span>)
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          );
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>      }
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  }
 </pre>
 <hr/>
-<div id="footer">Copyright &#169; 2024 <a href="https://github.com/objectionary">Objectionary</a>. All rights reserved.</div>
+<div id="footer">Copyright &#169; 2024&#x2013;2025 <a href="https://github.com/objectionary">Objectionary</a>. All rights reserved.</div>
 </body>
 </html>

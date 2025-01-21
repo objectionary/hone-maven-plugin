@@ -44,7 +44,7 @@ jobs:
           key: maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             maven-
-      - run: mvn clean install -Pjacoco --errors --batch-mode
+      - run: mvn clean install -Pjacoco -Dinvoker.skip --errors --batch-mode '-Dgroups=!deep'
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

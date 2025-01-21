@@ -38,14 +38,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link OptimizeMojo}.
  *
  * @since 0.1.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -76,7 +81,8 @@ final class OptimizeMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
+    @Timeout(6000L)
+    @DisabledWithoutDocker
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -148,8 +154,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Timeout(6000L)
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -219,8 +226,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final String path = "com/sun/jna/Pointer.class";
@@ -304,8 +312,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Timeout(6000L)
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void optimizesWithExtraRule(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -376,8 +385,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Timeout(6000L)
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @ExtendWith(StopIfStuck.class)
     void normalizesCanonicalPhiExamples(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -406,7 +416,7 @@ final class OptimizeMojoTest {
                 "-c",
                 String.join(
                     "\n",
-                    "set -e",
+                    "set -ex",
                     "eo-phi-normalizer --version",
                     "mkdir -p parts",
                     "errors=()",

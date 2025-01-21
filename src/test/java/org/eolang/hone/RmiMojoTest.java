@@ -42,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class RmiMojoTest {
 
     @Test
+    @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void pullsAndRemovesDockerImage(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(

@@ -139,10 +139,11 @@ mvn clean install -Pqulice
 You will need [Maven 3.3+](https://maven.apache.org), Java 11+,
 and [Docker](https://docs.docker.com/engine/install/) installed.
 
-The versions of [EO](https://github.com/objectionary/eo) and
+The versions of [EO] and
 [JEO](https://github.com/objectionary/jeo-maven-plugin),
 that we use, are defined in the `in-docker-pom.xml` file.
 
+[EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/11933394049
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html

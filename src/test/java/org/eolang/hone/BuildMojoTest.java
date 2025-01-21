@@ -32,12 +32,15 @@ import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link BuildMojo}.
  *
  * @since 0.1.0
  */
+@Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
 final class BuildMojoTest {
@@ -67,6 +70,7 @@ final class BuildMojoTest {
 
     @Test
     @ExtendWith(MayBeSlow.class)
+    @DisabledWithoutDocker
     void buildsDockerImage(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(

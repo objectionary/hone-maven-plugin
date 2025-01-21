@@ -37,6 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class DockerTest {
 
     @Test
+    @DisabledWithoutDocker
     void printsVersion() throws Exception {
         MatcherAssert.assertThat(
             "docker version must be printed",

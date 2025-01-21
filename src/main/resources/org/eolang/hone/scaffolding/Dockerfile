@@ -24,7 +24,7 @@ FROM yegor256/hone:0.0.28
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+LABEL "version"="0.0.29"
 
 ENV DEBIAN_FRONTEND="noninteractive"
 

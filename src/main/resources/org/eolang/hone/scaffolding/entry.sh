@@ -93,9 +93,6 @@ mvn "${opts[@]}" \
   eo:phi-to-xmir \
   "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
   "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi" \
-  jeo:unroll-phi \
-  "-Djeo.unroll-phi.sourcesDir=${TARGET}/generated-sources/unphi" \
-  "-Djeo.unroll-phi.outputDir=${TARGET}/generated-sources/unrolled" \
   jeo:assemble \
-  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unrolled" \
+  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
   "-Djeo.assemble.outputDir=${TARGET}/classes"

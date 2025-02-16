@@ -30,8 +30,8 @@ SOFTWARE.
   <version>0.0.0</version>
   <name>hone</name>
   <properties>
-    <eo.version>0.50.0</eo.version>
-    <jeo.version>0.7.2</jeo.version>
+    <eo.version>0.51.5</eo.version>
+    <jeo.version>0.7.5</jeo.version>
   </properties>
   <build>
     <pluginManagement>

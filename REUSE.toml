@@ -21,9 +21,11 @@ path = [
     "**/.DS_Store",
     "**/.gitignore",
     "**/CNAME",
+    "**/MANIFEST.MF",
     ".DS_Store",
     ".gitattributes",
     ".gitignore",
+    "MANIFEST.MF",
     "README.md",
     "renovate.json",
 ]

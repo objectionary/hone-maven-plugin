@@ -4,6 +4,8 @@
 version = 1
 [[annotations]]
 path = [
+    "**.class",
+    "**.phi",
     "**.csv",
     "**.json",
     "**.md",

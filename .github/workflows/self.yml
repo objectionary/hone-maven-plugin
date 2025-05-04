@@ -48,6 +48,7 @@ jobs:
           perl -i -0777 -pe 's/(?<=\[self-benchmark-gha\]: )[^\n]+(?=\n)/$ENV{url}/gs;' README.md
       - uses: peter-evans/create-pull-request@v7
         with:
+          sign-commits: true
           branch: self-benchmark
           commit-message: 'new self benchmark results'
           delete-branch: true

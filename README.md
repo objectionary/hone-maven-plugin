@@ -100,14 +100,10 @@ Here is the result of the latest optimization of itself:
 
 <!-- self_benchmark_begin -->
 ```text
-wrap-bytes.xsl              1588  27.56%
-wrap-method-calls.xsl       1535  26.64%
-normalize-bytes.xsl         1373  23.83%
-atoms-with-bound-attrs.xsl  1266  21.97%
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2025-01-21 at 12:52,
+on 2025-05-19 at 09:43,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -135,4 +131,4 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/12887187273
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/12887187268
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15109567119

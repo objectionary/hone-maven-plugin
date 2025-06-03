@@ -385,7 +385,7 @@ final class OptimizeMojoTest {
                     .set("image", image);
                 f.exec("initialize");
                 f.files().file("ex").save(
-                    Paths.get(System.getProperty("user.dir")).resolve("src/test/normalizer-tests")
+                    Paths.get(System.getProperty("user.dir")).resolve("src/test/phino-tests")
                 );
             }
         );
@@ -400,13 +400,13 @@ final class OptimizeMojoTest {
                 String.join(
                     "\n",
                     "set -ex",
-                    "eo-phi-normalizer --version",
+                    "phino --version",
                     "mkdir -p parts",
                     "errors=()",
                     "for f in $(find /ex -name '*.phi' -type f -not -name '_*' | sort); do",
                     "  awk -v RS= '{print > (\"parts/\" NR \".phi\")}' \"${f}\"",
                     "  cat parts/2.phi | tr -d '[:space:]' > parts/expected.phi",
-                    "  eo-phi-normalizer rewrite --max-depth=25 --single parts/1.phi > parts/received.phi",
+                    "  phino rewrite --max-depth=25 parts/1.phi > parts/received.phi",
                     "  cat parts/received.phi | tr -d '[:space:]' > parts/output.phi",
                     "  if ! diff parts/expected.phi parts/output.phi; then",
                     "    echo \"Example ${f} failed\"",

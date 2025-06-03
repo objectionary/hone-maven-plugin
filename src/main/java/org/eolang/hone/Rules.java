@@ -20,7 +20,7 @@ import org.cactoos.scalar.IoChecked;
 import org.cactoos.scalar.LengthOf;
 
 /**
- * Collection of YAML rules for Normalizer.
+ * Collection of YAML rules for Phino.
  *
  * @since 0.1.0
  */

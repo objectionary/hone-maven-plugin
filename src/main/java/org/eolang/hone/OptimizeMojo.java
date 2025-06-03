@@ -29,7 +29,7 @@ import org.cactoos.iterable.Mapped;
  * then converts <tt>.xmir</tt> to <tt>.phi</tt> (which is
  * <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>),
  * then optimizes it via
- * <a href="https://github.com/objectionary/eo-phi-normalizer">eo-phi-normalizer</a>,
+ * <a href="https://github.com/objectionary/phino">phino</a>,
  * and then back to <tt>.xmir</tt> and to <tt>.class</tt>. As a result,
  * you obtain optimized Bytecode in the <tt>target/classes/</tt> directory,
  * which supposedly works faster than before.</p>

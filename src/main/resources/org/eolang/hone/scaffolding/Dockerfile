@@ -53,10 +53,10 @@ RUN chmod a+x install-stack.sh \
   && stack upgrade \
   && stack update
 
-ENV NORMALIZER=3.2.0
-COPY install-normalizer.sh ./
-RUN chmod a+x install-normalizer.sh \
-  && ./install-normalizer.sh
+ENV PHINO=0.0.0.1
+COPY install-phino.sh ./
+RUN chmod a+x install-phino.sh \
+  && ./install-phino.sh
 
 COPY in-docker-pom.xml pom.xml
 

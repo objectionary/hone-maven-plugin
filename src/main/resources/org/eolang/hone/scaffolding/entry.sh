@@ -67,10 +67,10 @@ mvn "${opts[@]}" \
   "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "-Deo.phiOutputDir=${TARGET}/generated-sources/phi" \
   exec:exec \
-  "-Dexec.normalizer.script=${SELF}/normalize.sh" \
-  "-Dexec.normalizer.rules=${RULES}" \
-  "-Dexec.normalizer.from=${TARGET}/generated-sources/phi" \
-  "-Dexec.normalizer.to=${TARGET}/generated-sources/phi-optimized" \
+  "-Dexec.phino.script=${SELF}/normalize.sh" \
+  "-Dexec.phino.rules=${RULES}" \
+  "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
+  "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
   eo:phi-to-xmir \
   "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
   "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi" \

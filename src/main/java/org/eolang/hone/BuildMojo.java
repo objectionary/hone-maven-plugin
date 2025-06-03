@@ -38,7 +38,7 @@ public final class BuildMojo extends AbstractMojo {
             final String[] files = {
                 "Dockerfile", "entry.sh", "in-docker-pom.xml", "normalize.sh",
                 "install-ghc.sh", "install-maven.sh", "install-stack.sh",
-                "install-normalizer.sh", "extensions.xml",
+                "install-phino.sh", "extensions.xml",
             };
             for (final String file : files) {
                 new IoChecked<>(

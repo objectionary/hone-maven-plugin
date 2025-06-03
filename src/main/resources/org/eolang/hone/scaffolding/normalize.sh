@@ -2,8 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -ex
-set -o pipefail
+set -ex -o pipefail
 
 rules=$1
 from=$2

@@ -39,19 +39,10 @@ COPY install-maven.sh ./
 RUN chmod a+x install-maven.sh \
   && ./install-maven.sh
 
-ENV GHC=9.10.1
-COPY install-ghc.sh ./
-RUN chmod a+x install-ghc.sh \
-  && ./install-ghc.sh
-ENV PATH="/opt/ghc/${GHC}/bin:$PATH"
-
-ENV STACK=2.15.7
-COPY install-stack.sh ./
-RUN chmod a+x install-stack.sh \
-  && ./install-stack.sh \
-  && stack config set system-ghc --global true \
-  && stack upgrade \
-  && stack update
+COPY install-cabal.sh ./
+RUN chmod a+x install-cabal.sh \
+  && ./install-cabal.sh
+ENV PATH="/root/.ghcup/bin:${PATH}"
 
 ENV PHINO=0.0.0.1
 COPY install-phino.sh ./

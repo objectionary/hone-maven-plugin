@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -ex
+set -ex -o pipefail
 
 if [ "$(phino --version)" == "${PHINO}" ]; then
   echo "Phino ${PHINO} already installed"

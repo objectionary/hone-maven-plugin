@@ -43,6 +43,7 @@ COPY install-cabal.sh ./
 RUN chmod a+x install-cabal.sh \
   && ./install-cabal.sh
 ENV PATH="/root/.ghcup/bin:${PATH}"
+RUN cabal --version
 
 ENV PHINO=0.0.0.1
 COPY install-phino.sh ./

@@ -43,12 +43,14 @@ COPY install-cabal.sh ./
 RUN chmod a+x install-cabal.sh \
   && ./install-cabal.sh
 ENV PATH="/root/.ghcup/bin:${PATH}"
+ENV PATH="/root/.cabal/bin:${PATH}"
 RUN cabal --version
 
 ENV PHINO=0.0.0.1
 COPY install-phino.sh ./
 RUN chmod a+x install-phino.sh \
   && ./install-phino.sh
+RUN phino --version
 
 COPY in-docker-pom.xml pom.xml
 

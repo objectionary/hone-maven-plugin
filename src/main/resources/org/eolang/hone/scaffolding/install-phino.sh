@@ -4,14 +4,14 @@
 
 set -ex -o pipefail
 
-if [ "$(phino --version)" == "${PHINO}" ]; then
+if phino --version && [ "$(phino --version)" == "${PHINO}" ]; then
   echo "Phino ${PHINO} already installed"
   exit
 fi
 
-stack install --no-run-tests --no-run-benchmarks \
-  --progress-bar count-only \
-  "phino-${PHINO}"
+cabal update
+cabal install --global --disable-tests --disable-coverage "phino-${PHINO}"
+
 cp /root/.local/bin/phino /usr/local/bin/phino
 
 phino --help

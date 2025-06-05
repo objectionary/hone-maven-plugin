@@ -28,7 +28,7 @@ release:
     cat ../docker-password | sudo docker login --password-stdin -u yegor256
     cd src/main/resources/org/eolang/hone/scaffolding/
     cp ../rules/*.yml rules
-    sed -i -e "s/0.0.0/${tag}/" Dockerfile
+    sed -i -e "s/\"0.0.0\"/\"${tag}\"/" Dockerfile
     sed -i -e "s/0.0.0/${tag}/" entry.sh
     git add Dockerfile
     git add entry.sh

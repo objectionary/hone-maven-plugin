@@ -1,12 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-title: "forty-three"
-rules:
-  - name: forty-three
-    description: 'change 33 double to 42 double'
-    pattern: |
-      Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )
-    result: |
-      Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-45-00-00-00-00-00-00 ⟧ )
-    tests: [ ]
+name: forty-three
+pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-45-00-00-00-00-00-00 ⟧ )'

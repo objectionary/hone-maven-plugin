@@ -51,6 +51,7 @@ COPY install-phino.sh ./
 RUN chmod a+x install-phino.sh \
   && ./install-phino.sh
 RUN phino --version
+RUN cp "$(which phino)" /usr/bin
 
 COPY in-docker-pom.xml pom.xml
 

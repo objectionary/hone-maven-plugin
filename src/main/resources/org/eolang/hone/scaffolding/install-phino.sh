@@ -10,4 +10,5 @@ if phino --version > /dev/null 2>&1 && [ "$(phino --version)" == "${PHINO}" ]; t
 fi
 
 cabal update
-cabal install --global --disable-tests --disable-coverage "phino-${PHINO}"
+cabal install --global --disable-tests \
+  --disable-coverage --overwrite-policy=always "phino-${PHINO}"

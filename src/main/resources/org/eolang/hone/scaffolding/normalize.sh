@@ -12,7 +12,8 @@ phino --version
 
 mkdir -p "${to}"
 while IFS= read -r f; do
+  mkdir -p "$(dirname "${to}/${f}")"
   for rule in ${rules}; do
-    phino rewrite --rule "${rule}" "${from}/${f}" --single -o "${to}/${f}"
+    phino rewrite --rule "${rule}" < "${from}/${f}" > "${to}/${f}"
   done
 done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)

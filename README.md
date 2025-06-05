@@ -51,7 +51,7 @@ the `target/generated-sources/jeo-disassemble/` directory.
 convert `.xmir` files to `.phi` files
 with [𝜑-calculus](https://arxiv.org/abs/2111.13384) expressions,
 and place them into the `target/generated-sources/phi/` directory.
-1. Using [normalizer](https://github.com/objectionary/normalizer),
+1. Using [phino](https://github.com/objectionary/phino),
 apply a number of optimizations to 𝜑-calculus expressions in the `.phi` files
 and place new `.phi` files into
 the `target/generated-sources/phi-optimized/` directory.

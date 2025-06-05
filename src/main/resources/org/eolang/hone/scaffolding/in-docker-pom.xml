@@ -34,11 +34,11 @@
           <artifactId>exec-maven-plugin</artifactId>
           <groupId>org.codehaus.mojo</groupId>
           <configuration>
-            <executable>${exec.normalizer.script}</executable>
+            <executable>${exec.phino.script}</executable>
             <arguments>
-              <argument>${exec.normalizer.rules}</argument>
-              <argument>${exec.normalizer.from}</argument>
-              <argument>${exec.normalizer.to}</argument>
+              <argument>${exec.phino.rules}</argument>
+              <argument>${exec.phino.from}</argument>
+              <argument>${exec.phino.to}</argument>
             </arguments>
           </configuration>
         </plugin>

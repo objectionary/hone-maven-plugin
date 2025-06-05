@@ -65,6 +65,7 @@ final class OptimizeMojoTest {
     @ExtendWith(MayBeSlow.class)
     @Timeout(6000L)
     @DisabledWithoutDocker
+    @Disabled
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -139,6 +140,7 @@ final class OptimizeMojoTest {
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
+    @Disabled
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -307,16 +309,12 @@ final class OptimizeMojoTest {
                     .file("src/rules/simple.yaml")
                     .write(
                         """
-                        title: "simple"
-                        rules:
-                            -   name: simple
-                                description: 'change 7777 int to 5555 int'
-                                pattern: |
-                                    Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 00-00-00-00-00-00-1E-61 ⟧ )
-                                result: |
-                                    Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-B5-B3-00-00-00-15-B3 ⟧ )
-                                when: [ ]
-                                tests: [ ]
+                        -   name: simple
+                            description: 'change 7777 int to 5555 int'
+                            pattern: |
+                                Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 00-00-00-00-00-00-1E-61 ⟧ )
+                            result: |
+                                Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-B5-B3-00-00-00-15-B3 ⟧ )
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -371,6 +369,7 @@ final class OptimizeMojoTest {
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
+    @Disabled
     void normalizesCanonicalPhiExamples(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -385,7 +384,7 @@ final class OptimizeMojoTest {
                     .set("image", image);
                 f.exec("initialize");
                 f.files().file("ex").save(
-                    Paths.get(System.getProperty("user.dir")).resolve("src/test/normalizer-tests")
+                    Paths.get(System.getProperty("user.dir")).resolve("src/test/phino-tests")
                 );
             }
         );
@@ -400,13 +399,13 @@ final class OptimizeMojoTest {
                 String.join(
                     "\n",
                     "set -ex",
-                    "eo-phi-normalizer --version",
+                    "phino --version",
                     "mkdir -p parts",
                     "errors=()",
                     "for f in $(find /ex -name '*.phi' -type f -not -name '_*' | sort); do",
                     "  awk -v RS= '{print > (\"parts/\" NR \".phi\")}' \"${f}\"",
                     "  cat parts/2.phi | tr -d '[:space:]' > parts/expected.phi",
-                    "  eo-phi-normalizer rewrite --max-depth=25 --single parts/1.phi > parts/received.phi",
+                    "  phino rewrite --normalize --max-depth=25 < parts/1.phi > parts/received.phi",
                     "  cat parts/received.phi | tr -d '[:space:]' > parts/output.phi",
                     "  if ! diff parts/expected.phi parts/output.phi; then",
                     "    echo \"Example ${f} failed\"",

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-FROM yegor256/hone:0.0.29
+FROM yegor256/hone:0.0.31
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"

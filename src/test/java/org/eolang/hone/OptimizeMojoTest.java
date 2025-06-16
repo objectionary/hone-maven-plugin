@@ -19,7 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -65,7 +64,6 @@ final class OptimizeMojoTest {
     @ExtendWith(MayBeSlow.class)
     @Timeout(6000L)
     @DisabledWithoutDocker
-    @Disabled
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -140,7 +138,6 @@ final class OptimizeMojoTest {
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @Disabled
     void optimizesTwice(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
@@ -299,7 +296,6 @@ final class OptimizeMojoTest {
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @Disabled
     void optimizesWithExtraRule(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(

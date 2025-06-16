@@ -18,11 +18,10 @@ RUN cabal update \
 COPY in-docker-pom.xml pom.xml
 
 COPY extensions.xml ./.mvn/
-RUN mvn --update-snapshots --batch-mode --strict-checksums --errors \
-  -Dbuildtime.output.log=true \
-  eo:help \
-  jeo:help \
-  exec:help
+COPY settings.xml /hone/
+RUN mkdir -p /hone/.m2 \
+    && mvn --settings=/hone/settings.xml --update-snapshots --batch-mode --strict-checksums --errors -Dbuildtime.output.log=true eo:help jeo:help exec:help \
+    && chmod -R a+rwx /hone/.m2
 
 COPY entry.sh ./
 RUN chmod a+x entry.sh

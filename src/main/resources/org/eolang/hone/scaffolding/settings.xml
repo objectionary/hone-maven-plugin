@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+ * SPDX-License-Identifier: MIT
+-->
+<settings>
+  <localRepository>/hone/.m2/repository</localRepository>
+</settings>

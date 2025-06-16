@@ -24,6 +24,7 @@ cp -R "${TARGET}/classes" "${TARGET}/classes-before-hone"
 
 # Maven options for all steps:
 declare -a opts=(
+  '--settings=/hone/settings.xml'
   '--update-snapshots'
   '--fail-fast'
   '--strict-checksums'

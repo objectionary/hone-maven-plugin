@@ -20,34 +20,38 @@ import org.cactoos.scalar.IoChecked;
 import org.cactoos.scalar.LengthOf;
 
 /**
- * Collection of YAML rules for Phino.
+ * Optimization rules used by Phino.
+ *
+ * <p>This class handles pattern-based selection of optimization rules,
+ * supporting wildcards and exclusions. Rules are stored as YAML files
+ * and can be copied to a target directory for use by the optimizer.</p>
  *
  * @since 0.1.0
  */
 final class Rules {
 
     /**
-     * All of them.
+     * All available rule names.
      */
     private static final String[] ALL = {
         "none", "thirty-three",
     };
 
     /**
-     * Patterns.
+     * Compiled regex patterns for rule matching with inclusion/exclusion flags.
      */
     private final Map<Pattern, Boolean> patterns;
 
     /**
-     * Ctor.
+     * Creates a rule manager that includes all rules.
      */
     Rules() {
         this("*");
     }
 
     /**
-     * Ctor.
-     * @param ptns The pattern (comma-separated)
+     * Creates a rule manager with specific patterns.
+     * @param ptns Comma-separated patterns (e.g., "simple,b*,!abc")
      */
     Rules(final String ptns) {
         this.patterns = Rules.regexs(ptns);
@@ -65,10 +69,10 @@ final class Rules {
     }
 
     /**
-     * Create a space-separated list of rule
-     * file names, for example, the rules defined by the user as
-     * "n*,thirty-three" this method will produce "none.yml thirty-three.yml".
-     * @return List of rule YML files separated by space
+     * Get the YAML file names for all matching rules.
+     * <p>For example, if rules are defined as "n*,thirty-three",
+     * this method will return "none.yml thirty-three.yml".</p>
+     * @return Iterable of YAML file names for matching rules
      */
     public Iterable<String> yamls() {
         final Collection<String> files = new LinkedList<>();
@@ -82,9 +86,9 @@ final class Rules {
     }
 
     /**
-     * Copy them all to a destination directory.
-     * @param dir Destination directory to copy to
-     * @throws IOException If fails
+     * Copy all matching rule files to the specified directory.
+     * @param dir Destination directory where rule files will be copied
+     * @throws IOException If copying files fails
      */
     public void copyTo(final Path dir) throws IOException {
         if (dir.toFile().getParentFile().mkdirs()) {
@@ -106,9 +110,9 @@ final class Rules {
     }
 
     /**
-     * This rule name is good?
-     * @param name THe name of the rule, e.g. "thirty-three"
-     * @return TRUE if it's good
+     * Check if a rule name matches the configured patterns.
+     * @param name The name of the rule, e.g. "thirty-three"
+     * @return TRUE if the rule matches and should be included
      */
     private boolean matches(final CharSequence name) {
         boolean matches = false;
@@ -124,9 +128,9 @@ final class Rules {
     }
 
     /**
-     * Convert list of patterns to regular expressions.
-     * @param ptns List of them
-     * @return Map of regular expression patterns
+     * Convert pattern strings to compiled regular expressions.
+     * @param ptns Comma-separated pattern strings with optional negation
+     * @return Map of compiled patterns to inclusion flags
      */
     private static Map<Pattern, Boolean> regexs(final String ptns) {
         final Map<Pattern, Boolean> list = new HashMap<>(0);

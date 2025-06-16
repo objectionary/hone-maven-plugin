@@ -13,30 +13,35 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 /**
- * Timings.
+ * Performance timing recorder that measures and logs execution times.
+ *
+ * <p>This class records the execution time of various operations
+ * and appends them to a CSV file for performance analysis.
+ * Each timing entry consists of an operation name and its duration
+ * in milliseconds.</p>
  *
  * @since 0.1.0
  */
 final class Timings {
 
     /**
-     * Path of the file.
+     * Path to the CSV file where timings are recorded.
      */
     private final Path path;
 
     /**
-     * Ctor.
-     * @param file Location of the CSV file to modify
+     * Creates a new timings recorder.
+     * @param file Path to the CSV file where timings will be recorded
      */
     Timings(final Path file) {
         this.path = file;
     }
 
     /**
-     * Run and record.
-     * @param name Name of the action
-     * @param action The action
-     * @throws IOException If fails
+     * Executes an action and records its execution time.
+     * @param name Name of the action being timed
+     * @param action The action to execute and measure
+     * @throws IOException If recording the timing fails
      */
     public void through(final String name, final Timings.Action action) throws IOException {
         final long start = System.currentTimeMillis();
@@ -58,14 +63,14 @@ final class Timings {
     }
 
     /**
-     * What to do.
+     * Functional interface for actions that can be timed.
      *
      * @since 0.1.0
      */
     public interface Action {
         /**
-         * Exec it.
-         * @throws IOException If fails
+         * Execute the action.
+         * @throws IOException If execution fails
          */
         void exec() throws IOException;
     }

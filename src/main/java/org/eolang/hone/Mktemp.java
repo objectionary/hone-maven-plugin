@@ -12,28 +12,32 @@ import java.nio.file.Path;
 import java.util.Comparator;
 
 /**
- * Temp directory.
+ * Temporary directory that automatically cleans up after itself.
+ *
+ * <p>This class creates a temporary directory and implements {@link Closeable}
+ * to ensure the directory and all its contents are deleted when closed.
+ * It should be used with try-with-resources for automatic cleanup.</p>
  *
  * @since 0.1.0
  */
 final class Mktemp implements Closeable {
 
     /**
-     * The temp directory.
+     * Path to the temporary directory.
      */
     private final Path dir;
 
     /**
-     * Ctor.
-     * @throws IOException If fails
+     * Creates a new temporary directory.
+     * @throws IOException If directory creation fails
      */
     Mktemp() throws IOException {
         this.dir = Files.createTempDirectory("tmp");
     }
 
     /**
-     * Return the path.
-     * @return Path of the directory
+     * Get the path to the temporary directory.
+     * @return Path of the temporary directory
      */
     public Path path() {
         return this.dir;

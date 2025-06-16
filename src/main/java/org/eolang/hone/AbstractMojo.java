@@ -12,11 +12,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.slf4j.impl.StaticLoggerBinder;
 
 /**
- * Abstract Mojo.
+ * Abstract base class for all Hone Maven plugin goals.
  *
- * <p>This one is used by all other Mojos in the plugin, for the
- * sake of code reuse. Unfortunately, this is the best we can do
- * in Maven Plugin API design.</p>
+ * <p>This class provides common functionality shared by all plugin goals,
+ * including Docker image configuration, sudo support, execution timing,
+ * and skip functionality. Unfortunately, this is the best we can do
+ * in Maven Plugin API design (this inheritance-based approach is ugly,
+ * but Maven forces us to use it).</p>
  *
  * @since 0.1.0
  * @checkstyle VisibilityModifierCheck (500 lines)
@@ -35,7 +37,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     protected File target;
 
     /**
-     * Timings.
+     * Timings tracker for performance measurements.
      *
      * @since 0.1.0
      */
@@ -50,7 +52,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     protected String image;
 
     /**
-     * Use "sudo" for "docker".
+     * Whether to use "sudo" when executing Docker commands.
      *
      * @since 0.1.0
      */
@@ -81,8 +83,8 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     /**
-     * Execute it.
-     * @throws IOException If fails
+     * Execute the specific goal implementation.
+     * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
 }

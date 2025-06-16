@@ -91,6 +91,8 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * EO cache directory.
+     *
+     * @since 0.1.0
      * @checkstyle MemberNameCheck (7 lines)
      * @checkstyle VisibilityModifierCheck (10 lines)
      */

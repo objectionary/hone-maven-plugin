@@ -14,47 +14,51 @@ import java.util.List;
 import java.util.logging.Level;
 
 /**
- * Docker runner.
+ * Docker command executor with optional sudo support.
+ *
+ * <p>This class provides a wrapper for executing Docker commands
+ * with proper error handling and logging. It supports running
+ * commands with sudo when required.</p>
  *
  * @since 0.1.0
  */
 final class Docker {
 
     /**
-     * Use "sudo" for "docker".
+     * Whether to prepend "sudo" to Docker commands.
      */
     private final boolean sudo;
 
     /**
-     * Ctor.
+     * Creates a Docker executor without sudo.
      */
     Docker() {
         this(false);
     }
 
     /**
-     * Ctor.
-     * @param root Run as root?
+     * Creates a Docker executor with optional sudo.
+     * @param root Whether to run Docker commands with sudo
      */
     Docker(final boolean root) {
         this.sudo = root;
     }
 
     /**
-     * Run this command and its arguments.
-     * @param args Arguments.
-     * @return Exit code
-     * @throws IOException If fails
+     * Execute a Docker command with the given arguments.
+     * @param args Docker command arguments
+     * @return Exit code (always 0 on success)
+     * @throws IOException If the command fails or returns non-zero exit code
      */
     public int exec(final String... args) throws IOException {
         return this.exec(Arrays.asList(args));
     }
 
     /**
-     * Run this one.
-     * @param args Arguments
-     * @return Exit code
-     * @throws IOException If fails
+     * Execute a Docker command with the given arguments.
+     * @param args Docker command arguments as a collection
+     * @return Exit code (always 0 on success)
+     * @throws IOException If the command fails or returns non-zero exit code
      */
     public int exec(final Collection<String> args) throws IOException {
         final List<String> command = new LinkedList<>();
@@ -67,10 +71,10 @@ final class Docker {
     }
 
     /**
-     * Run this one.
-     * @param command The command with args
-     * @return Exit code
-     * @throws IOException If fails
+     * Execute the assembled command and handle the process.
+     * @param command Complete command with all arguments
+     * @return Exit code (always 0 on success)
+     * @throws IOException If the command fails or returns non-zero exit code
      */
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();

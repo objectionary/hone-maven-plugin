@@ -62,6 +62,7 @@
         <version>@project.version@</version>
         <configuration>
           <image>larger-hone:local</image>
+          <rules>none</rules>
         </configuration>
         <executions>
           <execution>

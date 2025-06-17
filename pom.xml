@@ -159,6 +159,7 @@
         <artifactId>maven-invoker-plugin</artifactId>
         <configuration>
           <pomExcludes>
+            <!-- see https://github.com/objectionary/eo/issues/4292 -->
             <pomExclude>larger/pom.xml</pomExclude>
           </pomExcludes>
         </configuration>

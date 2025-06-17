@@ -102,6 +102,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
+        final long start = System.currentTimeMillis();
         final Collection<String> command = new LinkedList<>(
             Arrays.asList(
                 "run",
@@ -183,6 +184,11 @@ public final class OptimizeMojo extends AbstractMojo {
             "optimize",
             () -> new Docker(this.sudo).exec(command)
         );
-        Logger.info(this, "Bytecode was optimized in '%s'", this.target);
+        Logger.info(
+            this,
+            "Bytecode was optimized in '%s' in %[ms]s",
+            this.target,
+            System.currentTimeMillis() - start
+        );
     }
 }

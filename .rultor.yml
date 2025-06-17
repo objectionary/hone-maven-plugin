@@ -14,7 +14,7 @@ assets:
   secring.gpg: yegor256/objectionary-secrets#secring.gpg
   docker-password: yegor256/objectionary-secrets#docker-password
 merge:
-  script: mvn clean install -DskipTests -Dinvoker.skip -Pqulice -e -B -Dstyle.color=never
+  script: mvn clean install -Dinvoker.skip -Pqulice -e -B -Dstyle.color=never
 release:
   pre: false
   script: |
@@ -23,7 +23,7 @@ release:
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
     git commit -am "${tag}"
     export MAVEN_OPTS="--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
-    mvn clean deploy -DskipTests -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
+    mvn clean deploy -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
 
     cat ../docker-password | sudo docker login --password-stdin -u yegor256
     cd src/main/resources/org/eolang/hone/scaffolding/

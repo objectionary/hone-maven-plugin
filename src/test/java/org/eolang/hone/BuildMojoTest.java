@@ -11,6 +11,7 @@ import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
@@ -50,6 +51,7 @@ final class BuildMojoTest {
     }
 
     @Test
+    @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @DisabledWithoutDocker
     void buildsDockerImage(@Mktmp final Path dir,

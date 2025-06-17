@@ -61,6 +61,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @Timeout(6000L)
     @DisabledWithoutDocker
@@ -135,6 +136,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
@@ -293,6 +295,7 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)

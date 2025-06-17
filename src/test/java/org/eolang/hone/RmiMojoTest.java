@@ -11,6 +11,7 @@ import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class RmiMojoTest {
 
     @Test
+    @Tag("deep")
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void pullsAndRemovesDockerImage(@Mktmp final Path dir) throws Exception {

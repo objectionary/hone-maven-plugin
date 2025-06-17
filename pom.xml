@@ -166,6 +166,7 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <excludedGroups>deep</excludedGroups>
           <systemPropertyVariables>
             <target.directory>${project.build.directory}</target.directory>
           </systemPropertyVariables>

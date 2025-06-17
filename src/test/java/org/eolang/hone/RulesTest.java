@@ -31,7 +31,7 @@ final class RulesTest {
     @Test
     void skipsSome() throws Exception {
         try (Mktemp temp = new Mktemp()) {
-            final Rules rules = new Rules("!none,t*");
+            final Rules rules = new Rules("!none,33*");
             rules.copyTo(temp.path().resolve("a/b/c"));
             MatcherAssert.assertThat(
                 String.format("file must be written, because of %s", rules),

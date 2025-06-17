@@ -27,7 +27,7 @@ jobs:
           key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ubuntu-jdk-21-maven-
       - run: docker pull yegor256/hone:0.0.29
-      - run: mvn clean test -Dtest=OptimizeMojoTest#optimizesJustOneLargeJnaClass --errors --batch-mode -DexcludeGroups=
+      - run: mvn clean test -Dtest=OptimizeMojoTest#optimizesJustOneLargeJnaClass --errors --batch-mode -DexcludedGroups=
       - run: |
           set -x
           sum=$(

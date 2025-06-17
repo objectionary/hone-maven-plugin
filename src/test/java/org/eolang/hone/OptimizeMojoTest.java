@@ -305,12 +305,9 @@ final class OptimizeMojoTest {
                     .file("src/rules/simple.yaml")
                     .write(
                         """
-                        -   name: simple
-                            description: 'change 7777 int to 5555 int'
-                            pattern: |
-                                Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 00-00-00-00-00-00-1E-61 ⟧ )
-                            result: |
-                                Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-B5-B3-00-00-00-15-B3 ⟧ )
+                        name: fifty-to-sixty
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -319,7 +316,7 @@ final class OptimizeMojoTest {
                         """
                             class Foo {
                                 int bar() {
-                                    return 7777;
+                                    return 50;
                                 }
                             }
                         """.getBytes(StandardCharsets.UTF_8)
@@ -332,8 +329,8 @@ final class OptimizeMojoTest {
                         import org.junit.jupiter.api.Test;
                         class FooTest {
                             @Test
-                            void worksAfterOptimization() {
-                                Assertions.assertEquals(5555, new Foo().bar());
+                            void worksAfterOptimizationWithExtraRule() {
+                                Assertions.assertEquals(60, new Foo().bar());
                             }
                         }
                         """.getBytes(StandardCharsets.UTF_8)

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-name: forty-three
+name: thirty-three-to-forty-two
 pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
 result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-45-00-00-00-00-00-00 ⟧ )'

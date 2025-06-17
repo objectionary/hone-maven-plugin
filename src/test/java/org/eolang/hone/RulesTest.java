@@ -35,7 +35,7 @@ final class RulesTest {
             rules.copyTo(temp.path().resolve("a/b/c"));
             MatcherAssert.assertThat(
                 String.format("file must be written, because of %s", rules),
-                temp.path().resolve("a/b/c/thirty-three.yml").toFile().exists(),
+                temp.path().resolve("a/b/c/33-to-42.yml").toFile().exists(),
                 Matchers.is(true)
             );
             MatcherAssert.assertThat(

@@ -34,7 +34,7 @@ final class Rules {
      * All available rule names.
      */
     private static final String[] ALL = {
-        "none", "thirty-three",
+        "none", "33-to-42",
     };
 
     /**
@@ -70,8 +70,8 @@ final class Rules {
 
     /**
      * Get the YAML file names for all matching rules.
-     * <p>For example, if rules are defined as "n*,thirty-three",
-     * this method will return "none.yml thirty-three.yml".</p>
+     * <p>For example, if rules are defined as "n*,33-to-42",
+     * this method will return "none.yml 33-to-42.yml".</p>
      * @return Iterable of YAML file names for matching rules
      */
     public Iterable<String> yamls() {

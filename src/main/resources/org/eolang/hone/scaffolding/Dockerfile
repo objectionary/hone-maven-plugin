@@ -23,6 +23,9 @@ RUN mkdir -p /hone/.m2 \
     && mvn --settings=/hone/settings.xml --update-snapshots --batch-mode --strict-checksums --errors -Dbuildtime.output.log=true eo:help jeo:help exec:help \
     && chmod -R a+rwx /hone/.m2
 
+ENV MAVEN_OPTS=-Xmx16g
+ENV JAVA_OPTS=-Xmx16g
+
 COPY entry.sh ./
 RUN chmod a+x entry.sh
 COPY normalize.sh ./

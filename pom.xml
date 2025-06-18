@@ -168,7 +168,6 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludedGroups>${excludedGroups}</excludedGroups>
           <systemPropertyVariables>
             <target.directory>${project.build.directory}</target.directory>
           </systemPropertyVariables>

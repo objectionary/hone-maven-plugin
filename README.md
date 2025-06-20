@@ -22,7 +22,7 @@ Just add this to your `pom.xml` file
       <plugin>
         <groupId>org.eolang</groupId>
         <artifactId>hone-maven-plugin</artifactId>
-        <version>0.0.29</version>
+        <version>0.0.32</version>
         <executions>
           <execution>
             <goals>

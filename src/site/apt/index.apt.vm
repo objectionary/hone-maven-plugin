@@ -8,7 +8,7 @@
 
 Hone Maven Plugin
 
-  This {{{http://github.com/objectionary/hone-maven-plugin}README}}
+  This {{{https://github.com/objectionary/hone-maven-plugin}README}}
   documentation explains it in details.
 
   Use it like this:
@@ -33,4 +33,4 @@ Hone Maven Plugin
 </build>
 +--
 
-  If any questions, submit a {{{http://github.com/objectionary/hone-maven-plugin/issues}GitHub issue}}.
+  If any questions, submit a {{{https://github.com/objectionary/hone-maven-plugin/issues}GitHub issue}}.

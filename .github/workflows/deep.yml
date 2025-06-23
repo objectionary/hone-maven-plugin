@@ -48,7 +48,7 @@ jobs:
           path: ~/.m2/repository
           key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ubuntu-jdk-21-maven-
-      - run: mvn clean install --errors --batch-mode -DexcludeGroups= -Dinvoker.skip
+      - run: mvn clean install --errors --batch-mode -Pdeep -Dinvoker.skip
       - run: mvn clean install --errors --batch-mode -DskipTests
   terminate-instance:
     needs:

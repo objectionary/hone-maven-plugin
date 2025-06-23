@@ -71,9 +71,7 @@ mvn "${opts[@]}" \
   "-Dexec.phino.rules=${RULES}" \
   "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
   "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
-  eo:phi-to-xmir \
-  "-Deo.unphiInputDir=${TARGET}/generated-sources/phi-optimized" \
-  "-Deo.unphiOutputDir=${TARGET}/generated-sources/unphi" \
+  "-Dexec.phino.xmir=${TARGET}/generated-sources/unphi" \
   jeo:assemble \
   "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
   "-Djeo.assemble.outputDir=${TARGET}/classes"

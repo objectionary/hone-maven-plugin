@@ -7,6 +7,7 @@ set -ex -o pipefail
 rules=$1
 from=$2
 to=$3
+xmir=$4
 
 phino --version
 
@@ -15,5 +16,6 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${to}/${f}")"
   for rule in ${rules}; do
     phino rewrite --rule "${rule}" < "${from}/${f}" > "${to}/${f}"
+    phino rewrite --nothing < "${to}/${f}" > "${xmir}/${f}"
   done
 done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)

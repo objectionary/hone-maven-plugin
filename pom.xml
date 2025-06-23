@@ -310,5 +310,11 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>deep</id>
+      <properties>
+        <excludedGroups/>
+      </properties>
+    </profile>
   </profiles>
 </project>

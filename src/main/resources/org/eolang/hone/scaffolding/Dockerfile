@@ -9,7 +9,7 @@ LABEL "version"="0.0.0"
 
 WORKDIR /hone
 
-ENV PHINO=0.0.0.7
+ENV PHINO=0.0.0.8
 RUN cabal update \
     && cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO}" \
     && cp /root/.local/bin/phino /usr/bin \

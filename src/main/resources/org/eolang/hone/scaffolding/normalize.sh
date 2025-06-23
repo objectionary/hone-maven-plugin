@@ -9,9 +9,9 @@ from=$2
 to=$3
 xmir=$4
 
-phino --version
-
 mkdir -p "${to}"
+mkdir -p "${xmir}"
+
 while IFS= read -r f; do
   mkdir -p "$(dirname "${to}/${f}")"
   for rule in ${rules}; do

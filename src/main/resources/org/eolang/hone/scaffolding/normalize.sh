@@ -22,6 +22,6 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${xmir}/${f}")"
   for rule in ${rules}; do
     phino rewrite --rule "${rule}" < "${from}/${f}" > "${to}/${f}"
-    phino rewrite --nothing --output=xmir < "${to}/${f}" > "${xmir}/${f}"
+    phino rewrite --nothing --output=xmir < "${to}/${f}" > "${xmir}/${f%.phi}.xmir"
   done
 done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)

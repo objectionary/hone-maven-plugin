@@ -9,7 +9,7 @@ from=$2
 to=$3
 xmir=$4
 
-if [ ! -e "${from}" ]; then
+if [ ! -d "${from}" ]; then
   echo "The source directory '${from}' does not exist!"
   exit 1
 fi

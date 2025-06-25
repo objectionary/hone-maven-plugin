@@ -80,18 +80,18 @@ Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
 Size of .xmir after disassemble: 2Mb (2Mb bytes, 36274 lines)
 Size of .phi: 335Kb (335Kb bytes, 7164 lines)
-Size of .xmir after unphi: 4Mb (4Mb bytes, 103546 lines)
-Optimization time: 36s (36272 ms)
+Size of .xmir after unphi: 4Mb (4Mb bytes, 103534 lines)
+Optimization time: 38s (37511 ms)
 
-eo-maven-plugin:phi-to-xmir   24.266  71.95%
-eo-maven-plugin:xmir-to-phi   5.738   17.01%
-jeo-maven-plugin:disassemble  2.28    6.76%
-exec-maven-plugin:exec        0.865   2.56%
-jeo-maven-plugin:assemble     0.577   1.71%
+eo-maven-plugin:phi-to-xmir   25.751  74.06%
+eo-maven-plugin:xmir-to-phi   5.774   16.61%
+jeo-maven-plugin:disassemble  1.928   5.54%
+exec-maven-plugin:exec        0.77    2.21%
+jeo-maven-plugin:assemble     0.548   1.58%
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2025-06-17 at 08:32,
+on 2025-06-25 at 13:40,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
@@ -131,7 +131,7 @@ The versions of [EO] and
 that we use, are defined in the `in-docker-pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15702055002
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15877758536
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/12887187268

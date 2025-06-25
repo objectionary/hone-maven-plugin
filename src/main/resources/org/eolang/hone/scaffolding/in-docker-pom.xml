@@ -11,8 +11,8 @@
   <version>0.0.0</version>
   <name>hone</name>
   <properties>
-    <eo.version>0.51.5</eo.version>
-    <jeo.version>0.7.5</jeo.version>
+    <eo.version>0.56.9</eo.version>
+    <jeo.version>0.10.0</jeo.version>
   </properties>
   <build>
     <pluginManagement>
@@ -39,6 +39,7 @@
               <argument>${exec.phino.rules}</argument>
               <argument>${exec.phino.from}</argument>
               <argument>${exec.phino.to}</argument>
+              <argument>${exec.phino.xmir}</argument>
             </arguments>
           </configuration>
         </plugin>

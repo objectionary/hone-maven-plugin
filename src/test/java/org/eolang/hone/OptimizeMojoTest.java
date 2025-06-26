@@ -137,6 +137,66 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(6000L)
+    @DisabledWithoutDocker
+    void optimizesWithoutPhino(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/h1/Hello.java")
+                    .write(
+                        """
+                            package h1;
+                            final class Hello {
+                                String say() {;
+                                    return "Hello, world!";
+                                }
+                            }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/test/java/h1/HelloTest.java")
+                    .write(
+                        """
+                        package h1;
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class KidTest {
+                            @Test
+                            void worksAfterOptimization() {
+                                Assertions.assertEquals("Hello, world!", new Hello().say());
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("phino", false)
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)

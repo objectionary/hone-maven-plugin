@@ -90,6 +90,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private String jeoVersion;
 
     /**
+     * Skip phino entirely.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skip-phino", defaultValue = "false")
+    private boolean skipPhino;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -153,6 +162,14 @@ public final class OptimizeMojo extends AbstractMojo {
             command.addAll(
                 Arrays.asList(
                     "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
+                )
+            );
+        }
+        if (this.skipPhino) {
+            Logger.debug(this, "Phino phase is skipped due to skipPhino flag");
+            command.addAll(
+                Arrays.asList(
+                    "--env", "SKIP_PHINO=yes"
                 )
             );
         }

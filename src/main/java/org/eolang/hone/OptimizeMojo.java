@@ -48,12 +48,15 @@ import org.cactoos.iterable.Mapped;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
-     * List of rules to use for optimizations.
+     * List of built-in rules to use for optimizations.
      *
      * <p>For example, "<tt>simple,b*,!abc</tt>" would include
      * the <tt>simple</tt> rule, all rules that start
      * with the <tt>b</tt> character, and exclude the <tt>abc</tt>
      * rule.</p>
+     *
+     * <p>In order to disable them all, simply set this parameter
+     * to <tt>none</tt>.</p>
      *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)

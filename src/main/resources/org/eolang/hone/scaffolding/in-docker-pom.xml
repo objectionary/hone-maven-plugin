@@ -37,9 +37,10 @@
             <executable>${exec.phino.script}</executable>
             <arguments>
               <argument>${exec.phino.rules}</argument>
+              <argument>${exec.phino.xmir-in}</argument>
               <argument>${exec.phino.from}</argument>
               <argument>${exec.phino.to}</argument>
-              <argument>${exec.phino.xmir}</argument>
+              <argument>${exec.phino.xmir-out}</argument>
             </arguments>
           </configuration>
         </plugin>

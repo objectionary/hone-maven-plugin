@@ -5,23 +5,28 @@
 set -ex -o pipefail
 
 rules=$1
-from=$2
-to=$3
-xmir=$4
+xmirIn=$2
+from=$3
+to=$4
+xmirOut=$5
 
-if [ ! -d "${from}" ]; then
-  echo "The source directory '${from}' does not exist!"
+if [ ! -d "${xmirIn}" ]; then
+  echo "The source directory '${xmirIn}' does not exist!"
   exit 1
 fi
 
+mkdir -p "${from}"
 mkdir -p "${to}"
-mkdir -p "${xmir}"
+mkdir -p "${xmirOut}"
 
 while IFS= read -r f; do
+  f=${f%.*}
+  mkdir -p "$(dirname "${from}/${f}")"
   mkdir -p "$(dirname "${to}/${f}")"
-  mkdir -p "$(dirname "${xmir}/${f}")"
+  mkdir -p "$(dirname "${xmirOut}/${f}")"
   for rule in ${rules}; do
-    phino rewrite --rule "${rule}" < "${from}/${f}" > "${to}/${f}"
-    phino rewrite --nothing --output=xmir < "${to}/${f}" > "${xmir}/${f%.phi}.xmir"
+    phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
+    phino rewrite --sweet --rule "${rule}" < "${from}/${f}.phi" > "${to}/${f}.phi"
+    phino rewrite --nothing --output=xmir < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
   done
-done < <(find "$(realpath "${from}")" -name '*.phi' -type f -exec realpath --relative-to="${from}" {} \;)
+done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

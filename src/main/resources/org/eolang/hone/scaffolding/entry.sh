@@ -59,29 +59,17 @@ if [ -n "${EXTRA}" ]; then
   RULES="${RULES} $(find "${EXTRA}" -name '*.yml' -exec realpath {} \;)"
 fi
 
-if [ -z "${SKIP_PHINO}" ]; then
-  mvn "${opts[@]}" \
-    jeo:disassemble \
-    "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
-    "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
-    eo:xmir-to-phi \
-    "-Deo.phiInputDir=${TARGET}/generated-sources/jeo-disassemble" \
-    "-Deo.phiOutputDir=${TARGET}/generated-sources/phi" \
-    exec:exec \
-    "-Dexec.phino.script=${SELF}/normalize.sh" \
-    "-Dexec.phino.rules=${RULES}" \
-    "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
-    "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
-    "-Dexec.phino.xmir=${TARGET}/generated-sources/unphi" \
-    jeo:assemble \
-    "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
-    "-Djeo.assemble.outputDir=${TARGET}/classes"
-else
-  mvn "${opts[@]}" \
-    jeo:disassemble \
-    "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
-    "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
-    jeo:assemble \
-    "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/jeo-disassemble" \
-    "-Djeo.assemble.outputDir=${TARGET}/classes"
-fi
+mvn "${opts[@]}" \
+  jeo:disassemble \
+  "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
+  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
+  exec:exec \
+  "-Dexec.phino.script=${SELF}/normalize.sh" \
+  "-Dexec.phino.rules=${RULES}" \
+  "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \
+  "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
+  "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
+  "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi" \
+  jeo:assemble \
+  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
+  "-Djeo.assemble.outputDir=${TARGET}/classes"

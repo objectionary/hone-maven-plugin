@@ -26,7 +26,6 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${xmirOut}/${f}")"
   for rule in ${rules}; do
     phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
-    phino rewrite --sweet --rule jeo-to-formations < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
     phino rewrite --sweet --rule "${rule}" < "${from}/${f}.phi" > "${to}/${f}.phi"
     phino rewrite --nothing --output=xmir < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
   done

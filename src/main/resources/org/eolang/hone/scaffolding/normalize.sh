@@ -27,6 +27,6 @@ while IFS= read -r f; do
   for rule in ${rules}; do
     phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
     phino rewrite --sweet --rule "${rule}" < "${from}/${f}.phi" > "${to}/${f}.phi"
-    phino rewrite --nothing --output=xmir < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
+    phino rewrite --nothing --output=xmir --omit-listing < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
   done
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

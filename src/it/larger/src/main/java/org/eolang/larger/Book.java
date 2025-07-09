@@ -19,7 +19,7 @@ class Book implements Material {
     public String итог() throws Exception {
         return new Capitalized(
             String.format(
-                "%s %s %s",
+                "%s %s -- <%s>",
                 мойTitle,
                 new String(мойData),
                 new TextOf(new ResourceOf("org/eolang/larger/book.txt"))

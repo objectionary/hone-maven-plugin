@@ -22,7 +22,7 @@ Just add this to your `pom.xml` file
       <plugin>
         <groupId>org.eolang</groupId>
         <artifactId>hone-maven-plugin</artifactId>
-        <version>0.0.35</version>
+        <version>0.1.0</version>
         <executions>
           <execution>
             <goals>
@@ -78,18 +78,18 @@ from [JNA](https://github.com/java-native-access/jna):
 ```text
 Input: com/sun/jna/Pointer.class
 Size of .class: 22Kb (22Kb bytes)
-Size of .xmir after disassemble: 2Mb (2Mb bytes, 42360 lines)
-Size of .phi: 435Kb (435Kb bytes, 15961 lines)
-Size of .xmir after unphi: 3Mb (3Mb bytes, 64714 lines)
-Optimization time: 8s (8426 ms)
+Size of .xmir after disassemble: 2Mb (2Mb bytes, 56524 lines)
+Size of .phi: 643Kb (643Kb bytes, 19153 lines)
+Size of .xmir after unphi: 5Mb (5Mb bytes, 156118 lines)
+Optimization time: 11s (10534 ms)
 
-exec-maven-plugin:exec        2.694  44.89%
-jeo-maven-plugin:disassemble  2.491  41.50%
-jeo-maven-plugin:assemble     0.817  13.61%
+exec-maven-plugin:exec        4.076  53.39%
+jeo-maven-plugin:disassemble  2.53   33.14%
+jeo-maven-plugin:assemble     1.029  13.48%
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2025-06-30 at 07:46,
+on 2025-07-08 at 15:17,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
@@ -100,7 +100,7 @@ Here is the result of the latest optimization of itself:
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2025-06-26 at 06:56,
+on 2025-07-08 at 15:15,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -125,7 +125,7 @@ The versions of [EO] and
 that we use, are defined in the `in-docker-pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15966810321
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16147077606
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15894962711
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16147077666

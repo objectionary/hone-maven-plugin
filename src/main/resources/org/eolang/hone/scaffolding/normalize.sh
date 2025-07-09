@@ -32,5 +32,6 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${xmirOut}/${f}")"
   phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
   phino rewrite --sweet "${opts[@]}" < "${from}/${f}.phi" > "${to}/${f}.phi"
+  diff "${from}/${f}.phi" "${to}/${f}.phi" || echo "No changes made by ${array[*]} rule(s)"
   phino rewrite --nothing --output=xmir --omit-listing < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

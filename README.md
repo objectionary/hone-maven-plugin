@@ -100,7 +100,7 @@ Here is the result of the latest optimization of itself:
 ```
 
 The results were calculated in [this GHA job][self-benchmark-gha],
-on 2025-06-26 at 06:56,
+on 2025-07-08 at 15:15,
 on Linux with 4 CPUs.
 For the sake of brevity, we show only the first 16 lines.
 <!-- self_benchmark_end -->
@@ -128,4 +128,4 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15966810321
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/15894962711
+[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16147077666

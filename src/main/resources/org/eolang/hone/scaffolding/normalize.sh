@@ -19,14 +19,17 @@ mkdir -p "${from}"
 mkdir -p "${to}"
 mkdir -p "${xmirOut}"
 
+opts=()
+for rule in ${rules}; do
+  opts+=(--rule "${rule}")
+done
+
 while IFS= read -r f; do
   f=${f%.*}
   mkdir -p "$(dirname "${from}/${f}")"
   mkdir -p "$(dirname "${to}/${f}")"
   mkdir -p "$(dirname "${xmirOut}/${f}")"
-  for rule in ${rules}; do
-    phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
-    phino rewrite --sweet --rule "${rule}" < "${from}/${f}.phi" > "${to}/${f}.phi"
-    phino rewrite --nothing --output=xmir < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
-  done
+  phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
+  phino rewrite --sweet "${opts[@]}" < "${from}/${f}.phi" > "${to}/${f}.phi"
+  phino rewrite --nothing --output=xmir --omit-listing < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

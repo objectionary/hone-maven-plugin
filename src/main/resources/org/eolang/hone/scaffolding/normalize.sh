@@ -20,7 +20,8 @@ mkdir -p "${to}"
 mkdir -p "${xmirOut}"
 
 opts=()
-for rule in ${rules}; do
+IFS=' ' read -r -a rulesArray <<< "${rules}"
+for rule in "${rulesArray[@]}"; do
   opts+=(--rule "${rule}")
 done
 

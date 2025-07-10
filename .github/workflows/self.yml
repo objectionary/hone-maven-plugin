@@ -7,7 +7,6 @@ name: self
   push:
     branches:
       - master
-    paths-ignore: [ 'README.md', '.github' ]
 concurrency:
   group: self-${{ github.ref }}
   cancel-in-progress: true
@@ -29,29 +28,3 @@ jobs:
             ubuntu-jdk-21-maven-
       - run: mvn clean install -DskipTests -Dinvoker.skip --errors --batch-mode
       - run: mvn clean install -DskipTests -Dinvoker.skip -Pself -Dhone.rules=none --errors --batch-mode
-      - run: |
-          set -x
-          sum=$(
-            max=16
-            printf "\`\`\`text\n"
-            awk -F ',' '{ a[$1]+=$2; s+=$2; } END { for (k in a) printf("%s.xsl\t%s\t%0.2f%%\n", k, a[k], 100 * a[k] / s)}' target/xsl-measures.csv | sort -g -k 2 | tac | column -t | head "-${max}"
-            printf "\`\`\`\n\n"
-            echo "The results were calculated in [this GHA job][self-benchmark-gha],"
-            echo "on $(date +'%Y-%m-%d') at $(date +'%H:%M'),"
-            echo "on $(uname) with $(nproc --all) CPUs."
-            echo "For the sake of brevity, we show only the first ${max} lines."
-          )
-          export sum
-          perl -i -0777 -pe 's/(?<=<!-- self_benchmark_begin -->).*(?=<!-- self_benchmark_end -->)/\n$ENV{sum}\n/gs;' README.md
-          url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
-          export url
-          perl -i -0777 -pe 's/(?<=\[self-benchmark-gha\]: )[^\n]+(?=\n)/$ENV{url}/gs;' README.md
-      - uses: peter-evans/create-pull-request@v7
-        with:
-          sign-commits: true
-          branch: self-benchmark
-          commit-message: 'new self benchmark results'
-          delete-branch: true
-          title: 'New self benchmarking results'
-          assignees: yegor256
-          base: master

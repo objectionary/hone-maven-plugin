@@ -89,18 +89,6 @@ on 2025-07-08 at 15:17,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
-Here is the result of the latest optimization of itself:
-
-<!-- self_benchmark_begin -->
-```text
-```
-
-The results were calculated in [this GHA job][self-benchmark-gha],
-on 2025-07-08 at 15:15,
-on Linux with 4 CPUs.
-For the sake of brevity, we show only the first 16 lines.
-<!-- self_benchmark_end -->
-
 ## How to Contribute
 
 Fork repository, make changes, then send us a [pull request][guidelines].

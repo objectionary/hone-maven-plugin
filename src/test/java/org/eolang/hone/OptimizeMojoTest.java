@@ -164,6 +164,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize")
                     .configuration()
+                    .set("rules", "none")
                     .set("image", image);
                 f.build()
                     .plugins()

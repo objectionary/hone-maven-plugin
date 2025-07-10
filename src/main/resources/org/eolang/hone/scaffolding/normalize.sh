@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -ex -o pipefail
+set -e -o pipefail
 
 rules=$1
 xmirIn=$2
@@ -31,7 +31,10 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${to}/${f}")"
   mkdir -p "$(dirname "${xmirOut}/${f}")"
   phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
+  echo "Converted XMIR to phi: ${f}"
   phino rewrite --sweet --shuffle "${opts[@]}" < "${from}/${f}.phi" > "${to}/${f}.phi"
-  diff "${from}/${f}.phi" "${to}/${f}.phi"
+  echo "Applied ${array[*]} rules: ${f}"
+  diff -q "${from}/${f}.phi" "${to}/${f}.phi" || true
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
+  echo "Converted phi to XMIR: ${f}"
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

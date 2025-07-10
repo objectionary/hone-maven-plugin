@@ -8,11 +8,9 @@
 ![Lines of code](https://sloc.xyz/github/objectionary/hone-maven-plugin)
 [![codecov](https://codecov.io/gh/objectionary/hone-maven-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/objectionary/hone-maven-plugin)
 
-This [Apache Maven](https://maven.apache.org/) plugin _may_ optimize
-your [Bytecode][bytecode]
-after compilation, to make it work faster.
-Just add this to your `pom.xml` file
-(you must have [Docker](https://docs.docker.com/engine/install/) installed too):
+This [Maven] plugin _may_ optimize your [Bytecode][bytecode] after compilation,
+  to make it work faster.
+Just add this to your `pom.xml` file (you must have [Docker] installed too):
 
 ```xml
 <project>
@@ -47,7 +45,7 @@ transform `.class` files to
 `.xmir` [format](https://news.eolang.org/2022-11-25-xmir-guide.html),
 which is [EO](https://www.eolang.org) in XML, and place them into
 the `target/generated-sources/jeo-disassemble/` directory.
-1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
+1. Using [phino](https://github.com/objectionary/phino),
 convert `.xmir` files to `.phi` files
 with [𝜑-calculus](https://arxiv.org/abs/2111.13384) expressions,
 and place them into the `target/generated-sources/phi/` directory.
@@ -55,7 +53,7 @@ and place them into the `target/generated-sources/phi/` directory.
 apply a number of optimizations to 𝜑-calculus expressions in the `.phi` files
 and place new `.phi` files into
 the `target/generated-sources/phi-optimized/` directory.
-1. Using [eo-maven-plugin](https://github.com/objectionary/eo/eo-maven-plugin),
+1. Using [phino](https://github.com/objectionary/phino),
 convert `.phi` files back to `.xmir` files and
 place them into the `target/generated-sources/unphi/` directory.
 1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
@@ -65,9 +63,7 @@ the `target/classes/` directory.
 The effect of the plugin should be performance-positive (your code should
 work faster) along with no functionality degradation (your code should work
 exactly the same as it worked before optimizations). If any of these
-is not true,
-[submit a ticket](https://github.com/objectionary/hone-maven-plugin/issues),
-we will try to fix.
+is not true, [submit a ticket], we will try to fix.
 
 ## Benchmark
 
@@ -107,8 +103,7 @@ For the sake of brevity, we show only the first 16 lines.
 
 ## How to Contribute
 
-Fork repository, make changes, then send us
-a [pull request][guidelines].
+Fork repository, make changes, then send us a [pull request][guidelines].
 We will review your changes and apply them to the `master` branch shortly,
 provided they don't violate our quality standards. To avoid frustration,
 before sending us your pull request please run full Maven build:
@@ -129,3 +124,6 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16147077666
+[Maven]: https://maven.apache.org/
+[Docker]: https://docs.docker.com/engine/install/
+[submit a ticket]: https://github.com/objectionary/hone-maven-plugin/issues

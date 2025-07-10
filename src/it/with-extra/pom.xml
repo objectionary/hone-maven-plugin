@@ -31,6 +31,7 @@
               <goal>rmi</goal>
             </goals>
             <configuration>
+              <rules>none</rules>
               <extra>
                 <rule>${basedir}/src/main/rules/sevens-to-fives.yml</rule>
               </extra>

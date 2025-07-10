@@ -137,6 +137,54 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(6000L)
+    @DisabledWithoutDocker
+    void optimizesExecutableJavaApp(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/foo/Main.java")
+                    .write(
+                        """
+                            package foo;
+                            public class Main {
+                                public static void main(String[] args) {;
+                                    System.out.println("Hello, world!");
+                                }
+                            }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("image", image);
+                f.build()
+                    .plugins()
+                    .append("org.codehaus.mojo", "exec-maven-plugin", "3.5.0")
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("java")
+                    .configuration()
+                    .set("mainClass", "foo.Main");
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "the message must be printed",
+                    f.log().content(),
+                    Matchers.containsString("Hello, world!")
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)

@@ -27,6 +27,10 @@
           <artifactId>jeo-maven-plugin</artifactId>
           <version>${jeo.version}</version>
           <configuration>
+            <omitComments>true</omitComments>
+            <omitListings>true</omitListings>
+            <prettyXmir>true</prettyXmir>
+            <xmirVerification>false</xmirVerification>
             <skipVerification>true</skipVerification>
           </configuration>
         </plugin>

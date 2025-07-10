@@ -111,7 +111,6 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16147077606
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[self-benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16147077666
 [Maven]: https://maven.apache.org/
 [Docker]: https://docs.docker.com/engine/install/
 [submit a ticket]: https://github.com/objectionary/hone-maven-plugin/issues

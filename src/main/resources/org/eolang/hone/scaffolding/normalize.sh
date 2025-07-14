@@ -32,10 +32,10 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${to}/${f}")"
   mkdir -p "$(dirname "${xmirOut}/${f}")"
   phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
-  echo "Converted XMIR to ${f}.phi"
+  echo "Converted XMIR ($(du -sh "${xmirIn}/${f}.xmir" | cut -f1)) to ${from}/${f}.phi ($(du -sh "${from}/${f}.phi" | cut -f1))"
   phino rewrite --sweet --shuffle "${opts[@]}" < "${from}/${f}.phi" > "${to}/${f}.phi"
   echo "Applied ${#array[@]} rules to ${f}.phi"
   diff -q "${from}/${f}.phi" "${to}/${f}.phi" || true
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
-  echo "Converted phi to ${f}.xmir"
+  echo "Converted phi to ${xmirOut}/${f}.xmir ($(du -sh "${xmirOut}/${f}.xmir" | cut -f1))"
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

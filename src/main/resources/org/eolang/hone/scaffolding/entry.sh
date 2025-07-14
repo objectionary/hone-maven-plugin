@@ -56,7 +56,9 @@ for rule in ${RULES}; do
   fi
 done
 if [ -n "${EXTRA}" ]; then
-  RULES="${RULES} $(find "${EXTRA}" -name '*.yml' -exec realpath {} \;)"
+  e=$(find "${EXTRA}" -name '*.yml' -exec realpath {} \; | sort | tr '\n' ' ')
+  echo "Extra rules found: ${e}"
+  RULES="${RULES} ${e}"
 fi
 
 mvn "${opts[@]}" \

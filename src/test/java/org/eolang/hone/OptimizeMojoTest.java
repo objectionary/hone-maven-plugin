@@ -412,7 +412,7 @@ final class OptimizeMojoTest {
                         "extra",
                         new String[] {
                             "src/rules/first.yaml",
-                            "src/rules/second.yaml"
+                            "src/rules/second.yaml",
                         }
                     )
                     .set("image", image);

@@ -26,6 +26,8 @@ for rule in "${array[@]}"; do
   echo "Using '${rule}' rule"
 done
 
+echo "Phino version is $(phino --version | xargs)"
+
 while IFS= read -r f; do
   f=${f%.*}
   mkdir -p "$(dirname "${from}/${f}")"

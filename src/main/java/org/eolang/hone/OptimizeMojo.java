@@ -133,7 +133,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 final Path src = Paths.get(this.extra.get(pos));
                 final Path dest = extdir.resolve(String.format(fmt, pos));
                 Files.copy(src, dest);
-                Logger.debug(this, "Extra rule %[file]s copied to %[file]s", src, dest);
+                Logger.info(this, "Extra rule %[file]s copied to %[file]s", src, dest);
             }
             command.addAll(
                 Arrays.asList(

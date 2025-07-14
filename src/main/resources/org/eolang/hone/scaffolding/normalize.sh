@@ -23,6 +23,7 @@ opts=()
 IFS=' ' read -r -a array <<< "${rules}"
 for rule in "${array[@]}"; do
   opts+=(--rule "${rule}")
+  echo "Using '${rule}' rule"
 done
 
 while IFS= read -r f; do
@@ -31,10 +32,10 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${to}/${f}")"
   mkdir -p "$(dirname "${xmirOut}/${f}")"
   phino rewrite --input=xmir --sweet --nothing < "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
-  echo "Converted XMIR to phi: ${f}"
+  echo "Converted XMIR to ${f}.phi"
   phino rewrite --sweet --shuffle "${opts[@]}" < "${from}/${f}.phi" > "${to}/${f}.phi"
-  echo "Applied ${array[*]} rules: ${f}"
+  echo "Applied ${#array[@]} rules to ${f}.phi"
   diff -q "${from}/${f}.phi" "${to}/${f}.phi" || true
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments < "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
-  echo "Converted phi to XMIR: ${f}"
+  echo "Converted phi to ${f}.xmir"
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

@@ -348,13 +348,13 @@ final class OptimizeMojoTest {
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    void optimizesWithExtraRule(@Mktmp final Path home,
+    void optimizesWithExtraRules(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(
             f -> {
                 f.clean();
                 f.files()
-                    .file("src/rules/simple.yaml")
+                    .file("src/rules/first.yaml")
                     .write(
                         """
                         name: fifty-to-sixty
@@ -363,12 +363,21 @@ final class OptimizeMojoTest {
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
+                    .file("src/rules/second.yaml")
+                    .write(
+                        """
+                        name: thirty-three-to-one
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
                     .file("src/main/java/Foo.java")
                     .write(
                         """
                             class Foo {
                                 int bar() {
-                                    return 50;
+                                    return Math.abs(50) * 33;
                                 }
                             }
                         """.getBytes(StandardCharsets.UTF_8)
@@ -398,7 +407,14 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize")
                     .configuration()
-                    .set("extra", new String[] {"src/rules/simple.yaml"})
+                    .set("rules", "none")
+                    .set(
+                        "extra",
+                        new String[] {
+                            "src/rules/first.yaml",
+                            "src/rules/second.yaml",
+                        }
+                    )
                     .set("image", image);
                 f.exec("test");
                 MatcherAssert.assertThat(

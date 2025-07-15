@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -ex -o pipefail
+set -e -o pipefail
 
 SELF=$(dirname "$0")
 
@@ -57,8 +57,12 @@ for rule in ${RULES}; do
 done
 if [ -n "${EXTRA}" ]; then
   e=$(find "${EXTRA}" -name '*.yml' -exec realpath {} \; | sort | tr '\n' ' ')
-  echo "Extra rules found: ${e}"
-  RULES="${RULES} ${e}"
+  if [ -n "${e}" ]; then
+    echo "Extra rules found in ${EXTRA}: ${e}"
+    RULES="${RULES} ${e}"
+  else
+    echo "No extra rules found in ${EXTRA}"
+  fi
 fi
 
 mvn "${opts[@]}" \

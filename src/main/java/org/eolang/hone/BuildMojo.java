@@ -7,6 +7,7 @@ package org.eolang.hone;
 import java.io.IOException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.cactoos.Scalar;
 import org.cactoos.io.OutputTo;
 import org.cactoos.io.ResourceOf;
@@ -31,6 +32,16 @@ import org.cactoos.scalar.Retry;
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public final class BuildMojo extends AbstractMojo {
+
+    /**
+     * Phino version to use.
+     *
+     * @since 0.2.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
+    @Parameter(property = "hone.phino-version", defaultValue = "0.0.0.25")
+    private String phinoVersion;
 
     @Override
     public void exec() throws IOException {
@@ -61,6 +72,7 @@ public final class BuildMojo extends AbstractMojo {
                             "build",
                             "--pull",
                             "--progress=plain",
+                            "--build-arg", String.format("PHINO_VERSION=%s", this.phinoVersion),
                             "--tag", this.image,
                             temp.path().toString()
                         )

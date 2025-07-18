@@ -104,6 +104,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void exec() throws IOException {
         final long start = System.currentTimeMillis();
         final Collection<String> command = new LinkedList<>(
@@ -129,11 +130,36 @@ public final class OptimizeMojo extends AbstractMojo {
                 "%%0%dd.yml",
                 (int) Math.log10(this.extra.size()) + 1
             );
-            for (int pos = 0; pos < this.extra.size(); ++pos) {
+            int pos = 0;
+            while (pos < this.extra.size()) {
                 final Path src = Paths.get(this.extra.get(pos));
-                final Path dest = extdir.resolve(String.format(fmt, pos));
-                Files.copy(src, dest);
-                Logger.info(this, "Extra rule %[file]s copied to %[file]s", src, dest);
+                if (src.toFile().isDirectory()) {
+                    Logger.info(this, "Scanning %[file]s for extra rules (.yml or .yaml)...", src);
+                    try (var files = Files.list(src)) {
+                        final List<Path> yamls = files
+                            .filter(
+                                f -> f.getFileName().toString().endsWith(".yml")
+                                    || f.getFileName().toString().endsWith(".yaml")
+                            )
+                            .sorted()
+                            .toList();
+                        for (int yml = 0; yml < yamls.size(); ++yml) {
+                            final Path copy = extdir.resolve(String.format(fmt, pos + yml));
+                            Files.copy(yamls.get(yml), copy);
+                            Logger.info(
+                                this,
+                                "Extra rule %[file]s found in %[file]s and copied to %[file]s",
+                                yamls.get(yml), src, copy
+                            );
+                            pos += 1;
+                        }
+                    }
+                } else {
+                    final Path dest = extdir.resolve(String.format(fmt, pos));
+                    Files.copy(src, dest);
+                    Logger.info(this, "Extra rule %[file]s copied to %[file]s", src, dest);
+                }
+                pos += 1;
             }
             command.addAll(
                 Arrays.asList(

@@ -372,12 +372,31 @@ final class OptimizeMojoTest {
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
+                    .file("src/rules/a-few/001.yaml")
+                    .write(
+                        """
+                        name: hello-to-bye
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/rules/a-few/002.yaml")
+                    .write(
+                        """
+                        name: mama-to-papa
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
                     .file("src/main/java/Foo.java")
                     .write(
                         """
                             class Foo {
                                 int bar() {
-                                    return Math.abs(50) * 33;
+                                    return Math.abs(50) * 33
+                                        + "hello".hashCode() + "mama".hashCode();
                                 }
                             }
                         """.getBytes(StandardCharsets.UTF_8)
@@ -391,7 +410,10 @@ final class OptimizeMojoTest {
                         class FooTest {
                             @Test
                             void worksAfterOptimizationWithExtraRule() {
-                                Assertions.assertEquals(60, new Foo().bar());
+                                Assertions.assertEquals(
+                                    3531468,
+                                    new Foo().bar()
+                                );
                             }
                         }
                         """.getBytes(StandardCharsets.UTF_8)
@@ -413,6 +435,7 @@ final class OptimizeMojoTest {
                         new String[] {
                             "src/rules/first.yaml",
                             "src/rules/second.yaml",
+                            "src/rules/a-few",
                         }
                     )
                     .set("image", image);

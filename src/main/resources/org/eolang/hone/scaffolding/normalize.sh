@@ -21,7 +21,7 @@ mkdir -p "${from}"
 mkdir -p "${to}"
 mkdir -p "${xmirOut}"
 
-phino --version
+echo "Phino version: $(phino --version | xargs)"
 
 while IFS= read -r f; do
   f=${f%.*}
@@ -34,26 +34,29 @@ while IFS= read -r f; do
   pos=0
   IFS=' ' read -r -a array <<< "${rules}"
   if [ "${smallSteps}" == "true" ]; then
-    echo "Running in small steps mode, applying rules one by one"
+    echo "Running in small steps mode, applying ${array[*]} rule(s) one by one to ${from}/${f}.phi"
     cp "${from}/${f}.phi" "${to}/${f}.phi"
     for rule in "${array[@]}"; do
       pos=$(( pos + 1 ))
       phino rewrite --max-depth "${maxDepth}" --sweet --rule "${rule}" "${to}/${f}.phi" > "${to}/${f}.phi.${pos}"
-      echo "Applied '${rule}', saved to ${to}/${f}.phi.${pos}"
       if diff -q "${to}/${f}.phi" "${to}/${f}.phi.${pos}"; then
-        echo "No changes made by '${rule}'"
+        echo ".. No changes made by '${rule}' to ${to}/${f}.phi.${pos}"
       else
-        echo "$(diff "${to}/${f}.phi" "${to}/${f}.phi.${pos}" | grep -E '^[+-]' | grep -cvE '^\+\+\+|^---') lines changed by '${rule}'"
+        echo ".. $(diff "${to}/${f}.phi" "${to}/${f}.phi.${pos}" | grep -cE '^[><]') lines changed by '${rule}' to ${to}/${f}.phi.${pos}"
       fi
       cp "${to}/${f}.phi.${pos}" "${to}/${f}.phi"
     done
   else
-    echo "Running in full mode, applying all ${array[*]} rule(s) at once"
     opts=()
     for rule in "${array[@]}"; do
       opts+=("--rule=${rule}")
     done
     phino rewrite --max-depth "${maxDepth}" --sweet "${opts[@]}" "${from}/${f}.phi" > "${to}/${f}.phi"
+    if diff -q "${from}/${f}.phi" "${to}/${f}.phi"; then
+      echo "No changes made by ${array[*]} rule(s) to ${to}/${f}.phi"
+    else
+      echo "All ${array[*]} rule(s) made some changes to ${from}/${f}.phi, saved to ${to}/${f}.phi"
+    fi
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
   echo "Converted phi to ${xmirOut}/${f}.xmir ($(du -sh "${xmirOut}/${f}.xmir" | cut -f1))"

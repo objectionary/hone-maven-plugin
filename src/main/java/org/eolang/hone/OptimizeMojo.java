@@ -142,23 +142,16 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--env", "TARGET=/target"
             )
         );
-        Path extdir = this.target.toPath().resolve("hone-extra");
+        final Path extdir = this.target.toPath().resolve("hone-extra");
         if (extdir.toFile().mkdirs()) {
             Logger.debug(this, "Directory %[file]s created", extdir);
         }
         if (this.extra != null) {
-            final int sub = extdir.toFile().list().length + 1;
-            extdir = extdir.resolve(Integer.toString(sub));
             if (extdir.toFile().mkdirs()) {
                 Logger.debug(this, "Directory %[file]s created", extdir);
             }
-            final String fmt = String.format(
-                "%%0%dd.yml",
-                Math.max((int) Math.log10(this.extra.size()) + 1, 3)
-            );
-            int pos = 0;
-            while (pos < this.extra.size()) {
-                final Path src = Paths.get(this.extra.get(pos));
+            for (final String ext : this.extra) {
+                final Path src = Paths.get(ext);
                 if (src.toFile().isDirectory()) {
                     Logger.info(this, "Scanning %[file]s for extra rules (.yml or .yaml)...", src);
                     try (var files = Files.list(src)) {
@@ -170,26 +163,16 @@ public final class OptimizeMojo extends AbstractMojo {
                             .sorted()
                             .toList();
                         for (final Path yaml : yamls) {
-                            final Path copy = extdir.resolve(String.format(fmt, pos));
-                            Files.copy(yaml, copy);
-                            Logger.info(
-                                this,
-                                "Extra rule %[file]s found in %[file]s and copied to %[file]s",
-                                yaml, src, copy
-                            );
-                            pos += 1;
+                            this.saveExtra(yaml, extdir);
                         }
                     }
                 } else {
-                    final Path dest = extdir.resolve(String.format(fmt, pos));
-                    Files.copy(src, dest);
-                    Logger.info(this, "Extra rule %[file]s copied to %[file]s", src, dest);
+                    this.saveExtra(src, extdir);
                 }
-                pos += 1;
             }
             command.addAll(
                 Arrays.asList(
-                    "--env", String.format("EXTRA=/target/hone-extra/%d", sub)
+                    "--env", "EXTRA=/target/hone-extra"
                 )
             );
         }
@@ -256,4 +239,28 @@ public final class OptimizeMojo extends AbstractMojo {
             System.currentTimeMillis() - start
         );
     }
+
+    private void saveExtra(final Path src, final Path target) throws IOException {
+        final int already = Files.list(target).toList().size();
+        final String name = String.format(
+            "%04d-%s.yml", already,
+            src.getFileName().toString().replaceAll("\\.ya?ml$", "")
+        );
+        final Path copy = target.resolve(name);
+        if (copy.toFile().exists()) {
+            throw new IllegalStateException(
+                String.format(
+                    "Extra rule %s already exists, something is wrong with our algorithm?",
+                    copy
+                )
+            );
+        }
+        Files.copy(src, copy);
+        Logger.info(
+            this,
+            "Extra rule '%s' found in %[file]s and copied to %[file]s",
+            name, src, target
+        );
+    }
+
 }

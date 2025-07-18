@@ -76,6 +76,7 @@ mvn "${opts[@]}" \
   "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
   "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
   "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi" \
+  "-Dexec.phino.small-steps=${SMALL_STEPS}" \
   jeo:assemble \
   "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
   "-Djeo.assemble.outputDir=${TARGET}/classes"

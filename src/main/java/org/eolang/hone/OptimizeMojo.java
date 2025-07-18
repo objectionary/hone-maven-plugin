@@ -93,6 +93,20 @@ public final class OptimizeMojo extends AbstractMojo {
     private String jeoVersion;
 
     /**
+     * Small steps or big steps?
+     *
+     * <p>Small steps mode will apply one rule at a time, producing separate
+     * .phi files. This may be useful for debugging of the rules. To the contrary,
+     * big steps mode will apply all rules at once, which is faster, but less
+     * transparent for debugging.</p>
+     *
+     * @since 0.3.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.small-steps", defaultValue = "false")
+    private boolean smallSteps;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -185,6 +199,11 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("SMALL_STEPS=%s", this.smallSteps)
+            )
+        );
         command.add("--user");
         command.add(
             String.format(

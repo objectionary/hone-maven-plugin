@@ -61,7 +61,7 @@ while IFS= read -r f; do
     if cmp -s "${r}" "${s}"; then
       echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}")"
     else
-      echo "All ${#array[@]} rule(s) made some changes to $(basename "${r}"), saved to $(basename "${s}"): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
+      echo "Modified $(basename "${r}") by ${#array[@]} rule(s), saved to $(basename "${s}"): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
     fi
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"

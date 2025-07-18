@@ -128,7 +128,7 @@ public final class OptimizeMojo extends AbstractMojo {
             }
             final String fmt = String.format(
                 "%%0%dd.yml",
-                (int) Math.log10(this.extra.size()) + 1
+                Math.max((int) Math.log10(this.extra.size()) + 1, 3)
             );
             int pos = 0;
             while (pos < this.extra.size()) {
@@ -143,13 +143,13 @@ public final class OptimizeMojo extends AbstractMojo {
                             )
                             .sorted()
                             .toList();
-                        for (int yml = 0; yml < yamls.size(); ++yml) {
-                            final Path copy = extdir.resolve(String.format(fmt, pos + yml));
-                            Files.copy(yamls.get(yml), copy);
+                        for (final Path yaml : yamls) {
+                            final Path copy = extdir.resolve(String.format(fmt, pos));
+                            Files.copy(yaml, copy);
                             Logger.info(
                                 this,
                                 "Extra rule %[file]s found in %[file]s and copied to %[file]s",
-                                yamls.get(yml), src, copy
+                                yaml, src, copy
                             );
                             pos += 1;
                         }

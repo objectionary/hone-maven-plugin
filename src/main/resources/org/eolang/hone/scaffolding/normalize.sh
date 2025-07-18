@@ -38,7 +38,7 @@ while IFS= read -r f; do
   pos=0
   IFS=' ' read -r -a array <<< "${rules}"
   if [ "${smallSteps}" == "true" ]; then
-    echo "Running in small-steps mode, applying ${#array[@]} rule(s) one by one to ${r}"
+    echo "Applying ${#array[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${from}/${f}.phi" "${s}"
     for rule in "${array[@]}"; do
       m=$(basename "${rule}" .yml)
@@ -48,7 +48,7 @@ while IFS= read -r f; do
       if cmp -s "${s}" "${t}"; then
         echo ".. No changes made by '${m}' to $(basename "${t}")"
       else
-        echo ".. $(diff "${s}" "${f}" | grep -cE '^[><]') lines changed by '${m}' to $(basename "${t}")"
+        echo ".. $(diff "${s}" "${t}" | grep -cE '^[><]') lines changed by '${m}' to $(basename "${t}")"
       fi
       cp "${t}" "${s}"
     done

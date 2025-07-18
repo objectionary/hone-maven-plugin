@@ -46,6 +46,7 @@
               <argument>${exec.phino.to}</argument>
               <argument>${exec.phino.xmir-out}</argument>
               <argument>${exec.phino.small-steps}</argument>
+              <argument>${exec.phino.max-depth}</argument>
             </arguments>
           </configuration>
         </plugin>

@@ -10,6 +10,7 @@ from=$3
 to=$4
 xmirOut=$5
 smallSteps=$6
+maxDepth=$7
 
 if [ ! -d "${xmirIn}" ]; then
   echo "The source directory '${xmirIn}' does not exist!"
@@ -37,7 +38,7 @@ while IFS= read -r f; do
     cp "${from}/${f}.phi" "${to}/${f}.phi"
     for rule in "${array[@]}"; do
       pos=$(( pos + 1 ))
-      phino rewrite --sweet --rule "${rule}" "${to}/${f}.phi" > "${to}/${f}.phi.${pos}"
+      phino rewrite --max-depth "${maxDepth}" --sweet --rule "${rule}" "${to}/${f}.phi" > "${to}/${f}.phi.${pos}"
       echo "Applied '${rule}', saved to ${to}/${f}.phi.${pos}"
       if diff -q "${to}/${f}.phi" "${to}/${f}.phi.${pos}"; then
         echo "No changes made by '${rule}'"
@@ -47,12 +48,12 @@ while IFS= read -r f; do
       cp "${to}/${f}.phi.${pos}" "${to}/${f}.phi"
     done
   else
-    echo "Running in full mode, applying all rules at once"
+    echo "Running in full mode, applying all ${array[*]} rule(s) at once"
     opts=()
     for rule in "${array[@]}"; do
       opts+=("--rule=${rule}")
     done
-    phino rewrite --sweet "${opts[@]}" "${from}/${f}.phi" > "${to}/${f}.phi"
+    phino rewrite --max-depth "${maxDepth}" --sweet "${opts[@]}" "${from}/${f}.phi" > "${to}/${f}.phi"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
   echo "Converted phi to ${xmirOut}/${f}.xmir ($(du -sh "${xmirOut}/${f}.xmir" | cut -f1))"

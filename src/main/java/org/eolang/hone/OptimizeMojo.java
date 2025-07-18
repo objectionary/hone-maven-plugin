@@ -107,6 +107,18 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean smallSteps;
 
     /**
+     * How many rewriting cycles to tolerate maximum?
+     *
+     * <p>This number doesn't need to be changed. However, may be used for debugging.
+     * The larger the number, the longer optimization might take.</p>
+     *
+     * @since 0.4.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.max-depth", defaultValue = "500")
+    private int maxDepth;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -202,6 +214,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("SMALL_STEPS=%s", this.smallSteps)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("MAX_DEPTH=%d", this.maxDepth)
             )
         );
         command.add("--user");

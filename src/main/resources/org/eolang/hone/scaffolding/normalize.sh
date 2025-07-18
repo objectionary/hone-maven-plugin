@@ -25,17 +25,20 @@ echo "Phino version: $(phino --version | xargs)"
 
 while IFS= read -r f; do
   f=${f%.*}
-  mkdir -p "$(dirname "${from}/${f}")"
-  mkdir -p "$(dirname "${to}/${f}")"
+  r="${from}/${f}.phi"
+  s="${to}/${f}.phi"
+  xo=${xmirOut}/${f}.xmir
+  xi=${xmirIn}/${f}.xmir
+  mkdir -p "$(dirname "${r}")"
+  mkdir -p "$(dirname "${s}")"
   mkdir -p "$(dirname "${xmirOut}/${f}")"
-  phino rewrite --input=xmir --sweet --nothing "${xmirIn}/${f}.xmir" > "${from}/${f}.phi"
-  echo "Converted XMIR ($(du -sh "${xmirIn}/${f}.xmir" | cut -f1)) to ${from}/${f}.phi ($(du -sh "${from}/${f}.phi" | cut -f1))"
-  rm -f "${to}/${f}.phi.*"
+  phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"
+  echo "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
+  rm -f "${s}.*"
   pos=0
   IFS=' ' read -r -a array <<< "${rules}"
   if [ "${smallSteps}" == "true" ]; then
-    echo "Running in small-steps mode, applying ${#array[@]} rule(s) one by one to ${from}/${f}.phi"
-    s="${to}/${f}.phi"
+    echo "Running in small-steps mode, applying ${#array[@]} rule(s) one by one to ${r}"
     cp "${from}/${f}.phi" "${s}"
     for rule in "${array[@]}"; do
       m=$(basename "${rule}" .yml)
@@ -54,18 +57,18 @@ while IFS= read -r f; do
     for rule in "${array[@]}"; do
       opts+=("--rule=${rule}")
     done
-    phino rewrite --max-depth "${maxDepth}" --sweet "${opts[@]}" "${from}/${f}.phi" > "${to}/${f}.phi"
-    if cmp -s "${from}/${f}.phi" "${to}/${f}.phi"; then
-      echo "No changes made by ${#array[@]} rule(s) to ${to}/${f}.phi"
+    phino rewrite --max-depth "${maxDepth}" --sweet "${opts[@]}" "${r}" > "${s}"
+    if cmp -s "${r}" "${s}"; then
+      echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}")"
     else
-      echo "All ${#array[@]} rule(s) made some changes to ${from}/${f}.phi, saved to ${to}/${f}.phi: $(diff "${from}/${f}.phi" "${to}/${f}.phi" | grep -cE '^[><]') lines"
+      echo "All ${#array[@]} rule(s) made some changes to $(basename "${r}"), saved to $(basename "${s}"): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
     fi
   fi
-  phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${to}/${f}.phi" > "${xmirOut}/${f}.xmir"
-  echo "Converted phi to ${xmirOut}/${f}.xmir ($(du -sh "${xmirOut}/${f}.xmir" | cut -f1))"
-  if cmp -s "${xmirIn}/${f}.xmir" "${xmirOut}/${f}.xmir"; then
-    echo "No changes made to ${f}.xmir"
+  phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
+  echo "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
+  if cmp -s "${xi}" "${xo}"; then
+    echo "No changes made to $(basename "${xi}")"
   else
-    echo "Some changes were made to ${f}.xmir: $(diff "${xmirIn}/${f}.xmir" "${xmirOut}/${f}.xmir" | grep -cE '^[><]') lines"
+    echo "Some changes were made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
 done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)

@@ -46,9 +46,9 @@ while IFS= read -r f; do
       t="${to}/${f}.phi.${pos}"
       phino rewrite --max-depth "${maxDepth}" --sweet --rule "${rule}" "${s}" > "${t}"
       if cmp -s "${s}" "${t}"; then
-        echo ".. No changes made by '${m}' to $(basename "${t}")"
+        echo "  No changes made by '${m}' to $(basename "${t}")"
       else
-        echo ".. $(diff "${s}" "${t}" | grep -cE '^[><]') lines changed by '${m}' to $(basename "${t}")"
+        echo "  $(diff "${s}" "${t}" | grep -cE '^[><]') lines changed by '${m}' to $(basename "${t}")"
       fi
       cp "${t}" "${s}"
     done

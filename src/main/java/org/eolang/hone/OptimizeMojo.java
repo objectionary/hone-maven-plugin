@@ -258,8 +258,8 @@ public final class OptimizeMojo extends AbstractMojo {
         Files.copy(src, copy);
         Logger.info(
             this,
-            "Extra rule '%s' found in %[file]s and copied to %[file]s",
-            name, src, target
+            "Extra rule '%s' copied to %[file]s from %[file]s",
+            name, target, src
         );
     }
 

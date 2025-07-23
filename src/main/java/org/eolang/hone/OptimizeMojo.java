@@ -42,6 +42,7 @@ import org.cactoos.iterable.Mapped;
  * of the <tt>rmi</tt> goal.</p>
  *
  * @since 0.1.0
+ * @checkstyle CyclomaticComplexityCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -119,6 +120,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private int maxDepth;
 
     /**
+     * All file extensions for the extra rules.
+     *
+     * @since 0.5.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.extra-extensions", defaultValue = "yml,yaml,phr")
+    private String extraExtensions;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -153,12 +163,23 @@ public final class OptimizeMojo extends AbstractMojo {
             for (final String ext : this.extra) {
                 final Path src = Paths.get(ext);
                 if (src.toFile().isDirectory()) {
-                    Logger.info(this, "Scanning %[file]s for extra rules (.yml or .yaml)...", src);
+                    Logger.info(
+                        this,
+                        "Scanning %[file]s for extra rules (%s)...",
+                        src, this.extraExtensions
+                    );
                     try (var files = Files.list(src)) {
                         final List<Path> yamls = files
                             .filter(
-                                f -> f.getFileName().toString().endsWith(".yml")
-                                    || f.getFileName().toString().endsWith(".yaml")
+                                f -> {
+                                    boolean match = false;
+                                    for (final String extn : this.extraExtensions.split(",")) {
+                                        match = match || f.getFileName().toString().endsWith(
+                                            String.format(".%s", extn.trim())
+                                        );
+                                    }
+                                    return match;
+                                }
                             )
                             .sorted()
                             .toList();
@@ -244,7 +265,7 @@ public final class OptimizeMojo extends AbstractMojo {
         final int already = Files.list(target).toList().size();
         final String name = String.format(
             "%04d-%s.yml", already,
-            src.getFileName().toString().replaceAll("\\.ya?ml$", "")
+            src.getFileName().toString().replaceAll("\\.[a-zA-Z0-9]+$", "")
         );
         final Path copy = target.resolve(name);
         if (copy.toFile().exists()) {

@@ -5,7 +5,7 @@ FROM yegor256/haskell:0.0.1
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+LABEL "version"="0.5.3"
 
 WORKDIR /hone
 

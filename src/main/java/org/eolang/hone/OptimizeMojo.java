@@ -5,7 +5,8 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
-import com.sun.security.auth.module.UnixSystem;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -168,7 +171,7 @@ public final class OptimizeMojo extends AbstractMojo {
                         "Scanning %[file]s for extra rules (%s)...",
                         src, this.extraExtensions
                     );
-                    try (var files = Files.list(src)) {
+                    try (Stream<Path> files = Files.list(src)) {
                         final List<Path> yamls = files
                             .filter(
                                 f -> {
@@ -182,7 +185,7 @@ public final class OptimizeMojo extends AbstractMojo {
                                 }
                             )
                             .sorted()
-                            .toList();
+                            .collect(Collectors.toList());
                         for (final Path yaml : yamls) {
                             this.saveExtra(yaml, extdir);
                         }
@@ -226,13 +229,7 @@ public final class OptimizeMojo extends AbstractMojo {
             )
         );
         command.add("--user");
-        command.add(
-            String.format(
-                "%d:%d",
-                new UnixSystem().getUid(),
-                new UnixSystem().getGid()
-            )
-        );
+        command.add(OptimizeMojo.whoami());
         command.addAll(
             Arrays.asList(
                 "--env",
@@ -262,7 +259,7 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     private void saveExtra(final Path src, final Path target) throws IOException {
-        final int already = Files.list(target).toList().size();
+        final int already = Files.list(target).collect(Collectors.toList()).size();
         final String name = String.format(
             "%04d-%s.yml", already,
             src.getFileName().toString().replaceAll("\\.[a-zA-Z0-9]+$", "")
@@ -284,4 +281,47 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    /**
+     * Returns the user and group IDs of the current user.
+     *
+     * @return A string in the format "uid:gid"
+     */
+    private static String whoami() {
+        return String.format(
+            "%d:%d",
+            OptimizeMojo.CLibrary.INSTANCE.getuid(),
+            OptimizeMojo.CLibrary.INSTANCE.geteuid()
+        );
+    }
+
+    /**
+     * C library interface for getting user IDs.
+     *
+     * <p>This interface uses JNA (Java Native Access)
+     * to call native C functions.</p>
+     *
+     * @since 0.6.0
+     */
+    public interface CLibrary extends Library {
+        /**
+         * Instance of the C library.
+         *
+         * <p>This is used to access native methods.</p>
+         */
+        OptimizeMojo.CLibrary INSTANCE = Native.load("c", OptimizeMojo.CLibrary.class);
+
+        /**
+         * Gets the user ID of the calling process.
+         *
+         * @return The user ID
+         */
+        int getuid();
+
+        /**
+         * Gets the effective user ID of the calling process.
+         *
+         * @return The effective user ID
+         */
+        int geteuid();
+    }
 }

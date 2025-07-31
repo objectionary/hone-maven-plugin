@@ -66,9 +66,15 @@
   </distributionManagement>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <maven.compiler.release>17</maven.compiler.release>
+    <!--
+    Don't change the version of Java to anything higher than 8.
+    This plugin may be used in projects that are compiled with Java 8,
+    and it must not require a higher version of Java.
+    -->
+    <jdk.version>8</jdk.version>
+    <maven.compiler.release>${jdk.version}</maven.compiler.release>
+    <maven.compiler.source>${jdk.version}</maven.compiler.source>
+    <maven.compiler.target>${jdk.version}</maven.compiler.target>
     <excludedGroups>deep</excludedGroups>
     <skipITs/>
   </properties>
@@ -99,6 +105,11 @@
       <artifactId>jcabi-maven-slf4j</artifactId>
       <version>0.12.2</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.java.dev.jna</groupId>
+      <artifactId>jna</artifactId>
+      <version>5.14.0</version>
     </dependency>
     <dependency>
       <groupId>org.cactoos</groupId>

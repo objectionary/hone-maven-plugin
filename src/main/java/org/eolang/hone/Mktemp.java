@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.stream.Stream;
 
 /**
  * Temporary directory that automatically cleans up after itself.
@@ -45,7 +46,7 @@ final class Mktemp implements Closeable {
 
     @Override
     public void close() throws IOException {
-        try (var stream = Files.walk(this.dir)) {
+        try (Stream<Path> stream = Files.walk(this.dir)) {
             stream
                 .map(Path::toFile)
                 .sorted(Comparator.reverseOrder())

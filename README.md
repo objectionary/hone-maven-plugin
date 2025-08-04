@@ -77,15 +77,15 @@ Size of .class: 22Kb (22Kb bytes)
 Size of .xmir after disassemble: 2Mb (2Mb bytes, 56909 lines)
 Size of .phi: 646Kb (646Kb bytes, 19230 lines)
 Size of .xmir after unphi: 2Mb (2Mb bytes, 56894 lines)
-Optimization time: 8s (7636 ms)
+Optimization time: 8s (7859 ms)
 
-jeo-maven-plugin:disassemble  2.396  45.47%
-exec-maven-plugin:exec        1.97   37.39%
-jeo-maven-plugin:assemble     0.903  17.14%
+jeo-maven-plugin:disassemble  2.337  44.78%
+exec-maven-plugin:exec        1.962  37.59%
+jeo-maven-plugin:assemble     0.92   17.63%
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2025-07-26 at 04:49,
+on 2025-08-03 at 06:16,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
@@ -108,7 +108,7 @@ The versions of [EO] and
 that we use, are defined in the `in-docker-pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16536153807
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/16701866363
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

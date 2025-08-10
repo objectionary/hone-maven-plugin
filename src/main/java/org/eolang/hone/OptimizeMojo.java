@@ -46,6 +46,7 @@ import org.cactoos.iterable.Mapped;
  *
  * @since 0.1.0
  * @checkstyle CyclomaticComplexityCheck (500 lines)
+ * @checkstyle NPathComplexityCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -132,6 +133,30 @@ public final class OptimizeMojo extends AbstractMojo {
     private String extraExtensions;
 
     /**
+     * Include patterns for .class files.
+     *
+     * <p>Array of patterns to include specific .class files for optimization.
+     * If not specified, all .class files will be included.</p>
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.includes")
+    private String[] includes;
+
+    /**
+     * Exclude patterns for .class files.
+     *
+     * <p>Array of patterns to exclude specific .class files from optimization.
+     * If not specified, no .class files will be excluded.</p>
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.excludes")
+    private String[] excludes;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -143,7 +168,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
 
     @Override
-    @SuppressWarnings("PMD.CognitiveComplexity")
+    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity" })
     public void exec() throws IOException {
         final long start = System.currentTimeMillis();
         final Collection<String> command = new LinkedList<>(
@@ -228,6 +253,20 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--env", String.format("MAX_DEPTH=%d", this.maxDepth)
             )
         );
+        if (this.includes != null && this.includes.length > 0) {
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("INCLUDES=%s", String.join(",", this.includes))
+                )
+            );
+        }
+        if (this.excludes != null && this.excludes.length > 0) {
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("EXCLUDES=%s", String.join(",", this.excludes))
+                )
+            );
+        }
         command.add("--user");
         command.add(OptimizeMojo.whoami());
         command.addAll(

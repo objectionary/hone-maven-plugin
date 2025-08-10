@@ -65,10 +65,21 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
+declare -a jeo_opts=()
+if [ -n "${INCLUDES}" ]; then
+  jeo_opts+=("-Djeo.disassemble.includes=${INCLUDES}")
+  jeo_opts+=("-Djeo.assemble.includes=${INCLUDES}")
+fi
+if [ -n "${EXCLUDES}" ]; then
+  jeo_opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
+  jeo_opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
+fi
+
 mvn "${opts[@]}" \
   jeo:disassemble \
   "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
   "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
+  "${jeo_opts[@]}" \
   exec:exec \
   "-Dexec.phino.script=${SELF}/normalize.sh" \
   "-Dexec.phino.rules=${RULES}" \
@@ -80,4 +91,5 @@ mvn "${opts[@]}" \
   "-Dexec.phino.max-depth=${MAX_DEPTH}" \
   jeo:assemble \
   "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
-  "-Djeo.assemble.outputDir=${TARGET}/classes"
+  "-Djeo.assemble.outputDir=${TARGET}/classes" \
+  "${jeo_opts[@]}"

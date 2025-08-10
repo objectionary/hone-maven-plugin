@@ -46,6 +46,7 @@ import org.cactoos.iterable.Mapped;
  *
  * @since 0.1.0
  * @checkstyle CyclomaticComplexityCheck (500 lines)
+ * @checkstyle NPathComplexityCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -167,7 +168,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
 
     @Override
-    @SuppressWarnings("PMD.CognitiveComplexity")
+    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity" })
     public void exec() throws IOException {
         final long start = System.currentTimeMillis();
         final Collection<String> command = new LinkedList<>(

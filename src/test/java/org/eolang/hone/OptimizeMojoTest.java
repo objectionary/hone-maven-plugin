@@ -396,17 +396,23 @@ final class OptimizeMojoTest {
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "optimized IncludedClass.phi must be present",
-                    f.files().file("target/generated-sources/phi-optimized/foo/IncludedClass.phi").exists(),
+                    f.files().file(
+                        "target/generated-sources/phi-optimized/foo/IncludedClass.phi"
+                    ).exists(),
                     Matchers.is(true)
                 );
                 MatcherAssert.assertThat(
                     "ExcludedClass.phi must not be optimized",
-                    f.files().file("target/generated-sources/phi-optimized/foo/ExcludedClass.phi").exists(),
+                    f.files().file(
+                        "target/generated-sources/phi-optimized/foo/ExcludedClass.phi"
+                    ).exists(),
                     Matchers.is(false)
                 );
                 MatcherAssert.assertThat(
                     "AnotherClass.phi must not be optimized (not included)",
-                    f.files().file("target/generated-sources/phi-optimized/bar/AnotherClass.phi").exists(),
+                    f.files().file(
+                        "target/generated-sources/phi-optimized/bar/AnotherClass.phi"
+                    ).exists(),
                     Matchers.is(false)
                 );
             }

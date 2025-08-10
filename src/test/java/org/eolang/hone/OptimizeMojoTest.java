@@ -348,6 +348,76 @@ final class OptimizeMojoTest {
     @Timeout(6000L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
+    void optimizesWithIncludesAndExcludes(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/foo/IncludedClass.java")
+                    .write(
+                        """
+                        package foo;
+                        class IncludedClass {
+                            int calculate() { return 42; }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/main/java/foo/ExcludedClass.java")
+                    .write(
+                        """
+                        package foo;
+                        class ExcludedClass {
+                            int calculate() { return 100; }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/main/java/bar/AnotherClass.java")
+                    .write(
+                        """
+                        package bar;
+                        class AnotherClass {
+                            int calculate() { return 200; }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("image", image)
+                    .set("includes", "foo/Included*")
+                    .set("excludes", "foo/Excluded*");
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "optimized IncludedClass.phi must be present",
+                    f.files().file("target/generated-sources/phi-optimized/foo/IncludedClass.phi").exists(),
+                    Matchers.is(true)
+                );
+                MatcherAssert.assertThat(
+                    "ExcludedClass.phi must not be optimized",
+                    f.files().file("target/generated-sources/phi-optimized/foo/ExcludedClass.phi").exists(),
+                    Matchers.is(false)
+                );
+                MatcherAssert.assertThat(
+                    "AnotherClass.phi must not be optimized (not included)",
+                    f.files().file("target/generated-sources/phi-optimized/bar/AnotherClass.phi").exists(),
+                    Matchers.is(false)
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @Timeout(6000L)
+    @DisabledWithoutDocker
+    @ExtendWith(MayBeSlow.class)
     void optimizesWithExtraRules(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(

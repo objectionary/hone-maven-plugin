@@ -4,16 +4,12 @@
  */
 package org.eolang.hone;
 
-import com.jcabi.log.Logger;
-import com.jcabi.log.VerboseProcess;
 import com.yegor256.MayBeSlow;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.logging.Level;
 import org.cactoos.io.InputOf;
 import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;

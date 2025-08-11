@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>hone:build – hone-maven-plugin</title>
+        <link media="all" rel="stylesheet" type="text/css" href="./css/jcabi.css"/>
+                                                    <script src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="./js/jcabi.js"></script>
+    </head>
+    <body>
+                <div class="page" itemscope="" itemtype="http://schema.org/BlogPosting">
+            <nav class="menu-section">
+                <ul class="menu" id="menu">
+                                                                                    <li>
+                            <span>Overview</span>
+                                                            <ul>
+                                                                                                    <li >
+                            <span>                        <a href="index.html" title="Introduction">Introduction</a>
+        </span>
+                                                                                                                                                                <ul>
+                                                                    </ul>
+                                                    </li>
+                                                                                                                        <li >
+                            <span>                        <a href="plugin-info.html" title="Goals">Goals</a>
+        </span>
+                                                                                                                                                                <ul>
+                                                                    </ul>
+                                                    </li>
+                                                                                        </ul>
+                                                    </li>
+                                            <li>
+                            <span>Project Documentation</span>
+                                                            <ul>
+                                                                                                    <li >
+                            <span>                        <a href="project-info.html" title="Project Information">Project Information</a>
+        </span>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </li>
+                                                                                                                        <li >
+                            <span>                        <a href="project-reports.html" title="Project Reports">Project Reports</a>
+        </span>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </li>
+                                                                                        </ul>
+                                                    </li>
+                                    </ul>
+            </nav>
+            <div class="right-side">
+                <main>
+                    <div class="content">
+                        <header>
+                            <div class="logo">
+                                <a href="index.html"
+                                    title=" logo ">
+                                    <img src="${decoration.bannerLeft.src}"
+                                        alt="hone-maven-plugin"
+                                                                                                                        itemprop="image"
+                                    />
+                                </a>
+                            </div>
+                            <ul class="badges">
+                                <li>
+                                    <strong itemprop="version">0.7.0</strong>
+                                </li>
+                                <li>
+                                    $dateFormat.applyPattern("yyyy-MM-dd'T'hh:mm:ss'Z'")
+                                    <time itemprop="datePublished" datetime="${dateFormat.format($currentDate)}">
+                                        $dateFormat.applyPattern('dd-MMM-yyyy')
+                                        ${dateFormat.format($currentDate)}
+                                    </time>
+                                </li>
+                                <li class="menu-button">menu</li>
+                            </ul>
+                        </header>
+                        <div id="here-goes-menu" class="menu-off"></div>
+                                                                            <a href="https://github.com/objectionary/hone-maven-plugin">
+                                <img src="https://www.jcabi.com/fork-me.svg" class="fork-me"/>
+                            </a>
+                                                <article itemprop="articleBody">
+                            <section><a id="hone.3Abuild"></a>
+<h1>hone:build</h1>
+<p><strong>Full name</strong>:</p>
+<p>org.eolang:hone-maven-plugin:0.7.0:build</p>
+<p><strong>Description</strong>:</p>
+<p>Build Docker image. 
+<p>This goal must be used only if you want to build a local custom Docker image for your project. This may be useful when you don't have network access to Docker Hub. In most cases, you have it and that's why don't need this goal. Instead, just use the <tt>pull</tt> goal, which will simply pull a required Docker image from the Hub.</p>
+<p>This goal is mostly for testing and CI/CD.</p></p>
+<p><strong>Attributes</strong>:</p>
+<ul>
+<li>Requires a Maven project to be executed.</li>
+<li>The goal is not marked as thread-safe and thus does not support parallel builds.</li>
+<li>Since version: <code>0.1.0</code>.</li>
+<li>Binds by default to the <a class="externalLink" href="https://maven.apache.org/ref/current/maven-core/lifecycles.html">lifecycle phase</a>: <code>generate-resources</code>.</li></ul><section><a id="Optional_Parameters"></a>
+<h2>Optional Parameters</h2>
+<table class="bodyTable">
+<tr class="a">
+<th>Name</th>
+<th>Type</th>
+<th>Since</th>
+<th>Description</th></tr>
+<tr class="b">
+<td><a href="#image"><code>&lt;image&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.1.0</code></td>
+<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone:latest</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
+<tr class="a">
+<td><a href="#phinoVersion"><code>&lt;phinoVersion&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.2.0</code></td>
+<td>Phino version to use.<br /><strong>Default</strong>: <code>0.0.0.37</code><br /><strong>User Property</strong>: <code>hone.phino-version</code></td></tr>
+<tr class="b">
+<td><a href="#skip"><code>&lt;skip&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.1.0</code></td>
+<td>Skip the execution, if set to TRUE.<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.skip</code></td></tr>
+<tr class="a">
+<td><a href="#sudo"><code>&lt;sudo&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.1.0</code></td>
+<td>Whether to use "sudo" when executing Docker commands.<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.sudo</code></td></tr>
+<tr class="b">
+<td><a href="#target"><code>&lt;target&gt;</code></a></td>
+<td><code>File</code></td>
+<td><code>0.1.0</code></td>
+<td>The "target/" directory of Maven project.<br /><strong>Default</strong>: <code>${project.build.directory}</code><br /><strong>User Property</strong>: <code>hone.target</code></td></tr></table></section><section><a id="Parameter_Details"></a>
+<h2>Parameter Details</h2><a id="image"></a><section><a id="a.3Cimage.3E"></a>
+<h3>&lt;image&gt;</h3>
+<div>Docker image to use.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.image</code></li>
+<li><strong>Default</strong>: <code>yegor256/hone:latest</code></li></ul><hr /></section><a id="phinoVersion"></a><section><a id="a.3CphinoVersion.3E"></a>
+<h3>&lt;phinoVersion&gt;</h3>
+<div>Phino version to use.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.2.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.phino-version</code></li>
+<li><strong>Default</strong>: <code>0.0.0.37</code></li></ul><hr /></section><a id="skip"></a><section><a id="a.3Cskip.3E"></a>
+<h3>&lt;skip&gt;</h3>
+<div>Skip the execution, if set to TRUE.</div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.skip</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a id="sudo"></a><section><a id="a.3Csudo.3E"></a>
+<h3>&lt;sudo&gt;</h3>
+<div>Whether to use "sudo" when executing Docker commands.</div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.sudo</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a id="target"></a><section><a id="a.3Ctarget.3E"></a>
+<h3>&lt;target&gt;</h3>
+<div>The "target/" directory of Maven project.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.io.File</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.target</code></li>
+<li><strong>Default</strong>: <code>${project.build.directory}</code></li></ul></section></section></section>
+                        </article>
+                    </div>
+                </main>
+                <footer class="legal-notes">
+                    <div>
+                        Copyright &#169;
+                                                                            2024-${currentYear}
+                                            </div>
+                    <div>Objectionary, All Rights Reserved.</div>
+                    <div><a href="http://maven.apache.org/privacy-policy.html">Privacy Policy</a>.</div>
+                </footer>
+            </div>
+        </div>
+    </body>
+</html>

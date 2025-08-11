@@ -80,6 +80,6 @@ where:
       - '"s/\\((.+)\\).+/$1/g"'
   - meta: 𝑒-returned
     function: sed
-    args: 
+    args:
       - 𝑒-target-signature
       - '"s/\\(.*\\)(.+)/$1/g"'

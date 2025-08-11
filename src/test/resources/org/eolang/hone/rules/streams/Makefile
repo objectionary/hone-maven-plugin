@@ -7,9 +7,9 @@ SHELL := bash
 .SECONDARY:
 .PHONY: all clean test diff jeo-test run
 
-RULES_DIR=../main/rules
+RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules
 TESTS_DIR=expressions
-TARGET=../../target/foo
+TARGET=../../../../../../../../target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)
 RULES=$(sort $(subst $(RULES_DIR)/,,$(RULE_FILES)))

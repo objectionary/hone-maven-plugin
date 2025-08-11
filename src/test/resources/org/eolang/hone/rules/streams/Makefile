@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 .ONESHELL:
-.SHELLFLAGS := -e -o pipefail -c
+.SHELLFLAGS := -ex -o pipefail -c
 SHELL := bash
 .SECONDARY:
 .PHONY: all clean test diff jeo-test run
 
-RULES_DIR=../main/rules
+RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules
 TESTS_DIR=expressions
-TARGET=../../target/foo
+TARGET=../../../../../../../../target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)
 RULES=$(sort $(subst $(RULES_DIR)/,,$(RULE_FILES)))
@@ -17,7 +17,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=0.13.1
+JEO_VERSION=0.13.2
 
 all: test jeo-test run
 
@@ -58,6 +58,7 @@ $(TARGET)/before/%.class: %.java Makefile
 	javac -d "$$(dirname $@)" $<
 
 $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
+	rm -f $@
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):disassemble" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"

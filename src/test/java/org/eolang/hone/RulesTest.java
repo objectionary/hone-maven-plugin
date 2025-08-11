@@ -51,7 +51,10 @@ final class RulesTest {
         MatcherAssert.assertThat(
             "Should discover none.yml from classpath",
             new Rules("*").yamls(),
-            Matchers.hasItem("none.yml")
+            Matchers.hasItems(
+                "none.yml",
+                "streams/701-lambda-to-invokedynamic.phr"
+            )
         );
     }
 }

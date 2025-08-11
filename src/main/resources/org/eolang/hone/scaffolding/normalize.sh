@@ -4,47 +4,39 @@
 
 set -e -o pipefail
 
-rules=$1
-xmirIn=$2
-from=$3
-to=$4
-xmirOut=$5
-smallSteps=$6
-maxDepth=$7
-
-if [ ! -d "${xmirIn}" ]; then
-  echo "The source directory '${xmirIn}' does not exist!"
+if [ ! -d "${HONE_XMIR_IN}" ]; then
+  echo "The source directory '${HONE_XMIR_IN}' does not exist!"
   exit 1
 fi
 
-mkdir -p "${from}"
-mkdir -p "${to}"
-mkdir -p "${xmirOut}"
+mkdir -p "${HONE_FROM}"
+mkdir -p "${HONE_TO}"
+mkdir -p "${HONE_XMIR_OUT}"
 
 echo "Phino version: $(phino --version | xargs)"
 
 while IFS= read -r f; do
   f=${f%.*}
-  r="${from}/${f}.phi"
-  s="${to}/${f}.phi"
-  xo=${xmirOut}/${f}.xmir
-  xi=${xmirIn}/${f}.xmir
+  r="${HONE_FROM}/${f}.phi"
+  s="${HONE_TO}/${f}.phi"
+  xo=${HONE_XMIR_OUT}/${f}.xmir
+  xi=${HONE_XMIR_IN}/${f}.xmir
   mkdir -p "$(dirname "${r}")"
   mkdir -p "$(dirname "${s}")"
-  mkdir -p "$(dirname "${xmirOut}/${f}")"
+  mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
   phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"
   echo "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
   rm -f "${s}.*"
   pos=0
-  IFS=' ' read -r -a array <<< "${rules}"
-  if [ "${smallSteps}" == "true" ]; then
+  IFS=' ' read -r -a array <<< "${HONE_RULES}"
+  if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     echo "Applying ${#array[@]} rule(s) one by one to $(basename "${r}")..."
-    cp "${from}/${f}.phi" "${s}"
+    cp "${HONE_FROM}/${f}.phi" "${s}"
     for rule in "${array[@]}"; do
       m=$(basename "${rule}" .yml)
       pos=$(( pos + 1 ))
-      t="${to}/${f}.phi.${pos}"
-      phino rewrite --max-depth "${maxDepth}" --sweet --rule "${rule}" "${s}" > "${t}"
+      t="${HONE_TO}/${f}.phi.${pos}"
+      phino rewrite --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${s}" > "${t}"
       if cmp -s "${s}" "${t}"; then
         echo "  No changes made by '${m}' to $(basename "${t}")"
       else
@@ -57,7 +49,7 @@ while IFS= read -r f; do
     for rule in "${array[@]}"; do
       opts+=("--rule=${rule}")
     done
-    phino rewrite --max-depth "${maxDepth}" --sweet "${opts[@]}" "${r}" > "${s}"
+    phino rewrite --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${r}" > "${s}"
     if cmp -s "${r}" "${s}"; then
       echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}")"
     else
@@ -69,6 +61,6 @@ while IFS= read -r f; do
   if cmp -s "${xi}" "${xo}"; then
     echo "No changes made to $(basename "${xi}")"
   else
-    echo "Some changes were made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
+    echo "Some changes made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
-done < <(find "$(realpath "${xmirIn}")" -name '*.xmir' -type f -exec realpath --relative-to="${xmirIn}" {} \;)
+done < <(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \;)

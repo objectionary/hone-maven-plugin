@@ -26,14 +26,14 @@ import org.cactoos.iterable.Mapped;
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
  *
- * <p>This goal takes every <tt>.class</tt> file from the
- * <tt>target/classes/</tt> directory, converts it to <tt>.xmir</tt>
+ * <p>This goal takes every {@code .class} file from the
+ * <tt>target/classes/</tt> directory, converts it to {@code .xmir}
  * format (which is XML representation of <a href="https://www.eolang.org">EO</a>),
- * then converts <tt>.xmir</tt> to <tt>.phi</tt> (which is
+ * then converts {@code .xmir} to {@code .phi} (which is
  * <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>),
  * then optimizes it via
  * <a href="https://github.com/objectionary/phino">phino</a>,
- * and then back to <tt>.xmir</tt> and to <tt>.class</tt>. As a result,
+ * and then back to {@code .xmir} and to {@code .class}. As a result,
  * you obtain optimized Bytecode in the <tt>target/classes/</tt> directory,
  * which supposedly works faster than before.</p>
  *
@@ -101,7 +101,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * Small steps or big steps?
      *
      * <p>Small steps mode will apply one rule at a time, producing separate
-     * .phi files. This may be useful for debugging of the rules. To the contrary,
+     * {@code .phi} files. This may be useful for debugging of the rules. To the contrary,
      * big steps mode will apply all rules at once, which is faster, but less
      * transparent for debugging.</p>
      *
@@ -135,8 +135,10 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Include patterns for .class files.
      *
-     * <p>Array of patterns to include specific .class files for optimization.
-     * If not specified, all .class files will be included.</p>
+     * <p>Array of patterns to include specific {@code .class} files for optimization.
+     * If not specified, all {@code .class} files will be included.</p>
+     *
+     * <p>Start them with {@code "/target/classes"}.</p>
      *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -147,8 +149,10 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Exclude patterns for .class files.
      *
-     * <p>Array of patterns to exclude specific .class files from optimization.
-     * If not specified, no .class files will be excluded.</p>
+     * <p>Array of patterns to exclude specific {@code .class} files from optimization.
+     * If not specified, no {@code .class} files will be excluded.</p>
+     *
+     * <p>Start them with {@code "/target/classes"}.</p>
      *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)

@@ -40,7 +40,7 @@ public final class BuildMojo extends AbstractMojo {
      * @checkstyle MemberNameCheck (6 lines)
      */
     @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
-    @Parameter(property = "hone.phino-version", defaultValue = "0.0.0.25")
+    @Parameter(property = "hone.phino-version", defaultValue = "0.0.0.37")
     private String phinoVersion;
 
     @Override
@@ -60,7 +60,7 @@ public final class BuildMojo extends AbstractMojo {
                     )
                 ).value();
             }
-            new Rules().copyTo(temp.path().resolve("rules"));
+            new Rules("*").copyTo(temp.path().resolve("rules"));
             for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }

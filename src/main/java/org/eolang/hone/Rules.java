@@ -5,6 +5,9 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.Resource;
+import io.github.classgraph.ScanResult;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -31,11 +34,9 @@ import org.cactoos.scalar.LengthOf;
 final class Rules {
 
     /**
-     * All available rule names.
+     * Resource path for rules.
      */
-    private static final String[] ALL = {
-        "none", "33-to-42",
-    };
+    private static final String RULES_PATH = "org/eolang/hone/rules";
 
     /**
      * Compiled regex patterns for rule matching with inclusion/exclusion flags.
@@ -76,7 +77,7 @@ final class Rules {
      */
     public Iterable<String> yamls() {
         final Collection<String> files = new LinkedList<>();
-        for (final String name : Rules.ALL) {
+        for (final String name : Rules.discover()) {
             if (!this.matches(name)) {
                 continue;
             }
@@ -91,16 +92,19 @@ final class Rules {
      * @throws IOException If copying files fails
      */
     public void copyTo(final Path dir) throws IOException {
-        if (dir.toFile().getParentFile().mkdirs()) {
+        if (dir.toFile().mkdirs()) {
             Logger.debug(this, "Directory created at %[file]s", dir);
         }
         for (final String file : this.yamls()) {
             final Path target = dir.resolve(file);
+            if (target.toFile().getParentFile().mkdirs()) {
+                Logger.debug(this, "Directory created for %[file]s", target);
+            }
             new IoChecked<>(
                 new LengthOf(
                     new TeeInput(
                         new ResourceOf(
-                            String.format("org/eolang/hone/rules/%s", file)
+                            String.format("%s/%s", Rules.RULES_PATH, file)
                         ),
                         new OutputTo(target)
                     )
@@ -155,5 +159,35 @@ final class Rules {
             );
         }
         return list;
+    }
+
+    /**
+     * Discover all available rules from the classpath.
+     * @return Array of rule names discovered from classpath resources
+     */
+    private static String[] discover() {
+        final Collection<String> names = new LinkedList<>();
+        try (ScanResult scan = new ClassGraph()
+            .acceptPaths(Rules.RULES_PATH)
+            .scan()) {
+            for (final Resource resource : scan.getAllResources()) {
+                final String path = resource.getPath();
+                if (path.startsWith(Rules.RULES_PATH) && path.endsWith(".yml")) {
+                    String relative = path.substring(Rules.RULES_PATH.length());
+                    if (relative.startsWith("/")) {
+                        relative = relative.substring(1);
+                    }
+                    names.add(relative.substring(0, relative.length() - 4));
+                }
+            }
+        }
+        if (names.isEmpty()) {
+            throw new IllegalStateException(
+                String.format("No rules found in classpath at %s", Rules.RULES_PATH)
+            );
+        }
+        final String[] result = names.toArray(new String[0]);
+        Logger.debug(Rules.class, "Discovered %d rules: %s", result.length, names);
+        return result;
     }
 }

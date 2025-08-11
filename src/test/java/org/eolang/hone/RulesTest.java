@@ -45,4 +45,13 @@ final class RulesTest {
             );
         }
     }
+
+    @Test
+    void discoversRulesFromClasspath() {
+        MatcherAssert.assertThat(
+            "Should discover none.yml from classpath",
+            new Rules("*").yamls(),
+            Matchers.hasItem("none.yml")
+        );
+    }
 }

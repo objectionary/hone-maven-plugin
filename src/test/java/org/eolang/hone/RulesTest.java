@@ -57,4 +57,23 @@ final class RulesTest {
             )
         );
     }
+
+    @Test
+    void yamlsReturnsSortedList() {
+        final Iterable<String> yamls = new Rules("*").yamls();
+        String previous = null;
+        for (String current : yamls) {
+            if (previous != null) {
+                MatcherAssert.assertThat(
+                    String.format(
+                        "yamls() is not sorted: '%s' > '%s'",
+                        previous, current
+                    ),
+                    previous.compareTo(current) <= 0
+                );
+            }
+            previous = current;
+        }
+    }
+
 }

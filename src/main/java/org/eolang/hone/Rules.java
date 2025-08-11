@@ -11,8 +11,10 @@ import io.github.classgraph.ScanResult;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.cactoos.io.OutputTo;
@@ -166,7 +168,7 @@ final class Rules {
      * @return Array of rule names discovered from classpath resources
      */
     private static String[] discover() {
-        final Collection<String> names = new LinkedList<>();
+        final List<String> names = new LinkedList<>();
         try (ScanResult scan = new ClassGraph()
             .acceptPaths(Rules.RULES_PATH)
             .scan()) {
@@ -187,6 +189,7 @@ final class Rules {
                 String.format("No rules found in classpath at %s", Rules.RULES_PATH)
             );
         }
+        Collections.sort(names);
         final String[] result = names.toArray(new String[0]);
         Logger.debug(Rules.class, "Discovered %d rules: %s", result.length, names);
         return result;

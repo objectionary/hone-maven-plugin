@@ -31,7 +31,8 @@ release:
     sed -i -e "s/\"0.0.0\"/\"${tag}\"/" Dockerfile
     sed -i -e "s/0.0.0/${tag}/" entry.sh
     sed -i -e "s/0.0.0/${tag}/" in-docker-pom.xml
-    git add Dockerfile entry.sh in-docker-pom.xml
+    sed -i -e "s/hone:latest/hone:${tag}/" src/main/java/org/eolang/hone/AbstractMojo.java
+    git add Dockerfile entry.sh in-docker-pom.xml src/main/java/org/eolang/hone/AbstractMojo.java
     git commit -m "version set to ${tag}"
     repo=yegor256/hone
     sudo docker build "$(pwd)" --tag "${repo}:${tag}"

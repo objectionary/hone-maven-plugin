@@ -596,7 +596,7 @@ final class OptimizeMojoTest {
                             void worksAfterOptimizationWithSmallSteps() {
                                 Assertions.assertEquals(
                                     3531468,
-                                    new Foo().bar()
+                                    new Smalls().bar()
                                 );
                             }
                         }

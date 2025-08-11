@@ -60,7 +60,7 @@ public final class BuildMojo extends AbstractMojo {
                     )
                 ).value();
             }
-            new Rules().copyTo(temp.path().resolve("rules"));
+            new Rules("*").copyTo(temp.path().resolve("rules"));
             for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }

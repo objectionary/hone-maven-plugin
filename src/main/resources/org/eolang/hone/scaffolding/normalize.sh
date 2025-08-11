@@ -9,6 +9,11 @@ if [ ! -d "${HONE_XMIR_IN}" ]; then
   exit 1
 fi
 
+if [ -z "${HONE_RULES}" ]; then
+  echo "No rules specified in HONE_RULES environment variable!"
+  exit 1
+fi
+
 mkdir -p "${HONE_FROM}"
 mkdir -p "${HONE_TO}"
 mkdir -p "${HONE_XMIR_OUT}"

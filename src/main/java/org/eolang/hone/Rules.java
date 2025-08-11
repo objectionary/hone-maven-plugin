@@ -81,7 +81,7 @@ final class Rules {
             if (!this.matches(name)) {
                 continue;
             }
-            files.add(String.format("%s.yml", name));
+            files.add(name);
         }
         return files;
     }
@@ -172,13 +172,14 @@ final class Rules {
             .scan()) {
             for (final Resource resource : scan.getAllResources()) {
                 final String path = resource.getPath();
-                if (path.startsWith(Rules.RULES_PATH) && path.endsWith(".yml")) {
-                    String relative = path.substring(Rules.RULES_PATH.length());
-                    if (relative.startsWith("/")) {
-                        relative = relative.substring(1);
-                    }
-                    names.add(relative.substring(0, relative.length() - 4));
+                if (!path.endsWith(".phr") && !path.endsWith(".yml")) {
+                    continue;
                 }
+                String rel = path.substring(Rules.RULES_PATH.length());
+                if (rel.startsWith("/")) {
+                    rel = rel.substring(1);
+                }
+                names.add(rel);
             }
         }
         if (names.isEmpty()) {

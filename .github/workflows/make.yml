@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: make
+'on':
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  make:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 23
+      - run: sudo wget -q -o /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
+      - run: make -C src/test/resources/org/eolang/hone/rules/streams

@@ -39,15 +39,15 @@
           <groupId>org.codehaus.mojo</groupId>
           <configuration>
             <executable>${exec.phino.script}</executable>
-            <arguments>
-              <argument>${exec.phino.rules}</argument>
-              <argument>${exec.phino.xmir-in}</argument>
-              <argument>${exec.phino.from}</argument>
-              <argument>${exec.phino.to}</argument>
-              <argument>${exec.phino.xmir-out}</argument>
-              <argument>${exec.phino.small-steps}</argument>
-              <argument>${exec.phino.max-depth}</argument>
-            </arguments>
+            <environmentVariables>
+              <HONE_RULES>${exec.phino.rules}</HONE_RULES>
+              <HONE_XMIR_IN>${exec.phino.xmir-in}</HONE_XMIR_IN>
+              <HONE_FROM>${exec.phino.from}</HONE_FROM>
+              <HONE_TO>${exec.phino.to}</HONE_TO>
+              <HONE_XMIR_OUT>${exec.phino.xmir-out}</HONE_XMIR_OUT>
+              <HONE_SMALL_STEPS>${exec.phino.small-steps}</HONE_SMALL_STEPS>
+              <HONE_MAX_DEPTH>${exec.phino.max-depth}</HONE_MAX_DEPTH>
+            </environmentVariables>
           </configuration>
         </plugin>
       </plugins>

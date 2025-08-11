@@ -391,8 +391,8 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("image", image)
-                    .set("includes", "foo/Included*")
-                    .set("excludes", "foo/Excluded*");
+                    .set("includes", "/target/classes/foo/Included*")
+                    .set("excludes", "/target/classes/foo/Excluded*");
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "optimized IncludedClass.phi must be present",
@@ -508,6 +508,114 @@ final class OptimizeMojoTest {
                     .set("rules", "none")
                     .set("smallSteps", "true")
                     .set("maxDepth", "10")
+                    .set(
+                        "extra",
+                        new String[] {
+                            "src/rules/first.yaml",
+                            "src/rules/second.yaml",
+                            "src/rules/a-few",
+                        }
+                    )
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @Timeout(6000L)
+    @DisabledWithoutDocker
+    @ExtendWith(MayBeSlow.class)
+    void optimizesWithSmallSteps(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/rules/first.yaml")
+                    .write(
+                        """
+                        name: fifty-to-sixty
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/rules/second.yaml")
+                    .write(
+                        """
+                        name: thirty-three-to-one
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/rules/a-few/001.yaml")
+                    .write(
+                        """
+                        name: hello-to-bye
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/rules/a-few/002.yaml")
+                    .write(
+                        """
+                        name: mama-to-papa
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/main/java/Smalls.java")
+                    .write(
+                        """
+                            class Smalls {
+                                int bar() {
+                                    return Math.abs(50) * 33
+                                        + "hello".hashCode() + "mama".hashCode();
+                                }
+                            }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/test/java/SmallsTest.java")
+                    .write(
+                        """
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class SmallsTest {
+                            @Test
+                            void worksAfterOptimizationWithSmallSteps() {
+                                Assertions.assertEquals(
+                                    3531468,
+                                    new Foo().bar()
+                                );
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("rules", "none")
+                    .set("smallSteps", "false")
+                    .set("maxDepth", "40")
                     .set(
                         "extra",
                         new String[] {

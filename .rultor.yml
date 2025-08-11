@@ -30,8 +30,8 @@ release:
     cp ../rules/*.yml rules
     sed -i -e "s/\"0.0.0\"/\"${tag}\"/" Dockerfile
     sed -i -e "s/0.0.0/${tag}/" entry.sh
-    git add Dockerfile
-    git add entry.sh
+    sed -i -e "s/0.0.0/${tag}/" in-docker-pom.xml
+    git add Dockerfile entry.sh in-docker-pom.xml
     git commit -m "version set to ${tag}"
     repo=yegor256/hone
     sudo docker build "$(pwd)" --tag "${repo}:${tag}"

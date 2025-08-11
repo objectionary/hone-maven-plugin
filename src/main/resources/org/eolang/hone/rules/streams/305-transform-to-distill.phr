@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: transform-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.transform,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "transform",
+    accepted ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-bridge-output,
+    body ↦ ⟦
+      i ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-opcode,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ Φ̇.false
+      ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]

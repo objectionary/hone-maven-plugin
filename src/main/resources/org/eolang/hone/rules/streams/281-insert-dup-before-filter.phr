@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: insert-dup-before-filter
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      opcode ↦ 𝑒-first-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-first-target-handle,
+      target-class ↦ 𝑒-first-target-class,
+      target-method ↦ 𝑒-first-target-method,
+      target-signature ↦ 𝑒-first-target-signature,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-second-target-handle,
+      target-class ↦ 𝑒-second-target-class,
+      target-method ↦ 𝑒-second-target-method,
+      target-signature ↦ 𝑒-second-target-signature,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      opcode ↦ 𝑒-first-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-first-target-handle,
+      target-class ↦ 𝑒-first-target-class,
+      target-method ↦ 𝑒-first-target-method,
+      target-signature ↦ 𝑒-first-target-signature,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned
+    ⟧,
+    𝜏-dup ↦ ⟦
+      φ ↦ Φ.hone.dup,
+      opcode ↦ 𝑒-dup-opcode,
+      class ↦ 𝑒-class
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-second-target-handle,
+      target-class ↦ 𝑒-second-target-class,
+      target-method ↦ 𝑒-second-target-method,
+      target-signature ↦ 𝑒-second-target-signature,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-one, 'map']
+        - eq: [𝜏-one, 'o-filter']
+        - eq: [𝜏-one, 'p-filter']
+    - or:
+        - eq: [𝜏-two, 'o-filter']
+        - eq: [𝜏-two, 'p-filter']
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+    args: [𝐵-before, 𝜏-first, 𝜏-second, 𝐵-after]
+  - meta: 𝑒-dup-opcode
+    function: sed
+    args:
+      - 𝑒-first-returned
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'

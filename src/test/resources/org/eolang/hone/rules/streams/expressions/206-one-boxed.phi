@@ -1,0 +1,53 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 65,
+    access ↦ 33,
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 9,
+      descriptor ↦ "([Ljava/lang/String;)V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        val26 ↦ 7,
+        val27 ↦ 4
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        arg0 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ "[Ljava/lang/String;"
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of50,
+        i ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i1 ↦ "java/util/stream/IntStream",
+          i2 ↦ "boxed",
+          i3 ↦ "()Ljava/util/stream/Stream;",
+          i4 ↦ Φ̇.true
+        ⟧
+      ⟧,
+      name ↦ "lambda$main$0"
+    ⟧,
+    attributes ↦ ⟦
+      φ ↦ Φ.jeo.seq.of1,
+      attr1 ↦ ⟦
+        φ ↦ Φ.jeo.inner-class,
+        name ↦ "java/lang/invoke/MethodHandles$Lookup",
+        outer ↦ "java/lang/invoke/MethodHandles",
+        inner ↦ "Lookup",
+        access ↦ 25
+      ⟧
+    ⟧
+  ⟧
+⟧}

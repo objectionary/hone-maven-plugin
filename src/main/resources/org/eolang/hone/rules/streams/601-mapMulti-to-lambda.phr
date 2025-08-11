@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: mapMulti-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.mapMulti,
+    class ↦ 𝑒-class,
+    target-method ↦ 𝑒-target-method,
+    bridge-input ↦ 𝑒-bridge-input,
+    map-multi-consumer ↦ 𝑒-map-multi-consumer,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    consumer ↦ 𝑒-consumer,
+    stream-class ↦ 𝑒-stream-class
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "accept",
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    target-handle ↦ 6,
+    target-class ↦ 𝑒-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-bridge-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    stream-class ↦ 𝑒-stream-class,
+    stream-method ↦ "mapMulti",
+    stream-signature ↦ 𝑒-stream-signature
+  ⟧
+where:
+  - meta: 𝑒-interface
+    function: concat
+    args: ['"()"', 𝑒-map-multi-consumer]
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-bridge-input
+      - 𝑒-consumer
+      - '")V"'
+  - meta: 𝑒-stream-signature
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-map-multi-consumer
+      - '")L"'
+      - 𝑒-stream-class
+      - '";"'

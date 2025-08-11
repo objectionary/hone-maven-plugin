@@ -1,0 +1,84 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: lambda-to-filter
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "test",
+    interface ↦ "()Ljava/util/function/Predicate;",
+    lambda-signature ↦ "(Ljava/lang/Object;)Z",
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    stream-class ↦ "java/util/stream/Stream",
+    stream-method ↦ "filter",
+    stream-signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.𝜏-filter,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-bridge-input
+  ⟧
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    # "(Ljava/lang/Integer;)Z"
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\)Z/$1/g"'
+  - meta: 𝑒-opcode
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\(.+\\)(Z|Ljava\\/lang\\/Boolean;)/invokestatic/g"'
+      - '"s/\\(\\)(Z|Ljava\\/lang\\/Boolean;)/invokevirtual/g"'
+  - meta: 𝑒-target-class-pattern
+    function: sed
+    # java\\/lang\\/String
+    args:
+      - 𝑒-target-class
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-virtual-accepted-pattern
+    function: concat
+    # s/\\(\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(\\).+/L"', 𝑒-target-class-pattern, '";/g"']
+  - meta: 𝑒-bridge-input-pattern
+    function: sed
+    # Ljava\\/lang\\/String;
+    args:
+      - 𝑒-bridge-input
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-java-object-pattern
+    function: concat
+    # s/\\(Ljava\\/lang\\/Object;\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(Ljava\\/lang\\/Object;\\).+/"', 𝑒-bridge-input-pattern, '"/g"']
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - 𝑒-virtual-accepted-pattern
+      - 𝑒-java-object-pattern
+      - '"s/\\((.+)\\).+/$1/g"'
+  - meta: 𝑒-filter
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\(.*\\)Z/p-filter/g"'
+      - '"s/\\(.*\\)L.+;/o-filter/g"'
+  - meta: 𝜏-filter
+    function: tau
+    args: [𝑒-filter]

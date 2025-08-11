@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: unbox-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.unbox,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ 𝑒-method,
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    stream-class ↦ "java/util/stream/Stream",
+    stream-method ↦ 𝑒-stream-method,
+    stream-signature ↦ 𝑒-stream-signature
+  ⟧
+where:
+  - meta: 𝑒-bridge-output
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(L.+;\\)(.)/$1/g"'
+  - meta: 𝑒-output-class-simple-name
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/I/Integer/g"'
+      - '"s/J/Long/g"'
+      - '"s/D/Double/g"'
+  - meta: 𝑒-method
+    function: concat
+    args: ['"applyAs"', 𝑒-output-class-simple-name]
+  - meta: 𝑒-interface
+    function: concat
+    args: ['"()Ljava/util/function/To"', 𝑒-output-class-simple-name, '"Function;"']
+  - meta: 𝑒-lambda-signature
+    function: concat
+    args: ['"(Ljava/lang/Object;)"', 𝑒-bridge-output]
+  - meta: 𝑒-stream-method
+    function: concat
+    args: ['"mapTo"', 𝑒-output-class-simple-name]
+  - meta: 𝑒-stream-signature
+    function: concat
+    args:
+      - '"(Ljava/util/function/To"'
+      - 𝑒-output-class-simple-name
+      - '"Function;)Ljava/util/stream/"'
+      - 𝑒-output-class-simple-name
+      - '"Stream;"'

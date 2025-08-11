@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: boxed-to-box
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.opcode.invokeinterface,
+    𝜏-target-stream-class ↦ 𝑒-target-stream-class,
+    𝜏-method ↦ "boxed",
+    𝜏-result-stream-class ↦ "()Ljava/util/stream/Stream;",
+    𝜏-flag ↦ Φ̇.true,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.box,
+    stream-class ↦ 𝑒-target-stream-class
+  ⟧
+when:
+  or:
+    - eq: [𝑒-target-stream-class, '"java/util/stream/IntStream"']
+    - eq: [𝑒-target-stream-class, '"java/util/stream/LongStream"']
+    - eq: [𝑒-target-stream-class, '"java/util/stream/DoubleStream"']

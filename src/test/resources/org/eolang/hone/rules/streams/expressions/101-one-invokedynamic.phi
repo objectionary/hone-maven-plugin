@@ -1,0 +1,55 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        i168 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          v169 ↦ "apply",
+          v170 ↦ "()Ljava/util/function/Function;",
+          h171 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            v172 ↦ 6,
+            v173 ↦ "java/lang/invoke/LambdaMetafactory",
+            v174 ↦ "metafactory",
+            v175 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            v176 ↦ Φ̇.false
+          ⟧,
+          t177 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            v178 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;"
+          ⟧,
+          h179 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            v180 ↦ 6,
+            v181 ↦ "Foo",
+            v182 ↦ "lambda$main$1",
+            v183 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
+            v184 ↦ Φ̇.false
+          ⟧,
+          t185 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            v186 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;"
+          ⟧
+        ⟧,
+        i192 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          v193 ↦ "java/util/stream/Stream",
+          v194 ↦ "map",
+          v195 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+          v196 ↦ Φ̇.true
+        ⟧
+      ⟧,
+      name ↦ "main"
+    ⟧
+  ⟧
+⟧}

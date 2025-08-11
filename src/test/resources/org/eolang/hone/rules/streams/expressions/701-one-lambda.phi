@@ -1,0 +1,50 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 65,
+    access ↦ 33,
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 9,
+      descriptor ↦ "([Ljava/lang/String;)V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        val26 ↦ 7,
+        val27 ↦ 4
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        arg0 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ "[Ljava/lang/String;"
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of50,
+        instruction282 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          target-handle ↦ 6,
+          target-class ↦ "Foo",
+          target-method ↦ "lambda$main$2",
+          target-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+          bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+          stream-class ↦ "java/util/stream/Stream",
+          stream-method ↦ "mapMulti",
+          stream-signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+⟧}

@@ -1,0 +1,43 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 65,
+    access ↦ 33,
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 9,
+      descriptor ↦ "([Ljava/lang/String;)V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        val26 ↦ 7,
+        val27 ↦ 4
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        arg0 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ "[Ljava/lang/String;"
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of50,
+        instruction30 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.iconst_5,
+          val31 ↦ 8
+        ⟧,
+        a🌵8198 ↦ ⟦
+          φ ↦ Φ.hone.box,
+          stream-class ↦ "java/util/stream/IntStream"
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+⟧}

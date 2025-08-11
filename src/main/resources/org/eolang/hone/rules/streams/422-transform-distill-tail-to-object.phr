@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: transform-distill-tail-to-object
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-bridge-output,
+    body ↦ ⟦
+      𝐵-body,
+      i-transform ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-transform-class,
+        i3 ↦ "valueOf",
+        i4 ↦ 𝑒-transform-signature,
+        i5 ↦ Φ̇.false
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-returned
+    - not:
+        matches:
+          - '^[BCDFIJSZ]$'
+          - 𝑒-bridge-output
+where:
+  - meta: 𝑒-transform-class
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-transform-signature
+    function: concat
+    args: ['"("', 𝑒-returned, '")"', 𝑒-bridge-output]

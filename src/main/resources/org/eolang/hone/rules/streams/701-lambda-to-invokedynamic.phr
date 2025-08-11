@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: lambda-to-invokedynamic
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      target-handle ↦ 𝑒-target-handle,
+      target-class ↦ 𝑒-target-class,
+      target-method ↦ 𝑒-target-method,
+      target-signature ↦ 𝑒-target-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      stream-class ↦ 𝑒-stream-class,
+      stream-method ↦ 𝑒-stream-method,
+      stream-signature ↦ 𝑒-stream-signature
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-invokedynamic ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      i2 ↦ 𝑒-method,
+      i3 ↦ 𝑒-interface,
+      i4 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        i1 ↦ 6,
+        i2 ↦ "java/lang/invoke/LambdaMetafactory",
+        i3 ↦ "metafactory",
+        i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+        i5 ↦ Φ̇.false
+      ⟧,
+      i5 ↦ ⟦
+        φ ↦ Φ.jeo.type,
+        i1 ↦ 𝑒-lambda-signature
+      ⟧,
+      i6 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        i1 ↦ 𝑒-target-handle,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ Φ̇.false
+      ⟧,
+      i7 ↦ ⟦
+        φ ↦ Φ.jeo.type,
+        i1 ↦ 𝑒-bridge-signature
+      ⟧
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ 𝑒-stream-method,
+      i4 ↦ 𝑒-stream-signature,
+      i5 ↦ Φ̇.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-invokedynamic
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after']
+  - meta: 𝜏-invokeinterface
+    function: random-tau
+    args: ['𝐵-before', '𝜏-invokedynamic', '𝐵-after']

@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: dup-before-filter-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "filter",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "dup",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    body ↦ ⟦
+      i-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
+      𝐵-body,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-dup
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+  - meta: 𝜏-dup
+    function: tau
+    args: [𝑒-dup]

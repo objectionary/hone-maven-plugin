@@ -1,0 +1,108 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: invokedynamic-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    name ↦ 𝑒-class,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-function-signature,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ̇.false,
+            𝐵10
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            𝐵11
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 𝑒-target-handle,
+            𝜏15 ↦ 𝑒-target-class,
+            𝜏16 ↦ 𝑒-target-method,
+            𝜏17 ↦ 𝑒-target-signature,
+            𝜏18 ↦ Φ̇.false,
+            𝐵12
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ 𝑒-bridge-signature,
+            𝐵13
+          ⟧,
+          𝐵14
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ 𝑒-stream-class,
+          𝜏25 ↦ 𝑒-stream-method,
+          𝜏26 ↦ 𝑒-stream-signature,
+          𝜏27 ↦ Φ̇.true,
+          𝐵15
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      name ↦ 𝑒-function,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    name ↦ 𝑒-class,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-function-signature,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ 𝑒-method,
+          interface ↦ 𝑒-interface,
+          lambda-signature ↦ 𝑒-lambda-signature,
+          target-handle ↦ 𝑒-target-handle,
+          target-class ↦ 𝑒-target-class,
+          target-method ↦ 𝑒-target-method,
+          target-signature ↦ 𝑒-target-signature,
+          bridge-signature ↦ 𝑒-bridge-signature,
+          stream-class ↦ 𝑒-stream-class,
+          stream-method ↦ 𝑒-stream-method,
+          stream-signature ↦ 𝑒-stream-signature
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      name ↦ 𝑒-function,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+where:
+  - meta: 𝜏-lambda
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']

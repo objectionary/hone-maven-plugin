@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: lambda-to-unbox
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ 𝑒-method,
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    stream-class ↦ "java/util/stream/Stream",
+    stream-method ↦ 𝑒-stream-method,
+    stream-signature ↦ 𝑒-stream-signature
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.unbox,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature
+  ⟧
+when:
+  or:
+    - and:
+        - eq: [𝑒-method, '"applyAsInt"']
+        - eq: [𝑒-interface, '"()Ljava/util/function/ToIntFunction;"']
+        - eq: [𝑒-lambda-signature, '"(Ljava/lang/Object;)I"']
+        - eq: [𝑒-stream-method, '"mapToInt"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToIntFunction;)Ljava/util/stream/IntStream;"']
+        - matches: ['\(L.+;\)I', 𝑒-bridge-signature]
+    - and:
+        - eq: [𝑒-method, '"applyAsLong"']
+        - eq: [𝑒-interface, '"()Ljava/util/function/ToLongFunction;"']
+        - eq: [𝑒-lambda-signature, '"(Ljava/lang/Object;)J"']
+        - eq: [𝑒-stream-method, '"mapToLong"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;"']
+        - matches: ['\(L.+;\)J', 𝑒-bridge-signature]
+    - and:
+        - eq: [𝑒-method, '"applyAsDouble"']
+        - eq: [𝑒-interface, '"()Ljava/util/function/ToDoubleFunction;"']
+        - eq: [𝑒-lambda-signature, '"(Ljava/lang/Object;)D"']
+        - eq: [𝑒-stream-method, '"mapToDouble"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToDoubleFunction;)Ljava/util/stream/DoubleStream;"']
+        - matches: ['\(L.+;\)D', 𝑒-bridge-signature]
+where:
+  - meta: 𝑒-opcode
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\(\\).+/invokevirtual/g"'
+      - '"s/\\(.+\\).+/invokestatic/g"'

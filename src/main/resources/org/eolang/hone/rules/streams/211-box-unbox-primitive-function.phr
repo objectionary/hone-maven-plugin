@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: box-unbox-primitive-function
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-primitive ↦ ⟦
+      φ ↦ Φ.hone.𝜏-primitive-func,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
+      target-class ↦ 𝑒-target-class,
+      target-method ↦ 𝑒-target-method,
+      target-signature ↦ 𝑒-target-signature,
+      bridge-signature ↦ 𝑒-bridge-signature
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ 𝑒-stream-class
+    ⟧,
+    𝜏-primitive ↦ ⟦
+      φ ↦ Φ.hone.𝜏-boxed-primitive-func,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
+      target-class ↦ 𝑒-target-class,
+      target-method ↦ 𝑒-target-method,
+      target-signature ↦ 𝑒-target-signature,
+      bridge-signature ↦ 𝑒-bridge-signature
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ "invokevirtual",
+      class ↦ 𝑒-class,
+      target-handle ↦ 5,
+      target-class ↦ 𝑒-unbox-target-class,
+      target-method ↦ 𝑒-unbox-target-method,
+      target-signature ↦ 𝑒-unbox-target-signature,
+      bridge-signature ↦ 𝑒-unbox-bridge-signature
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - eq: [𝜏-primitive-func, 'primitive-map']
+    - eq: [𝜏-primitive-func, 'primitive-filter']
+where:
+  - meta: 𝜏-box
+    function: random-tau
+    args: [𝐵-before, 𝜏-primitive, 𝐵-after]
+  - meta: 𝜏-unbox
+    function: random-tau
+    args: [𝐵-before, 𝜏-primitive, 𝜏-box, 𝐵-after]
+  - meta: 𝑒-primitive-func
+    function: string
+    args: [𝜏-primitive-func]
+  - meta: 𝑒-boxed-primitive-func
+    function: concat
+    args: ['"boxed-"', 𝑒-primitive-func]
+  - meta: 𝜏-boxed-primitive-func
+    function: tau
+    args: [𝑒-boxed-primitive-func]
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.)\\)./$1/g"'
+  - meta: 𝑒-unbox-target-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/I/java\\/lang\\/Integer/g"'
+      - '"s/D/java\\/lang\\/Double/g"'
+      - '"s/J/java\\/lang\\/Long/g"'
+  - meta: 𝑒-unbox-target-method-prefix
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/I/int/g"'
+      - '"s/D/double/g"'
+      - '"s/J/long/g"'
+  - meta: 𝑒-unbox-target-method
+    function: concat
+    args: [𝑒-unbox-target-method-prefix, '"Value"']
+  - meta: 𝑒-unbox-target-signature
+    function: concat
+    args: ['"()"', 𝑒-bridge-input]
+  - meta: 𝑒-unbox-bridge-signature
+    function: concat
+    args: ['"(L"', 𝑒-unbox-target-class, '";)"',  𝑒-bridge-input]

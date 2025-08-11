@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: remove-useless-object-to-primitive-conversions
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.transform,
+      opcode ↦ "invokestatic",
+      class ↦ 𝑒-class,
+      target-class ↦ 𝑒-target-class,
+      target-method ↦ "valueOf",
+      target-signature ↦ 𝑒-first-target-signature,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.map,
+      opcode ↦ "invokevirtual",
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-second-target-handle,
+      target-class ↦ 𝑒-target-class,
+      target-method ↦ 𝑒-second-target-method,
+      target-signature ↦ 𝑒-second-target-signature,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches:
+      - '^java\/lang\/(Byte|Character|Double|Float|Integer|Long|Short|Boolean)$'
+      - 𝑒-target-class
+where:
+  - meta: 𝑒-second-target-method-prefix
+    function: sed
+    args:
+      - 𝑒-second-returned
+      - '"s/B/byte/g"'
+      - '"s/C/char/g"'
+      - '"s/D/double/g"'
+      - '"s/F/float/g"'
+      - '"s/I/int/g"'
+      - '"s/J/long/g"'
+      - '"s/S/short/g"'
+      - '"s/Z/boolean/g"'
+  - meta: 𝑒-required-second-target-method
+    function: concat
+    args: [𝑒-second-target-method-prefix, '"Value"']
+  - meta: 𝑒-first-accepted
+    function: sed
+    args:
+      - 𝑒-first-target-signature
+      - '"s/\\((.)\\)L.+;/$1/g"'
+  - meta: 𝑒-first-returned
+    function: sed
+    args:
+      - 𝑒-first-target-signature
+      - '"s/\\(.\\)(L.+;)/$1/g"'
+
+having:
+  and:
+    - eq:
+        - 𝑒-second-target-method
+        - 𝑒-required-second-target-method
+    - eq:
+        - 𝑒-first-accepted
+        - 𝑒-second-returned
+    - eq:
+        - 𝑒-first-returned
+        - 𝑒-second-accepted

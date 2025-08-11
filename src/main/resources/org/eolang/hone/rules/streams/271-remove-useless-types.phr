@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: remove-useless-types
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-type ↦ ⟦
+      φ ↦ Φ.hone.type,
+      from ↦ 𝑒-from,
+      to ↦ 𝑒-to,
+      class ↦ 𝑒-class
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝐵-after
+  ⟧
+when:
+  eq: [𝑒-from, 𝑒-to]

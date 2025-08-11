@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: boxed-primitive-filter-to-filter
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.boxed-primitive-filter,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.𝜏-filter,
+    opcode ↦ "invokestatic",
+    class ↦ 𝑒-class,
+    target-handle ↦ 6,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-accepted
+  ⟧
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(I\\)Z/Ljava\\/lang\\/Integer;/g"'
+      - '"s/\\(D\\)Z/Ljava\\/lang\\/Double;/g"'
+      - '"s/\\(J\\)Z/Ljava\\/lang\\/Long;/g"'
+  - meta: 𝑒-bridge-input-pattern
+    function: sed
+    # Ljava\\/lang\\/String;
+    args:
+      - 𝑒-bridge-input
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-java-object-pattern
+    function: concat
+    # s/\\(Ljava\\/lang\\/Object;\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(Ljava\\/lang\\/Object;\\).+/"', 𝑒-bridge-input-pattern, '"/g"']
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - 𝑒-java-object-pattern
+      - '"s/\\((.+)\\).+/$1/g"'
+  - meta: 𝑒-filter
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\(.+\\)Z/p-filter/g"'
+      - '"s/\\(.+\\)L.+;/o-filter/g"'
+  - meta: 𝜏-filter
+    function: tau
+    args: [𝑒-filter]

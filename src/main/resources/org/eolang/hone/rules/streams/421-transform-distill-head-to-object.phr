@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: transform-distill-head-to-object
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-returned,
+    body ↦ ⟦
+      i-transform ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i2 ↦ 𝑒-transform-class,
+        i3 ↦ 𝑒-transform-method,
+        i4 ↦ 𝑒-transform-signature,
+        i5 ↦ Φ̇.false
+      ⟧,
+      𝐵-body,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-accepted
+    - not:
+        matches:
+          - '^[BCDFIJSZ]$'
+          - 𝑒-bridge-input
+where:
+  - meta: 𝑒-transform-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-transform-signature
+    function: concat
+    args: ['"()"', 𝑒-accepted]
+  - meta: 𝑒-transform-method-prefix
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/B/byte/g"'
+      - '"s/C/char/g"'
+      - '"s/D/double/g"'
+      - '"s/F/float/g"'
+      - '"s/I/int/g"'
+      - '"s/J/long/g"'
+      - '"s/S/short/g"'
+      - '"s/Z/boolean/g"'
+  - meta: 𝑒-transform-method
+    function: concat
+    args: [𝑒-transform-method-prefix, '"Value"']

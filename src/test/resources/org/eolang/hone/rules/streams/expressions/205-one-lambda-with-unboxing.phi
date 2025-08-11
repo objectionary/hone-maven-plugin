@@ -1,0 +1,61 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 65,
+    access ↦ 33,
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 9,
+      descriptor ↦ "([Ljava/lang/String;)V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        val26 ↦ 7,
+        val27 ↦ 4
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        arg0 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ "[Ljava/lang/String;"
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of50,
+        a🌵1277 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "applyAsLong",
+          interface ↦ "()Ljava/util/function/ToLongFunction;",
+          lambda-signature ↦ "(Ljava/lang/Object;)J",
+          target-handle ↦ 6,
+          target-class ↦ "Foo",
+          target-method ↦ "lambda$main$4",
+          target-signature ↦ "(Ljava/lang/Long;)J",
+          bridge-signature ↦ "(Ljava/lang/Long;)J",
+          stream-class ↦ "java/util/stream/Stream",
+          stream-method ↦ "mapToLong",
+          stream-signature ↦ "(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;"
+        ⟧
+      ⟧,
+      name ↦ "lambda$main$0"
+    ⟧,
+    attributes ↦ ⟦
+      φ ↦ Φ.jeo.seq.of1,
+      attr1 ↦ ⟦
+        φ ↦ Φ.jeo.inner-class,
+        name ↦ "java/lang/invoke/MethodHandles$Lookup",
+        outer ↦ "java/lang/invoke/MethodHandles",
+        inner ↦ "Lookup",
+        access ↦ 25
+      ⟧
+    ⟧
+  ⟧
+⟧}

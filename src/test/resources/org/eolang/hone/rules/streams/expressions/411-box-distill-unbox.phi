@@ -1,0 +1,67 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 65,
+    access ↦ 33,
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 9,
+      descriptor ↦ "([Ljava/lang/String;)V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        val26 ↦ 7,
+        val27 ↦ 4
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        arg0 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ "[Ljava/lang/String;"
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of50,
+        a🌵9877 ↦ ⟦
+          φ ↦ Φ.hone.box,
+          stream-class ↦ "java/util/stream/LongStream"
+        ⟧,
+        a🌵4798 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Long;",
+          bridge-output ↦ "Ljava/lang/Long;",
+          start ↦ "map",
+          accepted ↦ "J",
+          returned ↦ "J",
+          body ↦ ⟦
+            i1 ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ "Foo",
+              i3 ↦ "lambda$main$1",
+              i4 ↦ "(J)J",
+              i5 ↦ Φ̇.false
+            ⟧
+          ⟧
+        ⟧,
+        a🌵3963 ↦ ⟦
+          φ ↦ Φ.hone.unbox,
+          opcode ↦ "invokevirtual",
+          class ↦ "Foo",
+          target-handle ↦ 5,
+          target-class ↦ "java/lang/Long",
+          target-method ↦ "longValue",
+          target-signature ↦ "()J",
+          bridge-signature ↦ "(Ljava/lang/Long;)J"
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+⟧}

@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: lambda-to-primitive-filter
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "test",
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    target-handle ↦ 𝑒-target-handle,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    stream-class ↦ 𝑒-stream-class,
+    stream-method ↦ "filter",
+    stream-signature ↦ 𝑒-stream-signature
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.primitive-filter,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    target-class ↦ 𝑒-target-class,
+    target-method ↦ 𝑒-target-method,
+    target-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-bridge-signature
+  ⟧
+when:
+  or:
+    - and:
+        - eq: [𝑒-interface, '"()Ljava/util/function/IntPredicate;"']
+        - eq: [𝑒-lambda-signature, '"(I)Z"']
+        - eq: [𝑒-bridge-signature, '"(I)Z"']
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"']
+    - and:
+        - eq: [𝑒-interface, '"()Ljava/util/function/LongPredicate;"']
+        - eq: [𝑒-lambda-signature, '"(J)Z"']
+        - eq: [𝑒-bridge-signature, '"(J)Z"']
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"']
+    - and:
+        - eq: [𝑒-interface, '"()Ljava/util/function/DoublePredicate;"']
+        - eq: [𝑒-lambda-signature, '"(D)Z"']
+        - eq: [𝑒-bridge-signature, '"(D)Z"']
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/DoublePredicate;)Ljava/util/stream/DoubleStream;"']

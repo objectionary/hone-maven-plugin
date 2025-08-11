@@ -1,0 +1,180 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: transform-object-to-primitive-after-map
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.map,
+      opcode ↦ 𝑒-first-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-first-target-handle,
+      target-class ↦ 𝑒-first-target-class,
+      target-method ↦ 𝑒-first-target-method,
+      target-signature ↦ 𝑒-first-target-signature,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-second-target-handle,
+      target-class ↦ 𝑒-second-target-class,
+      target-method ↦ 𝑒-second-target-method,
+      target-signature ↦ 𝑒-second-target-signature,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.map,
+      opcode ↦ 𝑒-first-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-first-target-handle,
+      target-class ↦ 𝑒-first-target-class,
+      target-method ↦ 𝑒-first-target-method,
+      target-signature ↦ 𝑒-first-target-signature,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned
+    ⟧,
+    𝜏-transform ↦ ⟦
+      φ ↦ Φ.hone.transform,
+      opcode ↦ "invokevirtual",
+      class ↦ 𝑒-class,
+      target-class ↦ 𝑒-transform-target-class,
+      target-method ↦ 𝑒-transform-target-method,
+      target-signature ↦ 𝑒-transform-target-signature,
+      bridge-input ↦ 𝑒-transform-bridge-input,
+      bridge-output ↦ 𝑒-transform-bridge-output
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-second-target-handle,
+      target-class ↦ 𝑒-second-target-class,
+      target-method ↦ 𝑒-second-target-method,
+      target-signature ↦ 𝑒-second-target-signature,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-updated-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-updated-second-returned
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches:
+        - '^L.+;$'
+        - 𝑒-first-returned
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-second-accepted
+    - or:
+        - eq: [𝜏-two, 'map']
+        - eq: [𝜏-two, 'o-filter']
+        - eq: [𝜏-two, 'p-filter']
+where:
+  - meta: 𝜏-transform
+    function: random-tau
+    args: [𝐵-before, 𝜏-first, 𝜏-second, 𝐵-after]
+  - meta: 𝑒-transform-target-class
+    function: sed
+    args:
+      - 𝑒-first-bridge-output
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-transform-target-method-prefix
+    function: sed
+    args:
+      - 𝑒-second-accepted
+      - '"s/B/byte/g"'
+      - '"s/C/char/g"'
+      - '"s/D/double/g"'
+      - '"s/F/float/g"'
+      - '"s/I/int/g"'
+      - '"s/J/long/g"'
+      - '"s/S/short/g"'
+      - '"s/Z/boolean/g"'
+  - meta: 𝑒-transform-target-method
+    function: concat
+    args: [𝑒-transform-target-method-prefix, '"Value"']
+  - meta: 𝑒-transform-target-signature
+    function: concat
+    args: ['"()"', 𝑒-second-accepted]
+  - meta: 𝑒-transform-bridge-input
+    function: concat
+    args: ['"L"', 𝑒-transform-target-class, '";"']
+  - meta: 𝑒-transform-bridge-output
+    function: sed
+    args:
+      - 𝑒-second-accepted
+      - '"s/B/Ljava\\/lang\\/Byte;/g"'
+      - '"s/C/Ljava\\/lang\\/Character;/g"'
+      - '"s/D/Ljava\\/lang\\/Double;/g"'
+      - '"s/F/Ljava\\/lang\\/Float;/g"'
+      - '"s/I/Ljava\\/lang\\/Integer;/g"'
+      - '"s/J/Ljava\\/lang\\/Long;/g"'
+      - '"s/S/Ljava\\/lang\\/Short;/g"'
+      - '"s/Z/Ljava\\/lang\\/Boolean;/g"'
+  - meta: 𝑒-two
+    function: string
+    args: [𝜏-two]
+  - meta: 𝑒-first-returned-pattern
+    function: sed
+    # java\\/lang\\/String
+    args:
+      - 𝑒-first-returned
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-second-returned-pattern
+    function: sed
+    # java\\/lang\\/String
+    args:
+      - 𝑒-second-returned
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-updated-filter-returned-pattern
+    function: concat
+    args: ['"s/^[op]-filter$/"', 𝑒-first-returned-pattern, '"/g"']
+  - meta: 𝑒-updated-map-returned-pattern
+    function: concat
+    args: ['"s/^map$/"', 𝑒-second-returned-pattern, '"/g"']
+  - meta: 𝑒-updated-second-returned
+    function: sed
+    args:
+      - 𝑒-two
+      - 𝑒-updated-filter-returned-pattern
+      - 𝑒-updated-map-returned-pattern
+  - meta: 𝑒-first-bridge-output-pattern
+    function: sed
+    args:
+      - 𝑒-first-bridge-output
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-second-bridge-output-pattern
+    function: sed
+    args:
+      - 𝑒-second-bridge-output
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-updated-filter-bridge-output-pattern
+    function: concat
+    args: ['"s/^[op]-filter$/"', 𝑒-first-bridge-output-pattern, '"/g"']
+  - meta: 𝑒-updated-map-bridge-output-pattern
+    function: concat
+    args: ['"s/^map$/"', 𝑒-second-bridge-output-pattern, '"/g"']
+  - meta: 𝑒-updated-second-bridge-output
+    function: sed
+    args:
+      - 𝑒-two
+      - 𝑒-updated-filter-bridge-output-pattern
+      - 𝑒-updated-map-bridge-output-pattern

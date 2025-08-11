@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: box-distill-unbox-to-primitive-distill
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ 𝑒-box-stream-class
+    ⟧,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-distill-bridge-input,
+      bridge-output ↦ 𝑒-distill-bridge-output,
+      start ↦ 𝑒-distill-start,
+      accepted ↦ 𝑒-distill-accepted,
+      returned ↦ 𝑒-distill-returned,
+      body ↦ 𝑒-distill-body
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-unbox-opcode,
+      class ↦ 𝑒-class,
+      target-handle ↦ 𝑒-unbox-target-handle,
+      target-class ↦ 𝑒-unbox-target-class,
+      target-method ↦ 𝑒-unbox-target-method,
+      target-signature ↦ 𝑒-unbox-target-signature,
+      bridge-signature ↦ 𝑒-unbox-bridge-signature
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-distill-accepted,
+      bridge-output ↦ 𝑒-distill-returned,
+      start ↦ 𝑒-distill-start,
+      accepted ↦ 𝑒-distill-accepted,
+      returned ↦ 𝑒-distill-returned,
+      body ↦ 𝑒-distill-body
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - eq: [𝑒-distill-accepted, 𝑒-distill-returned]
+    - eq: [𝑒-distill-bridge-input, 𝑒-distill-bridge-output]
+    - or:
+        - and:
+            - eq: [𝑒-distill-accepted, '"J"']
+            - eq: [𝑒-box-stream-class, '"java/util/stream/LongStream"']
+            - eq: [𝑒-distill-bridge-input, '"Ljava/lang/Long;"']
+            - eq: [𝑒-unbox-bridge-signature, '"(Ljava/lang/Long;)J"']
+            - matches: ['\(.*\)J', 𝑒-unbox-target-signature]
+        - and:
+            - eq: [𝑒-distill-accepted, '"I"']
+            - eq: [𝑒-box-stream-class, '"java/util/stream/IntStream"']
+            - eq: [𝑒-distill-bridge-input, '"Ljava/lang/Integer;"']
+            - eq: [𝑒-unbox-bridge-signature, '"(Ljava/lang/Integer;)I"']
+            - matches: ['\(.*\)I', 𝑒-unbox-target-signature]
+        - and:
+            - eq: [𝑒-distill-accepted, '"D"']
+            - eq: [𝑒-box-stream-class, '"java/util/stream/DoubleStream"']
+            - eq: [𝑒-distill-bridge-input, '"Ljava/lang/Double;"']
+            - eq: [𝑒-unbox-bridge-signature, '"(Ljava/lang/Double;)D"']
+            - matches: ['\(.*\)D', 𝑒-unbox-target-signature]

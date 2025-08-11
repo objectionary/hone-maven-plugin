@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: type-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.type,
+    from ↦ 𝑒-from,
+    to ↦ 𝑒-to,
+    class ↦ 𝑒-class
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    start ↦ "type",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Object;",
+    body ↦ ⟦
+      i ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-opcode ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-opcode
+    function: concat
+    args: [𝑒-from, '"2"', 𝑒-to]
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]

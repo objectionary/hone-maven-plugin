@@ -4,13 +4,20 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
+import com.jcabi.log.VerboseProcess;
 import com.yegor256.MayBeSlow;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.logging.Level;
+import org.cactoos.io.InputOf;
+import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,6 +80,53 @@ final class BuildMojoTest {
                     RequisiteMatcher.SUCCESS
                 );
             }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @DisabledWithoutDocker
+    void buildsImageAndVerifiesFileStructure(@Mktmp final Path dir,
+        @RandomImage final String image) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("generate-resources")
+                    .goals("build")
+                    .configuration()
+                    .set("image", image);
+                f.exec("generate-resources");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+        final ProcessBuilder bldr = new ProcessBuilder(
+            "docker", "run", "--rm",
+            "--env", "TARGET=/tmp",
+            "--entrypoint", "/bin/bash",
+            image,
+            "-c", "tree /hone"
+        );
+        bldr.redirectErrorStream(true);
+        bldr.redirectOutput(ProcessBuilder.Redirect.PIPE);
+        final Process process = bldr.start();
+        process.waitFor();
+        MatcherAssert.assertThat(
+            "docker tree command must execute successfully",
+            new TextOf(new InputOf(process.getInputStream())).asString(),
+            Matchers.allOf(
+                Matchers.containsString("entry.sh"),
+                Matchers.containsString("normalize.sh"),
+                Matchers.containsString("none.yml"),
+                Matchers.containsString("701-lambda-to-invokedynamic.phr")
+            )
         );
     }
 }

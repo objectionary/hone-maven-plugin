@@ -58,6 +58,7 @@ $(TARGET)/before/%.class: %.java Makefile
 	javac -d "$$(dirname $@)" $<
 
 $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
+	rm -f $@
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):disassemble" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"

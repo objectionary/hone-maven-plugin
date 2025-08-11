@@ -273,6 +273,7 @@
               <execution>
                 <configuration>
                   <image>self-hone:local</image>
+                  <rules>streams/*</rules>
                 </configuration>
                 <goals>
                   <goal>build</goal>

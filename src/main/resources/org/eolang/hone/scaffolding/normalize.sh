@@ -42,6 +42,7 @@ while IFS= read -r f; do
   rm -f "${s}.*"
   pos=0
   IFS=' ' read -r -a array <<< "${HONE_RULES}"
+  verbose "Applying ${#array[@]} rules: ${array[*]}"
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#array[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${HONE_FROM}/${f}.phi" "${s}"

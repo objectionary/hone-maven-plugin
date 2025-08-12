@@ -25,9 +25,10 @@ java {
     }
 }
 
-task runMavenPlugin(type: Exec) {
+task hone(type: Exec) {
+    dependsOn compileJava
     commandLine 'mvn', 'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize',
       '-Dhone.version=1.0-SNAPSHOT', '-Dhone.target=build', '-Dhone.rules=33-to-42'
 }
 
-build.dependsOn runMavenPlugin
+compileJava.finalizedBy hone

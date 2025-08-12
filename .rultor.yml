@@ -36,7 +36,8 @@ release:
     git add Dockerfile entry.sh in-docker-pom.xml
     git commit -m "version set to ${tag}"
     repo=yegor256/hone
-    sudo docker build "$(pwd)" --tag "${repo}:${tag}"
-    sudo docker build "$(pwd)" --tag "${repo}:latest"
+    phino_version=$(cat ../default-phino-version.txt)
+    sudo docker build --build-arg "PHINO_VERSION=${phino_version}" "$(pwd)" --tag "${repo}:${tag}"
+    sudo docker build --build-arg "PHINO_VERSION=${phino_version}" "$(pwd)" --tag "${repo}:latest"
     sudo docker push "${repo}:${tag}"
     sudo docker push "${repo}:latest"

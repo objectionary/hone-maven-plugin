@@ -9,7 +9,7 @@ LABEL "version"="0.0.0"
 
 WORKDIR /hone
 
-# The value to be set in BuildMojo:
+# The value to be set in BuildMojo or in default-phino-version.txt file:
 ARG PHINO_VERSION=0.0.0.0
 RUN cabal update \
     && cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO_VERSION}" \

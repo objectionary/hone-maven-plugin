@@ -63,10 +63,14 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>In order to disable them all, simply set this parameter
      * to <tt>none</tt>.</p>
      *
+     * <p>If you enable them all with "*", your code most definitely
+     * will be corrupted, because some rules are for testing purposes
+     * only.</p>
+     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.rules", defaultValue = "*")
+    @Parameter(property = "hone.rules", defaultValue = "none")
     private String rules;
 
     /**

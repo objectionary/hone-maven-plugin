@@ -273,6 +273,8 @@
               <executable>gradle</executable>
               <workingDirectory>${project.basedir}/src/test/gradle</workingDirectory>
               <arguments>
+                <argument>--console=plain</argument>
+                <argument>--no-parallel</argument>
                 <argument>clean</argument>
                 <argument>build</argument>
                 <argument>run</argument>

@@ -10,6 +10,6 @@ package org.eolang.gradle;
  */
 public class App {
     public static void main(String[] args) {
-        System.out.printf("int is %d\n", 7777);
+        System.out.printf("int is %d\n", 33);
     }
 }

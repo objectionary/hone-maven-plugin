@@ -20,6 +20,8 @@ function verbose {
   fi
 }
 
+verbose "We are in verbose mode, printing all messages..."
+
 mkdir -p "${HONE_FROM}"
 mkdir -p "${HONE_TO}"
 mkdir -p "${HONE_XMIR_OUT}"

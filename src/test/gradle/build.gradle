@@ -24,3 +24,10 @@ java {
         languageVersion = JavaLanguageVersion.of(11)
     }
 }
+
+task runMavenPlugin(type: Exec) {
+    commandLine 'mvn', 'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize',
+      '-Dhone.version=1.0-SNAPSHOT', '-Dhone.target=build', '-Dhone.rules=33-to-42'
+}
+
+build.dependsOn runMavenPlugin

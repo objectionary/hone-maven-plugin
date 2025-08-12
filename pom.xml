@@ -275,10 +275,10 @@
               <arguments>
                 <argument>--console=plain</argument>
                 <argument>--no-parallel</argument>
+                <argument>-Phone.version=${project.version}</argument>
                 <argument>clean</argument>
                 <argument>build</argument>
                 <argument>run</argument>
-                <argument>-Pversion=${project.version}</argument>
               </arguments>
             </configuration>
           </execution>

@@ -16,14 +16,15 @@ application {
 }
 
 task hone(type: Exec) {
+    String ver = project.property("hone.version")
     dependsOn compileJava
     commandLine 'mvn',
-        "-Dhone.version=${System.getProperty("version")}",
+        "-Dhone.version=${ver}",
         '-Dhone.target=build',
         '-Dhone.classes=classes/java/main',
         '-Dhone.rules=33-to-42',
-        'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:build',
-        'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize'
+        "org.eolang:hone-maven-plugin:${ver}:build",
+        "org.eolang:hone-maven-plugin:${ver}:optimize"
 }
 
 jar {

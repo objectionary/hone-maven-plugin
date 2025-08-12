@@ -3,6 +3,7 @@
 *.iml
 .claude/
 .DS_Store
+.gradle/
 .idea
 .idea/
 .vscode/

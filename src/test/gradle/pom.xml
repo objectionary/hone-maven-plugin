@@ -25,6 +25,7 @@
           <executions>
             <execution>
               <goals>
+                <goal>build</goal>
                 <goal>optimize</goal>
               </goals>
             </execution>

@@ -41,6 +41,7 @@
           <configuration>
             <executable>${exec.phino.script}</executable>
             <environmentVariables>
+              <HONE_VERBOSE>${exec.phino.verbose}</HONE_VERBOSE>
               <HONE_RULES>${exec.phino.rules}</HONE_RULES>
               <HONE_XMIR_IN>${exec.phino.xmir-in}</HONE_XMIR_IN>
               <HONE_FROM>${exec.phino.from}</HONE_FROM>

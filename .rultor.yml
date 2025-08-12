@@ -25,9 +25,9 @@ release:
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
     git commit -am "${tag}"
     export MAVEN_OPTS="--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
-    mvn clean install
+    mvn clean install -Pqulice
     mvn clean test -Pgradle
-    mvn clean deploy -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
+    mvn clean deploy -DskipTests -Dinvoker.skip -Pobjectionary,sonatype -e -B -s ../settings.xml
 
     cat ../docker-password | sudo docker login --password-stdin -u yegor256
     cd src/main/resources/org/eolang/hone/scaffolding/

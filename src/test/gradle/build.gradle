@@ -8,8 +8,8 @@ plugins {
     id 'application'
 }
 
-group = 'org.eolang.gradle'
-version = '1.0-SNAPSHOT'
+group = 'org.eolang.hone.gradle'
+version = '0.0.0'
 
 repositories {
     mavenCentral()
@@ -19,16 +19,13 @@ application {
     mainClass = 'org.eolang.gradle.App'
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
-    }
-}
-
 task hone(type: Exec) {
     dependsOn compileJava
-    commandLine 'mvn', 'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize',
-      '-Dhone.version=1.0-SNAPSHOT', '-Dhone.target=build', '-Dhone.rules=33-to-42'
+    commandLine 'mvn',
+      'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize',
+      "-Dhone.version=${System.getProperty("version")}",
+      '-Dhone.target=build',
+      '-Dhone.rules=33-to-42'
 }
 
 compileJava.finalizedBy hone

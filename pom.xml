@@ -278,6 +278,7 @@
                 <argument>clean</argument>
                 <argument>build</argument>
                 <argument>run</argument>
+                <argument>-Pversion=${project.version}</argument>
               </arguments>
             </configuration>
           </execution>
@@ -323,6 +324,8 @@
               <excludes>
                 <exclude>pmd:/src/it/.*</exclude>
                 <exclude>checkstyle:/src/it/.*</exclude>
+                <exclude>checkstyle:/src/test/gradle/.*</exclude>
+                <exclude>pmd:/src/test/gradle/.*</exclude>
                 <exclude>checkstyle:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
                 <exclude>pmd:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
                 <exclude>duplicatefinder:.*</exclude>

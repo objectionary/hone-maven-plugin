@@ -11,10 +11,6 @@ plugins {
 group = 'org.eolang.hone.gradle'
 version = '0.0.0'
 
-repositories {
-    mavenCentral()
-}
-
 application {
     mainClass = 'org.eolang.gradle.App'
 }

@@ -53,6 +53,15 @@ import org.cactoos.iterable.Mapped;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
+     * Location of .class files to optimize, inside {@code target} directory.
+     *
+     * @since 0.8.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.classes", defaultValue = "classes")
+    private String classes;
+
+    /**
      * List of built-in rules to use for optimizations.
      *
      * <p>For example, "<tt>simple,b*,!abc</tt>" would include
@@ -253,7 +262,17 @@ public final class OptimizeMojo extends AbstractMojo {
         }
         command.addAll(
             Arrays.asList(
+                "--env", String.format("CLASSES=%s", this.classes)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
                 "--env", String.format("SMALL_STEPS=%s", this.smallSteps)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("VERBOSE=%s", Logger.isDebugEnabled(this))
             )
         );
         command.addAll(

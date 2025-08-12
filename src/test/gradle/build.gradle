@@ -1,0 +1,32 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+ * SPDX-License-Identifier: MIT
+ */
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'org.eolang.hone.gradle'
+version = '0.0.0'
+
+application {
+    mainClass = 'org.eolang.gradle.App'
+}
+
+task hone(type: Exec) {
+    dependsOn compileJava
+    commandLine 'mvn',
+        "-Dhone.version=${System.getProperty("version")}",
+        '-Dhone.target=build',
+        '-Dhone.classes=classes/java/main',
+        '-Dhone.rules=33-to-42',
+        'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:build',
+        'org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize'
+}
+
+jar {
+    dependsOn hone
+    mustRunAfter hone
+}

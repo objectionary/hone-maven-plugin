@@ -20,6 +20,8 @@ function verbose {
   fi
 }
 
+verbose "We are in verbose mode, printing all messages..."
+
 mkdir -p "${HONE_FROM}"
 mkdir -p "${HONE_TO}"
 mkdir -p "${HONE_XMIR_OUT}"
@@ -40,6 +42,7 @@ while IFS= read -r f; do
   rm -f "${s}.*"
   pos=0
   IFS=' ' read -r -a array <<< "${HONE_RULES}"
+  verbose "Applying ${#array[@]} rules: ${array[*]}"
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#array[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${HONE_FROM}/${f}.phi" "${s}"
@@ -62,10 +65,11 @@ while IFS= read -r f; do
     done
     phino rewrite --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${r}" > "${s}"
   fi
+  s_size=$(du -sh "${xi}" | cut -f1)
   if cmp -s "${r}" "${s}"; then
-    echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}")"
+    echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}") (${s_size})"
   else
-    echo "Modified $(basename "${r}") by ${#array[@]} rule(s), saved to $(basename "${s}"): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
+    echo "Modified $(basename "${r}") by ${#array[@]} rule(s), saved to $(basename "${s}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

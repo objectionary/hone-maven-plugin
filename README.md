@@ -28,6 +28,9 @@ Just add this to your `pom.xml` file (you must have [Docker] installed too):
               <goal>optimize</goal>
               <goal>rmi</goal>
             </goals>
+            <configuration>
+              <rules>streams/*</rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -64,6 +67,52 @@ The effect of the plugin should be performance-positive (your code should
 work faster) along with no functionality degradation (your code should work
 exactly the same as it worked before optimizations). If any of these
 is not true, [submit a ticket], we will try to fix.
+
+## How to Use in Gradle
+
+You can use this plugin with [Gradle] too, but it requires
+some additional steps. You need to add the following to your `build.gradle` file:
+
+```groovy
+task hone(type: Exec) {
+    dependsOn compileJava
+    commandLine 'mvn',
+        "-Dhone.version=0.0.0",
+        '-Dhone.target=build',
+        '-Dhone.classes=classes/java/main',
+        '-Dhone.rules=streams/*',
+        'org.eolang:hone-maven-plugin:0.0.0:build',
+        'org.eolang:hone-maven-plugin:0.0.0:optimize'
+}
+jar {
+    dependsOn hone
+    mustRunAfter hone
+}
+```
+
+Then, you should create `pom.xml` file in the root of your project
+with the following content:
+
+```xml
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.eolang.hone</groupId>
+  <artifactId>gradle</artifactId>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.eolang</groupId>
+          <artifactId>hone-maven-plugin</artifactId>
+          <version>0.0.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
+```
+
+See how it works in [this example](src/test/gradle).
 
 ## Benchmark
 

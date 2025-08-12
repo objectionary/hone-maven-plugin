@@ -24,6 +24,5 @@ task hone(type: Exec) {
       '-Dhone.rules=33-to-42'
 }
 
-classes.dependsOn hone
 jar.dependsOn hone
 jar.mustRunAfter hone

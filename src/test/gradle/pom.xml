@@ -22,14 +22,6 @@
           <groupId>org.eolang</groupId>
           <artifactId>hone-maven-plugin</artifactId>
           <version>${hone.version}</version>
-          <executions>
-            <execution>
-              <goals>
-                <goal>build</goal>
-                <goal>optimize</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>

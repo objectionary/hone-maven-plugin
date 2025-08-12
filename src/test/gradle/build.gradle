@@ -29,7 +29,4 @@ task hone(type: Exec) {
 jar {
     dependsOn hone
     mustRunAfter hone
-    from(sourceSets.main.output.classesDirs) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
 }

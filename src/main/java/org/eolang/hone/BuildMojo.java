@@ -73,7 +73,7 @@ public final class BuildMojo extends AbstractMojo {
                         (Scalar<Object>) () -> new Docker(this.sudo).exec(
                             "buildx",
                             "build",
-                            "--output", "type=docker",
+                            "--load",
                             "--pull",
                             "--progress=plain",
                             "--build-arg", String.format("PHINO_VERSION=%s", this.phino()),

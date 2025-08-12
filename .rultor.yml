@@ -25,6 +25,7 @@ release:
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
     git commit -am "${tag}"
     export MAVEN_OPTS="--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
+    docker buildx create --name mybuilder --driver docker --use
     mvn clean install -Pqulice
     mvn clean test -Pgradle
     mvn clean deploy -DskipTests -Dinvoker.skip -Pobjectionary,sonatype -e -B -s ../settings.xml

@@ -13,14 +13,14 @@ TARGET/ TARGET of a Maven project."
   exit 1
 fi
 
-if [ ! -e "${TARGET}/classes" ]; then
-  echo "There is no '${TARGET}/classes' directory, which most probably means \
+if [ ! -e "${TARGET}/${CLASSES}" ]; then
+  echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project hasn't been compiled yet. Make sure you use 'hone-maven-plugin' \
 after the 'compile' phase is finished."
   exit 1
 fi
 # In order to save them "as is", just in case:
-cp -R "${TARGET}/classes" "${TARGET}/classes-before-hone"
+cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
 
 # Maven options for all steps:
 declare -a opts=(
@@ -77,7 +77,7 @@ fi
 
 mvn "${opts[@]}" \
   jeo:disassemble \
-  "-Djeo.disassemble.sourcesDir=${TARGET}/classes" \
+  "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}" \
   "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
   "${jeo_opts[@]}" \
   exec:exec \
@@ -92,5 +92,5 @@ mvn "${opts[@]}" \
   "-Dexec.phino.max-depth=${MAX_DEPTH}" \
   jeo:assemble \
   "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
-  "-Djeo.assemble.outputDir=${TARGET}/classes" \
+  "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}" \
   "${jeo_opts[@]}"

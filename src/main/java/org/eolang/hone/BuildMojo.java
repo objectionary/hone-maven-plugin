@@ -41,7 +41,6 @@ public final class BuildMojo extends AbstractMojo {
      * @since 0.2.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
     @Parameter(property = "hone.phino-version")
     private String phinoVersion;
 

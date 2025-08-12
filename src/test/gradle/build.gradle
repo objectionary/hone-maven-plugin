@@ -24,4 +24,6 @@ task hone(type: Exec) {
       '-Dhone.rules=33-to-42'
 }
 
-compileJava.finalizedBy hone
+classes.dependsOn hone
+jar.dependsOn hone
+jar.mustRunAfter hone

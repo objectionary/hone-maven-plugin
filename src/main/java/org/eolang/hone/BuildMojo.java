@@ -71,7 +71,9 @@ public final class BuildMojo extends AbstractMojo {
                 () -> new IoChecked<>(
                     new Retry<>(
                         (Scalar<Object>) () -> new Docker(this.sudo).exec(
+                            "buildx",
                             "build",
+                            "--load",
                             "--pull",
                             "--progress=plain",
                             "--build-arg", String.format("PHINO_VERSION=%s", this.phino()),

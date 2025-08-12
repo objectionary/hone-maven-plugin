@@ -27,7 +27,4 @@ task hone(type: Exec) {
         "org.eolang:hone-maven-plugin:${ver}:optimize"
 }
 
-jar {
-    dependsOn hone
-    mustRunAfter hone
-}
+jar.mustRunAfter hone

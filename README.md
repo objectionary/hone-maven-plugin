@@ -84,10 +84,7 @@ task hone(type: Exec) {
         'org.eolang:hone-maven-plugin:0.0.0:build',
         'org.eolang:hone-maven-plugin:0.0.0:optimize'
 }
-jar {
-    dependsOn hone
-    mustRunAfter hone
-}
+jar.mustRunAfter hone
 ```
 
 Then, you should create `pom.xml` file in the root of your project
@@ -163,3 +160,4 @@ that we use, are defined in the `in-docker-pom.xml` file.
 [Maven]: https://maven.apache.org/
 [Docker]: https://docs.docker.com/engine/install/
 [submit a ticket]: https://github.com/objectionary/hone-maven-plugin/issues
+[Gradle]: https://gradle.org/

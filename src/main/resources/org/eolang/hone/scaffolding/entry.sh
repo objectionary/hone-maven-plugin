@@ -82,7 +82,7 @@ mvn "${opts[@]}" \
   "${jeo_opts[@]}" \
   exec:exec \
   "-Dexec.phino.script=${SELF}/normalize.sh" \
-  "-Dexec.phino.verbose=false" \
+  "-Dexec.phino.verbose=${VERBOSE}" \
   "-Dexec.phino.rules=${RULES}" \
   "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \
   "-Dexec.phino.from=${TARGET}/generated-sources/phi" \

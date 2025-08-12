@@ -62,10 +62,11 @@ while IFS= read -r f; do
     done
     phino rewrite --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${r}" > "${s}"
   fi
+  s_size=$(du -sh "${xi}" | cut -f1)
   if cmp -s "${r}" "${s}"; then
-    echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}")"
+    echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}") (${s_size})"
   else
-    echo "Modified $(basename "${r}") by ${#array[@]} rule(s), saved to $(basename "${s}"): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
+    echo "Modified $(basename "${r}") by ${#array[@]} rule(s), saved to $(basename "${s}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

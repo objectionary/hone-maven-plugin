@@ -258,6 +258,11 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         command.addAll(
             Arrays.asList(
+                "--env", String.format("VERBOSE=%s", Logger.isDebugEnabled(this))
+            )
+        );
+        command.addAll(
+            Arrays.asList(
                 "--env", String.format("MAX_DEPTH=%d", this.maxDepth)
             )
         );

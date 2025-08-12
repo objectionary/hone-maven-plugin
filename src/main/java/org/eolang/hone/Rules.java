@@ -153,7 +153,7 @@ final class Rules {
             list.put(
                 Pattern.compile(
                     String.format(
-                        "^\\Q%s\\E$",
+                        "^\\Q%s\\E\\.(yml|phr)$",
                         body.replace("*", "\\E.*\\Q")
                     )
                 ),

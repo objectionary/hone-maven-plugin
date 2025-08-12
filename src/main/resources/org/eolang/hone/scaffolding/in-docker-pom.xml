@@ -12,7 +12,7 @@
   <name>hone</name>
   <properties>
     <eo.version>0.58.0</eo.version>
-    <jeo.version>0.13.2</jeo.version>
+    <jeo.version>0.13.3</jeo.version>
   </properties>
   <build>
     <pluginManagement>
@@ -27,6 +27,7 @@
           <artifactId>jeo-maven-plugin</artifactId>
           <version>${jeo.version}</version>
           <configuration>
+            <mode>debug</mode>
             <omitComments>true</omitComments>
             <omitListings>true</omitListings>
             <prettyXmir>true</prettyXmir>

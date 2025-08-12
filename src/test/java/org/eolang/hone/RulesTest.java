@@ -49,6 +49,24 @@ final class RulesTest {
     }
 
     @Test
+    void discoversOneRuleFromClasspathWithoutSuffix() {
+        MatcherAssert.assertThat(
+            "Should discover none from classpath (without YML suffix)",
+            new Rules("none").yamls(),
+            Matchers.iterableWithSize(1)
+        );
+    }
+
+    @Test
+    void discoversNothingWithSuffix() {
+        MatcherAssert.assertThat(
+            "Should NOT discover none.yml from classpath",
+            new Rules("none.yml").yamls(),
+            Matchers.emptyIterable()
+        );
+    }
+
+    @Test
     void discoversRulesFromClasspath() {
         MatcherAssert.assertThat(
             "Should discover none.yml from classpath",

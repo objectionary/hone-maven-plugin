@@ -15,6 +15,8 @@ import org.cactoos.io.TeeInput;
 import org.cactoos.scalar.IoChecked;
 import org.cactoos.scalar.LengthOf;
 import org.cactoos.scalar.Retry;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 
 /**
  * Build Docker image.
@@ -40,7 +42,7 @@ public final class BuildMojo extends AbstractMojo {
      * @checkstyle MemberNameCheck (6 lines)
      */
     @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
-    @Parameter(property = "hone.phino-version", defaultValue = "0.0.0.37")
+    @Parameter(property = "hone.phino-version")
     private String phinoVersion;
 
     @Override
@@ -72,7 +74,7 @@ public final class BuildMojo extends AbstractMojo {
                             "build",
                             "--pull",
                             "--progress=plain",
-                            "--build-arg", String.format("PHINO_VERSION=%s", this.phinoVersion),
+                            "--build-arg", String.format("PHINO_VERSION=%s", this.phino()),
                             "--tag", this.image,
                             temp.path().toString()
                         )
@@ -80,5 +82,17 @@ public final class BuildMojo extends AbstractMojo {
                 ).value()
             );
         }
+    }
+
+    private String phino() throws IOException {
+        String version = this.phinoVersion;
+        if (version == null || version.isEmpty()) {
+            version = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf("org/eolang/hone/default-phino-version.txt")
+                )
+            ).asString().trim();
+        }
+        return version;
     }
 }

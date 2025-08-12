@@ -58,11 +58,11 @@ final class RulesTest {
     }
 
     @Test
-    void doesntDiscoverOneRuleFromClasspath() {
+    void discoversNothingWithSuffix() {
         MatcherAssert.assertThat(
-            "Should discover none.yml from classpath",
+            "Should NOT discover none.yml from classpath",
             new Rules("none.yml").yamls(),
-            Matchers.iterableWithSize(0)
+            Matchers.emptyIterable()
         );
     }
 

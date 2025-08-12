@@ -29,9 +29,7 @@ release:
 
     cat ../docker-password | sudo docker login --password-stdin -u yegor256
     cd src/main/resources/org/eolang/hone/scaffolding/
-    mkdir -p rules
-    cp -R ../rules/*.yml rules
-    cp -R ../rules/*.phr rules
+    cp -R ../rules rules
     sed -i -e "s/\"0.0.0\"/\"${tag}\"/" Dockerfile
     sed -i -e "s/0.0.0/${tag}/" entry.sh
     sed -i -e "s/0.0.0/${tag}/" in-docker-pom.xml

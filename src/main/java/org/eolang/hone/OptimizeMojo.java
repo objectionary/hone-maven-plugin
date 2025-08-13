@@ -188,6 +188,9 @@ public final class OptimizeMojo extends AbstractMojo {
     @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity" })
     public void exec() throws IOException {
         final long start = System.currentTimeMillis();
+        if (this.target.mkdirs()) {
+            Logger.debug(this, "Target directory '%s' created", this.target);
+        }
         final String tdir = "/target";
         final String cdir = "/eo-cache";
         final Collection<String> command = new LinkedList<>(

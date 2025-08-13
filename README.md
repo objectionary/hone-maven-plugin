@@ -74,16 +74,15 @@ You can use this plugin with [Gradle] too, but it requires
 some additional steps. You need to add the following to your `build.gradle` file:
 
 ```groovy
-task hone(type: Exec) {
-    dependsOn compileJava
+task hone(type: Exec, dependsOn: compileJava) {
     commandLine 'mvn',
-        "-Dhone.version=0.0.0",
         '-Dhone.target=build',
         '-Dhone.classes=classes/java/main',
         '-Dhone.rules=streams/*',
         'org.eolang:hone-maven-plugin:0.0.0:build',
         'org.eolang:hone-maven-plugin:0.0.0:optimize'
 }
+jar.dependsOn hone
 jar.mustRunAfter hone
 ```
 

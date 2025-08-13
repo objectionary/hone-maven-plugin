@@ -15,9 +15,8 @@ application {
     mainClass = 'org.eolang.gradle.App'
 }
 
-task hone(type: Exec) {
+task hone(type: Exec, dependsOn: compileJava) {
     String ver = project.property("hone.version")
-    dependsOn compileJava
     commandLine 'mvn',
         "-Dhone.version=${ver}",
         '-Dhone.target=build',
@@ -27,4 +26,5 @@ task hone(type: Exec) {
         "org.eolang:hone-maven-plugin:${ver}:optimize"
 }
 
+jar.dependsOn hone
 jar.mustRunAfter hone

@@ -35,6 +35,7 @@ after the 'compile' phase is finished; this is what is in the '${TARGET}' direct
 fi
 # In order to save them "as is", just in case:
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
+echo "The classes before hone are saved in '${TARGET}/classes-before-hone'"
 
 # Maven options for all steps:
 declare -a opts=(
@@ -49,9 +50,11 @@ declare -a opts=(
 )
 if [ -n "${EO_VERSION}" ]; then
   opts+=("-Deo.version=${EO_VERSION}")
+  echo "Using EO version ${EO_VERSION}"
 fi
 if [ -n "${JEO_VERSION}" ]; then
   opts+=("-Djeo.version=${JEO_VERSION}")
+  echo "Using JEO version ${JEO_VERSION}"
 fi
 opts+=(
   "-Dbuildtime.output.csv=true"
@@ -79,6 +82,8 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
+echo "Using the following rules: ${RULES}"
+
 declare -a jeo_opts=()
 if [ -n "${INCLUDES}" ]; then
   jeo_opts+=("-Djeo.disassemble.includes=${INCLUDES}")
@@ -89,6 +94,7 @@ if [ -n "${EXCLUDES}" ]; then
   jeo_opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
 fi
 
+set -x
 mvn "${opts[@]}" \
   jeo:disassemble \
   "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}" \

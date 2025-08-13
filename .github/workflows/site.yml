@@ -29,3 +29,8 @@ jobs:
           folder: target/site
           target-folder: ${{ github.ref_name }}
           clean: false
+      - uses: JamesIves/github-pages-deploy-action@v4.7.3
+        with:
+          branch: gh-pages
+          folder: target/site
+          clean: false

@@ -7,29 +7,29 @@ set -e -o pipefail
 SELF=$(dirname "$0")
 
 if [ -z "${TARGET}" ]; then
-  echo "The \$TARGET environment variable is not set! Make sure you do \
+  echo "The \$TARGET environment variable is not set; make sure you do \
 'docker run' with the '-e TARGET=...' parameter, which points to the \
-target/ directory of a Maven project."
+target/ directory of a Maven project"
   exit 1
 fi
 
 if [ -z "${EO_CACHE}" ]; then
-  echo "The \$EO_CACHE environment variable is not set! Make sure you do \
+  echo "The \$EO_CACHE environment variable is not set; make sure you do \
 'docker run' with the '-e EO_CACHE=...' parameter, which points to the \
-directory with EO cache files."
+directory with EO cache files"
   exit 1
 fi
 
 if [ ! -e "${TARGET}" ]; then
   echo "There is no '${TARGET}' directory, which most probably means \
-that Docker is misconfigured. The directory must exist even if there are no .class files."
+that Docker is misconfigured; the directory must exist even if there are no .class files"
   exit 1
 fi
 
 if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
-that the project hasn't been compiled yet. Make sure you use 'hone-maven-plugin' \
-after the 'compile' phase is finished. This is what is in the '${TARGET}' directory:"
+that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \
+after the 'compile' phase is finished; this is what is in the '${TARGET}' directory:"
   tree "${TARGET}"
   exit 1
 fi
@@ -64,7 +64,7 @@ if [ -z "${RULES}" ]; then
 fi
 for rule in ${RULES}; do
   if [ ! -e "${rule}" ]; then
-    echo "YAML rule file doesn't exist: ${rule}"
+    echo "YAML rule file does not exist: ${rule}"
     tree "${SELF}"
     exit 1
   fi

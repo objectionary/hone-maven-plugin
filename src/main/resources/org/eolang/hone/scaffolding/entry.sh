@@ -35,7 +35,7 @@ after the 'compile' phase is finished; this is what is in the '${TARGET}' direct
 fi
 # In order to save them "as is", just in case:
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
-echo "The classes before hone are saved in '${TARGET}/classes-before-hone'"
+echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -print | wc -l | xargs) files)"
 
 # Maven options for all steps:
 declare -a opts=(

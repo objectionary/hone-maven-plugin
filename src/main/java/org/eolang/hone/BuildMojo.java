@@ -49,10 +49,10 @@ public final class BuildMojo extends AbstractMojo {
     /**
      * Shall we use buildx?
      *
-     * @since 0.9.0
+     * @since 0.8.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.use-buildx", defaultValue = "false")
+    @Parameter(property = "hone.use-buildx", defaultValue = "true")
     private boolean useBuildx;
 
     @Override

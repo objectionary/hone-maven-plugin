@@ -12,7 +12,7 @@
   <name>hone</name>
   <properties>
     <eo.version>0.58.0</eo.version>
-    <jeo.version>0.13.4</jeo.version>
+    <jeo.version>0.13.6</jeo.version>
   </properties>
   <build>
     <pluginManagement>

@@ -82,7 +82,11 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
-echo "Using the following rules: ${RULES}"
+printf 'Using Java: %s' "$(java --version | head -1)"
+
+printf 'Using Maven: %s' "$(mvn --version | head -1)"
+
+printf 'Using the following rules:\n\t%s' "$(echo "${RULES}" | gsed 's/ /\n\t/g')"
 
 declare -a jeo_opts=()
 if [ -n "${INCLUDES}" ]; then
@@ -94,23 +98,25 @@ if [ -n "${EXCLUDES}" ]; then
   jeo_opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
 fi
 
-set -x
-mvn "${opts[@]}" \
-  jeo:disassemble \
-  "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}" \
-  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
-  "${jeo_opts[@]}" \
-  exec:exec \
-  "-Dexec.phino.script=${SELF}/normalize.sh" \
-  "-Dexec.phino.verbose=${VERBOSE}" \
-  "-Dexec.phino.rules=${RULES}" \
-  "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \
-  "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
-  "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
-  "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi" \
-  "-Dexec.phino.small-steps=${SMALL_STEPS}" \
-  "-Dexec.phino.max-depth=${MAX_DEPTH}" \
-  jeo:assemble \
-  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
-  "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}" \
-  "${jeo_opts[@]}"
+(
+  set -x
+  mvn "${opts[@]}" \
+    jeo:disassemble \
+    "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}" \
+    "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
+    "${jeo_opts[@]}" \
+    exec:exec \
+    "-Dexec.phino.script=${SELF}/normalize.sh" \
+    "-Dexec.phino.verbose=${VERBOSE}" \
+    "-Dexec.phino.rules=${RULES}" \
+    "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \
+    "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
+    "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
+    "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi" \
+    "-Dexec.phino.small-steps=${SMALL_STEPS}" \
+    "-Dexec.phino.max-depth=${MAX_DEPTH}" \
+    jeo:assemble \
+    "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
+    "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}" \
+    "${jeo_opts[@]}"
+)

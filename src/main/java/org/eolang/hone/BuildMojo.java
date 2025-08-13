@@ -5,6 +5,8 @@
 package org.eolang.hone;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -44,6 +46,15 @@ public final class BuildMojo extends AbstractMojo {
     @Parameter(property = "hone.phino-version")
     private String phinoVersion;
 
+    /**
+     * Shall we use buildx?
+     *
+     * @since 0.9.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.use-buildx", defaultValue = "false")
+    private boolean useBuildx;
+
     @Override
     public void exec() throws IOException {
         try (Mktemp temp = new Mktemp()) {
@@ -65,20 +76,24 @@ public final class BuildMojo extends AbstractMojo {
             for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
+            final List<String> args = new LinkedList<>();
+            args.add("build");
+            if (this.useBuildx) {
+                args.add("buildx");
+                args.add("--load");
+            }
+            args.add("--pull");
+            args.add("--progress=plain");
+            args.add("--build-arg");
+            args.add(String.format("PHINO_VERSION=%s", this.phino()));
+            args.add("--tag");
+            args.add(this.image);
+            args.add(temp.path().toString());
             this.timings.through(
                 "build",
                 () -> new IoChecked<>(
                     new Retry<>(
-                        (Scalar<Object>) () -> new Docker(this.sudo).exec(
-                            "buildx",
-                            "build",
-                            "--load",
-                            "--pull",
-                            "--progress=plain",
-                            "--build-arg", String.format("PHINO_VERSION=%s", this.phino()),
-                            "--tag", this.image,
-                            temp.path().toString()
-                        )
+                        (Scalar<Object>) () -> new Docker(this.sudo).exec(args)
                     )
                 ).value()
             );

@@ -77,9 +77,11 @@ public final class BuildMojo extends AbstractMojo {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             final List<String> args = new LinkedList<>();
-            args.add("build");
             if (this.useBuildx) {
                 args.add("buildx");
+            }
+            args.add("build");
+            if (this.useBuildx) {
                 args.add("--load");
             }
             args.add("--pull");

@@ -4,16 +4,6 @@
 
 set -e -o pipefail
 
-if [ ! -d "${HONE_XMIR_IN}" ]; then
-  echo "The source directory '${HONE_XMIR_IN}' does not exist"
-  exit 1
-fi
-
-if [ -z "${HONE_RULES}" ]; then
-  echo "No rules specified in HONE_RULES environment variable"
-  exit 1
-fi
-
 function verbose {
   if [ "${HONE_VERBOSE}" == 'true' ]; then
     echo "$@"
@@ -21,6 +11,17 @@ function verbose {
 }
 
 verbose "We are in verbose mode, printing all messages..."
+
+if [ ! -d "${HONE_XMIR_IN}" ]; then
+  echo "The source directory '${HONE_XMIR_IN}' does not exist"
+  exit 1
+fi
+verbose "Source directory: ${HONE_XMIR_IN}"
+
+if [ -z "${HONE_RULES}" ]; then
+  echo "No rules specified in the \$HONE_RULES environment variable"
+  exit 1
+fi
 
 mkdir -p "${HONE_FROM}"
 verbose "Using source directory: ${HONE_FROM}"
@@ -33,7 +34,8 @@ verbose "Using XMIR output directory: ${HONE_XMIR_OUT}"
 
 echo "Phino version: $(phino --version | xargs)"
 
-echo "Using ${#array[@]} rule(s)"
+IFS=' ' read -r -a rules <<< "${HONE_RULES}"
+echo "Using ${#rules[@]} rule(s)"
 
 while IFS= read -r f; do
   f=${f%.*}
@@ -48,11 +50,10 @@ while IFS= read -r f; do
   verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
   rm -f "${s}.*"
   pos=0
-  IFS=' ' read -r -a array <<< "${HONE_RULES}"
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
-    verbose "Applying ${#array[@]} rule(s) one by one to $(basename "${r}")..."
+    verbose "Applying ${#rules[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${HONE_FROM}/${f}.phi" "${s}"
-    for rule in "${array[@]}"; do
+    for rule in "${rules[@]}"; do
       m=$(basename "${rule}" .yml)
       pos=$(( pos + 1 ))
       t="${HONE_TO}/${f}.phi.${pos}"
@@ -66,7 +67,7 @@ while IFS= read -r f; do
     done
   else
     opts=()
-    for rule in "${array[@]}"; do
+    for rule in "${rules[@]}"; do
       opts+=("--rule=${rule}")
     done
     phino rewrite --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${r}" > "${s}"
@@ -76,7 +77,7 @@ while IFS= read -r f; do
   if cmp -s "${r}" "${s}"; then
     echo "No changes made to $(basename "${s}") (${s_size}, ${s_lines} lines)"
   else
-    echo "Modified $(basename "${r}") saved to $(basename "${s}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
+    echo "Modified $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

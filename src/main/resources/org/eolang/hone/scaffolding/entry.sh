@@ -29,7 +29,8 @@ fi
 if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project hasn't been compiled yet. Make sure you use 'hone-maven-plugin' \
-after the 'compile' phase is finished."
+after the 'compile' phase is finished. This is what is in the '${TARGET}' directory:"
+  tree "${TARGET}"
   exit 1
 fi
 # In order to save them "as is", just in case:

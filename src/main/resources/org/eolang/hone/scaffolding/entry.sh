@@ -13,6 +13,12 @@ TARGET/ TARGET of a Maven project."
   exit 1
 fi
 
+if [ ! -e "${TARGET}" ]; then
+  echo "There is no '${TARGET}' directory, which most probably means \
+that Docker is misconfigured. The directoy must exist even if there are no .class files."
+  exit 1
+fi
+
 if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project hasn't been compiled yet. Make sure you use 'hone-maven-plugin' \

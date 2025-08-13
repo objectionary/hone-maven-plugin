@@ -82,8 +82,8 @@ task hone(type: Exec, dependsOn: compileJava) {
         'org.eolang:hone-maven-plugin:0.0.0:build',
         'org.eolang:hone-maven-plugin:0.0.0:optimize'
 }
-jar.dependsOn hone
-jar.mustRunAfter hone
+compileJava.finalizedBy hone
+classes.dependsOn hone
 ```
 
 Then, you should create `pom.xml` file in the root of your project

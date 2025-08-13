@@ -16,7 +16,7 @@ application {
 }
 
 task hone(type: Exec, dependsOn: compileJava) {
-    String ver = project.property("hone.version")
+    String ver = project.hasProperty('hone.version') ? project.property('hone.version') : '1.0-SNAPSHOT'
     commandLine 'mvn',
         "-Dhone.version=${ver}",
         '-Dhone.target=build',
@@ -25,6 +25,5 @@ task hone(type: Exec, dependsOn: compileJava) {
         "org.eolang:hone-maven-plugin:${ver}:build",
         "org.eolang:hone-maven-plugin:${ver}:optimize"
 }
-
-jar.dependsOn hone
-jar.mustRunAfter hone
+compileJava.finalizedBy hone
+classes.dependsOn hone

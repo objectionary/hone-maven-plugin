@@ -23,8 +23,13 @@ function verbose {
 verbose "We are in verbose mode, printing all messages..."
 
 mkdir -p "${HONE_FROM}"
+verbose "Using source directory: ${HONE_FROM}"
+
 mkdir -p "${HONE_TO}"
+verbose "Using target directory: ${HONE_TO}"
+
 mkdir -p "${HONE_XMIR_OUT}"
+verbose "Using XMIR output directory: ${HONE_XMIR_OUT}"
 
 echo "Phino version: $(phino --version | xargs)"
 

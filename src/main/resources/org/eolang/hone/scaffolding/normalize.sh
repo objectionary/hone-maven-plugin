@@ -28,7 +28,7 @@ mkdir -p "${HONE_XMIR_OUT}"
 
 echo "Phino version: $(phino --version | xargs)"
 
-echo "Using ${#array[@]} rules"
+echo "Using ${#array[@]} rule(s)"
 
 while IFS= read -r f; do
   f=${f%.*}

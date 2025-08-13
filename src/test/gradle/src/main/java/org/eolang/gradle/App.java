@@ -5,11 +5,14 @@
 package org.eolang.gradle;
 
 /**
- * Simple application that prints a greeting message.
+ * Simple application that builds a greeting message that
+ * is supposed to be modified by the Hone plugin. The number
+ * 33 is used here as a placeholder that is expected to be
+ * replaced by the number 42.
  * @since 1.0
  */
-public class App {
-    public static void main(String[] args) {
-        System.out.printf("int is %d\n", 33);
+public final class App {
+    public String txt() {
+        return String.format("int is %d\n", 33);
     }
 }

@@ -13,6 +13,6 @@ package org.eolang.gradle;
  */
 public final class App {
     public String txt() {
-        return String.format("int is %d\n", 33);
+        return String.format("int is %d", 33);
     }
 }

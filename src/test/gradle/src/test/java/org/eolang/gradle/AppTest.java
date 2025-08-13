@@ -17,7 +17,7 @@ public final class AppTest {
     void returnsFormattedTextWithModifiedNumber() {
         assertThat(
             new App().txt(),
-            is("int is 42\n")
+            is("int is 42")
         );
     }
 }

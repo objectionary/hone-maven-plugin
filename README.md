@@ -76,36 +76,14 @@ some additional steps. You need to add the following to your `build.gradle` file
 ```groovy
 task hone(type: Exec, dependsOn: compileJava) {
     commandLine 'mvn',
-        '-Dhone.target=build',
-        '-Dhone.classes=classes/java/main',
-        '-Dhone.rules=streams/*',
-        'org.eolang:hone-maven-plugin:0.0.0:build',
-        'org.eolang:hone-maven-plugin:0.0.0:optimize'
+      "-Dhone.target=${buildDir}",
+      "-Dhone.classes=${buildDir.toPath().relativize(sourceSets.main.output.classesDirs.singleFile.toPath())}",
+      '-Dhone.rules=streams/*',
+      'org.eolang:hone-maven-plugin:0.0.0:build',
+      'org.eolang:hone-maven-plugin:0.0.0:optimize'
 }
 compileJava.finalizedBy hone
 classes.dependsOn hone
-```
-
-Then, you should create `pom.xml` file in the root of your project
-with the following content:
-
-```xml
-<project>
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.eolang.hone</groupId>
-  <artifactId>gradle</artifactId>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.eolang</groupId>
-          <artifactId>hone-maven-plugin</artifactId>
-          <version>0.0.0</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-</project>
 ```
 
 See how it works in [this example](src/test/gradle).

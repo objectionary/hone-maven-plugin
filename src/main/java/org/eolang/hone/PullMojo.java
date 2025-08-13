@@ -21,7 +21,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  *
  * @since 0.1.0
  */
-@Mojo(name = "pull", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "pull", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
 public final class PullMojo extends AbstractMojo {
 
     @Override

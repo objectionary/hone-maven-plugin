@@ -48,7 +48,7 @@ import org.cactoos.iterable.Mapped;
  * @checkstyle CyclomaticComplexityCheck (500 lines)
  * @checkstyle NPathComplexityCheck (500 lines)
  */
-@Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public final class OptimizeMojo extends AbstractMojo {
 

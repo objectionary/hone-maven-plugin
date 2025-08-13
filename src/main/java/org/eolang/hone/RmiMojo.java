@@ -18,7 +18,7 @@ import org.apache.maven.plugins.annotations.Mojo;
  *
  * @since 0.1.0
  */
-@Mojo(name = "rmi", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "rmi", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
 public final class RmiMojo extends AbstractMojo {
 
     @Override

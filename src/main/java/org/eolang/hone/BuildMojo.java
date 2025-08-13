@@ -34,7 +34,7 @@ import org.cactoos.text.TextOf;
  *
  * @since 0.1.0
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresProject = false)
 public final class BuildMojo extends AbstractMojo {
 
     /**

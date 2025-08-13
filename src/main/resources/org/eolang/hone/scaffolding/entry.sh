@@ -9,7 +9,14 @@ SELF=$(dirname "$0")
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set! Make sure you do \
 'docker run' with the '-e TARGET=...' parameter, which points to the \
-TARGET/ TARGET of a Maven project."
+target/ directory of a Maven project."
+  exit 1
+fi
+
+if [ -z "${EO_CACHE}" ]; then
+  echo "The \$EO_CACHE environment variable is not set! Make sure you do \
+'docker run' with the '-e EO_CACHE=...' parameter, which points to the \
+directory with EO cache files."
   exit 1
 fi
 
@@ -36,7 +43,7 @@ declare -a opts=(
   '--strict-checksums'
   '--errors'
   '--batch-mode'
-  '-Deo.cache=/eo-cache'
+  "-Deo.cache=/${EO_CACHE}"
   "--file=$(dirname "$0")/pom.xml"
 )
 if [ -n "${EO_VERSION}" ]; then

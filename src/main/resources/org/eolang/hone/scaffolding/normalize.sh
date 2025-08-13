@@ -28,6 +28,8 @@ mkdir -p "${HONE_XMIR_OUT}"
 
 echo "Phino version: $(phino --version | xargs)"
 
+echo "Using ${#array[@]} rules"
+
 while IFS= read -r f; do
   f=${f%.*}
   r="${HONE_FROM}/${f}.phi"
@@ -42,7 +44,6 @@ while IFS= read -r f; do
   rm -f "${s}.*"
   pos=0
   IFS=' ' read -r -a array <<< "${HONE_RULES}"
-  verbose "Applying ${#array[@]} rules: ${array[*]}"
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#array[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${HONE_FROM}/${f}.phi" "${s}"
@@ -66,10 +67,11 @@ while IFS= read -r f; do
     phino rewrite --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${r}" > "${s}"
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
+  s_lines=$(wc -l < "${s}")
   if cmp -s "${r}" "${s}"; then
-    echo "No changes made by ${#array[@]} rule(s) to $(basename "${s}") (${s_size})"
+    echo "No changes made to $(basename "${s}") (${s_size}, ${s_lines} lines)"
   else
-    echo "Modified $(basename "${r}") by ${#array[@]} rule(s), saved to $(basename "${s}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]') lines"
+    echo "Modified $(basename "${r}") saved to $(basename "${s}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

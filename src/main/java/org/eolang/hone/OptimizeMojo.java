@@ -188,13 +188,16 @@ public final class OptimizeMojo extends AbstractMojo {
     @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity" })
     public void exec() throws IOException {
         final long start = System.currentTimeMillis();
+        final String tdir = "/target";
+        final String cdir = "/eo-cache";
         final Collection<String> command = new LinkedList<>(
             Arrays.asList(
                 "run",
                 "--rm",
-                "--volume", String.format("%s:/target", this.target),
-                "--volume", String.format("%s:/eo-cache", this.cache),
-                "--env", "TARGET=/target"
+                "--volume", String.format("%s:%s", this.target, tdir),
+                "--volume", String.format("%s:%s", this.cache, cdir),
+                "--env", String.format("TARGET=%s", tdir),
+                "--env", String.format("EO_CACHE=%s", cdir)
             )
         );
         final Path extdir = this.target.toPath().resolve("hone-extra");
@@ -238,7 +241,7 @@ public final class OptimizeMojo extends AbstractMojo {
             }
             command.addAll(
                 Arrays.asList(
-                    "--env", "EXTRA=/target/hone-extra"
+                    "--env", String.format("EXTRA=%s/hone-extra", tdir)
                 )
             );
         }

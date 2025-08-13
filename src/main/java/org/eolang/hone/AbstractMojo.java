@@ -71,7 +71,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
         if (this.skip) {
-            Logger.info(this, "Execution skipped");
+            Logger.info(this, "Execution skipped due to hone.skip=true");
             return;
         }
         this.timings = new Timings(this.target.toPath().resolve("hone-timings.csv"));

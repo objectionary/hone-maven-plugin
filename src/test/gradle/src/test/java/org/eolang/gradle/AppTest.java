@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.is;
  */
 public final class AppTest {
     @Test
-    void returnsFormattedTextWithTheNumber33() {
+    void returnsFormattedTextWithModifiedNumber() {
         assertThat(
             new App().txt(),
             is("int is 42\n")

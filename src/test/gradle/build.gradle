@@ -30,11 +30,10 @@ test {
 
 task hone(type: Exec, dependsOn: compileJava) {
     String ver = project.hasProperty('hone.version') ? project.property('hone.version') : '1.0-SNAPSHOT'
-    String classesPath = sourceSets.main.output.classesDirs.singleFile.path - "${buildDir}${File.separator}"
     commandLine 'mvn',
         "-Dhone.version=${ver}",
         "-Dhone.target=${buildDir}",
-        "-Dhone.classes=${classesPath}",
+        "-Dhone.classes=${buildDir.toPath().relativize(sourceSets.main.output.classesDirs.singleFile.toPath())}",
         '-Dhone.rules=33-to-42',
         "org.eolang:hone-maven-plugin:${ver}:build",
         "org.eolang:hone-maven-plugin:${ver}:optimize"

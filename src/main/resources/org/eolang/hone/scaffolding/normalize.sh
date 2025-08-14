@@ -37,7 +37,11 @@ echo "Phino version: $(phino --version | xargs)"
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 echo "Using ${#rules[@]} rule(s)"
 
+files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
+total=$(echo "${files}" | wc -l | xargs)
+idx=0
 while IFS= read -r f; do
+  idx=$(( idx + 1 ))
   f=${f%.*}
   r="${HONE_FROM}/${f}.phi"
   s="${HONE_TO}/${f}.phi"
@@ -75,9 +79,9 @@ while IFS= read -r f; do
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${s}")
   if cmp -s "${r}" "${s}"; then
-    echo "No changes made to $(basename "${s}") (${s_size}, ${s_lines} lines)"
+    echo "No changes in ${idx}/${total} $(basename "${s}") (${s_size}, ${s_lines} lines)"
   else
-    echo "Modified $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
+    echo "Modified ${idx}/${total} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
@@ -86,4 +90,4 @@ while IFS= read -r f; do
   else
     verbose "Some changes made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
-done < <(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \;)
+done <<< "${files}"

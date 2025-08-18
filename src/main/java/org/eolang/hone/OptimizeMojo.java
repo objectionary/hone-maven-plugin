@@ -113,10 +113,10 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Grep XMIR files to rewrite.
      *
-     * <p>Using this regular expression you can filter-in files that
+     * <p>Using this regular expression you can filter-in (include) XMIR files that
      * need to be rewritten. It's advised to use this regex in order
-     * to save time. This is a good example, to filter-in only files
-     * with filter() and map() methods:</p>
+     * to save time. This is a good example, to filter-in only the files
+     * that contain filter() and map() methods:</p>
      *
      * <pre>"&gt;o&lt;(66-69-6C-74-65-72|6D-61-70)&gt;/o&lt;</pre>
      *
@@ -126,7 +126,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.grep-in")
+    @Parameter(property = "hone.grep-in", defaultValue = "")
     private String grepIn;
 
     /**

@@ -118,5 +118,5 @@ $(TARGET)/after:
 	mkdir -p "$(TARGET)/after"
 
 define check_xml
-	xmllint --quiet --xpath '/object/o/@name' "$(1)" >/dev/null || printf 'XML in %s is broken:\n%s' "$(1)" "$$(cat "$(1)")"
+	xmllint --quiet --xpath '/object/o/@name' "$(1)" > /dev/null || printf 'XML in %s is broken:\n===\n%s\n===\n' "$(1)" "$$(cat "$(1)")"
 endef

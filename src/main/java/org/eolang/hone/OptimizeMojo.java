@@ -126,7 +126,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.grep-in", defaultValue = "")
+    @Parameter(property = "hone.grep-in", defaultValue = ".*")
     private String grepIn;
 
     /**

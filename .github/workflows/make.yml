@@ -20,6 +20,7 @@ jobs:
           distribution: 'zulu'
           java-version: 23
       - run: |
+          sudo apt-get -y install xmllint
           sudo wget -q -o /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod +x /usr/bin/phino
       - run: make -C src/test/resources/org/eolang/hone/rules/streams

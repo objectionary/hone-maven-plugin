@@ -65,10 +65,12 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 		"-Djeo.disassemble.mode=short" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"
-	@$(call check_xml,$@,"after disassemble")
+	@$(call check_xml,$@,"after-disassemble")
+	echo 'bc to xmir' && cat $@
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
 	phino rewrite --sweet --input=xmir --nothing < $< > $@
+	echo 'xmir to phi' && cat $@
 
 .SILENT:
 $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
@@ -87,17 +89,19 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 		fi
 		cp "$${n}" $@
 	done
+	echo 'phi to phi' && cat $@
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
 	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
-	@$(call check_xml,$@,"after phino")
+	@$(call check_xml,$@,"after-phino")
+	echo 'phi to xmir' && cat $@
 
 .SILENT:
 $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile
 	mkdir -p "$(TARGET)/tmp/assemble"
 	rm -rf "$(TARGET)/tmp/assemble"/*
 	cp $< "$(TARGET)/tmp/assemble"
-	@$(call check_xml,$<,"before assemble")
+	@$(call check_xml,$<,"before-assemble")
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):assemble" \
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
 		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \

@@ -10,28 +10,36 @@ pattern: |
     method ↦ "apply",
     interface ↦ "()Ljava/util/function/Function;",
     lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
-    target-handle ↦ 𝑒-target-handle,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
-    stream-class ↦ "java/util/stream/Stream",
-    stream-method ↦ "map",
-    stream-signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "map",
+      signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+    ⟧
   ⟧
 result: |
   ⟦
     φ ↦ Φ.hone.map,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
-    target-handle ↦ 𝑒-target-handle,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
-    returned ↦ 𝑒-returned
+    returned ↦ 𝑒-returned,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
   ⟧
 where:
   - meta: 𝑒-bridge-input

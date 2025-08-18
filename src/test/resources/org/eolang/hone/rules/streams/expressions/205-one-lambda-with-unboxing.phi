@@ -35,14 +35,19 @@
           method ↦ "applyAsLong",
           interface ↦ "()Ljava/util/function/ToLongFunction;",
           lambda-signature ↦ "(Ljava/lang/Object;)J",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$4",
-          target-signature ↦ "(Ljava/lang/Long;)J",
           bridge-signature ↦ "(Ljava/lang/Long;)J",
-          stream-class ↦ "java/util/stream/Stream",
-          stream-method ↦ "mapToLong",
-          stream-signature ↦ "(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;"
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$4",
+            signature ↦ "(Ljava/lang/Long;)J",
+            is-interface ↦ Φ̇.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapToLong",
+            signature ↦ "(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;"
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

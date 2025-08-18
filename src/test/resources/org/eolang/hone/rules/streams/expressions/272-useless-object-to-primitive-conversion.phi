@@ -37,24 +37,29 @@
           φ ↦ Φ.hone.transform,
           opcode ↦ "invokestatic",
           class ↦ "Foo",
-          target-class ↦ "java/lang/Long",
-          target-method ↦ "valueOf",
-          target-signature ↦ "(J)Ljava/lang/Long;",
           bridge-input ↦ "Ljava/lang/Long;",
-          bridge-output ↦ "Ljava/lang/Long;"
+          bridge-output ↦ "Ljava/lang/Long;",
+          target ↦ ⟦
+            class ↦ "java/lang/Long",
+            method ↦ "valueOf",
+            signature ↦ "(J)Ljava/lang/Long;"
+          ⟧
         ⟧,
         a🌵1750 ↦ ⟦
           φ ↦ Φ.hone.map,
           opcode ↦ "invokevirtual",
           class ↦ "Foo",
-          target-handle ↦ 5,
-          target-class ↦ "java/lang/Long",
-          target-method ↦ "longValue",
-          target-signature ↦ "()J",
           bridge-input ↦ "Ljava/lang/Long;",
           bridge-output ↦ "J",
           accepted ↦ "Ljava/lang/Long;",
-          returned ↦ "J"
+          returned ↦ "J",
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "java/lang/Long",
+            method ↦ "longValue",
+            signature ↦ "()J",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧
     ⟧

@@ -10,24 +10,29 @@ pattern: |
       φ ↦ Φ.hone.transform,
       opcode ↦ "invokestatic",
       class ↦ 𝑒-class,
-      target-class ↦ 𝑒-target-class,
-      target-method ↦ "valueOf",
-      target-signature ↦ 𝑒-first-target-signature,
       bridge-input ↦ 𝑒-first-bridge-input,
-      bridge-output ↦ 𝑒-first-bridge-output
+      bridge-output ↦ 𝑒-first-bridge-output,
+      target ↦ ⟦
+        class ↦ 𝑒-target-class,
+        method ↦ "valueOf",
+        signature ↦ 𝑒-first-target-signature
+      ⟧
     ⟧,
     𝜏-second ↦ ⟦
       φ ↦ Φ.hone.map,
       opcode ↦ "invokevirtual",
       class ↦ 𝑒-class,
-      target-handle ↦ 𝑒-second-target-handle,
-      target-class ↦ 𝑒-target-class,
-      target-method ↦ 𝑒-second-target-method,
-      target-signature ↦ 𝑒-second-target-signature,
       bridge-input ↦ 𝑒-second-bridge-input,
       bridge-output ↦ 𝑒-second-bridge-output,
       accepted ↦ 𝑒-second-accepted,
-      returned ↦ 𝑒-second-returned
+      returned ↦ 𝑒-second-returned,
+      target ↦ ⟦
+        handle ↦ 𝑒-second-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-second-target-method,
+        signature ↦ 𝑒-second-target-signature,
+        is-interface ↦ 𝑒-second-target-is-interface
+      ⟧
     ⟧,
     𝐵-after
   ⟧

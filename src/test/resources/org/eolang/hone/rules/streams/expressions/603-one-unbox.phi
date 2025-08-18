@@ -37,11 +37,14 @@
           φ ↦ Φ.hone.unbox,
           opcode ↦ "invokevirtual",
           class ↦ "Foo",
-          target-handle ↦ 5,
-          target-class ↦ "java/lang/Integer",
-          target-method ↦ "intValue",
-          target-signature ↦ "()I",
-          bridge-signature ↦ "(Ljava/lang/Integer;)I"
+          bridge-signature ↦ "(Ljava/lang/Long;)J",
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "java/lang/Long",
+            method ↦ "longValue",
+            signature ↦ "()J",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧
     ⟧

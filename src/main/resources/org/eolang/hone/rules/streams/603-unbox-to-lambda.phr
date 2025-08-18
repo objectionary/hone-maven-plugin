@@ -8,11 +8,8 @@ pattern: |
     φ ↦ Φ.hone.unbox,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
-    target-handle ↦ 𝑒-target-handle,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
-    bridge-signature ↦ 𝑒-bridge-signature
+    bridge-signature ↦ 𝑒-bridge-signature,
+    target ↦ 𝑒-target
   ⟧
 result: |
   ⟦
@@ -21,14 +18,13 @@ result: |
     method ↦ 𝑒-method,
     interface ↦ 𝑒-interface,
     lambda-signature ↦ 𝑒-lambda-signature,
-    target-handle ↦ 𝑒-target-handle,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
-    stream-class ↦ "java/util/stream/Stream",
-    stream-method ↦ 𝑒-stream-method,
-    stream-signature ↦ 𝑒-stream-signature
+    target ↦ 𝑒-target,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ 𝑒-stream-method,
+      signature ↦ 𝑒-stream-signature
+    ⟧
   ⟧
 where:
   - meta: 𝑒-bridge-output

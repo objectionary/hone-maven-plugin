@@ -35,14 +35,20 @@
           method ↦ "apply",
           interface ↦ "()Ljava/util/function/Function;",
           lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
-          target-handle ↦ 5,
-          target-class ↦ "java/lang/String",
-          target-method ↦ "toLowerCase",
-          target-signature ↦ "()Ljava/lang/String;",
           bridge-signature ↦ "(Ljava/lang/String;)Ljava/lang/String;",
-          stream-class ↦ "java/util/stream/Stream",
-          stream-method ↦ "map",
-          stream-signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "java/lang/String",
+            method ↦ "toLowerCase",
+            signature ↦ "()Ljava/lang/String;",
+            is-interface ↦ Φ̇.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "map",
+            signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

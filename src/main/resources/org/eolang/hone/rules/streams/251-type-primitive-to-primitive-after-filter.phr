@@ -10,27 +10,21 @@ pattern: |
       φ ↦ Φ.hone.𝜏-one,
       opcode ↦ 𝑒-first-opcode,
       class ↦ 𝑒-class,
-      target-handle ↦ 𝑒-first-target-handle,
-      target-class ↦ 𝑒-first-target-class,
-      target-method ↦ 𝑒-first-target-method,
-      target-signature ↦ 𝑒-first-target-signature,
       bridge-input ↦ 𝑒-first-bridge-input,
       bridge-output ↦ 𝑒-first-bridge-output,
       accepted ↦ 𝑒-first-accepted,
-      returned ↦ 𝑒-first-returned
+      returned ↦ 𝑒-first-returned,
+      target ↦ 𝑒-first-target
     ⟧,
     𝜏-second ↦ ⟦
       φ ↦ Φ.hone.𝜏-two,
       opcode ↦ 𝑒-second-opcode,
       class ↦ 𝑒-class,
-      target-handle ↦ 𝑒-second-target-handle,
-      target-class ↦ 𝑒-second-target-class,
-      target-method ↦ 𝑒-second-target-method,
-      target-signature ↦ 𝑒-second-target-signature,
       bridge-input ↦ 𝑒-second-bridge-input,
       bridge-output ↦ 𝑒-second-bridge-output,
       accepted ↦ 𝑒-second-accepted,
-      returned ↦ 𝑒-second-returned
+      returned ↦ 𝑒-second-returned,
+      target ↦ 𝑒-second-target
     ⟧,
     𝐵-after
   ⟧
@@ -41,14 +35,11 @@ result: |
       φ ↦ Φ.hone.𝜏-one,
       opcode ↦ 𝑒-first-opcode,
       class ↦ 𝑒-class,
-      target-handle ↦ 𝑒-first-target-handle,
-      target-class ↦ 𝑒-first-target-class,
-      target-method ↦ 𝑒-first-target-method,
-      target-signature ↦ 𝑒-first-target-signature,
       bridge-input ↦ 𝑒-first-bridge-input,
       bridge-output ↦ 𝑒-first-bridge-output,
       accepted ↦ 𝑒-first-accepted,
-      returned ↦ 𝑒-first-returned
+      returned ↦ 𝑒-first-returned,
+      target ↦ 𝑒-first-target
     ⟧,
     𝜏-type ↦ ⟦
       φ ↦ Φ.hone.type,
@@ -60,14 +51,11 @@ result: |
       φ ↦ Φ.hone.𝜏-two,
       opcode ↦ 𝑒-second-opcode,
       class ↦ 𝑒-class,
-      target-handle ↦ 𝑒-second-target-handle,
-      target-class ↦ 𝑒-second-target-class,
-      target-method ↦ 𝑒-second-target-method,
-      target-signature ↦ 𝑒-second-target-signature,
       bridge-input ↦ 𝑒-second-bridge-input,
       bridge-output ↦ 𝑒-updated-second-bridge-output,
       accepted ↦ 𝑒-second-accepted,
-      returned ↦ 𝑒-updated-second-returned
+      returned ↦ 𝑒-updated-second-returned,
+      target ↦ 𝑒-second-target
     ⟧,
     𝐵-after
   ⟧

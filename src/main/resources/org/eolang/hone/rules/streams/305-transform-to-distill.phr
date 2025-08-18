@@ -8,11 +8,13 @@ pattern: |
     φ ↦ Φ.hone.transform,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
     bridge-input ↦ 𝑒-bridge-input,
-    bridge-output ↦ 𝑒-bridge-output
+    bridge-output ↦ 𝑒-bridge-output,
+    target ↦ ⟦
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature
+    ⟧
   ⟧
 result: |
   ⟦

@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: MIT
  */
 
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-public class Foo {
+public class Foo implements Supplier<Object> {
 
     public static final int N = 100_000_000;
 
@@ -73,5 +74,10 @@ public class Foo {
 
     private static boolean filterObject(Object x) {
         return true;
+    }
+
+    @Override
+    public Object get() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

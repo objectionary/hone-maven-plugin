@@ -8,14 +8,17 @@ pattern: |
     φ ↦ Φ.hone.map,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
-    target-handle ↦ 𝑒-target-handle,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
-    returned ↦ 𝑒-returned
+    returned ↦ 𝑒-returned,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
   ⟧
 result: |
   ⟦
@@ -32,7 +35,7 @@ result: |
         i2 ↦ 𝑒-target-class,
         i3 ↦ 𝑒-target-method,
         i4 ↦ 𝑒-target-signature,
-        i5 ↦ Φ̇.false
+        i5 ↦ 𝑒-target-is-interface
       ⟧
     ⟧
   ⟧

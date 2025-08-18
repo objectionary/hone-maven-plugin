@@ -10,10 +10,8 @@ pattern: |
       φ ↦ Φ.hone.𝜏-primitive-func,
       class ↦ 𝑒-class,
       stream-class ↦ 𝑒-stream-class,
-      target-class ↦ 𝑒-target-class,
-      target-method ↦ 𝑒-target-method,
-      target-signature ↦ 𝑒-target-signature,
-      bridge-signature ↦ 𝑒-bridge-signature
+      bridge-signature ↦ 𝑒-bridge-signature,
+      target ↦ 𝑒-target
     ⟧,
     𝐵-after
   ⟧
@@ -27,21 +25,21 @@ result: |
     𝜏-primitive ↦ ⟦
       φ ↦ Φ.hone.𝜏-boxed-primitive-func,
       class ↦ 𝑒-class,
-      stream-class ↦ 𝑒-stream-class,
-      target-class ↦ 𝑒-target-class,
-      target-method ↦ 𝑒-target-method,
-      target-signature ↦ 𝑒-target-signature,
-      bridge-signature ↦ 𝑒-bridge-signature
+      bridge-signature ↦ 𝑒-bridge-signature,
+      target ↦ 𝑒-target
     ⟧,
     𝜏-unbox ↦ ⟦
       φ ↦ Φ.hone.unbox,
       opcode ↦ "invokevirtual",
       class ↦ 𝑒-class,
-      target-handle ↦ 5,
-      target-class ↦ 𝑒-unbox-target-class,
-      target-method ↦ 𝑒-unbox-target-method,
-      target-signature ↦ 𝑒-unbox-target-signature,
-      bridge-signature ↦ 𝑒-unbox-bridge-signature
+      bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      target ↦ ⟦
+        handle ↦ 5,
+        class ↦ 𝑒-unbox-target-class,
+        method ↦ 𝑒-unbox-target-method,
+        signature ↦ 𝑒-unbox-target-signature,
+        is-interface ↦ Φ̇.false
+      ⟧
     ⟧,
     𝐵-after
   ⟧

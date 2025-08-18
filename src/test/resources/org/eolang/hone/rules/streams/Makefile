@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 .ONESHELL:
-.SHELLFLAGS := -ex -o pipefail -c
+.SHELLFLAGS := -e -o pipefail -c
 SHELL := bash
 .SECONDARY:
 .PHONY: all clean test diff jeo-test run
 
-RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules
+RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules/streams
 TESTS_DIR=expressions
 TARGET=../../../../../../../../target/foo
 
@@ -17,7 +17,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=0.13.2
+JEO_VERSION=0.13.9
 
 all: test jeo-test run
 

@@ -33,14 +33,17 @@
           φ ↦ Φ.hone.p-filter,
           opcode ↦ "invokestatic",
           class ↦ "Foo",
-          target-handle ↦ 6,
-          target-class ↦ "java/lang/Integer",
-          target-method ↦ "valueOf",
-          target-signature ↦ "(Ljava/lang/Object;)Z",
           bridge-input ↦ "Ljava/lang/Integer;",
           bridge-output ↦ "Ljava/lang/Long;",
           accepted ↦ "Ljava/lang/Integer",
-          returned ↦ "Ljava/lang/Long;"
+          returned ↦ "Ljava/lang/Long;",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "java/lang/Integer",
+            method ↦ "valueOf",
+            signature ↦ "(Ljava/lang/Object;)Z",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

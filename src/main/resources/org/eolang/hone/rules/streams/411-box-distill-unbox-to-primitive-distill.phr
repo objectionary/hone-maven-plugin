@@ -24,11 +24,12 @@ pattern: |
       φ ↦ Φ.hone.unbox,
       opcode ↦ 𝑒-unbox-opcode,
       class ↦ 𝑒-class,
-      target-handle ↦ 𝑒-unbox-target-handle,
-      target-class ↦ 𝑒-unbox-target-class,
-      target-method ↦ 𝑒-unbox-target-method,
-      target-signature ↦ 𝑒-unbox-target-signature,
-      bridge-signature ↦ 𝑒-unbox-bridge-signature
+      bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      target ↦ ⟦
+        𝐵-unbox-target-before,
+        signature ↦ 𝑒-unbox-target-signature,
+        𝐵-unbox-target-after
+      ⟧
     ⟧,
     𝐵-after
   ⟧

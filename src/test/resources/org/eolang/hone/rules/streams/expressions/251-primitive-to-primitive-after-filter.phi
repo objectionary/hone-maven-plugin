@@ -37,27 +37,33 @@
           φ ↦ Φ.hone.o-filter,
           opcode ↦ "invokestatic",
           class ↦ "Foo",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$0",
-          target-signature ↦ "(Ljava/lang/Object;)Z",
           bridge-input ↦ "Ljava/lang/Integer;",
           bridge-output ↦ "Ljava/lang/Long;",
           accepted ↦ "Ljava/lang/Integer;",
-          returned ↦ "J"
+          returned ↦ "J",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$0",
+            signature ↦ "(Ljava/lang/Object;)Z",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧,
         instruction179 ↦ ⟦
           φ ↦ Φ.hone.o-filter,
           opcode ↦ "invokestatic",
           class ↦ "Foo",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$1",
-          target-signature ↦ "(D)Ljava/lang/String;",
           bridge-input ↦ "Ljava/lang/Double;",
           bridge-output ↦ "Ljava/lang/String;",
           accepted ↦ "D",
-          returned ↦ "Ljava/lang/String;"
+          returned ↦ "Ljava/lang/String;",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$1",
+            signature ↦ "(D)Ljava/lang/String;",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧
     ⟧

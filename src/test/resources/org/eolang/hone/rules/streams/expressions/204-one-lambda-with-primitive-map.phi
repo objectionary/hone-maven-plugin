@@ -35,14 +35,19 @@
           method ↦ "applyAsInt",
           interface ↦ "()Ljava/util/function/IntUnaryOperator;",
           lambda-signature ↦ "(I)I",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$0",
-          target-signature ↦ "(I)I",
           bridge-signature ↦ "(I)I",
-          stream-class ↦ "java/util/stream/IntStream",
-          stream-method ↦ "map",
-          stream-signature ↦ "(Ljava/util/function/IntUnaryOperator;)Ljava/util/stream/IntStream;"
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$0",
+            signature ↦ "(I)I",
+            is-interface ↦ Φ̇.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/IntStream",
+            method ↦ "map",
+            signature ↦ "(Ljava/util/function/IntUnaryOperator;)Ljava/util/stream/IntStream;"
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

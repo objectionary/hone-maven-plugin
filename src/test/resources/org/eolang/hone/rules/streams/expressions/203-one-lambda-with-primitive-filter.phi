@@ -35,14 +35,19 @@
           method ↦ "test",
           interface ↦ "()Ljava/util/function/IntPredicate;",
           lambda-signature ↦ "(I)Z",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$1",
-          target-signature ↦ "(I)Z",
           bridge-signature ↦ "(I)Z",
-          stream-class ↦ "java/util/stream/IntStream",
-          stream-method ↦ "filter",
-          stream-signature ↦ "(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$1",
+            signature ↦ "(I)Z",
+            is-interface ↦ Φ̇.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/IntStream",
+            method ↦ "filter",
+            signature ↦ "(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

@@ -35,14 +35,19 @@
           method ↦ "accept",
           interface ↦ "()Ljava/util/function/BiConsumer;",
           lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$2",
-          target-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
           bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
-          stream-class ↦ "java/util/stream/Stream",
-          stream-method ↦ "mapMulti",
-          stream-signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$2",
+            signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+            is-interface ↦ Φ̇.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
         ⟧
       ⟧
     ⟧

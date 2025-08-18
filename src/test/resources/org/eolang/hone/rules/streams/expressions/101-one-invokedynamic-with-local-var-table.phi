@@ -9,10 +9,26 @@
       φ ↦ Φ.jeo.seq.of0
     ⟧,
     name ↦ "Foo",
-    j$main ↦ ⟦
+    j$defects ↦ ⟦
       φ ↦ Φ.jeo.method,
+      access ↦ 1,
+      descriptor ↦ "(Ljava/util/Map;)Ljava/util/Collection;",
+      signature ↦ "(Ljava/util/Map<Ljava/lang/String;Lcom/jcabi/xml/XML;>;)Ljava/util/Collection<Lorg/eolang/lints/Defect;>;",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        v1597 ↦ 5,
+        v1600 ↦ 5
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        arg0 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ "Ljava/util/Map;"
+        ⟧
+      ⟧,
       body ↦ ⟦
-        φ ↦ Φ.jeo.seq.of2,
         i2186 ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokedynamic,
           v2194 ↦ "apply",
@@ -50,8 +66,10 @@
           v2376 ↦ Φ̇.true
         ⟧
       ⟧,
-      local-variable-table ↦ ⟦⟧,
-      name ↦ "main"
+      local-variable-table ↦ ⟦
+        φ ↦ Φ.jeo.seq.of0
+      ⟧,
+      name ↦ "defects"
     ⟧
   ⟧
 ⟧}

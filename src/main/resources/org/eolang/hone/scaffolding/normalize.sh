@@ -50,6 +50,11 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${r}")"
   mkdir -p "$(dirname "${s}")"
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
+  if ! grep -qE '<o>(66-69-6C-74-65-72|6D-61-70)</o>' "${xi}"; then
+    cp "${xi}" "${xo}"
+    verbose "No filter() or map() in $(basename "${xi}"), skipped"
+    continue
+  fi
   phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"
   verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
   rm -f "${s}.*"

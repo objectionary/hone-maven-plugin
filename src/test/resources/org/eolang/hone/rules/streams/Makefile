@@ -69,6 +69,9 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
 	echo '$<'
+	phino --version
+	phino --help
+	phino rewrite --help
 	phino rewrite --sweet --input=xmir --nothing < $<
 	echo 'xmir to phi' && head $< && head $@
 

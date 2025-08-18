@@ -52,7 +52,7 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
   if ! grep -qE '<o>(66-69-6C-74-65-72|6D-61-70)</o>' "${xi}"; then
     cp "${xi}" "${xo}"
-    verbose "No filter() or map() in $(basename "${xi}"), skipped"
+    echo "No filter() or map() in $(basename "${xi}"), skipped"
     continue
   fi
   phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"

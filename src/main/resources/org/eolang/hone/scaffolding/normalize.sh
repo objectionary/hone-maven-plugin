@@ -56,7 +56,7 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${r}")"
   mkdir -p "$(dirname "${s}")"
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
-  if ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
+  if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
     cp "${xi}" "${xo}"
     echo "No grep-in for $(basename "${xi}"), skipped"
     continue

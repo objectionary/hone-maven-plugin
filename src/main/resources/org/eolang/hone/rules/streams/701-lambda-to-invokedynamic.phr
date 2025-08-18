@@ -12,14 +12,19 @@ pattern: |
       method ↦ 𝑒-method,
       interface ↦ 𝑒-interface,
       lambda-signature ↦ 𝑒-lambda-signature,
-      target-handle ↦ 𝑒-target-handle,
-      target-class ↦ 𝑒-target-class,
-      target-method ↦ 𝑒-target-method,
-      target-signature ↦ 𝑒-target-signature,
       bridge-signature ↦ 𝑒-bridge-signature,
-      stream-class ↦ 𝑒-stream-class,
-      stream-method ↦ 𝑒-stream-method,
-      stream-signature ↦ 𝑒-stream-signature
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧
     ⟧,
     𝐵-after
   ⟧
@@ -48,7 +53,7 @@ result: |
         i2 ↦ 𝑒-target-class,
         i3 ↦ 𝑒-target-method,
         i4 ↦ 𝑒-target-signature,
-        i5 ↦ Φ̇.false
+        i5 ↦ 𝑒-target-is-interface
       ⟧,
       i7 ↦ ⟦
         φ ↦ Φ.jeo.type,

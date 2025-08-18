@@ -7,25 +7,27 @@ pattern: |
   ⟦
     φ ↦ Φ.hone.boxed-primitive-filter,
     class ↦ 𝑒-class,
-    stream-class ↦ 𝑒-stream-class,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
-    bridge-signature ↦ 𝑒-bridge-signature
+    bridge-signature ↦ 𝑒-bridge-signature,
+    target ↦ ⟦
+      𝐵-target-before,
+      signature ↦ 𝑒-target-signature,
+      𝐵-target-after
+    ⟧
   ⟧
 result: |
   ⟦
     φ ↦ Φ.hone.𝜏-filter,
     opcode ↦ "invokestatic",
     class ↦ 𝑒-class,
-    target-handle ↦ 6,
-    target-class ↦ 𝑒-target-class,
-    target-method ↦ 𝑒-target-method,
-    target-signature ↦ 𝑒-target-signature,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-input,
     accepted ↦ 𝑒-accepted,
-    returned ↦ 𝑒-accepted
+    returned ↦ 𝑒-accepted,
+    target ↦ ⟦
+      𝐵-target-before,
+      signature ↦ 𝑒-target-signature,
+      𝐵-target-after
+    ⟧
   ⟧
 where:
   - meta: 𝑒-bridge-input

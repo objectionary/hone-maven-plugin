@@ -32,11 +32,15 @@
         a🌵3416 ↦ ⟦
           φ ↦ Φ.hone.primitive-map,
           class ↦ "Foo",
-          stream-class ↦ "java/util/stream/IntStream",
-          target-class ↦ "Foo",
-          target-method ↦ "acceptsDouble",
-          target-signature ↦ "(D)Ljava/lang/Integer;",
-          bridge-signature ↦ "(I)I"
+          stream-class ↦ "java/util/stream/IntStream",  
+          bridge-signature ↦ "(I)I",
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "Foo",
+            method ↦ "acceptsDouble",
+            signature ↦ "(D)Ljava/lang/Integer;",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

@@ -8,6 +8,7 @@ pattern: |
     φ ↦ Φ.jeo.class,
     version ↦ 𝑒-class-version,
     access ↦ 𝑒-class-access,
+    signature ↦ 𝑒-class-signature,
     supername ↦ 𝑒-class-supername,
     interfaces ↦ 𝑒-class-interfaces,
     name ↦ 𝑒-class,
@@ -28,12 +29,12 @@ pattern: |
             𝜏8 ↦ "metafactory",
             𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
             𝜏10 ↦ Φ̇.false,
-            𝐵10
+            ρ ↦ ∅
           ⟧,
           𝜏11 ↦ ⟦
             φ ↦ Φ.jeo.type,
             𝜏12 ↦ 𝑒-lambda-signature,
-            𝐵11
+            ρ ↦ ∅
           ⟧,
           𝜏13 ↦ ⟦
             φ ↦ Φ.jeo.handle,
@@ -41,15 +42,15 @@ pattern: |
             𝜏15 ↦ 𝑒-target-class,
             𝜏16 ↦ 𝑒-target-method,
             𝜏17 ↦ 𝑒-target-signature,
-            𝜏18 ↦ Φ̇.false,
-            𝐵12
+            𝜏18 ↦ 𝑒-target-is-interface,
+            ρ ↦ ∅
           ⟧,
           𝜏19 ↦ ⟦
             φ ↦ Φ.jeo.type,
             𝜏21 ↦ 𝑒-bridge-signature,
-            𝐵13
+            ρ ↦ ∅
           ⟧,
-          𝐵14
+          ρ ↦ ∅
         ⟧,
         𝜏-invokeinterface ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
@@ -57,10 +58,11 @@ pattern: |
           𝜏25 ↦ 𝑒-stream-method,
           𝜏26 ↦ 𝑒-stream-signature,
           𝜏27 ↦ Φ̇.true,
-          𝐵15
+          ρ ↦ ∅
         ⟧,
         𝐵-body-tail
       ⟧,
+      local-variable-table ↦ 𝑒-lvt,
       name ↦ 𝑒-function,
       ρ ↦ ∅
     ⟧,
@@ -71,6 +73,7 @@ result: |
     φ ↦ Φ.jeo.class,
     version ↦ 𝑒-class-version,
     access ↦ 𝑒-class-access,
+    signature ↦ 𝑒-class-signature,
     supername ↦ 𝑒-class-supername,
     interfaces ↦ 𝑒-class-interfaces,
     name ↦ 𝑒-class,
@@ -86,17 +89,23 @@ result: |
           method ↦ 𝑒-method,
           interface ↦ 𝑒-interface,
           lambda-signature ↦ 𝑒-lambda-signature,
-          target-handle ↦ 𝑒-target-handle,
-          target-class ↦ 𝑒-target-class,
-          target-method ↦ 𝑒-target-method,
-          target-signature ↦ 𝑒-target-signature,
           bridge-signature ↦ 𝑒-bridge-signature,
-          stream-class ↦ 𝑒-stream-class,
-          stream-method ↦ 𝑒-stream-method,
-          stream-signature ↦ 𝑒-stream-signature
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ 𝑒-stream-class,
+            method ↦ 𝑒-stream-method,
+            signature ↦ 𝑒-stream-signature
+          ⟧
         ⟧,
         𝐵-body-tail
       ⟧,
+      local-variable-table ↦ 𝑒-lvt,
       name ↦ 𝑒-function,
       ρ ↦ ∅
     ⟧,

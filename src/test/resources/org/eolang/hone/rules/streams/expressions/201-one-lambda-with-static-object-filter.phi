@@ -35,14 +35,19 @@
           method ↦ "test",
           interface ↦ "()Ljava/util/function/Predicate;",
           lambda-signature ↦ "(Ljava/lang/Object;)Z",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$0",
-          target-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Boolean;",
           bridge-signature ↦ "(Ljava/lang/Integer;)Z",
-          stream-class ↦ "java/util/stream/Stream",
-          stream-method ↦ "filter",
-          stream-signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$0",
+            signature ↦ "(Ljava/lang/Object;)Ljava/lang/Boolean;",
+            is-interface ↦ Φ̇.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "filter",
+            signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+          ⟧
         ⟧
       ⟧,
       name ↦ "lambda$main$0"

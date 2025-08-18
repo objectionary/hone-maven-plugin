@@ -37,11 +37,13 @@
           φ ↦ Φ.hone.transform,
           opcode ↦ "invokevirtual",
           class ↦ "Foo",
-          target-class ↦ "java/lang/Long",
-          target-method ↦ "doubleValue",
-          target-signature ↦ "()D",
           bridge-input ↦ "Ljava/lang/Long;",
-          bridge-output ↦ "Ljava/lang/Double;"
+          bridge-output ↦ "Ljava/lang/Double;",
+          target ↦ ⟦
+            class ↦ "java/lang/Long",
+            method ↦ "doubleValue",
+            signature ↦ "()D"
+          ⟧
         ⟧
       ⟧
     ⟧

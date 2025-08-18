@@ -37,14 +37,17 @@
           φ ↦ Φ.hone.map,
           opcode ↦ "invokevirtual",
           class ↦ "Foo",
-          target-handle ↦ 6,
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$0",
-          target-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
           bridge-input ↦ "Ljava/lang/Integer;",
           bridge-output ↦ "Ljava/lang/String;",
           accepted ↦ "Ljava/lang/Integer",
-          returned ↦ "Ljava/lang/String;"
+          returned ↦ "Ljava/lang/String;",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "java/lang/Integer",
+            method ↦ "valueOf",
+            signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧
     ⟧

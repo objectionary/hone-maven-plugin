@@ -36,11 +36,14 @@
         a🌵9906 ↦ ⟦
           φ ↦ Φ.hone.boxed-primitive-filter,
           class ↦ "Foo",
-          stream-class ↦ "java/util/stream/IntStream",
-          target-class ↦ "Foo",
-          target-method ↦ "lambda$main$0",
-          target-signature ↦ "(I)Z",
-          bridge-signature ↦ "(I)Z"
+          bridge-signature ↦ "(I)Z",
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "Foo",
+            method ↦ "lambda$main$0",
+            signature ↦ "(I)Z",
+            is-interface ↦ Φ̇.false
+          ⟧
         ⟧
       ⟧
     ⟧

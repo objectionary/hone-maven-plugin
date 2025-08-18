@@ -68,12 +68,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 	@$(call check_xml,$@,"after-disassemble")
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
-	echo '$<'
-	phino --version
-	phino --help
-	phino rewrite --help
-	phino rewrite --sweet --input=xmir --nothing < $<
-	echo 'xmir to phi' && head $< && head $@
+	phino rewrite --sweet --input=xmir --nothing < $< > $@
 
 .SILENT:
 $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
@@ -92,12 +87,10 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 		fi
 		cp "$${n}" $@
 	done
-	echo 'phi to phi' && cat $@
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
 	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
 	@$(call check_xml,$@,"after-phino")
-	echo 'phi to xmir' && cat $@
 
 .SILENT:
 $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile

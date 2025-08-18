@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 .ONESHELL:
-.SHELLFLAGS := -e -o pipefail -c
+.SHELLFLAGS := -ex -o pipefail -c
 SHELL := bash
 .SECONDARY:
 .PHONY: all clean test env diff jeo-test run
@@ -69,7 +69,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
 	echo '$<'
-	phino rewrite --sweet --input=xmir --nothing < $< > $@
+	phino rewrite --sweet --input=xmir --nothing < $<
 	echo 'xmir to phi' && head $< && head $@
 
 .SILENT:

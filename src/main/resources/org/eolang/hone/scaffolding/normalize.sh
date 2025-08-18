@@ -37,6 +37,12 @@ echo "Phino version: $(phino --version | xargs)"
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 echo "Using ${#rules[@]} rule(s)"
 
+if [ -n "${HONE_GREP_IN}" ]; then
+  echo "Using grep-in: ${HONE_GREP_IN}"
+fi
+
+echo "Phino version: $(phino --version | xargs)"
+
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
 idx=0
@@ -50,9 +56,9 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${r}")"
   mkdir -p "$(dirname "${s}")"
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
-  if ! grep -qE '<o>(66-69-6C-74-65-72|6D-61-70)</o>' "${xi}"; then
+  if ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
     cp "${xi}" "${xo}"
-    echo "No filter() or map() in $(basename "${xi}"), skipped"
+    echo "No grep-in for $(basename "${xi}"), skipped"
     continue
   fi
   phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"

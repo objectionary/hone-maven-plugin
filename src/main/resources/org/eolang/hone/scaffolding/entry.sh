@@ -109,6 +109,7 @@ fi
     "-Dexec.phino.script=${SELF}/normalize.sh" \
     "-Dexec.phino.verbose=${VERBOSE}" \
     "-Dexec.phino.rules=${RULES}" \
+    "-Dexec.phino.grep-in=${GREP_IN}" \
     "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \
     "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
     "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \

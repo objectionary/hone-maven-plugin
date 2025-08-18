@@ -37,6 +37,12 @@ echo "Phino version: $(phino --version | xargs)"
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 echo "Using ${#rules[@]} rule(s)"
 
+if [ -n "${HONE_GREP_IN}" ]; then
+  echo "Using grep-in: ${HONE_GREP_IN}"
+fi
+
+echo "Phino version: $(phino --version | xargs)"
+
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
 idx=0
@@ -50,10 +56,16 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${r}")"
   mkdir -p "$(dirname "${s}")"
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
+  if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
+    cp "${xi}" "${xo}"
+    echo "No grep-in for $(basename "${xi}"), skipped"
+    continue
+  fi
   phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"
   verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
   rm -f "${s}.*"
   pos=0
+  start=$(date '+%s.%N')
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#rules[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${HONE_FROM}/${f}.phi" "${s}"
@@ -78,10 +90,11 @@ while IFS= read -r f; do
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${s}")
+  per=$(perl -E "say int(${s_lines} / ( $(date '+%s.%N') - ${start} ))")
   if cmp -s "${r}" "${s}"; then
-    echo "No changes in ${idx}/${total} $(basename "${s}") (${s_size}, ${s_lines} lines)"
+    echo "No changes in ${idx}/${total} $(basename "${s}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    echo "Modified ${idx}/${total} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
+    echo "Modified ${idx}/${total} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

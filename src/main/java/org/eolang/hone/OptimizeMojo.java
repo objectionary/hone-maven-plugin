@@ -111,6 +111,25 @@ public final class OptimizeMojo extends AbstractMojo {
     private String jeoVersion;
 
     /**
+     * Grep XMIR files to rewrite.
+     *
+     * <p>Using this regular expression you can filter-in (include) XMIR files that
+     * need to be rewritten. It's advised to use this regex in order
+     * to save time. This is a good example, to filter-in only the files
+     * that contain filter() and map() methods:</p>
+     *
+     * <pre>"&gt;o&lt;(66-69-6C-74-65-72|6D-61-70)&gt;/o&lt;</pre>
+     *
+     * <p>Here, <tt>66-69-6C-74-65-72</tt> stands for the <tt>"filter"</tt>
+     * and <tt>6D-61-70</tt> for the <tt>"map"</tt>, in hexadecimal format.</p>
+     *
+     * @since 0.10.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.grep-in", defaultValue = ".*")
+    private String grepIn;
+
+    /**
      * Small steps or big steps?
      *
      * <p>Small steps mode will apply one rule at a time, producing separate
@@ -279,6 +298,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("VERBOSE=%s", Logger.isDebugEnabled(this))
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("GREP_IN=%s", this.grepIn)
             )
         );
         command.addAll(

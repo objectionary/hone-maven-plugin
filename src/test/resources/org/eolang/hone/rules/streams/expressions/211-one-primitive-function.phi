@@ -32,7 +32,7 @@
         a🌵3416 ↦ ⟦
           φ ↦ Φ.hone.primitive-map,
           class ↦ "Foo",
-          stream-class ↦ "java/util/stream/IntStream",  
+          stream-class ↦ "java/util/stream/IntStream",
           bridge-signature ↦ "(I)I",
           target ↦ ⟦
             handle ↦ 5,

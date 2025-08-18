@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: remove-self-reference-labels
+pattern: |
+  ⟦
+    𝐵-body-head,
+    𝜏-label ↦ ⟦
+      φ ↦ Φ.jeo.label,
+      𝜏-label-value ↦ 𝑒-label-value,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-line-number ↦ ⟦
+      φ ↦ Φ.jeo.line-number,
+      number ↦ 𝑒-number,
+      𝜏-ln-label ↦ ⟦
+        φ ↦ Φ.jeo.label,
+        𝜏-ln-label-value ↦ 𝑒-label-value,
+        ρ ↦ ∅
+      ⟧,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-body-tail
+  ⟧
+result: |
+  ⟦
+    𝐵-body-head,
+    𝐵-body-tail
+  ⟧

@@ -66,11 +66,11 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"
 	@$(call check_xml,$@,"after-disassemble")
-	echo 'bc to xmir' && cat $@
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
+	echo '$<'
 	phino rewrite --sweet --input=xmir --nothing < $< > $@
-	echo 'xmir to phi' && cat $@
+# 	echo 'xmir to phi' && cat $<
 
 .SILENT:
 $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile

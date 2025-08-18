@@ -5,7 +5,7 @@
 .SHELLFLAGS := -e -o pipefail -c
 SHELL := bash
 .SECONDARY:
-.PHONY: all clean test diff jeo-test run
+.PHONY: all clean test env diff jeo-test run
 
 RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules/streams
 TESTS_DIR=expressions
@@ -19,7 +19,10 @@ TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
 JEO_VERSION=0.13.9
 
-all: test jeo-test run
+all: env test jeo-test run
+
+env:
+	phino --version
 
 run: $(TARGET)/after/Foo.bc diff
 
@@ -62,7 +65,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 		"-Djeo.disassemble.mode=short" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"
-	@$(call check_xml,$@)
+	@$(call check_xml,$@,"after disassemble")
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
 	phino rewrite --sweet --input=xmir --nothing < $< > $@
@@ -87,14 +90,14 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
 	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
-	@$(call check_xml,$@)
+	@$(call check_xml,$@,"after phino")
 
 .SILENT:
 $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile
 	mkdir -p "$(TARGET)/tmp/assemble"
 	rm -rf "$(TARGET)/tmp/assemble"/*
 	cp $< "$(TARGET)/tmp/assemble"
-	@$(call check_xml,$<)
+	@$(call check_xml,$<,"before assemble")
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):assemble" \
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
 		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \
@@ -118,5 +121,9 @@ $(TARGET)/after:
 	mkdir -p "$(TARGET)/after"
 
 define check_xml
-	xmllint --quiet --xpath '/object/o/@name' "$(1)" > /dev/null || printf 'XML in %s is broken:\n===\n%s\n===\n' "$(1)" "$$(cat "$(1)")"
+	if [ "$$(head -1 "$(1)")" == '' ]; then
+		printf "The XML file %s at %s is empty\n" "$(2)" "$(1)"
+		exit 1
+	fi
+	xmllint --quiet --xpath '/object/o/@name' "$(1)" > /dev/null || printf 'XML %s in %s is broken:\n===\n%s\n===\n' "$(2)" "$(1)" "$$(cat "$(1)")"
 endef

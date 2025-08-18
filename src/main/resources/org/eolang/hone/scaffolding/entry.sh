@@ -82,11 +82,11 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
-printf 'Using Java: %s' "$(java --version | head -1)"
+printf 'Using Java: %s\n' "$(java --version | head -1)"
 
-printf 'Using Maven: %s' "$(mvn --version | head -1)"
+printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 
-printf 'Using the following rules:\n\t%s' "$(echo "${RULES}" | gsed 's/ /\n\t/g')"
+printf 'Using the following rules:\n\t%s\n' "${RULES// /\n\t/g}"
 
 declare -a jeo_opts=()
 if [ -n "${INCLUDES}" ]; then

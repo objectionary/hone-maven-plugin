@@ -54,6 +54,7 @@ while IFS= read -r f; do
   verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
   rm -f "${s}.*"
   pos=0
+  start=$(date '+%s.%N')
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#rules[@]} rule(s) one by one to $(basename "${r}")..."
     cp "${HONE_FROM}/${f}.phi" "${s}"
@@ -78,10 +79,11 @@ while IFS= read -r f; do
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${s}")
+  per=$(perl -E "say floor(${s_lines} / ( $(date '+%s.%N') - ${start} ))")
   if cmp -s "${r}" "${s}"; then
-    echo "No changes in ${idx}/${total} $(basename "${s}") (${s_size}, ${s_lines} lines)"
+    echo "No changes in ${idx}/${total} $(basename "${s}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    echo "Modified ${idx}/${total} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed"
+    echo "Modified ${idx}/${total} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
   verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

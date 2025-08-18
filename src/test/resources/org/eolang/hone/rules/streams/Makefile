@@ -62,6 +62,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 		"-Djeo.disassemble.mode=short" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"
+	xmllint --quiet --xpath '/object/o/@name' "$@"
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
 	phino rewrite --sweet --input=xmir --nothing < $< > $@
@@ -92,6 +93,7 @@ $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile
 	mkdir -p "$(TARGET)/tmp/assemble"
 	rm -rf "$(TARGET)/tmp/assemble"/*
 	cp $< "$(TARGET)/tmp/assemble"
+	xmllint --quiet --xpath '/object/o/@name' "$<"
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):assemble" \
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
 		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 .ONESHELL:
-.SHELLFLAGS := -e -o pipefail -c
+.SHELLFLAGS := -ex -o pipefail -c
 SHELL := bash
 .SECONDARY:
 .PHONY: all clean test diff jeo-test run

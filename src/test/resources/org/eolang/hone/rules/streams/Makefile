@@ -62,7 +62,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 		"-Djeo.disassemble.mode=short" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
 		"-Djeo.disassemble.outputDir=$$(dirname $@)"
-	xmllint --quiet --xpath '/object/o/@name' "$@"
+	@$(call check_xml,$@)
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
 	phino rewrite --sweet --input=xmir --nothing < $< > $@
@@ -87,14 +87,14 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
 	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
-	xmllint --quiet --xpath '/object/o/@name' "$@"
+	@$(call check_xml,$@)
 
 .SILENT:
 $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile
 	mkdir -p "$(TARGET)/tmp/assemble"
 	rm -rf "$(TARGET)/tmp/assemble"/*
 	cp $< "$(TARGET)/tmp/assemble"
-	xmllint --quiet --xpath '/object/o/@name' "$<"
+	@$(call check_xml,$<)
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):assemble" \
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
 		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \
@@ -116,3 +116,7 @@ $(TARGET)/before:
 
 $(TARGET)/after:
 	mkdir -p "$(TARGET)/after"
+
+define check_xml
+	xmllint --quiet --xpath '/object/o/@name' "$(1)" >/dev/null || printf 'XML in %s is broken:\n%s' "$(1)" "$$(cat "$(1)")"
+endef

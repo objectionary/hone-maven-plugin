@@ -24,7 +24,7 @@ jobs:
           sudo wget -q -o /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod +x /usr/bin/phino
           phino --version
-      - run: 
+      - run: |
           phino --version
           echo 'version'
           make -C src/test/resources/org/eolang/hone/rules/streams

@@ -87,6 +87,7 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
 	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
+	xmllint --quiet --xpath '/object/o/@name' "$@"
 
 .SILENT:
 $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile

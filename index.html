@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
     <head>
         <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <title>Hone Maven Plugin – hone-maven-plugin</title>
         <link media="all" rel="stylesheet" type="text/css" href="./css/jcabi.css"/>
-                    <meta name="author" content="Yegor Bugayenko" />
+                    <meta name="author" content="Yegor Bugayenko"/>
                                                     <script src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
         <script src="./js/jcabi.js"></script>
     </head>
@@ -92,7 +92,7 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.8.2</strong>
+                                    <strong itemprop="version">0.9.0</strong>
                                 </li>
                                 <li>
                                     $dateFormat.applyPattern("yyyy-MM-dd'T'hh:mm:ss'Z'")
@@ -118,12 +118,13 @@
     &lt;plugin&gt;
       &lt;groupId&gt;org.eolang&lt;/groupId&gt;
       &lt;artifactId&gt;hone-maven-plugin&lt;/artifactId&gt;
-      &lt;version&gt;0.8.2&lt;/version&gt;
+      &lt;version&gt;0.9.0&lt;/version&gt;
       &lt;executions&gt;
         &lt;execution&gt;
-          &lt;phase&gt;process-classes&lt;/phase&gt;
           &lt;goals&gt;
+            &lt;goal&gt;pull&lt;/goal&gt;
             &lt;goal&gt;optimize&lt;/goal&gt;
+            &lt;goal&gt;rmi&lt;/goal&gt;
           &lt;/goals&gt;
         &lt;/execution&gt;
       &lt;/executions&gt;
@@ -140,7 +141,7 @@
                                                                             2024-${currentYear}
                                             </div>
                     <div>Objectionary, All Rights Reserved.</div>
-                    <div><a href="http://maven.apache.org/privacy-policy.html">Privacy Policy</a>.</div>
+                    <div><a href="https://maven.apache.org/privacy-policy.html">Privacy Policy</a>.</div>
                 </footer>
             </div>
         </div>

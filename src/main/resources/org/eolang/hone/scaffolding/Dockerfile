@@ -16,7 +16,7 @@ RUN apt-get update \
   && apt-get install --yes --no-install-recommends \
     build-essential=* \
     ca-certificates=* \
-    curl=* wget=* \
+    wget=* \
     gnupg2=* \
     libgmp-dev=* \
     libxml2-utils=* \
@@ -58,7 +58,7 @@ RUN echo "export M2_HOME=/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}" 
 ARG GHC=9.6.7
 ARG CABAL=3.12.1.0
 RUN gpg --batch --recv-keys ECA44F5A172EDAD947F39E3D4275CDA6A29BED43 \
-  && curl https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup > /usr/bin/ghcup \
+  && wget https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup -O /usr/bin/ghcup \
   && chmod +x /usr/bin/ghcup \
   && ghcup config set gpg-setting GPGStrict \
   && ghcup -v install ghc --isolate /usr/local --force "${GHC}" \

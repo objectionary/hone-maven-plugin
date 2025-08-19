@@ -4,6 +4,11 @@
 
 set -e -o pipefail
 
+if [ "${DEBUG}" == 'true' ]; then
+  echo "We are in debug mode, printing all commands..."
+  set -x
+fi
+
 SELF=$(dirname "$0")
 
 if [ -z "${TARGET}" ]; then
@@ -86,7 +91,7 @@ printf 'Using Java: %s\n' "$(java --version | head -1)"
 
 printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 
-printf 'Using the following rules:\n\t%s\n' "${RULES// /\n\t/g}"
+printf 'Using the following rules:\n\t%b\n' "${RULES// /\n\t/g}"
 
 declare -a jeo_opts=()
 if [ -n "${INCLUDES}" ]; then
@@ -108,6 +113,7 @@ fi
     exec:exec \
     "-Dexec.phino.script=${SELF}/normalize.sh" \
     "-Dexec.phino.verbose=${VERBOSE}" \
+    "-Dexec.phino.debug=${DEBUG}" \
     "-Dexec.phino.rules=${RULES}" \
     "-Dexec.phino.grep-in=${GREP_IN}" \
     "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \

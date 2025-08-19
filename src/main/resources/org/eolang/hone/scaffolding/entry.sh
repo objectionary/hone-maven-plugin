@@ -91,7 +91,7 @@ printf 'Using Java: %s\n' "$(java --version | head -1)"
 
 printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 
-printf 'Using the following rules:\n\t%b\n' "${RULES// /\n\t/g}"
+printf 'Using the following rules:\n\t%b\n' "${RULES// /\\n\\t}"
 
 declare -a jeo_opts=()
 if [ -n "${INCLUDES}" ]; then

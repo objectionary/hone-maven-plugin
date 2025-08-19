@@ -5,6 +5,7 @@
 set -e -o pipefail
 
 if [ "${HONE_DEBUG}" == 'true' ]; then
+  echo "We are in debug mode, printing all commands..."
   set -x
 fi
 

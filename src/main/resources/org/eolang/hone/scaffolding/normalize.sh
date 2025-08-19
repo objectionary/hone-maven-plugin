@@ -20,8 +20,8 @@ function rewrite {
   idx=${1}
   phi=${2}
   pho=${3}
-  xo=${4}
-  xi=${5}
+  xi=${4}
+  xo=${5}
   phinopts=()
   if [ "${HONE_DEBUG}" == 'true' ]; then
     phinopts+=(--log-level=debug)
@@ -121,10 +121,11 @@ idx=0
 while IFS= read -r f; do
   idx=$(( idx + 1 ))
   f=${f%.*}
-  "${0}" \
-    "${idx}/${total}" \
-    "${HONE_FROM}/${f}.phi" \
-    "${HONE_TO}/${f}.phi" \
-    "${HONE_XMIR_OUT}/${f}.xmir" \
-    "${HONE_XMIR_IN}/${f}.xmir"
+  phi="${HONE_FROM}/${f}.phi"
+  pho="${HONE_TO}/${f}.phi"
+  xi="${HONE_XMIR_IN}/${f}.xmir"
+  xo="${HONE_XMIR_OUT}/${f}.xmir"
+  if ! timeout "${HONE_TIMEOUT}" "${0}" "${idx}/${total}" "${phi}" "${pho}" "${xi}" "${xo}"; then
+    cp "${xi}" "${xo}"
+  fi
 done <<< "${files}"

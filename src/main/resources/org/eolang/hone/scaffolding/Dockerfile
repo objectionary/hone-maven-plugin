@@ -11,6 +11,21 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /hone
 
+# To use UTF-8 locale:
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+RUN apt-get update && apt-get install --yes --no-install-recommends locales=* \
+  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+  && locale-gen \
+  && update-locale LANG=en_US.UTF-8 \
+  && printf 'LC_ALL=en_US.UTF-8\nLANG=en_US.UTF-8\nLANGUAGE=en_US.UTF-8\n' > /etc/default/locale \
+  && printf 'export LC_ALL=en_US.UTF-8\n' >> "${HOME}/.profile" \
+  && printf 'export LANG=en_US.UTF-8\n' >> "${HOME}/.profile" \
+  && printf 'export LANGUAGE=en_US.UTF-8\n' >> "${HOME}/.profile" \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install system dependencies:
 RUN apt-get update \
   && apt-get install --yes --no-install-recommends \

@@ -32,16 +32,16 @@ function rewrite {
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
   if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
     cp "${xi}" "${xo}"
-    echo "No grep-in match for $(basename "${xi}"), skipping"
+    echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
     return
   fi
   phino rewrite "${phinopts[@]}" --input=xmir --sweet --nothing "${xi}" > "${phi}"
-  verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
+  verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"
   pos=0
   start=$(date '+%s.%N')
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
-    verbose "Applying ${#rules[@]} rule(s) one by one to $(basename "${phi}")..."
+    verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
     cp "${phi}" "${pho}"
     for rule in "${rules[@]}"; do
       m=$(basename "${rule}" .yml)
@@ -71,11 +71,11 @@ function rewrite {
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): $(diff "${phi}" "${pho}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
   fi
   phino rewrite "${phinopts[@]}" --nothing --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
-  verbose "Converted PHI to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
+  verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then
-    verbose "No changes made to $(basename "${xi}")"
+    verbose "No changes made to ${idx} $(basename "${xi}")"
   else
-    verbose "Changes made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
+    verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
 }
 
@@ -125,7 +125,9 @@ while IFS= read -r f; do
   pho="${HONE_TO}/${f}.phi"
   xi="${HONE_XMIR_IN}/${f}.xmir"
   xo="${HONE_XMIR_OUT}/${f}.xmir"
-  if ! timeout "${HONE_TIMEOUT}" "${0}" "${idx}/${total}" "${phi}" "${pho}" "${xi}" "${xo}"; then
+  i="${idx}/${total}"
+  if ! timeout "${HONE_TIMEOUT}" "${0}" "${i}" "${phi}" "${pho}" "${xi}" "${xo}"; then
+    echo "Timeout in ${i} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
     cp "${xi}" "${xo}"
   fi
 done <<< "${files}"

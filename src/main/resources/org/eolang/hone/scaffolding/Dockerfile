@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     build-essential=* \
     ca-certificates=* \
     curl=* \
-    parallel=* \
     gnupg2=* \
     libgmp-dev=* \
     lsb-release=* \
@@ -49,6 +48,8 @@ LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
 LABEL "version"="0.0.0"
 
+ENV HOME=/root
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
@@ -60,9 +61,11 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     ca-certificates=* \
     curl=* \
     wget=* \
+    parallel=* \
     libgmp10=* \
     libxml2-utils=* \
     tree=* \
+    bzip2=* \
     unzip=* \
   && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
   && locale-gen \

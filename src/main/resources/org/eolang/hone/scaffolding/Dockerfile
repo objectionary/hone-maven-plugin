@@ -3,6 +3,8 @@
 
 FROM ubuntu:24.04 AS builder
 
+SHELL ["/bin/bash", "-e", "-c", "-o", "pipefail"]
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8

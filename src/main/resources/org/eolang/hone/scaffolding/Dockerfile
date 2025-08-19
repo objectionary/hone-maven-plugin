@@ -16,6 +16,7 @@ RUN apt-get update \
   && apt-get install --yes --no-install-recommends \
     build-essential=* \
     ca-certificates=* \
+    curl=* \
     wget=* \
     gnupg2=* \
     libgmp-dev=* \

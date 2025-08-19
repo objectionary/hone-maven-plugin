@@ -59,7 +59,7 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.11.0</strong>
+                                    <strong itemprop="version">0.11.1</strong>
                                 </li>
                                 <li>
                                     $dateFormat.applyPattern("yyyy-MM-dd'T'hh:mm:ss'Z'")
@@ -79,7 +79,7 @@
                             <section><a id="hone.3Aoptimize"></a>
 <h1>hone:optimize</h1>
 <p><strong>Full name</strong>:</p>
-<p>org.eolang:hone-maven-plugin:0.11.0:optimize</p>
+<p>org.eolang:hone-maven-plugin:0.11.1:optimize</p>
 <p><strong>Description</strong>:</p>
 <p>Converts Bytecode to Bytecode in order to make it faster. 
 <p>This goal takes every <code>.class</code> file from the <tt>target/classes/</tt> directory, converts it to <code>.xmir</code> format (which is XML representation of <a href="https://www.eolang.org">EO</a>), then converts <code>.xmir</code> to <code>.phi</code> (which is <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>), then optimizes it via <a href="https://github.com/objectionary/phino">phino</a>, and then back to <code>.xmir</code> and to <code>.class</code>. As a result, you obtain optimized Bytecode in the <tt>target/classes/</tt> directory, which supposedly works faster than before.</p>
@@ -145,7 +145,7 @@
 <td><a href="#image"><code>&lt;image&gt;</code></a></td>
 <td><code>String</code></td>
 <td><code>0.1.0</code></td>
-<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone:0.11.0</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
+<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone:0.11.1</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
 <tr class="a">
 <td><a href="#includes"><code>&lt;includes&gt;</code></a></td>
 <td><code>String[]</code></td>
@@ -271,7 +271,7 @@
 <li><strong>Since</strong>: <code>0.1.0</code></li>
 <li><strong>Required</strong>: <code>No</code></li>
 <li><strong>User Property</strong>: <code>hone.image</code></li>
-<li><strong>Default</strong>: <code>yegor256/hone:0.11.0</code></li></ul><hr /></section><a id="includes"></a><section><a id="a.3Cincludes.3E"></a>
+<li><strong>Default</strong>: <code>yegor256/hone:0.11.1</code></li></ul><hr /></section><a id="includes"></a><section><a id="a.3Cincludes.3E"></a>
 <h3>&lt;includes&gt;</h3>
 <div>Include patterns for .class files. 
 <p>Array of patterns to include specific <code>.class</code> files for optimization. If not specified, all <code>.class</code> files will be included.</p>

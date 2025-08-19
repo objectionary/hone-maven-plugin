@@ -79,8 +79,25 @@ function rewrite {
   fi
 }
 
-if [ -n "$*" ]; then
-  rewrite "$@"
+function rewrite_with_timeout {
+  idx=${1}
+  phi=${2}
+  pho=${3}
+  xi=${4}
+  xo=${5}
+  if ! timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@"; then
+    echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
+    cp "${xi}" "${xo}"
+  fi
+}
+
+if [ "${1}" == 'rewrite' ]; then
+  rewrite "${@:2}"
+  exit
+fi
+
+if [ "${1}" == 'rewrite_with_timeout' ]; then
+  rewrite_with_timeout "${@:2}"
   exit
 fi
 
@@ -126,8 +143,5 @@ while IFS= read -r f; do
   xi="${HONE_XMIR_IN}/${f}.xmir"
   xo="${HONE_XMIR_OUT}/${f}.xmir"
   i="${idx}/${total}"
-  if ! timeout "${HONE_TIMEOUT}" "${0}" "${i}" "${phi}" "${pho}" "${xi}" "${xo}"; then
-    echo "Timeout in ${i} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
-    cp "${xi}" "${xo}"
-  fi
+  "${0}" rewrite_with_timeout "${i}" "${phi}" "${pho}" "${xi}" "${xo}"
 done <<< "${files}"

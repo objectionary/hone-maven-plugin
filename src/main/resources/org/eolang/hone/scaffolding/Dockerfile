@@ -40,8 +40,6 @@ ARG PHINO_VERSION=0.0.0.0
 RUN cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO_VERSION}" \
   && find /root -name phino -type f 2>/dev/null | head -1 | xargs -I {} cp {} /usr/local/bin/phino \
   && chmod +x /usr/local/bin/phino \
-  && strip /usr/local/bin/phino \
-  && ldd /usr/local/bin/phino | grep "=>" | awk '{print $3}' | xargs -I {} cp {} /tmp/ 2>/dev/null || true \
   && /usr/local/bin/phino --version
 
 FROM eclipse-temurin:17-jre-jammy
@@ -84,7 +82,6 @@ WORKDIR /hone
 
 # Copy phino binary and its dependencies from builder:
 COPY --from=builder /usr/local/bin/phino /usr/bin/phino
-COPY --from=builder /tmp/*.so* /usr/lib/x86_64-linux-gnu/
 RUN phino --version
 
 COPY in-docker-pom.xml pom.xml

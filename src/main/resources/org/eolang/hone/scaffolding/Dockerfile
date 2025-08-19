@@ -58,7 +58,7 @@ RUN echo "export M2_HOME=/usr/local/apache-maven/apache-maven-${MAVEN_VERSION}" 
 ARG GHC=9.6.7
 ARG CABAL=3.12.1.0
 RUN gpg --batch --recv-keys ECA44F5A172EDAD947F39E3D4275CDA6A29BED43 \
-  && wget https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup -O /usr/bin/ghcup \
+  && wget --quiet https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup -O /usr/bin/ghcup \
   && chmod +x /usr/bin/ghcup \
   && ghcup config set gpg-setting GPGStrict \
   && ghcup -v install ghc --isolate /usr/local --force "${GHC}" \

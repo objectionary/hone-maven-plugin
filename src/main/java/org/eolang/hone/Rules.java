@@ -81,10 +81,13 @@ final class Rules {
         final Collection<String> files = new LinkedList<>();
         for (final String name : Rules.discover()) {
             if (!this.matches(name)) {
+                Logger.debug(this, "Rule %s doesn't match", name);
                 continue;
             }
+            Logger.debug(this, "Rule %s matched", name);
             files.add(name);
         }
+        Logger.info(this, "Found %d rule(s) by: %s", files.size(), this.patterns);
         return files;
     }
 
@@ -95,12 +98,12 @@ final class Rules {
      */
     public void copyTo(final Path dir) throws IOException {
         if (dir.toFile().mkdirs()) {
-            Logger.debug(this, "Directory created at %[file]s", dir);
+            Logger.info(this, "Directory created at %[file]s", dir);
         }
         for (final String file : this.yamls()) {
             final Path target = dir.resolve(file);
             if (target.toFile().getParentFile().mkdirs()) {
-                Logger.debug(this, "Directory created for %[file]s", target);
+                Logger.info(this, "Directory created for %[file]s", target);
             }
             new IoChecked<>(
                 new LengthOf(

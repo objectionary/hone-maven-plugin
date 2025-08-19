@@ -229,7 +229,7 @@ public final class OptimizeMojo extends AbstractMojo {
     public void exec() throws IOException {
         final long start = System.currentTimeMillis();
         if (this.target.mkdirs()) {
-            Logger.debug(this, "Target directory '%s' created", this.target);
+            Logger.info(this, "Target directory '%s' created", this.target);
         }
         final String tdir = "/target";
         final String cdir = "/eo-cache";
@@ -245,11 +245,11 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         final Path extdir = this.target.toPath().resolve("hone-extra");
         if (extdir.toFile().mkdirs()) {
-            Logger.debug(this, "Directory %[file]s created", extdir);
+            Logger.info(this, "Directory %[file]s created", extdir);
         }
         if (this.extra != null) {
             if (extdir.toFile().mkdirs()) {
-                Logger.debug(this, "Directory %[file]s created", extdir);
+                Logger.info(this, "Directory %[file]s created", extdir);
             }
             for (final String ext : this.extra) {
                 final Path src = Paths.get(ext);
@@ -289,7 +289,7 @@ public final class OptimizeMojo extends AbstractMojo {
             );
         }
         if (this.eoVersion == null) {
-            Logger.debug(this, "EO version is not set, we use the default one");
+            Logger.info(this, "EO version is not set, we use the default one");
         } else {
             command.addAll(
                 Arrays.asList(
@@ -298,7 +298,7 @@ public final class OptimizeMojo extends AbstractMojo {
             );
         }
         if (this.jeoVersion == null) {
-            Logger.debug(this, "JEO version is not set, we use the default one");
+            Logger.info(this, "JEO version is not set, we use the default one");
         } else {
             command.addAll(
                 Arrays.asList(

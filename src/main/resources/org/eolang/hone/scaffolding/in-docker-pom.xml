@@ -51,6 +51,7 @@
               <HONE_XMIR_OUT>${exec.phino.xmir-out}</HONE_XMIR_OUT>
               <HONE_SMALL_STEPS>${exec.phino.small-steps}</HONE_SMALL_STEPS>
               <HONE_MAX_DEPTH>${exec.phino.max-depth}</HONE_MAX_DEPTH>
+              <HONE_TIMEOUT>${exec.phino.timeout}</HONE_TIMEOUT>
             </environmentVariables>
           </configuration>
         </plugin>

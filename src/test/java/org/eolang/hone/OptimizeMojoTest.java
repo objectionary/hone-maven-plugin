@@ -119,6 +119,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize")
                     .configuration()
+                    .set("debug", "true")
                     .set("image", image);
                 f.exec("test");
                 MatcherAssert.assertThat(

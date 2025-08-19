@@ -47,6 +47,7 @@ import org.cactoos.iterable.Mapped;
  * @since 0.1.0
  * @checkstyle CyclomaticComplexityCheck (500 lines)
  * @checkstyle NPathComplexityCheck (500 lines)
+ * @checkstyle ExecutableStatementCountCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -165,14 +166,12 @@ public final class OptimizeMojo extends AbstractMojo {
     private int maxDepth;
 
     /**
-     * How many milliseconds to spend on each .phi file tops?
-     *
-     * <p>Zero means no timeout.</p>
+     * How many seconds to spend on each .phi file tops?
      *
      * @since 0.11.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.timeout", defaultValue = "999999999")
+    @Parameter(property = "hone.timeout", defaultValue = "999")
     private int timeout;
 
     /**

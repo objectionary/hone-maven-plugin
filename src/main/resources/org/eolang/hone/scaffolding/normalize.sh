@@ -18,16 +18,16 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
 function rewrite {
   idx=${1}
-  r=${2}
-  s=${3}
+  phi=${2}
+  pho=${3}
   xo=${4}
   xi=${5}
   phinopts=()
   if [ "${HONE_DEBUG}" == 'true' ]; then
     phinopts+=(--log-level=debug)
   fi
-  mkdir -p "$(dirname "${r}")"
-  mkdir -p "$(dirname "${s}")"
+  mkdir -p "$(dirname "${phi}")"
+  mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
   if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
@@ -35,42 +35,42 @@ function rewrite {
     echo "No grep-in match for $(basename "${xi}"), skipping"
     return
   fi
-  phino rewrite "${phinopts[*]}" --input=xmir --sweet --nothing "${xi}" > "${r}"
-  verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${r}") ($(du -sh "${r}" | cut -f1))"
-  rm -f "${s}.*"
+  phino rewrite "${phinopts[@]}" --input=xmir --sweet --nothing "${xi}" > "${phi}"
+  verbose "Converted XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
+  rm -f "${pho}.*"
   pos=0
   start=$(date '+%s.%N')
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
-    verbose "Applying ${#rules[@]} rule(s) one by one to $(basename "${r}")..."
-    cp "${HONE_FROM}/${f}.phi" "${s}"
+    verbose "Applying ${#rules[@]} rule(s) one by one to $(basename "${phi}")..."
+    cp "${phi}" "${pho}"
     for rule in "${rules[@]}"; do
       m=$(basename "${rule}" .yml)
       pos=$(( pos + 1 ))
-      t="${HONE_TO}/${f}.phi.${pos}"
-      phino rewrite "${phinopts[*]}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${s}" > "${t}"
-      if cmp -s "${s}" "${t}"; then
+      t="${pho}.${pos}"
+      phino rewrite "${phinopts[@]}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}" > "${t}"
+      if cmp -s "${pho}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"
       else
-        verbose "  $(diff "${s}" "${t}" | grep -cE '^[><]') lines changed by '${m}' in $(basename "${t}")"
+        verbose "  $(diff "${pho}" "${t}" | grep -cE '^[><]') lines changed by '${m}' in $(basename "${t}")"
       fi
-      cp "${t}" "${s}"
+      cp "${t}" "${pho}"
     done
   else
     opts=()
     for rule in "${rules[@]}"; do
       opts+=("--rule=${rule}")
     done
-    phino rewrite "${phinopts[*]}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${r}" > "${s}"
+    phino rewrite "${phinopts[@]}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}" > "${pho}"
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
-  s_lines=$(wc -l < "${s}")
+  s_lines=$(wc -l < "${pho}")
   per=$(perl -E "say int( ${s_lines} / ( $(date '+%s.%N') - ${start} ) )")
-  if cmp -s "${r}" "${s}"; then
-    echo "No changes in ${idx} $(basename "${s}"): ${s_size}, ${s_lines} lines, ${per} lps"
+  if cmp -s "${phi}" "${pho}"; then
+    echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    echo "Modified ${idx} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
+    echo "Modified ${idx} $(basename "${phi}") (${s_size}): $(diff "${phi}" "${pho}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
   fi
-  phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
+  phino rewrite "${phinopts[@]}" --nothing --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
   verbose "Converted PHI to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then
     verbose "No changes made to $(basename "${xi}")"
@@ -104,7 +104,7 @@ verbose "Target directory for PHI files: ${HONE_TO}"
 mkdir -p "${HONE_XMIR_OUT}"
 verbose "Output directory for XMIR files: ${HONE_XMIR_OUT}"
 
-echo "Timeout: ${HONE_TIMEOUT} milliseconds"
+echo "Timeout: ${HONE_TIMEOUT} seconds"
 
 echo "Phino version: $(phino --version | xargs)"
 
@@ -121,7 +121,8 @@ idx=0
 while IFS= read -r f; do
   idx=$(( idx + 1 ))
   f=${f%.*}
-  "${0}" "${idx}/${total}" \
+  "${0}" \
+    "${idx}/${total}" \
     "${HONE_FROM}/${f}.phi" \
     "${HONE_TO}/${f}.phi" \
     "${HONE_XMIR_OUT}/${f}.xmir" \

@@ -165,6 +165,17 @@ public final class OptimizeMojo extends AbstractMojo {
     private int maxDepth;
 
     /**
+     * How many milliseconds to spend on each .phi file tops?
+     *
+     * <p>Zero means no timeout.</p>
+     *
+     * @since 0.11.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.timeout", defaultValue = "999999999")
+    private int timeout;
+
+    /**
      * All file extensions for the extra rules.
      *
      * @since 0.5.0
@@ -324,6 +335,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("MAX_DEPTH=%d", this.maxDepth)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("TIMEOUT=%d", this.timeout)
             )
         );
         if (this.includes != null && this.includes.length > 0) {

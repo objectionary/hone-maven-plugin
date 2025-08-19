@@ -10,7 +10,7 @@ function verbose {
   fi
 }
 
-verbose "We are in verbose mode, printing all messages..."
+verbose "Running in verbose mode, printing all messages..."
 
 if [ ! -d "${HONE_XMIR_IN}" ]; then
   echo "The source directory '${HONE_XMIR_IN}' does not exist"
@@ -41,10 +41,9 @@ if [ -n "${HONE_GREP_IN}" ]; then
   echo "Using grep-in: ${HONE_GREP_IN}"
 fi
 
-echo "Phino version: $(phino --version | xargs)"
-
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
+verbose "Found ${total} file(s) to process"
 idx=0
 while IFS= read -r f; do
   idx=$(( idx + 1 ))
@@ -58,7 +57,7 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
   if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
     cp "${xi}" "${xo}"
-    echo "No grep-in for $(basename "${xi}"), skipped"
+    echo "No grep-in match for $(basename "${xi}"), skipping"
     continue
   fi
   phino rewrite --input=xmir --sweet --nothing "${xi}" > "${r}"
@@ -77,7 +76,7 @@ while IFS= read -r f; do
       if cmp -s "${s}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"
       else
-        verbose "  $(diff "${s}" "${t}" | grep -cE '^[><]') lines changed by '${m}' to $(basename "${t}")"
+        verbose "  $(diff "${s}" "${t}" | grep -cE '^[><]') lines changed by '${m}' in $(basename "${t}")"
       fi
       cp "${t}" "${s}"
     done
@@ -97,10 +96,10 @@ while IFS= read -r f; do
     echo "Modified ${idx}/${total} $(basename "${r}") (${s_size}): $(diff "${r}" "${s}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
   fi
   phino rewrite --nothing --output=xmir --omit-listing --omit-comments "${s}" > "${xo}"
-  verbose "Converted phi to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
+  verbose "Converted PHI to $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then
     verbose "No changes made to $(basename "${xi}")"
   else
-    verbose "Some changes made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
+    verbose "Changes made to $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
 done <<< "${files}"

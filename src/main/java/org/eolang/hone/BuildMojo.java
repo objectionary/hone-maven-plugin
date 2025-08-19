@@ -85,6 +85,7 @@ public final class BuildMojo extends AbstractMojo {
                 args.add("--load");
             }
             args.add("--pull");
+            args.add("--platform=linux/amd64");
             args.add("--progress=plain");
             args.add("--build-arg");
             args.add(String.format("PHINO_VERSION=%s", this.phino()));

@@ -16,7 +16,7 @@ if [ ! -d "${HONE_XMIR_IN}" ]; then
   echo "The source directory '${HONE_XMIR_IN}' does not exist"
   exit 1
 fi
-verbose "Source directory: ${HONE_XMIR_IN}"
+verbose "Source directory with XMIR files: ${HONE_XMIR_IN}"
 
 if [ -z "${HONE_RULES}" ]; then
   echo "No rules specified in the \$HONE_RULES environment variable"
@@ -24,13 +24,13 @@ if [ -z "${HONE_RULES}" ]; then
 fi
 
 mkdir -p "${HONE_FROM}"
-verbose "Using source directory: ${HONE_FROM}"
+verbose "Source directory for PHI files: ${HONE_FROM}"
 
 mkdir -p "${HONE_TO}"
-verbose "Using target directory: ${HONE_TO}"
+verbose "Target directory for PHI files: ${HONE_TO}"
 
 mkdir -p "${HONE_XMIR_OUT}"
-verbose "Using XMIR output directory: ${HONE_XMIR_OUT}"
+verbose "Output directory for XMIR files: ${HONE_XMIR_OUT}"
 
 echo "Phino version: $(phino --version | xargs)"
 
@@ -38,7 +38,7 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 echo "Using ${#rules[@]} rewriting rule(s)"
 
 if [ -n "${HONE_GREP_IN}" ]; then
-  echo "Using grep-in: ${HONE_GREP_IN}"
+  echo "Grep-in: ${HONE_GREP_IN}"
 fi
 
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
@@ -55,6 +55,7 @@ while IFS= read -r f; do
   mkdir -p "$(dirname "${r}")"
   mkdir -p "$(dirname "${s}")"
   mkdir -p "$(dirname "${HONE_XMIR_OUT}/${f}")"
+  verbose "Next ${idx}/${total} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
   if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
     cp "${xi}" "${xo}"
     echo "No grep-in match for $(basename "${xi}"), skipping"

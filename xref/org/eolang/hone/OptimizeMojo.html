@@ -237,7 +237,7 @@
 <a class="jxr_linenumber" name="L229" href="#L229">229</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> exec() <strong class="jxr_keyword">throws</strong> IOException {
 <a class="jxr_linenumber" name="L230" href="#L230">230</a>         <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> start = System.currentTimeMillis();
 <a class="jxr_linenumber" name="L231" href="#L231">231</a>         <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong>.target.mkdirs()) {
-<a class="jxr_linenumber" name="L232" href="#L232">232</a>             Logger.debug(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Target directory '%s' created"</span>, <strong class="jxr_keyword">this</strong>.target);
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>             Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Target directory '%s' created"</span>, <strong class="jxr_keyword">this</strong>.target);
 <a class="jxr_linenumber" name="L233" href="#L233">233</a>         }
 <a class="jxr_linenumber" name="L234" href="#L234">234</a>         <strong class="jxr_keyword">final</strong> String tdir = <span class="jxr_string">"/target"</span>;
 <a class="jxr_linenumber" name="L235" href="#L235">235</a>         <strong class="jxr_keyword">final</strong> String cdir = <span class="jxr_string">"/eo-cache"</span>;
@@ -253,11 +253,11 @@
 <a class="jxr_linenumber" name="L245" href="#L245">245</a>         );
 <a class="jxr_linenumber" name="L246" href="#L246">246</a>         <strong class="jxr_keyword">final</strong> Path extdir = <strong class="jxr_keyword">this</strong>.target.toPath().resolve(<span class="jxr_string">"hone-extra"</span>);
 <a class="jxr_linenumber" name="L247" href="#L247">247</a>         <strong class="jxr_keyword">if</strong> (extdir.toFile().mkdirs()) {
-<a class="jxr_linenumber" name="L248" href="#L248">248</a>             Logger.debug(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Directory %[file]s created"</span>, extdir);
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>             Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Directory %[file]s created"</span>, extdir);
 <a class="jxr_linenumber" name="L249" href="#L249">249</a>         }
 <a class="jxr_linenumber" name="L250" href="#L250">250</a>         <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong>.extra != <strong class="jxr_keyword">null</strong>) {
 <a class="jxr_linenumber" name="L251" href="#L251">251</a>             <strong class="jxr_keyword">if</strong> (extdir.toFile().mkdirs()) {
-<a class="jxr_linenumber" name="L252" href="#L252">252</a>                 Logger.debug(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Directory %[file]s created"</span>, extdir);
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>                 Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"Directory %[file]s created"</span>, extdir);
 <a class="jxr_linenumber" name="L253" href="#L253">253</a>             }
 <a class="jxr_linenumber" name="L254" href="#L254">254</a>             <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">final</strong> String ext : <strong class="jxr_keyword">this</strong>.extra) {
 <a class="jxr_linenumber" name="L255" href="#L255">255</a>                 <strong class="jxr_keyword">final</strong> Path src = Paths.get(ext);
@@ -297,7 +297,7 @@
 <a class="jxr_linenumber" name="L289" href="#L289">289</a>             );
 <a class="jxr_linenumber" name="L290" href="#L290">290</a>         }
 <a class="jxr_linenumber" name="L291" href="#L291">291</a>         <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong>.eoVersion == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L292" href="#L292">292</a>             Logger.debug(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"EO version is not set, we use the default one"</span>);
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>             Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"EO version is not set, we use the default one"</span>);
 <a class="jxr_linenumber" name="L293" href="#L293">293</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L294" href="#L294">294</a>             command.addAll(
 <a class="jxr_linenumber" name="L295" href="#L295">295</a>                 Arrays.asList(
@@ -306,7 +306,7 @@
 <a class="jxr_linenumber" name="L298" href="#L298">298</a>             );
 <a class="jxr_linenumber" name="L299" href="#L299">299</a>         }
 <a class="jxr_linenumber" name="L300" href="#L300">300</a>         <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong>.jeoVersion == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L301" href="#L301">301</a>             Logger.debug(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"JEO version is not set, we use the default one"</span>);
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>             Logger.info(<strong class="jxr_keyword">this</strong>, <span class="jxr_string">"JEO version is not set, we use the default one"</span>);
 <a class="jxr_linenumber" name="L302" href="#L302">302</a>         } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L303" href="#L303">303</a>             command.addAll(
 <a class="jxr_linenumber" name="L304" href="#L304">304</a>                 Arrays.asList(

@@ -79,7 +79,6 @@ RUN cabal update \
 RUN rm -rf /root/.cabal \
     && rm -rf /root/.local/state/cabal \
     && rm -rf /usr/local/bin/cabal \
-    && apt-get remove --purge -y cabal-install \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

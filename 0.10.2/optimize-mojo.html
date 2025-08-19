@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>hone:optimize – hone-maven-plugin</title>
+        <link media="all" rel="stylesheet" type="text/css" href="./css/jcabi.css"/>
+                                                    <script src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="./js/jcabi.js"></script>
+    </head>
+    <body>
+                <div class="page" itemscope="" itemtype="http://schema.org/BlogPosting">
+            <nav class="menu-section">
+                <ul class="menu" id="menu">
+                                                                                    <li>
+                            <span>Overview</span>
+                                                            <ul>
+                                                                                                    <li >
+                            <span>                        <a href="index.html" title="Introduction">Introduction</a>
+        </span>
+                                                                                                                                                                <ul>
+                                                                    </ul>
+                                                    </li>
+                                                                                                                        <li >
+                            <span>                        <a href="plugin-info.html" title="Goals">Goals</a>
+        </span>
+                                                                                                                                                                <ul>
+                                                                    </ul>
+                                                    </li>
+                                                                                        </ul>
+                                                    </li>
+                                            <li>
+                            <span>Project Documentation</span>
+                                                            <ul>
+                                                                                                    <li >
+                            <span>                        <a href="project-info.html" title="Project Information">Project Information</a>
+        </span>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </li>
+                                                                                                                        <li >
+                            <span>                        <a href="project-reports.html" title="Project Reports">Project Reports</a>
+        </span>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </li>
+                                                                                        </ul>
+                                                    </li>
+                                    </ul>
+            </nav>
+            <div class="right-side">
+                <main>
+                    <div class="content">
+                        <header>
+                            <div class="logo">
+                                <a href="index.html"
+                                    title=" logo ">
+                                    <img src="${decoration.bannerLeft.src}"
+                                        alt="hone-maven-plugin"
+                                                                                                                        itemprop="image"
+                                    />
+                                </a>
+                            </div>
+                            <ul class="badges">
+                                <li>
+                                    <strong itemprop="version">0.10.2</strong>
+                                </li>
+                                <li>
+                                    $dateFormat.applyPattern("yyyy-MM-dd'T'hh:mm:ss'Z'")
+                                    <time itemprop="datePublished" datetime="${dateFormat.format($currentDate)}">
+                                        $dateFormat.applyPattern('dd-MMM-yyyy')
+                                        ${dateFormat.format($currentDate)}
+                                    </time>
+                                </li>
+                                <li class="menu-button">menu</li>
+                            </ul>
+                        </header>
+                        <div id="here-goes-menu" class="menu-off"></div>
+                                                                            <a href="https://github.com/objectionary/hone-maven-plugin">
+                                <img src="https://www.jcabi.com/fork-me.svg" class="fork-me"/>
+                            </a>
+                                                <article itemprop="articleBody">
+                            <section><a id="hone.3Aoptimize"></a>
+<h1>hone:optimize</h1>
+<p><strong>Full name</strong>:</p>
+<p>org.eolang:hone-maven-plugin:0.10.2:optimize</p>
+<p><strong>Description</strong>:</p>
+<p>Converts Bytecode to Bytecode in order to make it faster. 
+<p>This goal takes every <code>.class</code> file from the <tt>target/classes/</tt> directory, converts it to <code>.xmir</code> format (which is XML representation of <a href="https://www.eolang.org">EO</a>), then converts <code>.xmir</code> to <code>.phi</code> (which is <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>), then optimizes it via <a href="https://github.com/objectionary/phino">phino</a>, and then back to <code>.xmir</code> and to <code>.class</code>. As a result, you obtain optimized Bytecode in the <tt>target/classes/</tt> directory, which supposedly works faster than before.</p>
+<p>The entire optimization pipeline happens inside Docker container, which is run from the image specified in the <tt>image</tt> parameter. The image may either be pulled or built locally. We recommend pulling it from the Docker Hub with the help of the <tt>pull</tt> goal. Also, we recommend deleting the image after optimization is done, with the help of the <tt>rmi</tt> goal.</p></p>
+<p><strong>Attributes</strong>:</p>
+<ul>
+<li>The goal is not marked as thread-safe and thus does not support parallel builds.</li>
+<li>Since version: <code>0.1.0</code>.</li>
+<li>Binds by default to the <a class="externalLink" href="https://maven.apache.org/ref/current/maven-core/lifecycles.html">lifecycle phase</a>: <code>process-classes</code>.</li></ul><section><a id="Optional_Parameters"></a>
+<h2>Optional Parameters</h2>
+<table class="bodyTable">
+<tr class="a">
+<th>Name</th>
+<th>Type</th>
+<th>Since</th>
+<th>Description</th></tr>
+<tr class="b">
+<td><a href="#cache"><code>&lt;cache&gt;</code></a></td>
+<td><code>File</code></td>
+<td><code>0.1.0</code></td>
+<td>EO cache directory.<br /><strong>User Property</strong>: <code>hone.cache</code></td></tr>
+<tr class="a">
+<td><a href="#classes"><code>&lt;classes&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.8.0</code></td>
+<td>Location of .class files to optimize, inside <code>target</code> directory.<br /><strong>Default</strong>: <code>classes</code><br /><strong>User Property</strong>: <code>hone.classes</code></td></tr>
+<tr class="b">
+<td><a href="#debug"><code>&lt;debug&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.11.0</code></td>
+<td>Print all commands of all Bash scripts.<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.debug</code></td></tr>
+<tr class="a">
+<td><a href="#eoVersion"><code>&lt;eoVersion&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.1.0</code></td>
+<td>EO version to use.<br /><strong>User Property</strong>: <code>hone.eo-version</code></td></tr>
+<tr class="b">
+<td><a href="#excludes"><code>&lt;excludes&gt;</code></a></td>
+<td><code>String[]</code></td>
+<td><code>0.1.0</code></td>
+<td>Exclude patterns for .class files. 
+<p>Array of patterns to exclude specific <code>.class</code> files from optimization. If not specified, no <code>.class</code> files will be excluded.</p>
+<p>Start them with <code>"/target/classes"</code>.</p><br /><strong>User Property</strong>: <code>hone.excludes</code></td></tr>
+<tr class="a">
+<td><a href="#extra"><code>&lt;extra&gt;</code></a></td>
+<td><code>List&lt;String&gt;</code></td>
+<td><code>0.1.0</code></td>
+<td>List of extra rules to use for optimizations, provided as YAML files.<br /><strong>User Property</strong>: <code>hone.extra</code></td></tr>
+<tr class="b">
+<td><a href="#extraExtensions"><code>&lt;extraExtensions&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.5.0</code></td>
+<td>All file extensions for the extra rules.<br /><strong>Default</strong>: <code>yml,yaml,phr</code><br /><strong>User Property</strong>: <code>hone.extra-extensions</code></td></tr>
+<tr class="a">
+<td><a href="#grepIn"><code>&lt;grepIn&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.10.0</code></td>
+<td>Grep XMIR files to rewrite. 
+<p>Using this regular expression you can filter-in (include) XMIR files that need to be rewritten. It's advised to use this regex in order to save time. This is a good example, to filter-in only the files that contain filter() and map() methods:</p>
+<pre>"&gt;o&lt;(66-69-6C-74-65-72|6D-61-70)&gt;/o&lt;</pre>
+<p>Here, <tt>66-69-6C-74-65-72</tt> stands for the <tt>"filter"</tt> and <tt>6D-61-70</tt> for the <tt>"map"</tt>, in hexadecimal format.</p><br /><strong>Default</strong>: <code>.*</code><br /><strong>User Property</strong>: <code>hone.grep-in</code></td></tr>
+<tr class="b">
+<td><a href="#image"><code>&lt;image&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.1.0</code></td>
+<td>Docker image to use.<br /><strong>Default</strong>: <code>yegor256/hone:0.10.2</code><br /><strong>User Property</strong>: <code>hone.image</code></td></tr>
+<tr class="a">
+<td><a href="#includes"><code>&lt;includes&gt;</code></a></td>
+<td><code>String[]</code></td>
+<td><code>0.1.0</code></td>
+<td>Include patterns for .class files. 
+<p>Array of patterns to include specific <code>.class</code> files for optimization. If not specified, all <code>.class</code> files will be included.</p>
+<p>Start them with <code>"/target/classes"</code>.</p><br /><strong>User Property</strong>: <code>hone.includes</code></td></tr>
+<tr class="b">
+<td><a href="#jeoVersion"><code>&lt;jeoVersion&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.1.0</code></td>
+<td>JEO version to use.<br /><strong>User Property</strong>: <code>hone.jeo-version</code></td></tr>
+<tr class="a">
+<td><a href="#maxDepth"><code>&lt;maxDepth&gt;</code></a></td>
+<td><code>int</code></td>
+<td><code>0.4.0</code></td>
+<td>How many rewriting cycles to tolerate maximum? 
+<p>This number doesn't need to be changed. However, may be used for debugging. The larger the number, the longer optimization might take.</p><br /><strong>Default</strong>: <code>500</code><br /><strong>User Property</strong>: <code>hone.max-depth</code></td></tr>
+<tr class="b">
+<td><a href="#rules"><code>&lt;rules&gt;</code></a></td>
+<td><code>String</code></td>
+<td><code>0.1.0</code></td>
+<td>List of built-in rules to use for optimizations. 
+<p>For example, "<tt>simple,b*,!abc</tt>" would include the <tt>simple</tt> rule, all rules that start with the <tt>b</tt> character, and exclude the <tt>abc</tt> rule.</p>
+<p>In order to disable them all, simply set this parameter to <tt>none</tt>.</p>
+<p>If you enable them all with "*", your code most definitely will be corrupted, because some rules are for testing purposes only.</p><br /><strong>Default</strong>: <code>none</code><br /><strong>User Property</strong>: <code>hone.rules</code></td></tr>
+<tr class="a">
+<td><a href="#skip"><code>&lt;skip&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.1.0</code></td>
+<td>Skip the execution, if set to TRUE.<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.skip</code></td></tr>
+<tr class="b">
+<td><a href="#smallSteps"><code>&lt;smallSteps&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.3.0</code></td>
+<td>Small steps or big steps? 
+<p>Small steps mode will apply one rule at a time, producing separate <code>.phi</code> files. This may be useful for debugging of the rules. To the contrary, big steps mode will apply all rules at once, which is faster, but less transparent for debugging.</p><br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.small-steps</code></td></tr>
+<tr class="a">
+<td><a href="#sudo"><code>&lt;sudo&gt;</code></a></td>
+<td><code>boolean</code></td>
+<td><code>0.1.0</code></td>
+<td>Whether to use "sudo" when executing Docker commands.<br /><strong>Default</strong>: <code>false</code><br /><strong>User Property</strong>: <code>hone.sudo</code></td></tr>
+<tr class="b">
+<td><a href="#target"><code>&lt;target&gt;</code></a></td>
+<td><code>File</code></td>
+<td><code>0.1.0</code></td>
+<td>The "target/" directory of Maven project.<br /><strong>Default</strong>: <code>${project.build.directory}</code><br /><strong>User Property</strong>: <code>hone.target</code></td></tr></table></section><section><a id="Parameter_Details"></a>
+<h2>Parameter Details</h2><a id="cache"></a><section><a id="a.3Ccache.3E"></a>
+<h3>&lt;cache&gt;</h3>
+<div>EO cache directory.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.io.File</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.cache</code></li></ul><hr /></section><a id="classes"></a><section><a id="a.3Cclasses.3E"></a>
+<h3>&lt;classes&gt;</h3>
+<div>Location of .class files to optimize, inside <code>target</code> directory.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.8.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.classes</code></li>
+<li><strong>Default</strong>: <code>classes</code></li></ul><hr /></section><a id="debug"></a><section><a id="a.3Cdebug.3E"></a>
+<h3>&lt;debug&gt;</h3>
+<div>Print all commands of all Bash scripts.</div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.11.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.debug</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a id="eoVersion"></a><section><a id="a.3CeoVersion.3E"></a>
+<h3>&lt;eoVersion&gt;</h3>
+<div>EO version to use.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.eo-version</code></li></ul><hr /></section><a id="excludes"></a><section><a id="a.3Cexcludes.3E"></a>
+<h3>&lt;excludes&gt;</h3>
+<div>Exclude patterns for .class files. 
+<p>Array of patterns to exclude specific <code>.class</code> files from optimization. If not specified, no <code>.class</code> files will be excluded.</p>
+<p>Start them with <code>"/target/classes"</code>.</p></div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String[]</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.excludes</code></li></ul><hr /></section><a id="extra"></a><section><a id="a.3Cextra.3E"></a>
+<h3>&lt;extra&gt;</h3>
+<div>List of extra rules to use for optimizations, provided as YAML files.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.util.List&lt;java.lang.String&gt;</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.extra</code></li></ul><hr /></section><a id="extraExtensions"></a><section><a id="a.3CextraExtensions.3E"></a>
+<h3>&lt;extraExtensions&gt;</h3>
+<div>All file extensions for the extra rules.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.5.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.extra-extensions</code></li>
+<li><strong>Default</strong>: <code>yml,yaml,phr</code></li></ul><hr /></section><a id="grepIn"></a><section><a id="a.3CgrepIn.3E"></a>
+<h3>&lt;grepIn&gt;</h3>
+<div>Grep XMIR files to rewrite. 
+<p>Using this regular expression you can filter-in (include) XMIR files that need to be rewritten. It's advised to use this regex in order to save time. This is a good example, to filter-in only the files that contain filter() and map() methods:</p>
+<pre>"&gt;o&lt;(66-69-6C-74-65-72|6D-61-70)&gt;/o&lt;</pre>
+<p>Here, <tt>66-69-6C-74-65-72</tt> stands for the <tt>"filter"</tt> and <tt>6D-61-70</tt> for the <tt>"map"</tt>, in hexadecimal format.</p></div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.10.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.grep-in</code></li>
+<li><strong>Default</strong>: <code>.*</code></li></ul><hr /></section><a id="image"></a><section><a id="a.3Cimage.3E"></a>
+<h3>&lt;image&gt;</h3>
+<div>Docker image to use.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.image</code></li>
+<li><strong>Default</strong>: <code>yegor256/hone:0.10.2</code></li></ul><hr /></section><a id="includes"></a><section><a id="a.3Cincludes.3E"></a>
+<h3>&lt;includes&gt;</h3>
+<div>Include patterns for .class files. 
+<p>Array of patterns to include specific <code>.class</code> files for optimization. If not specified, all <code>.class</code> files will be included.</p>
+<p>Start them with <code>"/target/classes"</code>.</p></div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String[]</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.includes</code></li></ul><hr /></section><a id="jeoVersion"></a><section><a id="a.3CjeoVersion.3E"></a>
+<h3>&lt;jeoVersion&gt;</h3>
+<div>JEO version to use.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.jeo-version</code></li></ul><hr /></section><a id="maxDepth"></a><section><a id="a.3CmaxDepth.3E"></a>
+<h3>&lt;maxDepth&gt;</h3>
+<div>How many rewriting cycles to tolerate maximum? 
+<p>This number doesn't need to be changed. However, may be used for debugging. The larger the number, the longer optimization might take.</p></div>
+<ul>
+<li><strong>Type</strong>: <code>int</code></li>
+<li><strong>Since</strong>: <code>0.4.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.max-depth</code></li>
+<li><strong>Default</strong>: <code>500</code></li></ul><hr /></section><a id="rules"></a><section><a id="a.3Crules.3E"></a>
+<h3>&lt;rules&gt;</h3>
+<div>List of built-in rules to use for optimizations. 
+<p>For example, "<tt>simple,b*,!abc</tt>" would include the <tt>simple</tt> rule, all rules that start with the <tt>b</tt> character, and exclude the <tt>abc</tt> rule.</p>
+<p>In order to disable them all, simply set this parameter to <tt>none</tt>.</p>
+<p>If you enable them all with "*", your code most definitely will be corrupted, because some rules are for testing purposes only.</p></div>
+<ul>
+<li><strong>Type</strong>: <code>java.lang.String</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.rules</code></li>
+<li><strong>Default</strong>: <code>none</code></li></ul><hr /></section><a id="skip"></a><section><a id="a.3Cskip.3E"></a>
+<h3>&lt;skip&gt;</h3>
+<div>Skip the execution, if set to TRUE.</div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.skip</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a id="smallSteps"></a><section><a id="a.3CsmallSteps.3E"></a>
+<h3>&lt;smallSteps&gt;</h3>
+<div>Small steps or big steps? 
+<p>Small steps mode will apply one rule at a time, producing separate <code>.phi</code> files. This may be useful for debugging of the rules. To the contrary, big steps mode will apply all rules at once, which is faster, but less transparent for debugging.</p></div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.3.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.small-steps</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a id="sudo"></a><section><a id="a.3Csudo.3E"></a>
+<h3>&lt;sudo&gt;</h3>
+<div>Whether to use "sudo" when executing Docker commands.</div>
+<ul>
+<li><strong>Type</strong>: <code>boolean</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.sudo</code></li>
+<li><strong>Default</strong>: <code>false</code></li></ul><hr /></section><a id="target"></a><section><a id="a.3Ctarget.3E"></a>
+<h3>&lt;target&gt;</h3>
+<div>The "target/" directory of Maven project.</div>
+<ul>
+<li><strong>Type</strong>: <code>java.io.File</code></li>
+<li><strong>Since</strong>: <code>0.1.0</code></li>
+<li><strong>Required</strong>: <code>No</code></li>
+<li><strong>User Property</strong>: <code>hone.target</code></li>
+<li><strong>Default</strong>: <code>${project.build.directory}</code></li></ul></section></section></section>
+                        </article>
+                    </div>
+                </main>
+                <footer class="legal-notes">
+                    <div>
+                        Copyright &#169;
+                                                                            2024-${currentYear}
+                                            </div>
+                    <div>Objectionary, All Rights Reserved.</div>
+                    <div><a href="https://maven.apache.org/privacy-policy.html">Privacy Policy</a>.</div>
+                </footer>
+            </div>
+        </div>
+    </body>
+</html>

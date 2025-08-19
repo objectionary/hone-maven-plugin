@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-FROM ubuntu:24.04 AS ubuntu
+FROM ubuntu:24.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=en_US.UTF-8
@@ -36,9 +36,11 @@ RUN gpg --batch --recv-keys ECA44F5A172EDAD947F39E3D4275CDA6A29BED43 \
 
 ARG PHINO_VERSION=0.0.0.0
 RUN cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO_VERSION}" \
-  && cp /root/.local/bin/phino /usr/local/bin/phino \
+  && find /root -name phino -type f 2>/dev/null | head -1 | xargs -I {} cp {} /usr/local/bin/phino \
+  && chmod +x /usr/local/bin/phino \
   && strip /usr/local/bin/phino \
-  && ldd /usr/local/bin/phino | grep "=>" | awk '{print $3}' | xargs -I {} cp {} /tmp/ 2>/dev/null || true
+  && ldd /usr/local/bin/phino | grep "=>" | awk '{print $3}' | xargs -I {} cp {} /tmp/ 2>/dev/null || true \
+  && /usr/local/bin/phino --version
 
 FROM eclipse-temurin:17-jre-jammy
 
@@ -78,8 +80,9 @@ RUN wget --quiet "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}
 
 WORKDIR /hone
 
-COPY --from=ubuntu /usr/local/bin/phino /usr/bin/phino
-COPY --from=ubuntu /tmp/*.so* /usr/lib/x86_64-linux-gnu/
+# Copy phino binary and its dependencies from builder:
+COPY --from=builder /usr/local/bin/phino /usr/bin/phino
+COPY --from=builder /tmp/*.so* /usr/lib/x86_64-linux-gnu/
 RUN phino --version
 
 COPY in-docker-pom.xml pom.xml

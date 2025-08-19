@@ -130,6 +130,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private String grepIn;
 
     /**
+     * Print all commands of all Bash scripts.
+     *
+     * @since 0.11.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.debug", defaultValue = "false")
+    private boolean debug;
+
+    /**
      * Small steps or big steps?
      *
      * <p>Small steps mode will apply one rule at a time, producing separate
@@ -198,6 +207,8 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.1.0
      * @checkstyle MemberNameCheck (7 lines)
      * @checkstyle VisibilityModifierCheck (10 lines)
+     * @checkstyle JavaNCSSCheck (500 lines)
+     * @checkstyle MethodLengthCheck (500 lines)
      */
     @Parameter(property = "hone.cache")
     @SuppressWarnings("PMD.ImmutableField")
@@ -298,6 +309,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("VERBOSE=%s", Logger.isDebugEnabled(this))
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("DEBUG=%s", this.debug)
             )
         );
         command.addAll(

@@ -42,6 +42,7 @@
             <executable>${exec.phino.script}</executable>
             <environmentVariables>
               <HONE_VERBOSE>${exec.phino.verbose}</HONE_VERBOSE>
+              <HONE_DEBUG>${exec.phino.debug}</HONE_DEBUG>
               <HONE_RULES>${exec.phino.rules}</HONE_RULES>
               <HONE_GREP_IN>${exec.phino.grep-in}</HONE_GREP_IN>
               <HONE_XMIR_IN>${exec.phino.xmir-in}</HONE_XMIR_IN>

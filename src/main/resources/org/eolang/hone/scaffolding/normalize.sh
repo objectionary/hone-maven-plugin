@@ -4,6 +4,10 @@
 
 set -e -o pipefail
 
+if [ "${HONE_DEBUG}" == 'true' ]; then
+  set -x
+fi
+
 function verbose {
   if [ "${HONE_VERBOSE}" == 'true' ]; then
     echo "$@"
@@ -90,7 +94,7 @@ while IFS= read -r f; do
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${s}")
-  per=$(perl -E "say int(${s_lines} / ( $(date '+%s.%N') - ${start} ))")
+  per=$(perl -E "say int( ${s_lines} / ( $(date '+%s.%N') - ${start} ) )")
   if cmp -s "${r}" "${s}"; then
     echo "No changes in ${idx}/${total} $(basename "${s}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else

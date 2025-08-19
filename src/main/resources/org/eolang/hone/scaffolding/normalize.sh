@@ -35,7 +35,7 @@ verbose "Using XMIR output directory: ${HONE_XMIR_OUT}"
 echo "Phino version: $(phino --version | xargs)"
 
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
-echo "Using ${#rules[@]} rule(s)"
+echo "Using ${#rules[@]} rewriting rule(s)"
 
 if [ -n "${HONE_GREP_IN}" ]; then
   echo "Using grep-in: ${HONE_GREP_IN}"

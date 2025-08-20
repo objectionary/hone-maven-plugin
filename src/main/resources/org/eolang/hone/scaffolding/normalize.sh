@@ -39,7 +39,7 @@ function rewrite {
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"
   pos=0
-  start=$(date '+%s.%N')
+  start=$(date '+%s')
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
     cp "${phi}" "${pho}"
@@ -64,7 +64,7 @@ function rewrite {
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}")
-  per=$(perl -E "say int( ${s_lines} / ( $(date '+%s.%N') - ${start} ) )")
+  per=$(perl -E "say int( ${s_lines} / ( $(date '+%s') - ${start} ) )")
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
@@ -85,8 +85,10 @@ function rewrite_with_timeout {
   pho=${3}
   xi=${4}
   xo=${5}
+  start=$(date '+%s')
   if ! timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@"; then
-    echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
+    sec=$(perl -E "say $(date '+%s') - ${start}")
+    echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
     cp "${xi}" "${xo}"
   fi
 }

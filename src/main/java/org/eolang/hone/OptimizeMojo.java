@@ -176,7 +176,7 @@ public final class OptimizeMojo extends AbstractMojo {
      *
      * <p>If rewriting for a file takes longer than the timeout,
      * the file remains untouched. The timeout doesn't lead to runtime
-     * failure, but only to the file processing being skipped.</p>
+     * failure but only to the file processing being skipped.</p>
      *
      * @since 0.11.0
      * @checkstyle MemberNameCheck (6 lines)

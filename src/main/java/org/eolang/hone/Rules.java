@@ -126,11 +126,13 @@ final class Rules {
     private boolean matches(final CharSequence name) {
         boolean matches = false;
         for (final Map.Entry<Pattern, Boolean> ent : this.patterns.entrySet()) {
-            if (ent.getKey().matcher(name).matches()) {
-                if (ent.getValue()) {
-                    matches = true;
-                }
-                break;
+            if (ent.getValue() && ent.getKey().matcher(name).matches()) {
+                matches = true;
+            }
+        }
+        for (final Map.Entry<Pattern, Boolean> ent : this.patterns.entrySet()) {
+            if (!ent.getValue() && ent.getKey().matcher(name).matches()) {
+                matches = false;
             }
         }
         return matches;
@@ -158,7 +160,7 @@ final class Rules {
                     String.format(
                         "^\\Q%s\\E\\.(yml|phr)$",
                         body.replace("*", "\\E.*\\Q")
-                    )
+                    ).replace("\\Q\\E", "")
                 ),
                 !negative
             );

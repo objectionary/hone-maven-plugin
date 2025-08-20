@@ -54,7 +54,8 @@ import org.cactoos.iterable.Mapped;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
-     * Location of .class files to optimize, inside {@code target} directory.
+     * Location of <tt>.class</tt> files to optimize inside
+     * the {@code target} directory.
      *
      * @since 0.8.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -63,9 +64,9 @@ public final class OptimizeMojo extends AbstractMojo {
     private String classes;
 
     /**
-     * List of built-in rules to use for optimizations.
+     * List of built-in rules to use for optimization.
      *
-     * <p>For example, "<tt>simple,b*,!abc</tt>" would include
+     * <p>For example, <tt>"simple,b*,!abc"</tt> would include
      * the <tt>simple</tt> rule, all rules that start
      * with the <tt>b</tt> character, and exclude the <tt>abc</tt>
      * rule.</p>
@@ -73,7 +74,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>In order to disable them all, simply set this parameter
      * to <tt>none</tt>.</p>
      *
-     * <p>If you enable them all with "*", your code most definitely
+     * <p>If you enable them all with <tt>"*"</tt>, your code most definitely
      * will be corrupted, because some rules are for testing purposes
      * only.</p>
      *
@@ -84,7 +85,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private String rules;
 
     /**
-     * List of extra rules to use for optimizations, provided as
+     * List of extra rules to use for optimization, provided as
      * YAML files.
      *
      * @since 0.1.0
@@ -114,12 +115,12 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Grep XMIR files to rewrite.
      *
-     * <p>Using this regular expression you can filter-in (include) XMIR files that
-     * need to be rewritten. It's advised to use this regex in order
-     * to save time. This is a good example, to filter-in only the files
-     * that contain filter() and map() methods:</p>
+     * <p>Using this regular expression, you can filter in (include) XMIR files that
+     * need to be rewritten. It's advised to use this regex to
+     * save time. This is a good example to filter in only the files
+     * that contain <tt>filter()</tt> and <tt>map()</tt> methods:</p>
      *
-     * <pre>"&gt;o&lt;(66-69-6C-74-65-72|6D-61-70)&gt;/o&lt;</pre>
+     * <pre>"&lt;o&gt;(66-69-6C-74-65-72|6D-61-70)&lt;/o&gt;</pre>
      *
      * <p>Here, <tt>66-69-6C-74-65-72</tt> stands for the <tt>"filter"</tt>
      * and <tt>6D-61-70</tt> for the <tt>"map"</tt>, in hexadecimal format.</p>
@@ -133,6 +134,10 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Print all commands of all Bash scripts.
      *
+     * <p>If this is set to <tt>true</tt>, all our internal bash scripts will
+     * start with <tt>set -x</tt>. This will lead to very verbose
+     * output but may help debug internal issues.</p>
+     *
      * @since 0.11.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -143,8 +148,8 @@ public final class OptimizeMojo extends AbstractMojo {
      * Small steps or big steps?
      *
      * <p>Small steps mode will apply one rule at a time, producing separate
-     * {@code .phi} files. This may be useful for debugging of the rules. To the contrary,
-     * big steps mode will apply all rules at once, which is faster, but less
+     * {@code .phi} files. This may be useful for debugging the rules. To the contrary,
+     * big steps mode will apply all rules at once, which is faster but less
      * transparent for debugging.</p>
      *
      * @since 0.3.0
@@ -154,10 +159,11 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean smallSteps;
 
     /**
-     * How many rewriting cycles to tolerate maximum?
+     * How many rewriting cycles to tolerate at maximum?
      *
-     * <p>This number doesn't need to be changed. However, may be used for debugging.
-     * The larger the number, the longer optimization might take.</p>
+     * <p>This number doesn't need to be changed. However, it may be used for debugging.
+     * The larger the number, the longer optimization might take. We pass
+     * this number to <tt>phino</tt> as the <tt>--max-depth</tt> argument.</p>
      *
      * @since 0.4.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -166,7 +172,11 @@ public final class OptimizeMojo extends AbstractMojo {
     private int maxDepth;
 
     /**
-     * How many seconds to spend on each .phi file tops?
+     * How many seconds to spend on each <tt>.phi</tt> file at most?
+     *
+     * <p>If rewriting for a file takes longer than the timeout,
+     * the file remains untouched. The timeout doesn't lead to runtime
+     * failure, but only to the file processing being skipped.</p>
      *
      * @since 0.11.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -177,14 +187,21 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * How many threads to use for rewriting?
      *
+     * <p>By default, it's a single-threaded process. However, it may be
+     * rather slow for large projects. It is recommended to use values
+     * that are close to the number of CPUs you have on your machine.</p>
+     *
+     * <p>If you set this parameter to zero, the number of threads
+     * will be set to the number of CPUs on the machine.</p>
+     *
      * @since 0.11.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.threads", defaultValue = "4")
+    @Parameter(property = "hone.threads", defaultValue = "1")
     private int threads;
 
     /**
-     * All file extensions for the extra rules.
+     * The list of all file extensions for the extra rules.
      *
      * @since 0.5.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -195,7 +212,7 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Include patterns for .class files.
      *
-     * <p>Array of patterns to include specific {@code .class} files for optimization.
+     * <p>An array of patterns to include specific {@code .class} files for optimization.
      * If not specified, all {@code .class} files will be included.</p>
      *
      * <p>Start them with {@code "/target/classes"}.</p>
@@ -209,7 +226,7 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Exclude patterns for .class files.
      *
-     * <p>Array of patterns to exclude specific {@code .class} files from optimization.
+     * <p>An array of patterns to exclude specific {@code .class} files from optimization.
      * If not specified, no {@code .class} files will be excluded.</p>
      *
      * <p>Start them with {@code "/target/classes"}.</p>
@@ -423,7 +440,7 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     /**
-     * Returns the user and group IDs of the current user.
+     * Return the user and group IDs of the current user.
      *
      * @return A string in the format "uid:gid"
      */
@@ -452,14 +469,14 @@ public final class OptimizeMojo extends AbstractMojo {
         OptimizeMojo.CLibrary INSTANCE = Native.load("c", OptimizeMojo.CLibrary.class);
 
         /**
-         * Gets the user ID of the calling process.
+         * Get the user ID of the calling process.
          *
          * @return The user ID
          */
         int getuid();
 
         /**
-         * Gets the effective user ID of the calling process.
+         * Get the effective user ID of the calling process.
          *
          * @return The effective user ID
          */

@@ -91,6 +91,8 @@ printf 'Using Java: %s\n' "$(java --version | head -1)"
 
 printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 
+printf 'Using GNU Parallel: %s\n' "$(parallel --version | head -1)"
+
 printf 'Using the following %d rules:\n\t%b\n' \
   "$(( "$(echo "${RULES}" | grep -o ' ' | wc -l)" + 1))" \
   "${RULES// /\\n\\t}"

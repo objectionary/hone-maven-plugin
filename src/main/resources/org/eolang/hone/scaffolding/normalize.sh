@@ -138,7 +138,7 @@ fi
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
 tasks=/target/hone-tasks.txt
-verbose "Found ${total} file(s) to process"
+verbose "Found ${total} XMIR file(s) to process"
 idx=0
 while IFS= read -r f; do
   idx=$(( idx + 1 ))

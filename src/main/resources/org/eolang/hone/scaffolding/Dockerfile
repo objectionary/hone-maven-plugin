@@ -17,7 +17,6 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     curl=* \
     gnupg2=* \
     libgmp-dev=* \
-    lsb-release=* \
     software-properties-common=* \
     zlib1g-dev=* \
   && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \

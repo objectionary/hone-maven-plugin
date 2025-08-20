@@ -21,8 +21,9 @@ release:
     [[ "${tag}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit -1
     mvn versions:set "-DnewVersion=${tag}"
     sed -i -e "s/hone:latest/hone:${tag}/" src/main/java/org/eolang/hone/AbstractMojo.java
-    git add src/main/java/org/eolang/hone/AbstractMojo.java
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
+    sed -i -e "s/0.0.0/${tag}/" src/main/resources/org/eolang/hone/scaffolding/in-docker-pom.xml
+    git add src/main/java/org/eolang/hone/AbstractMojo.java src/site/apt/index.apt.vm src/main/resources/org/eolang/hone/scaffolding/in-docker-pom.xml
     git commit -am "${tag}"
     export MAVEN_OPTS="--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
     mvn clean deploy -DskipTests -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml

@@ -94,7 +94,7 @@ COPY settings.xml /hone/
 
 # Pre-download Maven dependencies and clean up unnecessary plugins
 RUN mkdir -p /hone/.m2 \
-  && mvn --settings=/hone/settings.xml --update-snapshots --batch-mode --strict-checksums --errors -Dbuildtime.output.log=true eo:help jeo:help exec:help \
+  && mvn --settings=/hone/settings.xml --update-snapshots --batch-mode --strict-checksums --errors -Dbuildtime.output.log=true jeo:help exec:help \
   && chmod -R a+rwx /hone/.m2 \
   && find /hone/.m2 -name "*.lastUpdated" -delete \
   && find /hone/.m2 -name "_remote.repositories" -delete \

@@ -124,6 +124,7 @@ fi
     "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi" \
     "-Dexec.phino.small-steps=${SMALL_STEPS}" \
     "-Dexec.phino.timeout=${TIMEOUT}" \
+    "-Dexec.phino.threads=${THREADS}" \
     "-Dexec.phino.max-depth=${MAX_DEPTH}" \
     jeo:assemble \
     "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \

@@ -175,6 +175,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private int timeout;
 
     /**
+     * How many threads to use for rewriting?
+     *
+     * @since 0.11.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.threads", defaultValue = "4")
+    private int threads;
+
+    /**
      * All file extensions for the extra rules.
      *
      * @since 0.5.0
@@ -334,6 +343,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("MAX_DEPTH=%d", this.maxDepth)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("THREADS=%d", this.threads)
             )
         );
         command.addAll(

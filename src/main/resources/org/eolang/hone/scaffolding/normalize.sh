@@ -39,7 +39,7 @@ function rewrite {
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"
   pos=0
-  start=$(date '+%s')
+  start=$(date '+%s.%N')
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
     cp "${phi}" "${pho}"
@@ -64,7 +64,7 @@ function rewrite {
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}")
-  per=$(perl -E "say int( ${s_lines} / ( $(date '+%s') - ${start} ) )")
+  per=$(perl -E "say int(${s_lines} / ($(date '+%s.%N') - ${start}))")
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
@@ -85,9 +85,9 @@ function rewrite_with_timeout {
   pho=${3}
   xi=${4}
   xo=${5}
-  start=$(date '+%s')
+  start=$(date '+%s.%N')
   if ! timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@"; then
-    sec=$(perl -E "say $(date '+%s') - ${start}")
+    sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
     echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
     cp "${xi}" "${xo}"
   fi
@@ -123,9 +123,11 @@ verbose "Target directory for PHI files: ${HONE_TO}"
 mkdir -p "${HONE_XMIR_OUT}"
 verbose "Output directory for XMIR files: ${HONE_XMIR_OUT}"
 
-echo "Timeout: ${HONE_TIMEOUT} seconds"
+echo "Hone version: ${HONE_VERSION}"
 
 echo "Phino version: $(phino --version | xargs)"
+
+echo "Timeout: ${HONE_TIMEOUT} seconds"
 
 echo "Using ${#rules[@]} rewriting rule(s)"
 
@@ -153,11 +155,13 @@ args=(
   '--halt-on-error=now,fail=1'
   '--halt=now,fail=1'
   '--retries=0'
-  "--load=8"
   "--joblog=/target/hone-tasks.log"
-  "--max-procs=$(perl -E "say $(nproc) * 4")"
+  "--max-procs=${HONE_THREADS}"
   "--will-cite"
 )
 export PARALLEL_HOME=/target/parallel
 mkdir -p "${PARALLEL_HOME}"
+echo "Parallel rewriting in ${HONE_THREADS} threads"
+start=$(date '+%s.%N')
 parallel "${args[@]}" < "${tasks}"
+echo "Finished rewriting ${total} files in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

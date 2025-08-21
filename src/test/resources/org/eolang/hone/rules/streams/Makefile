@@ -17,7 +17,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=0.13.9
+JEO_VERSION=0.13.10
 
 all: env test jeo-test run
 

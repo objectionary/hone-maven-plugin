@@ -15,7 +15,11 @@ pattern: |
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
       φ ↦ Φ.jeo.method,
-      𝐵-function-signature,
+      access ↦ 𝑒-method-access,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
       body ↦ ⟦
         𝐵-body-head,
         𝜏-invokedynamic ↦ ⟦
@@ -63,8 +67,7 @@ pattern: |
         𝐵-body-tail
       ⟧,
       local-variable-table ↦ 𝑒-lvt,
-      name ↦ 𝑒-function,
-      ρ ↦ ∅
+      name ↦ 𝑒-function
     ⟧,
     𝐵-class-body-tail
   ⟧
@@ -80,7 +83,11 @@ result: |
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
       φ ↦ Φ.jeo.method,
-      𝐵-function-signature,
+      access ↦ 𝑒-method-access,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
       body ↦ ⟦
         𝐵-body-head,
         𝜏-lambda ↦ ⟦
@@ -106,8 +113,7 @@ result: |
         𝐵-body-tail
       ⟧,
       local-variable-table ↦ 𝑒-lvt,
-      name ↦ 𝑒-function,
-      ρ ↦ ∅
+      name ↦ 𝑒-function
     ⟧,
     𝐵-class-body-tail
   ⟧

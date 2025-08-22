@@ -14,7 +14,11 @@ public class Foo implements Supplier<Long> {
 
     public static void main(String[] args) {
         long y = new Foo().get();
-        System.out.printf("%d\n", y);
+        final long w = IntStream.of(1)
+            .map(x -> x + 1)
+            .map(x -> x + 2)
+            .sum();
+        System.out.printf("%d\n", y + w);
     }
 
     @Override

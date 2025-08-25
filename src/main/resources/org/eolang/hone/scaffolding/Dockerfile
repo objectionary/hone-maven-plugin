@@ -32,11 +32,11 @@ RUN gpg --batch --recv-keys ECA44F5A172EDAD947F39E3D4275CDA6A29BED43 \
   && chmod +x /usr/bin/ghcup \
   && ghcup config set gpg-setting GPGStrict \
   && ghcup -v install ghc --isolate /usr/local --force "${GHC}" \
-  && ghcup -v install cabal --isolate /usr/local/bin --force "${CABAL}" \
-  && cabal update
+  && ghcup -v install cabal --isolate /usr/local/bin --force "${CABAL}"
 
 ARG PHINO_VERSION=0.0.0.0
-RUN cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO_VERSION}" \
+RUN cabal update \
+  && cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO_VERSION}" \
   && find /root -name phino -type f 2>/dev/null | head -1 | xargs -I {} cp {} /usr/local/bin/phino \
   && chmod +x /usr/local/bin/phino \
   && /usr/local/bin/phino --version

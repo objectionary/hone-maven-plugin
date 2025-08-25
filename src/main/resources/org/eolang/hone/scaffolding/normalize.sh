@@ -156,17 +156,11 @@ if [ "${threads}" == '0' ]; then
   threads=$(nproc)
   echo "Using ${threads} threads, by the number of CPUs"
 fi
-args=(
-  '--halt-on-error=now,fail=1'
-  '--halt=now,fail=1'
-  '--retries=0'
-  "--joblog=/target/hone-tasks.log"
-  "--max-procs=${threads}"
-  "--will-cite"
-)
 export PARALLEL_HOME=/target/parallel
 mkdir -p "${PARALLEL_HOME}"
 echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
 start=$(date '+%s.%N')
-parallel "${args[@]}" < "${tasks}"
+parallel --retries=0 --joblog=/target/hone-tasks.log --will-cite \
+  "--max-procs=${threads}" \
+  --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

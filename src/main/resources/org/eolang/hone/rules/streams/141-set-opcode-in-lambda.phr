@@ -42,7 +42,7 @@ result: |
     stream ↦ 𝑒-stream
   ⟧
 where:
-  - meta: 𝑒-opcode-from-singature
+  - meta: 𝑒-opcode-from-signature
     function: sed
     args:
       - 𝑒-target-signature
@@ -56,7 +56,7 @@ where:
       - '"s/false/invokevirtual/g"'
   - meta: 𝑒-opcodes
     function: concat
-    args: [𝑒-opcode-from-singature, '"-"', 𝑒-opcode-from-static]
+    args: [𝑒-opcode-from-signature, '"-"', 𝑒-opcode-from-static]
   - meta: 𝑒-opcode
     function: sed
     args:

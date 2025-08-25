@@ -4,14 +4,16 @@
  */
 package org.eolang.hone;
 
-import com.yegor256.Mktmp;
-import com.yegor256.MktmpResolver;
 import java.io.IOException;
 import java.nio.file.Path;
+
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import com.yegor256.Mktmp;
+import com.yegor256.MktmpResolver;
 
 /**
  * Test case for {@link Rules}.
@@ -73,7 +75,7 @@ final class RulesTest {
             new Rules("*").yamls(),
             Matchers.hasItems(
                 "none.yml",
-                "streams/701-lambda-to-invokedynamic.phr"
+                "streams/701-static-lambda-to-invokedynamic.phr"
             )
         );
     }
@@ -84,7 +86,7 @@ final class RulesTest {
         MatcherAssert.assertThat(
             "Should copy .phr rules too",
             temp.resolve(
-                "copies/streams/701-lambda-to-invokedynamic.phr"
+                "copies/streams/701-static-lambda-to-invokedynamic.phr"
             ).toFile().exists(),
             Matchers.is(true)
         );

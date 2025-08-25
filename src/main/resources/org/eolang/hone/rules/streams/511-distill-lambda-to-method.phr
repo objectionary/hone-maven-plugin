@@ -142,9 +142,9 @@ where:
       - 𝑒-bridge-input
       - '"s/^[DJ]$/2/g"'
       - '"s/^(B|C|F|I|S|Z|L.+;)$/1/g"'
-  - meta: 𝑒-pop-consumer-index-wihtout-this
+  - meta: 𝑒-pop-consumer-index-without-this
     function: number
     args: [𝑒-pop-consumer-index-str]
   - meta: 𝑒-pop-consumer-index
     function: sum
-    args: [𝑒-pop-consumer-index-wihtout-this, 𝑒-this-extra-index]
+    args: [𝑒-pop-consumer-index-without-this, 𝑒-this-extra-index]

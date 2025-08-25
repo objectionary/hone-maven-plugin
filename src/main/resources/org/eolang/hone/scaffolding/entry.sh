@@ -87,7 +87,7 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
-printf 'Memory available: %s\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"
+printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"
 
 printf 'Using Java: %s\n' "$(java --version | head -1)"
 

@@ -8,9 +8,11 @@ pattern: |
     φ ↦ Φ.hone.lambda,
     class ↦ 𝑒-class,
     method ↦ "apply",
-    interface ↦ "()Ljava/util/function/Function;",
+    interface ↦ 𝑒-interface,
     lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -33,6 +35,7 @@ result: |
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -41,6 +44,10 @@ result: |
       is-interface ↦ 𝑒-target-is-interface
     ⟧
   ⟧
+when:
+  matches:
+    - '\(.*\)Ljava/util/function/Function;'
+    - 𝑒-interface
 where:
   - meta: 𝑒-bridge-input
     function: sed
@@ -53,12 +60,6 @@ where:
     args:
       - 𝑒-bridge-signature
       - '"s/\\(.*\\)(.+)/$1/g"'
-  - meta: 𝑒-opcode
-    function: sed
-    args:
-      - 𝑒-target-signature
-      - '"s/\\(\\).+/invokevirtual/g"'
-      - '"s/\\(.+\\).+/invokestatic/g"'
   - meta: 𝑒-target-class-pattern
     function: sed
     # java\\/lang\\/String

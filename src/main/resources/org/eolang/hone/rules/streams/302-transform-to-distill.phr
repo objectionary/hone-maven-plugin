@@ -2,22 +2,18 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: map-to-distill
+name: transform-to-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.map,
+    φ ↦ Φ.hone.transform,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
-    accepted ↦ 𝑒-accepted,
-    returned ↦ 𝑒-returned,
     target ↦ ⟦
-      handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
       method ↦ 𝑒-target-method,
-      signature ↦ 𝑒-target-signature,
-      is-interface ↦ 𝑒-target-is-interface
+      signature ↦ 𝑒-target-signature
     ⟧
   ⟧
 result: |
@@ -26,16 +22,17 @@ result: |
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
-    start ↦ "map",
-    accepted ↦ 𝑒-accepted,
-    returned ↦ 𝑒-returned,
+    start ↦ "transform",
+    accepted ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-bridge-output,
+    static ↦ "true",
     body ↦ ⟦
-      i1 ↦ ⟦
+      i ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-opcode,
         i2 ↦ 𝑒-target-class,
         i3 ↦ 𝑒-target-method,
         i4 ↦ 𝑒-target-signature,
-        i5 ↦ 𝑒-target-is-interface
+        i5 ↦ Φ̇.false
       ⟧
     ⟧
   ⟧

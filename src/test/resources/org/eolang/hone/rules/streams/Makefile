@@ -17,7 +17,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=0.13.9
+JEO_VERSION=0.13.11
 
 all: env test jeo-test run
 
@@ -64,7 +64,8 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):disassemble" \
 		"-Djeo.disassemble.mode=short" \
 		"-Djeo.disassemble.sourcesDir=$$(dirname $<)" \
-		"-Djeo.disassemble.outputDir=$$(dirname $@)"
+		"-Djeo.disassemble.outputDir=$$(dirname $@)" \
+		"-Djeo.disassemble.xmir.modifiers=true"
 	@$(call check_xml,$@,"after-disassemble")
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile

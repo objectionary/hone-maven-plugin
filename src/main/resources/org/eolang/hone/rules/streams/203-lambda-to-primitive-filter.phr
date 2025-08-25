@@ -11,6 +11,8 @@ pattern: |
     interface ↦ 𝑒-interface,
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
     target ↦ 𝑒-target,
     stream ↦ ⟦
       class ↦ 𝑒-stream-class,
@@ -21,27 +23,29 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.hone.primitive-filter,
+    opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     stream-class ↦ 𝑒-stream-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ 𝑒-target
   ⟧
 when:
   or:
     - and:
-        - eq: [𝑒-interface, '"()Ljava/util/function/IntPredicate;"']
+        - matches: ['\(.*\)Ljava/util/function/IntPredicate;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(I)Z"']
         - eq: [𝑒-bridge-signature, '"(I)Z"']
         - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"']
     - and:
-        - eq: [𝑒-interface, '"()Ljava/util/function/LongPredicate;"']
+        - matches: ['\(.*\)Ljava/util/function/LongPredicate;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(J)Z"']
         - eq: [𝑒-bridge-signature, '"(J)Z"']
         - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"']
     - and:
-        - eq: [𝑒-interface, '"()Ljava/util/function/DoublePredicate;"']
+        - matches: ['\(.*\)Ljava/util/function/DoublePredicate;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(D)Z"']
         - eq: [𝑒-bridge-signature, '"(D)Z"']
         - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']

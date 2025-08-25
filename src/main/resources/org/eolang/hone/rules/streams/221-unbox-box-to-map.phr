@@ -11,6 +11,7 @@ pattern: |
       opcode ↦ 𝑒-opcode,
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
       target ↦ ⟦
         handle ↦ 𝑒-target-handle,
         class ↦ 𝑒-target-class,
@@ -36,6 +37,7 @@ result: |
       bridge-output ↦ 𝑒-bridge-output,
       accepted ↦ 𝑒-accepted,
       returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
       target ↦ ⟦
         handle ↦ 𝑒-target-handle,
         class ↦ 𝑒-target-class,

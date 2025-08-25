@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: nonstatic-invokedynamic-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ 𝑒-method,
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "false",
+    opcode ↦ 𝑒-opcode,
+    target ↦ 𝑒-target,
+    stream ↦ 𝑒-stream
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ 𝑒-method,
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ 𝑒-opcode,
+    target ↦ 𝑒-target,
+    stream ↦ 𝑒-stream
+  ⟧
+when:
+  matches:
+    - '\(\).+'
+    - 𝑒-interface

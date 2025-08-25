@@ -6,8 +6,10 @@ name: boxed-primitive-filter-to-filter
 pattern: |
   ⟦
     φ ↦ Φ.hone.boxed-primitive-filter,
+    opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -17,12 +19,13 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.hone.𝜏-filter,
-    opcode ↦ "invokestatic",
+    opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-input,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-accepted,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,

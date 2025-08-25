@@ -11,6 +11,16 @@
     name ↦ "Foo",
     j$main ↦ ⟦
       φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      descriptor ↦ "()V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        v1 ↦ 5,
+        v2 ↦ 5
+      ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
+      modifiers ↦ ⟦ static ↦ Φ̇.true ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of2,
         i2186 ↦ ⟦

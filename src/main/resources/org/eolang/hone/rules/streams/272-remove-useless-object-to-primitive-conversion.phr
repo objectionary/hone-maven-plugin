@@ -26,6 +26,7 @@ pattern: |
       bridge-output ↦ 𝑒-second-bridge-output,
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
       target ↦ ⟦
         handle ↦ 𝑒-second-target-handle,
         class ↦ 𝑒-target-class,

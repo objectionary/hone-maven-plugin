@@ -18,6 +18,7 @@ pattern: |
       start ↦ 𝑒-distill-start,
       accepted ↦ 𝑒-distill-accepted,
       returned ↦ 𝑒-distill-returned,
+      static ↦ 𝑒-distill-static,
       body ↦ 𝑒-distill-body
     ⟧,
     𝜏-unbox ↦ ⟦
@@ -25,6 +26,7 @@ pattern: |
       opcode ↦ 𝑒-unbox-opcode,
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      static ↦ "true",
       target ↦ ⟦
         𝐵-unbox-target-before,
         signature ↦ 𝑒-unbox-target-signature,
@@ -44,6 +46,7 @@ result: |
       start ↦ 𝑒-distill-start,
       accepted ↦ 𝑒-distill-accepted,
       returned ↦ 𝑒-distill-returned,
+      static ↦ 𝑒-distill-static,
       body ↦ 𝑒-distill-body
     ⟧,
     𝐵-after

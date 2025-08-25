@@ -7,11 +7,13 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-public class Foo implements Supplier<Object> {
+public class Foo implements Supplier<Long> {
 
     public static final int N = 100_000_000;
 
     private static final long[] VALS = IntStream.range(0, N).mapToLong(i -> i % 1000).toArray();
+
+    private final int z = 5;
 
     public static void main(String[] args) {
         final int[] input = { 1, 2, 4, 8, 16 };
@@ -41,7 +43,8 @@ public class Foo implements Supplier<Object> {
             .mapToLong(Foo::mapToLong)
             .sum();
         long x = LongStream.of(VALS).map(d -> d + d).sum();
-        System.out.printf("%d\n", r + x);
+        long w = new Foo().get();
+        System.out.printf("%d\n", r + x + w);
     }
 
     private static Integer mapToLong(double x) {
@@ -77,7 +80,28 @@ public class Foo implements Supplier<Object> {
     }
 
     @Override
-    public Object get() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Long get() {
+        final int[] input = { 1, 2, 4, 8, 16 };
+        final long r = IntStream.of(input)
+            .map(x -> x + 1)
+            .map(this::func)
+            .boxed()
+            .filter(Foo::filterBool)
+            .map(x -> this.func(this.z) + x)
+            .filter(this::filter)
+            .mapToDouble(x -> x)
+            .filter(x -> this.z + x > 2)
+            .boxed()
+            .mapToLong(Foo::mapToLong)
+            .sum();
+        return r;
+    }
+
+    public int func(int x) {
+        return this.z + x;
+    }
+
+    public boolean filter(int x) {
+        return x > 1;
     }
 }

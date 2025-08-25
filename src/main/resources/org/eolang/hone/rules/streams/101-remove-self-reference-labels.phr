@@ -5,7 +5,11 @@
 name: remove-self-reference-labels
 pattern: |
   ⟦
-    𝐵-body-head,
+    𝐵-before,
+    𝜏-invokedynamic ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      𝐵-invokedynamic
+    ⟧,
     𝜏-label ↦ ⟦
       φ ↦ Φ.jeo.label,
       𝜏-label-value ↦ 𝑒-label-value,
@@ -13,7 +17,7 @@ pattern: |
     ⟧,
     𝜏-line-number ↦ ⟦
       φ ↦ Φ.jeo.line-number,
-      number ↦ 𝑒-number,
+      number ↦ 𝑒-line-number,
       𝜏-ln-label ↦ ⟦
         φ ↦ Φ.jeo.label,
         𝜏-ln-label-value ↦ 𝑒-label-value,
@@ -21,10 +25,22 @@ pattern: |
       ⟧,
       ρ ↦ ∅
     ⟧,
-    𝐵-body-tail
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝐵-invokeinterface
+    ⟧,
+    𝐵-after
   ⟧
 result: |
   ⟦
-    𝐵-body-head,
-    𝐵-body-tail
+    𝐵-before,
+    𝜏-invokedynamic ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      𝐵-invokedynamic
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝐵-invokeinterface
+    ⟧,
+    𝐵-after
   ⟧

@@ -15,7 +15,16 @@ pattern: |
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
       φ ↦ Φ.jeo.method,
-      𝐵-function-signature,
+      access ↦ 𝑒-method-access,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ̇.𝜏-static,
+        𝐵-modifiers-after
+      ⟧,
       body ↦ ⟦
         𝐵-body-head,
         𝜏-invokedynamic ↦ ⟦
@@ -63,8 +72,7 @@ pattern: |
         𝐵-body-tail
       ⟧,
       local-variable-table ↦ 𝑒-lvt,
-      name ↦ 𝑒-function,
-      ρ ↦ ∅
+      name ↦ 𝑒-function
     ⟧,
     𝐵-class-body-tail
   ⟧
@@ -80,7 +88,16 @@ result: |
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
       φ ↦ Φ.jeo.method,
-      𝐵-function-signature,
+      access ↦ 𝑒-method-access,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ̇.𝜏-static,
+        𝐵-modifiers-after
+      ⟧,
       body ↦ ⟦
         𝐵-body-head,
         𝜏-lambda ↦ ⟦
@@ -90,6 +107,8 @@ result: |
           interface ↦ 𝑒-interface,
           lambda-signature ↦ 𝑒-lambda-signature,
           bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ 𝑒-static,
+          opcode ↦ "",
           target ↦ ⟦
             handle ↦ 𝑒-target-handle,
             class ↦ 𝑒-target-class,
@@ -106,8 +125,7 @@ result: |
         𝐵-body-tail
       ⟧,
       local-variable-table ↦ 𝑒-lvt,
-      name ↦ 𝑒-function,
-      ρ ↦ ∅
+      name ↦ 𝑒-function
     ⟧,
     𝐵-class-body-tail
   ⟧
@@ -115,3 +133,6 @@ where:
   - meta: 𝜏-lambda
     function: random-tau
     args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']
+  - meta: 𝑒-static
+    function: string
+    args: [𝜏-static]

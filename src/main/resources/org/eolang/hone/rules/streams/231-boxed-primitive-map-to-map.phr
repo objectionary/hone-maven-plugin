@@ -6,8 +6,10 @@ name: boxed-primitive-map-to-map
 pattern: |
   ⟦
     φ ↦ Φ.hone.boxed-primitive-map,
+    opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -17,12 +19,13 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.hone.map,
-    opcode ↦ "invokestatic",
+    opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-input,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -37,12 +40,6 @@ where:
       - '"s/\\(I\\)I/Ljava\\/lang\\/Integer;/g"'
       - '"s/\\(D\\)D/Ljava\\/lang\\/Double;/g"'
       - '"s/\\(J\\)J/Ljava\\/lang\\/Long;/g"'
-  - meta: 𝑒-opcode
-    function: sed
-    args:
-      - 𝑒-target-signature
-      - '"s/\\(\\).+/invokevirtual/g"'
-      - '"s/\\(.+\\).+/invokestatic/g"'
   - meta: 𝑒-bridge-input-pattern
     function: sed
     # Ljava\\/lang\\/String;

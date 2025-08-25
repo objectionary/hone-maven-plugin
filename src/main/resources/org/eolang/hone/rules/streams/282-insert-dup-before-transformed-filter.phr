@@ -14,6 +14,7 @@ pattern: |
       bridge-output ↦ 𝑒-first-bridge-output,
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
       target ↦ 𝑒-first-target
     ⟧,
     𝜏-between ↦ ⟦
@@ -28,6 +29,7 @@ pattern: |
       bridge-output ↦ 𝑒-second-bridge-output,
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
       target ↦ 𝑒-second-target
     ⟧,
     𝐵-after
@@ -43,6 +45,7 @@ result: |
       bridge-output ↦ 𝑒-first-bridge-output,
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
       target ↦ 𝑒-first-target
     ⟧,
     𝜏-dup ↦ ⟦
@@ -62,6 +65,7 @@ result: |
       bridge-output ↦ 𝑒-second-bridge-output,
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
       target ↦ 𝑒-second-target
     ⟧,
     𝐵-after

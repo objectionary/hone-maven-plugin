@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: load-this-in-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.pre-distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ "false",
+    body ↦ ⟦ 𝐵-body ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ "false",
+    body ↦ ⟦
+      𝜏-load-this ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        i ↦ 0
+      ⟧,
+      𝜏-dupx ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝐵-body
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-load-this
+    function: random-tau
+    args: [ 𝐵-body ]
+  - meta: 𝜏-dupx
+    function: random-tau
+    args: [ 𝐵-body, 𝜏-load-this ]
+  - meta: 𝜏-pop
+    function: random-tau
+    args: [ 𝐵-body, 𝜏-load-this, 𝜏-dupx ]
+  - meta: 𝑒-dup-x
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/^[DJ]$/dup_x2/g"'
+      - '"s/^(L.+;|I)$/dup_x1/g"'
+  - meta: 𝜏-dup-x
+    function: tau
+    args: [ 𝑒-dup-x ]

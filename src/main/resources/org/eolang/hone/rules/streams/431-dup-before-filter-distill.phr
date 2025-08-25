@@ -12,6 +12,7 @@ pattern: |
     start ↦ "filter",
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
   ⟧
 result: |
@@ -23,6 +24,7 @@ result: |
     start ↦ "dup",
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     body ↦ ⟦
       i-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
       𝐵-body,

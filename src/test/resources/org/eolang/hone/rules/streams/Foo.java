@@ -14,23 +14,19 @@ public class Foo implements Supplier<Long> {
 
     public static void main(String[] args) {
         long y = new Foo().get();
-        final long w = IntStream.of(1)
-            .map(x -> x + 1)
-            .map(x -> x + 2)
-            .sum();
-        System.out.printf("%d\n", y + w);
+        System.out.printf("%d\n", y);
     }
-
+    
     @Override
     public Long get() {
+        int w = this.func(5);
         final long r = IntStream.of(1)
-            .map(x -> this.z)
-            .map(x -> this.z)
+            .map(this::func)
             .sum();
         return r;
     }
 
-    public static void func(IntStream xs) {
-        xs.map(x -> x).sum();
+    private int func(int num) {
+        return this.z + num;
     }
 }

@@ -1,0 +1,150 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: distill-to-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.method,
+    access ↦ 𝑒-access,
+    descriptor ↦ 𝑒-descriptor,
+    signature ↦ "",
+    maxs ↦ ⟦
+      φ ↦ Φ.jeo.maxs,
+      max-stack ↦ 5,
+      max-locals ↦ 𝑒-max-locals
+    ⟧,
+    params ↦ ⟦
+      φ ↦ Φ.jeo.params,
+      i1 ↦ ⟦
+        φ ↦ Φ.jeo.param,
+        index ↦ 0,
+        access ↦ 0,
+        type ↦ 𝑒-bridge-input
+      ⟧,
+      i2 ↦ ⟦
+        φ ↦ Φ.jeo.param,
+        index ↦ 1,
+        access ↦ 0,
+        type ↦ 𝑒-consumer
+      ⟧
+    ⟧,
+    body ↦ ⟦
+      φ ↦ Φ.jeo.seq.of,
+      i-pop-item ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-load-item,
+        i1 ↦ 𝑒-this-extra-index
+      ⟧,
+      𝐵-body,
+      i-pop-consumer ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        i1 ↦ 𝑒-pop-consumer-index
+      ⟧,
+      i-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x ⟧,
+      i-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ 𝑒-consumer-class,
+        i3 ↦ "accept",
+        i4 ↦ 𝑒-invokeinterface-signature,
+        i5 ↦ Φ̇.true
+      ⟧,
+      i-return ↦ ⟦
+        φ ↦ Φ.jeo.opcode.return
+      ⟧,
+      ρ ↦ ∅
+    ⟧,
+    name ↦ 𝑒-target-method
+  ⟧
+where:
+  - meta: 𝑒-access-str
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/true/4106/g"'
+      - '"s/false/4098/g"'
+  - meta: 𝑒-access
+    function: number
+    args: [𝑒-access-str]
+  - meta: 𝑒-descriptor
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-bridge-input
+      - 𝑒-consumer
+      - '")V"'
+  - meta: 𝑒-max-locals-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^[DJ]$/3/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/2/g"'
+  - meta: 𝑒-max-locals-without-this
+    function: number
+    args: [𝑒-max-locals-str]
+  - meta: 𝑒-this-extra-index-str
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/true/0/g"'
+      - '"s/false/1/g"'
+  - meta: 𝑒-this-extra-index
+    function: number
+    args: [𝑒-this-extra-index-str]
+  - meta: 𝑒-max-locals
+    function: sum
+    args: [𝑒-max-locals-without-this, 𝑒-this-extra-index]
+  - meta: 𝑒-load-item
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/aload/g"'
+      - '"s/^D$/dload/g"'
+      - '"s/^I$/iload/g"'
+      - '"s/^J$/lload/g"'
+  - meta: 𝜏-load-item
+    function: tau
+    args: [𝑒-load-item]
+  - meta: 𝑒-dup-x
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^[DJ]$/dup_x2/g"'
+      - '"s/^(L.+;|I)$/dup_x1/g"'
+  - meta: 𝜏-dup-x
+    function: tau
+    args: [𝑒-dup-x]
+  - meta: 𝑒-consumer-class
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-invokeinterface-input
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/Ljava\\/lang\\/Object;/g"'
+  - meta: 𝑒-invokeinterface-signature
+    function: concat
+    args: ['"("', 𝑒-invokeinterface-input,'")V"']
+  - meta: 𝑒-pop-consumer-index-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^[DJ]$/2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/1/g"'
+  - meta: 𝑒-pop-consumer-index-wihtout-this
+    function: number
+    args: [𝑒-pop-consumer-index-str]
+  - meta: 𝑒-pop-consumer-index
+    function: sum
+    args: [𝑒-pop-consumer-index-wihtout-this, 𝑒-this-extra-index]

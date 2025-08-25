@@ -22,7 +22,7 @@ pattern: |
       params ↦ 𝑒-method-params,
       modifiers ↦ ⟦
         𝐵-modifiers-before,
-        static ↦ Φ̇.true,
+        static ↦ Φ̇.𝜏-static,
         𝐵-modifiers-after
       ⟧,
       body ↦ ⟦
@@ -95,7 +95,7 @@ result: |
       params ↦ 𝑒-method-params,
       modifiers ↦ ⟦
         𝐵-modifiers-before,
-        static ↦ Φ̇.true,
+        static ↦ Φ̇.𝜏-static,
         𝐵-modifiers-after
       ⟧,
       body ↦ ⟦
@@ -107,7 +107,7 @@ result: |
           interface ↦ 𝑒-interface,
           lambda-signature ↦ 𝑒-lambda-signature,
           bridge-signature ↦ 𝑒-bridge-signature,
-          static ↦ Φ̇.true,
+          static ↦ 𝑒-static,
           target ↦ ⟦
             handle ↦ 𝑒-target-handle,
             class ↦ 𝑒-target-class,
@@ -132,3 +132,6 @@ where:
   - meta: 𝜏-lambda
     function: random-tau
     args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']
+  - meta: 𝑒-static
+    function: string
+    args: [𝜏-static]

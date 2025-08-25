@@ -12,7 +12,8 @@ pattern: |
     map-multi-consumer ↦ 𝑒-map-multi-consumer,
     lambda-signature ↦ 𝑒-lambda-signature,
     consumer ↦ 𝑒-consumer,
-    stream-class ↦ 𝑒-stream-class
+    stream-class ↦ 𝑒-stream-class,
+    static ↦ 𝑒-static
   ⟧
 result: |
   ⟦
@@ -22,6 +23,7 @@ result: |
     interface ↦ 𝑒-interface,
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 6,
       class ↦ 𝑒-class,
@@ -36,9 +38,23 @@ result: |
     ⟧
   ⟧
 where:
+  - meta: 𝑒-class-pattern
+    function: sed
+    args:
+      - 𝑒-class
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-class-as-argument-pattern
+    function: concat
+    args: ['"s/^false$/L"', 𝑒-class-pattern, '";/g"']
+  - meta: 𝑒-class-as-argument
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/^true$//g"'
+      - 𝑒-class-as-argument-pattern
   - meta: 𝑒-interface
     function: concat
-    args: ['"()"', 𝑒-map-multi-consumer]
+    args: ['"("', 𝑒-class-as-argument, '")"', 𝑒-map-multi-consumer]
   - meta: 𝑒-bridge-signature
     function: concat
     args:

@@ -11,6 +11,7 @@ pattern: |
     interface ↦ 𝑒-interface,
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ 𝑒-target,
     stream ↦ ⟦
       class ↦ 𝑒-stream-class,
@@ -24,6 +25,7 @@ result: |
     class ↦ 𝑒-class,
     stream-class ↦ 𝑒-stream-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ 𝑒-target
   ⟧
 when:

@@ -11,6 +11,7 @@ pattern: |
       class ↦ 𝑒-class,
       stream-class ↦ 𝑒-stream-class,
       bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
       target ↦ 𝑒-target
     ⟧,
     𝐵-after
@@ -26,6 +27,7 @@ result: |
       φ ↦ Φ.hone.𝜏-boxed-primitive-func,
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
       target ↦ 𝑒-target
     ⟧,
     𝜏-unbox ↦ ⟦
@@ -33,6 +35,7 @@ result: |
       opcode ↦ "invokevirtual",
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      static ↦ Φ̇.true,
       target ↦ ⟦
         handle ↦ 5,
         class ↦ 𝑒-unbox-target-class,

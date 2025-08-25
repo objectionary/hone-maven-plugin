@@ -14,6 +14,7 @@ pattern: |
       start ↦ 𝑒-first-start,
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
       body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
     ⟧,
     𝜏-second ↦ ⟦
@@ -24,6 +25,7 @@ pattern: |
       start ↦ 𝑒-second-start,
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
       body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
     ⟧,
     𝐵-body-tail
@@ -39,6 +41,7 @@ result: |
       start ↦ 𝑒-first-start,
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-result-static,
       body ↦ ⟦
         𝐵-first-body,
         𝐵-second-body,
@@ -47,3 +50,13 @@ result: |
     ⟧,
     𝐵-body-tail
   ⟧
+where:
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-first-static, 𝑒-second-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'

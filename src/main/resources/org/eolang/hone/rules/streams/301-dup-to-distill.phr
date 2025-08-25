@@ -18,6 +18,7 @@ result: |
     start ↦ "dup",
     accepted ↦ "Ljava/lang/Object;",
     returned ↦ "Ljava/lang/Object;",
+    static ↦ "true",
     body ↦ ⟦
       i ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-opcode ⟧
     ⟧

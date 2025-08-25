@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: dup-before-filter-distill
+name: load-this-in-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.distill,
+    φ ↦ Φ.hone.pre-distill,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
-    start ↦ "filter",
+    start ↦ 𝑒-start,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
-    static ↦ 𝑒-static,
-    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    static ↦ "false",
+    body ↦ ⟦ 𝐵-body ⟧
   ⟧
 result: |
   ⟦
@@ -21,23 +21,19 @@ result: |
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
-    start ↦ "dup",
+    start ↦ 𝑒-start,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
-    static ↦ 𝑒-static,
+    static ↦ "false",
     body ↦ ⟦
-      i-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
-      𝐵-body,
-      ρ ↦ ∅
+      𝜏-load-this ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        i ↦ 0
+      ⟧,
+      𝐵-body
     ⟧
   ⟧
 where:
-  - meta: 𝑒-dup
-    function: sed
-    args:
-      - 𝑒-accepted
-      - '"s/^[DJ]$/dup2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
-  - meta: 𝜏-dup
-    function: tau
-    args: [𝑒-dup]
+  - meta: 𝜏-load-this
+    function: random-tau
+    args: [ 𝐵-body ]

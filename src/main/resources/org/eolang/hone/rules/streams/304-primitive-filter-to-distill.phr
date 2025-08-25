@@ -12,6 +12,7 @@ pattern: |
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -22,13 +23,14 @@ pattern: |
   ⟧
 result: |
   ⟦
-    φ ↦ Φ.hone.distill,
+    φ ↦ Φ.hone.𝜏-distill,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-input,
     start ↦ "filter",
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     body ↦ ⟦
       i2 ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-opcode,
@@ -84,3 +86,12 @@ where:
       - '"s/^S$/short/g"'
       - '"s/^Z$/boolean/g"'
       - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-distill
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/true/distill/g"'
+      - '"s/false/pre-distill/g"'
+  - meta: 𝜏-distill
+    function: tau
+    args: [𝑒-distill]

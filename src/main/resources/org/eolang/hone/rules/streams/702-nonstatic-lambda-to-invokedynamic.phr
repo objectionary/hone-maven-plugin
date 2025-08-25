@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: lambda-to-invokedynamic
+name: nonstatic-lambda-to-invokedynamic
 pattern: |
   ⟦
     𝐵-before,
@@ -13,7 +13,7 @@ pattern: |
       interface ↦ 𝑒-interface,
       lambda-signature ↦ 𝑒-lambda-signature,
       bridge-signature ↦ 𝑒-bridge-signature,
-      static ↦ Φ̇.false,
+      static ↦ "false",
       target ↦ ⟦
         handle ↦ 𝑒-target-handle,
         class ↦ 𝑒-target-class,

@@ -8,6 +8,7 @@ pattern: |
     φ ↦ Φ.hone.boxed-primitive-map,
     class ↦ 𝑒-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -23,6 +24,7 @@ result: |
     bridge-output ↦ 𝑒-bridge-input,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,

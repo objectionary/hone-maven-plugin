@@ -9,6 +9,7 @@ pattern: |
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ 𝑒-target
   ⟧
 result: |
@@ -19,6 +20,7 @@ result: |
     interface ↦ 𝑒-interface,
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ 𝑒-target,
     stream ↦ ⟦
       class ↦ "java/util/stream/Stream",
@@ -36,7 +38,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-output
-      - '"s/I/Integer/g"'
+      - '"s/I/Int/g"'
       - '"s/J/Long/g"'
       - '"s/D/Double/g"'
   - meta: 𝑒-method

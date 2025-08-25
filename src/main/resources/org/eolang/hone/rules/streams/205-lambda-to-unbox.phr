@@ -11,6 +11,7 @@ pattern: |
     interface ↦ 𝑒-interface,
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -28,6 +29,7 @@ result: |
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -38,21 +40,21 @@ when:
   or:
     - and:
         - eq: [𝑒-method, '"applyAsInt"']
-        - eq: [𝑒-interface, '"()Ljava/util/function/ToIntFunction;"']
+        - matches: ['\(.*\)Ljava/util/function/ToIntFunction;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(Ljava/lang/Object;)I"']
         - eq: [𝑒-stream-method, '"mapToInt"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToIntFunction;)Ljava/util/stream/IntStream;"']
         - matches: ['\(L.+;\)I', 𝑒-bridge-signature]
     - and:
         - eq: [𝑒-method, '"applyAsLong"']
-        - eq: [𝑒-interface, '"()Ljava/util/function/ToLongFunction;"']
+        - matches: ['\(.*\)Ljava/util/function/ToLongFunction;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(Ljava/lang/Object;)J"']
         - eq: [𝑒-stream-method, '"mapToLong"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;"']
         - matches: ['\(L.+;\)J', 𝑒-bridge-signature]
     - and:
         - eq: [𝑒-method, '"applyAsDouble"']
-        - eq: [𝑒-interface, '"()Ljava/util/function/ToDoubleFunction;"']
+        - matches: ['\(.*\)Ljava/util/function/ToDoubleFunction;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(Ljava/lang/Object;)D"']
         - eq: [𝑒-stream-method, '"mapToDouble"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToDoubleFunction;)Ljava/util/stream/DoubleStream;"']

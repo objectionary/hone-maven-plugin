@@ -8,9 +8,10 @@ pattern: |
     φ ↦ Φ.hone.lambda,
     class ↦ 𝑒-class,
     method ↦ "test",
-    interface ↦ "()Ljava/util/function/Predicate;",
+    interface ↦ 𝑒-interface,
     lambda-signature ↦ "(Ljava/lang/Object;)Z",
     bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -33,6 +34,7 @@ result: |
     bridge-output ↦ 𝑒-bridge-input,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-bridge-input,
+    static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -41,6 +43,10 @@ result: |
       is-interface ↦ 𝑒-target-is-interface
     ⟧
   ⟧
+when:
+  matches:
+    - '\(.*\)Ljava/util/function/Predicate;'
+    - 𝑒-interface
 where:
   - meta: 𝑒-bridge-input
     function: sed

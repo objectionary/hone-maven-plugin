@@ -11,7 +11,7 @@
   <version>0.0.0</version>
   <name>hone</name>
   <properties>
-    <jeo.version>0.13.10</jeo.version>
+    <jeo.version>0.13.11</jeo.version>
   </properties>
   <build>
     <pluginManagement>
@@ -22,6 +22,7 @@
           <version>${jeo.version}</version>
           <configuration>
             <mode>debug</mode>
+            <modifiers>true</modifiers>
             <omitComments>true</omitComments>
             <omitListings>true</omitListings>
             <prettyXmir>true</prettyXmir>

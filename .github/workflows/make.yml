@@ -21,7 +21,8 @@ jobs:
           java-version: 23
       - run: |
           set -e
-          sudo apt-get --fix-missing -y install libxml2-utils
+          sudo apt-get update
+          sudo apt-get -y install libxml2-utils
           sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod +x /usr/bin/phino
           phino --version

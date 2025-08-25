@@ -20,7 +20,7 @@ result: |
     signature ↦ "",
     maxs ↦ ⟦
       φ ↦ Φ.jeo.maxs,
-      max-stack ↦ 5,
+      max-stack ↦ 6,
       max-locals ↦ 𝑒-max-locals
     ⟧,
     params ↦ ⟦

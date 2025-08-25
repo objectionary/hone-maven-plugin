@@ -30,6 +30,8 @@ result: |
         φ ↦ Φ.jeo.opcode.aload,
         i ↦ 0
       ⟧,
+      𝜏-dupx ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       𝐵-body
     ⟧
   ⟧
@@ -37,3 +39,18 @@ where:
   - meta: 𝜏-load-this
     function: random-tau
     args: [ 𝐵-body ]
+  - meta: 𝜏-dupx
+    function: random-tau
+    args: [ 𝐵-body, 𝜏-load-this ]
+  - meta: 𝜏-pop
+    function: random-tau
+    args: [ 𝐵-body, 𝜏-load-this, 𝜏-dupx ]
+  - meta: 𝑒-dup-x
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/^[DJ]$/dup_x2/g"'
+      - '"s/^(L.+;|I)$/dup_x1/g"'
+  - meta: 𝜏-dup-x
+    function: tau
+    args: [ 𝑒-dup-x ]

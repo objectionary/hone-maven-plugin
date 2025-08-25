@@ -21,6 +21,7 @@ result: |
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
     static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
     target ↦ 𝑒-target,
     stream ↦ ⟦
       class ↦ "java/util/stream/Stream",

@@ -24,8 +24,9 @@ result: |
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
     static ↦ 𝑒-static,
+    opcode ↦ "",
     target ↦ ⟦
-      handle ↦ 6,
+      handle ↦ 𝑒-handle,
       class ↦ 𝑒-class,
       method ↦ 𝑒-target-method,
       signature ↦ 𝑒-bridge-signature,
@@ -55,6 +56,15 @@ where:
   - meta: 𝑒-interface
     function: concat
     args: ['"("', 𝑒-class-as-argument, '")"', 𝑒-map-multi-consumer]
+  - meta: 𝑒-handle-str
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/true/6/g"'
+      - '"s/false/5/g"'
+  - meta: 𝑒-handle
+    function: number
+    args: [ 𝑒-handle-str ]
   - meta: 𝑒-bridge-signature
     function: concat
     args:

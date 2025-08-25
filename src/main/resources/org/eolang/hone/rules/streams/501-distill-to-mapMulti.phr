@@ -62,7 +62,8 @@ result: |
       consumer ↦ 𝑒-consumer,
       target-method ↦ 𝑒-target-method,
       body ↦ 𝑒-body
-    ⟧
+    ⟧,
+    ρ ↦ ∅
   ⟧
 where:
   - meta: 𝜏-distill-lambda

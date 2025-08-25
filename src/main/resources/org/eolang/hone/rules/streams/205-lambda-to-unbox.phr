@@ -12,6 +12,7 @@ pattern: |
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
     static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
     target ↦ ⟦
       𝐵-target-before,
       signature ↦ 𝑒-target-signature,
@@ -59,10 +60,3 @@ when:
         - eq: [𝑒-stream-method, '"mapToDouble"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/ToDoubleFunction;)Ljava/util/stream/DoubleStream;"']
         - matches: ['\(L.+;\)D', 𝑒-bridge-signature]
-where:
-  - meta: 𝑒-opcode
-    function: sed
-    args:
-      - 𝑒-target-signature
-      - '"s/\\(\\).+/invokevirtual/g"'
-      - '"s/\\(.+\\).+/invokestatic/g"'

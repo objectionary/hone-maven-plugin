@@ -19,6 +19,7 @@ pattern: |
       lambda-signature ↦ 𝑒-lambda-signature,
       bridge-signature ↦ 𝑒-bridge-signature,
       static ↦ "false",
+      opcode ↦ 𝑒-opcode,
       target ↦ 𝑒-target,
       stream ↦ 𝑒-stream
     ⟧,
@@ -35,6 +36,7 @@ result: |
       lambda-signature ↦ 𝑒-lambda-signature,
       bridge-signature ↦ 𝑒-bridge-signature,
       static ↦ "false",
+      opcode ↦ 𝑒-opcode,
       target ↦ 𝑒-target,
       stream ↦ 𝑒-stream
     ⟧,

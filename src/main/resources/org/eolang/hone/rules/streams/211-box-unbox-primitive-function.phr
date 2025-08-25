@@ -8,6 +8,7 @@ pattern: |
     𝐵-before,
     𝜏-primitive ↦ ⟦
       φ ↦ Φ.hone.𝜏-primitive-func,
+      opcode ↦ 𝑒-opcode,
       class ↦ 𝑒-class,
       stream-class ↦ 𝑒-stream-class,
       bridge-signature ↦ 𝑒-bridge-signature,
@@ -25,6 +26,7 @@ result: |
     ⟧,
     𝜏-primitive ↦ ⟦
       φ ↦ Φ.hone.𝜏-boxed-primitive-func,
+      opcode ↦ 𝑒-opcode,
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-bridge-signature,
       static ↦ 𝑒-static,
@@ -35,7 +37,7 @@ result: |
       opcode ↦ "invokevirtual",
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-unbox-bridge-signature,
-      static ↦ Φ̇.true,
+      static ↦ "true",
       target ↦ ⟦
         handle ↦ 5,
         class ↦ 𝑒-unbox-target-class,

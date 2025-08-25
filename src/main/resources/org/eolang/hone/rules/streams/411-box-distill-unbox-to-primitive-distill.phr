@@ -26,6 +26,7 @@ pattern: |
       opcode ↦ 𝑒-unbox-opcode,
       class ↦ 𝑒-class,
       bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      static ↦ "true",
       target ↦ ⟦
         𝐵-unbox-target-before,
         signature ↦ 𝑒-unbox-target-signature,

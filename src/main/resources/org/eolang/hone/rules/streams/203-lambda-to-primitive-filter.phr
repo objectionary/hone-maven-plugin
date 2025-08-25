@@ -12,6 +12,7 @@ pattern: |
     lambda-signature ↦ 𝑒-lambda-signature,
     bridge-signature ↦ 𝑒-bridge-signature,
     static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
     target ↦ 𝑒-target,
     stream ↦ ⟦
       class ↦ 𝑒-stream-class,
@@ -22,6 +23,7 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.hone.primitive-filter,
+    opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     stream-class ↦ 𝑒-stream-class,
     bridge-signature ↦ 𝑒-bridge-signature,

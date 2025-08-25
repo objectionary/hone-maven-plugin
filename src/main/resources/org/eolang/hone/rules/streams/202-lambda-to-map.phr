@@ -12,6 +12,7 @@ pattern: |
     lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
     bridge-signature ↦ 𝑒-bridge-signature,
     static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -59,12 +60,6 @@ where:
     args:
       - 𝑒-bridge-signature
       - '"s/\\(.*\\)(.+)/$1/g"'
-  - meta: 𝑒-opcode
-    function: sed
-    args:
-      - 𝑒-target-signature
-      - '"s/\\(\\).+/invokevirtual/g"'
-      - '"s/\\(.+\\).+/invokestatic/g"'
   - meta: 𝑒-target-class-pattern
     function: sed
     # java\\/lang\\/String

@@ -1,0 +1,67 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    signature ↦ "",
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    name ↦ "Foo",
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      descriptor ↦ "()V",
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        v1 ↦ 5,
+        v2 ↦ 5
+      ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
+      modifiers ↦ ⟦ static ↦ Φ̇.true ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        i2186 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          v2194 ↦ "apply",
+          v2196 ↦ "(Lcom/jcabi/xml/XSL;)Ljava/util/function/Function;",
+          h2198 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            v2199 ↦ 6,
+            v2201 ↦ "java/lang/invoke/LambdaMetafactory",
+            v2202 ↦ "metafactory",
+            v2203 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            v2204 ↦ Φ̇.false
+          ⟧,
+          t2214 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            v2215 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;"
+          ⟧,
+          h2246 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            v2249 ↦ 9,
+            v2250 ↦ "com/jcabi/xml/XSL",
+            v2251 ↦ "transform",
+            v2252 ↦ "(Lcom/jcabi/xml/XML;)Lcom/jcabi/xml/XML;",
+            v2254 ↦ Φ̇.true
+          ⟧,
+          t2271 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            v2272 ↦ "(Lcom/jcabi/xml/XML;)Lcom/jcabi/xml/XML;"
+          ⟧
+        ⟧,
+        i2362 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          v2369 ↦ "java/util/stream/Stream",
+          v2371 ↦ "map",
+          v2372 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+          v2376 ↦ Φ̇.true
+        ⟧
+      ⟧,
+      local-variable-table ↦ ⟦⟧,
+      name ↦ "main"
+    ⟧
+  ⟧
+⟧}

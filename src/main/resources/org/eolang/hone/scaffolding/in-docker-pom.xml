@@ -47,6 +47,7 @@
               <HONE_XMIR_OUT>${exec.phino.xmir-out}</HONE_XMIR_OUT>
               <HONE_SMALL_STEPS>${exec.phino.small-steps}</HONE_SMALL_STEPS>
               <HONE_MAX_DEPTH>${exec.phino.max-depth}</HONE_MAX_DEPTH>
+              <HONE_MAX_CYCLES>${exec.phino.max-cycles}</HONE_MAX_CYCLES>
               <HONE_THREADS>${exec.phino.threads}</HONE_THREADS>
               <HONE_TIMEOUT>${exec.phino.timeout}</HONE_TIMEOUT>
             </environmentVariables>

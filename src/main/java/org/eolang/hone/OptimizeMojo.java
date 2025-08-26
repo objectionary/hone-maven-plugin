@@ -4,6 +4,9 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,15 +18,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.cactoos.iterable.Mapped;
-
-import com.jcabi.log.Logger;
-import com.sun.jna.Library;
-import com.sun.jna.Native;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.

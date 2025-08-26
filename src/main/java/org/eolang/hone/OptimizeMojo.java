@@ -4,9 +4,6 @@
  */
 package org.eolang.hone;
 
-import com.jcabi.log.Logger;
-import com.sun.jna.Library;
-import com.sun.jna.Native;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,10 +15,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.cactoos.iterable.Mapped;
+
+import com.jcabi.log.Logger;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
@@ -159,7 +161,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean smallSteps;
 
     /**
-     * How many rewriting cycles to tolerate at maximum?
+     * How many rewriting cycles per rule to tolerate at maximum?
      *
      * <p>This number doesn't need to be changed. However, it may be used for debugging.
      * The larger the number, the longer optimization might take. We pass
@@ -170,6 +172,19 @@ public final class OptimizeMojo extends AbstractMojo {
      */
     @Parameter(property = "hone.max-depth", defaultValue = "500")
     private int maxDepth;
+
+    /**
+     * How many rewriting cycles across all rules to tolerate at maximum?
+     *
+     * <p>This number doesn't need to be changed. However, it may be used for debugging.
+     * The larger the number, the longer optimization might take. We pass
+     * this number to <tt>phino</tt> as the <tt>--max-depth</tt> argument.</p>
+     *
+     * @since 0.4.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.max-cycles", defaultValue = "1")
+    private int maxCycles;
 
     /**
      * How many seconds to spend on each <tt>.phi</tt> file at most?
@@ -360,6 +375,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("MAX_DEPTH=%d", this.maxDepth)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("MAX_CYCLES=%d", this.maxCycles)
             )
         );
         command.addAll(

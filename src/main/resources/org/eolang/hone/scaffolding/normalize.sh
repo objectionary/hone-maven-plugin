@@ -47,7 +47,7 @@ function rewrite {
       m=$(basename "${rule}" .yml)
       pos=$(( pos + 1 ))
       t="${pho}.${pos}"
-      phino rewrite "${phinopts[@]}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}" > "${t}"
+      phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}" > "${t}"
       if cmp -s "${pho}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"
       else
@@ -60,7 +60,7 @@ function rewrite {
     for rule in "${rules[@]}"; do
       opts+=("--rule=${rule}")
     done
-    phino rewrite "${phinopts[@]}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}" > "${pho}"
+    phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}" > "${pho}"
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}")

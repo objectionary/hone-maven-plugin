@@ -50,7 +50,7 @@ import org.cactoos.iterable.Mapped;
  * @checkstyle ExecutableStatementCountCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.TooManyFields"})
 public final class OptimizeMojo extends AbstractMojo {
 
     /**

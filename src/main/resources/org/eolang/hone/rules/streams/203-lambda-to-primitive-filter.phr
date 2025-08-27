@@ -33,19 +33,19 @@ result: |
 when:
   or:
     - and:
-        - matches: ['\(.*\)Ljava/util/function/IntPredicate;', 𝑒-interface]
+        - matches: ['\(\)Ljava/util/function/IntPredicate;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(I)Z"']
         - eq: [𝑒-bridge-signature, '"(I)Z"']
         - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"']
     - and:
-        - matches: ['\(.*\)Ljava/util/function/LongPredicate;', 𝑒-interface]
+        - matches: ['\(\)Ljava/util/function/LongPredicate;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(J)Z"']
         - eq: [𝑒-bridge-signature, '"(J)Z"']
         - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"']
     - and:
-        - matches: ['\(.*\)Ljava/util/function/DoublePredicate;', 𝑒-interface]
+        - matches: ['\(\)Ljava/util/function/DoublePredicate;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(D)Z"']
         - eq: [𝑒-bridge-signature, '"(D)Z"']
         - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']

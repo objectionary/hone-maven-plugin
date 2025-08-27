@@ -8,7 +8,7 @@ SHELL := bash
 .PHONY: all clean test env diff jeo-test run
 
 RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules/streams
-TESTS_DIR=expressions
+TESTS_DIR=lints
 TARGET=../../../../../../../../target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)

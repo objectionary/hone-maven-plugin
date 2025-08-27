@@ -34,21 +34,21 @@ when:
   or:
     - and:
         - eq: [𝑒-method, '"applyAsInt"']
-        - matches: ['\(.*\)Ljava/util/function/IntUnaryOperator;', 𝑒-interface]
+        - matches: ['\(\)Ljava/util/function/IntUnaryOperator;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(I)I"']
         - eq: [𝑒-bridge-signature, '"(I)I"']
         - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntUnaryOperator;)Ljava/util/stream/IntStream;"']
     - and:
         - eq: [𝑒-method, '"applyAsLong"']
-        - matches: ['\(.*\)Ljava/util/function/LongUnaryOperator;', 𝑒-interface]
+        - matches: ['\(\)Ljava/util/function/LongUnaryOperator;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(J)J"']
         - eq: [𝑒-bridge-signature, '"(J)J"']
         - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
         - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongUnaryOperator;)Ljava/util/stream/LongStream;"']
     - and:
         - eq: [𝑒-method, '"applyAsDouble"']
-        - matches: ['\(.*\)Ljava/util/function/DoubleUnaryOperator;', 𝑒-interface]
+        - matches: ['\(\)Ljava/util/function/DoubleUnaryOperator;', 𝑒-interface]
         - eq: [𝑒-lambda-signature, '"(D)D"']
         - eq: [𝑒-bridge-signature, '"(D)D"']
         - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']

@@ -132,6 +132,18 @@ public final class OptimizeMojo extends AbstractMojo {
     private String grepIn;
 
     /**
+     * Skip phino entirely.
+     *
+     * <p>If this is set to <tt>true</tt>, phino is not
+     * executed and no rewriting happens.</p>
+     *
+     * @since 0.15.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skip-phino", defaultValue = "false")
+    private boolean skipPhino;
+
+    /**
      * Print all commands of all Bash scripts.
      *
      * <p>If this is set to <tt>true</tt>, all our internal bash scripts will
@@ -353,6 +365,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("SMALL_STEPS=%s", this.smallSteps)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("SKIP_PHINO=%s", this.skipPhino)
             )
         );
         command.addAll(

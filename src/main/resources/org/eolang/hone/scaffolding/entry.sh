@@ -99,40 +99,42 @@ printf 'Using the following %d rules:\n\t%b\n' \
   "$(( "$(echo "${RULES}" | grep -o ' ' | wc -l)" + 1))" \
   "${RULES// /\\n\\t}"
 
-declare -a jeo_opts=()
 if [ -n "${INCLUDES}" ]; then
-  jeo_opts+=("-Djeo.disassemble.includes=${INCLUDES}")
-  jeo_opts+=("-Djeo.assemble.includes=${INCLUDES}")
+  opts+=("-Djeo.disassemble.includes=${INCLUDES}")
+  opts+=("-Djeo.assemble.includes=${INCLUDES}")
 fi
 if [ -n "${EXCLUDES}" ]; then
-  jeo_opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
-  jeo_opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
+  opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
+  opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
 fi
 
-(
-  set -x
-  mvn "${opts[@]}" \
-    jeo:disassemble \
-    "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}" \
-    "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble" \
-    "${jeo_opts[@]}" \
-    exec:exec \
-    "-Dexec.phino.script=${SELF}/normalize.sh" \
-    "-Dexec.phino.verbose=${VERBOSE}" \
-    "-Dexec.phino.debug=${DEBUG}" \
-    "-Dexec.phino.rules=${RULES}" \
-    "-Dexec.phino.grep-in=${GREP_IN}" \
-    "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble" \
-    "-Dexec.phino.from=${TARGET}/generated-sources/phi" \
-    "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized" \
-    "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi" \
-    "-Dexec.phino.small-steps=${SMALL_STEPS}" \
-    "-Dexec.phino.timeout=${TIMEOUT}" \
-    "-Dexec.phino.threads=${THREADS}" \
-    "-Dexec.phino.max-depth=${MAX_DEPTH}" \
-    "-Dexec.phino.max-cycles=${MAX_CYCLES}" \
-    jeo:assemble \
-    "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi" \
-    "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}" \
-    "${jeo_opts[@]}"
+opts+=(
+  "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}"
+  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble"
+  "-Dexec.phino.script=${SELF}/normalize.sh"
+  "-Dexec.phino.verbose=${VERBOSE}"
+  "-Dexec.phino.debug=${DEBUG}"
+  "-Dexec.phino.rules=${RULES}"
+  "-Dexec.phino.grep-in=${GREP_IN}"
+  "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble"
+  "-Dexec.phino.from=${TARGET}/generated-sources/phi"
+  "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized"
+  "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi"
+  "-Dexec.phino.small-steps=${SMALL_STEPS}"
+  "-Dexec.phino.timeout=${TIMEOUT}"
+  "-Dexec.phino.threads=${THREADS}"
+  "-Dexec.phino.max-depth=${MAX_DEPTH}"
+  "-Dexec.phino.max-cycles=${MAX_CYCLES}"
+  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi"
+  "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}"
 )
+
+opts+=('jeo:disassemble')
+if [ "${SKIP_PHINO}" == 'true' ]; then
+  echo "Skipping the phino step as requested"
+else
+  opts+=('exec:exec')
+fi
+opts+=('jeo:assemble')
+
+( set -x; mvn "${opts[@]}" )

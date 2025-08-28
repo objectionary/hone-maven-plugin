@@ -104,4 +104,3 @@ where:
       - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
       - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
       - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
-

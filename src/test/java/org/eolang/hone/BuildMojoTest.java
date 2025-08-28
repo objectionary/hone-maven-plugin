@@ -121,7 +121,7 @@ final class BuildMojoTest {
                 Matchers.containsString("entry.sh"),
                 Matchers.containsString("normalize.sh"),
                 Matchers.containsString("none.yml"),
-                Matchers.containsString("701-lambda-to-invokedynamic.phr")
+                Matchers.containsString("701-static-lambda-to-invokedynamic.phr")
             )
         );
     }

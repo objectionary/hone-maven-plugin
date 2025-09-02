@@ -141,6 +141,67 @@ final class OptimizeMojoTest {
     @ExtendWith(MayBeSlow.class)
     @Timeout(6000L)
     @DisabledWithoutDocker
+    void transformsSimpleAppWithoutPhino(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/foo/Foo.java")
+                    .write(
+                        """
+                        package foo;
+                        class Foo {
+                            int foo() {
+                                return 33;
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/test/java/foo/FooTest.java")
+                    .write(
+                        """
+                        package foo;
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class FooTest {
+                            @Test
+                            void worksWithoutPhino() {
+                                Assertions.assertEquals(33, new Foo().foo());
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("rules", "33-to-42")
+                    .set("skipPhino", "true")
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(6000L)
+    @DisabledWithoutDocker
     void optimizesExecutableJavaApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(

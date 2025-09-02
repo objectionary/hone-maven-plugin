@@ -125,14 +125,15 @@ opts+=(
   "-Dexec.phino.threads=${THREADS}"
   "-Dexec.phino.max-depth=${MAX_DEPTH}"
   "-Dexec.phino.max-cycles=${MAX_CYCLES}"
-  "-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi"
   "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}"
 )
 
 opts+=('jeo:disassemble')
 if [ "${SKIP_PHINO}" == 'true' ]; then
   echo "Skipping the phino step as requested"
+  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/jeo-disassemble")
 else
+  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi")
   opts+=('exec:exec')
 fi
 opts+=('jeo:assemble')

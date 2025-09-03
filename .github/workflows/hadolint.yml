@@ -16,6 +16,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.2.0
         with:
           dockerfile: src/main/resources/org/eolang/hone/scaffolding/Dockerfile

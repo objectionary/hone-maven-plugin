@@ -144,6 +144,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean skipPhino;
 
     /**
+     * Skip if no .class files found.
+     *
+     * @since 0.16.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skip-if-no-classes", defaultValue = "true")
+    private boolean skipIfNoClasses;
+
+    /**
      * Print all commands of all Bash scripts.
      *
      * <p>If this is set to <tt>true</tt>, all our internal bash scripts will
@@ -276,8 +285,13 @@ public final class OptimizeMojo extends AbstractMojo {
     private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
 
     @Override
-    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity" })
+    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })
     public void exec() throws IOException {
+        if (!this.target.toPath().resolve(this.classes).toFile().exists()
+            && this.skipIfNoClasses) {
+            Logger.info(this, "The directory with classes is absent, skipping");
+            return;
+        }
         final long start = System.currentTimeMillis();
         if (this.target.mkdirs()) {
             Logger.info(this, "Target directory '%s' created", this.target);

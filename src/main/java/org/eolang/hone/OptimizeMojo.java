@@ -144,6 +144,18 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean skipPhino;
 
     /**
+     * Run without Docker if phino is available.
+     *
+     * <p>If this is set to <tt>true</tt>, Docker is not used
+     * if phino is available.</p>
+     *
+     * @since 0.15.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.maybe-without-docker", defaultValue = "true")
+    private boolean maybeWithoutDocker;
+
+    /**
      * Skip if no .class files found.
      *
      * @since 0.16.0
@@ -305,7 +317,8 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--volume", String.format("%s:%s", this.target, tdir),
                 "--volume", String.format("%s:%s", this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
-                "--env", String.format("EO_CACHE=%s", cdir)
+                "--env", String.format("EO_CACHE=%s", cdir),
+                "--env", "HONE_HOME=/hone"
             )
         );
         final Path extdir = this.target.toPath().resolve("hone-extra");

@@ -153,6 +153,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.maybe-without-docker", defaultValue = "true")
+    @SuppressWarnings("PMD.LongVariable")
     private boolean maybeWithoutDocker;
 
     /**

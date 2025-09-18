@@ -564,7 +564,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
                 .withEnv("RULES", this.rulesAsString());
-            if (this.extra == null || this.extra.isEmpty()) {
+            if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
             }

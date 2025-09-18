@@ -160,9 +160,11 @@ if [ "${threads}" == '0' ]; then
 fi
 export PARALLEL_HOME=${TARGET}/parallel
 mkdir -p "${PARALLEL_HOME}"
+parallel --record-env
 echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
 start=$(date '+%s.%N')
 parallel --retries=0 "--joblog=${TARGET}/hone-tasks.log" --will-cite \
   "--max-procs=${threads}" \
+  --env _ \
   --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

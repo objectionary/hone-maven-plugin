@@ -12,6 +12,10 @@
             φ ↦ Φ.jeo.seq.of1,
             x0 ↦ "org/eolang/lints/Lint"
           ⟧,
+          modifiers ↦ ⟦
+            φ ↦ Φ.jeo.modifiers,
+            interface ↦ Φ̇.false
+          ⟧,
           name ↦ "org/eolang/lints/LtAtomIsNotUnique",
           j$pre ↦ ⟦
             φ ↦ Φ.jeo.field,

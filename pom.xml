@@ -371,6 +371,7 @@
                     <argument>--console=plain</argument>
                     <argument>--no-parallel</argument>
                     <argument>-Phone.version=${project.version}</argument>
+                    <argument>-Dfile.encoding=UTF-8</argument>
                     <argument>clean</argument>
                     <argument>test</argument>
                   </arguments>

@@ -314,9 +314,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Target directory '%s' created", this.target);
         }
         final long start = System.currentTimeMillis();
-        if (new Jaxec("phino", "--version").withCheck(false).exec().code() == 0
-            && this.maybeWithoutDocker) {
-            Logger.info(this, "The 'phino' executable found, no need to use Docker");
+        if (this.maybeWithoutDocker && this.phinoAvailable()) {
             this.withoutDocker();
         } else {
             this.withDocker();
@@ -327,6 +325,30 @@ public final class OptimizeMojo extends AbstractMojo {
             this.target,
             System.currentTimeMillis() - start
         );
+    }
+
+    private boolean phinoAvailable() {
+        boolean available = false;
+        try {
+            if (new Jaxec("phino", "--version").withCheck(false).execUnsafe().code() == 0) {
+                available = true;
+                Logger.info(this, "The 'phino' executable found, no need to use Docker");
+            } else {
+                Logger.info(
+                    this,
+                    "The 'phino' executable is found, but it doesn't work, we will use Docker"
+                );
+            }
+        } catch (final IOException ex) {
+            Logger.info(
+                this,
+                String.format(
+                    "The 'phino' executable not found, we will use Docker: %s",
+                    ex.getMessage()
+                )
+            );
+        }
+        return available;
     }
 
     @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })

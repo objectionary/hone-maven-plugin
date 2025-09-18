@@ -372,7 +372,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--volume", String.format("%s:%s", this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
                 "--env", String.format("EO_CACHE=%s", cdir),
-                "--env", "HONE_HOME=/hone"
+                "--env", "WORKDIR=/hone"
             )
         );
         final Path extdir = this.target.toPath().resolve("hone-extra");

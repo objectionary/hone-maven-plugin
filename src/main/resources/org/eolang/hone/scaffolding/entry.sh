@@ -48,7 +48,6 @@ echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(f
 
 # Maven options for all steps:
 declare -a opts=(
-  "--settings=${HONE_HOME}/settings.xml"
   '--update-snapshots'
   '--fail-fast'
   '--strict-checksums'
@@ -57,6 +56,9 @@ declare -a opts=(
   "-Deo.cache=${EO_CACHE}"
   "--file=$(dirname "$0")/pom.xml"
 )
+if [ -e "${WORKDIR}/settings.xml" ]; then
+  opts+=("--settings=${WORKDIR}/settings.xml")
+fi
 if [ -n "${EO_VERSION}" ]; then
   opts+=("-Deo.version=${EO_VERSION}")
   echo "Using EO version ${EO_VERSION}"

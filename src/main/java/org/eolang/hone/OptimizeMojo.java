@@ -584,6 +584,9 @@ public final class OptimizeMojo extends AbstractMojo {
                     )
                 ).value();
             }
+            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+                temp.path().resolve(file).toFile().setExecutable(true);
+            }
             new Rules("*").copyTo(temp.path().resolve("rules"));
             Jaxec jaxec = new Jaxec(temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())

@@ -59,6 +59,7 @@ declare -a opts=(
   '--batch-mode'
   '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
+  "-Dexec.phino.target=${TARGET}"
   "--file=$(dirname "$0")/pom.xml"
 )
 if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then

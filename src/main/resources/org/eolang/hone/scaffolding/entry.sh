@@ -11,6 +11,12 @@ fi
 
 SELF=$(dirname "$0")
 
+if [ "${LANG}" != 'en_US.UTF-8' ]; then
+  echo "Setting locale to en_US.UTF-8 from '${LANG}'"
+  LANG=en_US.UTF-8
+  export LANG
+fi
+
 cd "${SELF}" || exit 1
 
 if [ -z "${TARGET}" ]; then

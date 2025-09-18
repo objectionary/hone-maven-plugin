@@ -63,7 +63,7 @@ function rewrite {
     phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}" > "${pho}"
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
-  s_lines=$(wc -l < "${pho}")
+  s_lines=$(wc -l < "${pho}" | xargs)
   per=$(perl -E "say int(${s_lines} / ($(date '+%s.%N') - ${start}))")
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
@@ -138,7 +138,6 @@ fi
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
 tasks=${TARGET}/hone-tasks.txt
-rm -f "${tasks}"
 verbose "Found ${total} XMIR file(s) to process"
 idx=0
 while IFS= read -r f; do
@@ -151,8 +150,6 @@ while IFS= read -r f; do
   i="${idx}/${total}"
   printf "%s rewrite_with_timeout %s %s %s %s %s\n" "${0@Q}" "${i@Q}" "${phi@Q}" "${pho@Q}" "${xi@Q}" "${xo@Q}" >> "${tasks}"
 done <<< "${files}"
-
-echo "Task list created in ${tasks}"
 
 threads=${HONE_THREADS}
 if [ "${threads}" == '0' ]; then

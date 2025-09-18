@@ -9,8 +9,6 @@ if [ "${DEBUG}" == 'true' ]; then
   set -x
 fi
 
-set -x
-
 SELF=$(dirname "$0")
 
 cd "${SELF}" || exit 1

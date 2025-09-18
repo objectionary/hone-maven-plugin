@@ -137,7 +137,7 @@ fi
 
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
-tasks=/target/hone-tasks.txt
+tasks=${TARGET}/hone-tasks.txt
 verbose "Found ${total} XMIR file(s) to process"
 idx=0
 while IFS= read -r f; do
@@ -156,11 +156,11 @@ if [ "${threads}" == '0' ]; then
   threads=$(nproc)
   echo "Using ${threads} threads, by the number of CPUs"
 fi
-export PARALLEL_HOME=/target/parallel
+export PARALLEL_HOME=${TARGET}/parallel
 mkdir -p "${PARALLEL_HOME}"
 echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
 start=$(date '+%s.%N')
-parallel --retries=0 --joblog=/target/hone-tasks.log --will-cite \
+parallel --retries=0 "--joblog=${TARGET}/hone-tasks.log" --will-cite \
   "--max-procs=${threads}" \
   --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

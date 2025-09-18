@@ -510,6 +510,7 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void copyExtras(final Path extdir) throws IOException {
         if (this.extra != null) {
             if (extdir.toFile().mkdirs()) {

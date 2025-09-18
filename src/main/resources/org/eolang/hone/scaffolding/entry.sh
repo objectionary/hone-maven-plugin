@@ -146,4 +146,9 @@ else
 fi
 opts+=('jeo:assemble')
 
-( set -x; mvn "${opts[@]}"; echo "Maven exited with code $?" )
+MAVEN_OPTS="-Dfile.encoding=UTF-8"
+export MAVEN_OPTS
+(
+  set -x
+  mvn "${opts[@]}"
+)

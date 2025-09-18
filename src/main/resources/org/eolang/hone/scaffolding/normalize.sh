@@ -14,6 +14,11 @@ if [ "${HONE_DEBUG}" == 'true' ]; then
   set -x
 fi
 
+if [ "${LANG}" != 'en_US.UTF-8' ]; then
+  LANG=en_US.UTF-8
+  export LANG
+fi
+
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
 function rewrite {

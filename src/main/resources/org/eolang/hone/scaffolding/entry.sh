@@ -56,8 +56,9 @@ declare -a opts=(
   "-Deo.cache=${EO_CACHE}"
   "--file=$(dirname "$0")/pom.xml"
 )
-if [ -e "${WORKDIR}/settings.xml" ]; then
+if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
   opts+=("--settings=${WORKDIR}/settings.xml")
+  echo "Using Maven settings file at ${WORKDIR}"
 fi
 if [ -n "${EO_VERSION}" ]; then
   opts+=("-Deo.version=${EO_VERSION}")
@@ -144,4 +145,4 @@ else
 fi
 opts+=('jeo:assemble')
 
-( set -x; mvn "${opts[@]}" 2>&1 )
+( set -x; mvn "${opts[@]}" )

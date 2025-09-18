@@ -36,6 +36,7 @@
           <configuration>
             <executable>${exec.phino.script}</executable>
             <environmentVariables>
+              <TARGET>${project.build.directory}</TARGET>
               <HONE_VERSION>${project.version}</HONE_VERSION>
               <HONE_VERBOSE>${exec.phino.verbose}</HONE_VERBOSE>
               <HONE_DEBUG>${exec.phino.debug}</HONE_DEBUG>

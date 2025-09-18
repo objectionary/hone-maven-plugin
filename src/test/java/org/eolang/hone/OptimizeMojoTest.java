@@ -271,6 +271,7 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .configuration()
                     .set("image", image)
+                    .set("verbose", "true")
                     .set("timeout", "15");
                 f.build()
                     .plugins()
@@ -284,7 +285,7 @@ final class OptimizeMojoTest {
                     .execution("second")
                     .phase("process-classes")
                     .goals("optimize");
-                f.exec("test");
+                f.exec("test", "-X");
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
                     f.files().file("target/generated-sources/phi-optimized/Hello.phi").exists(),

@@ -152,6 +152,7 @@ else
 fi
 opts+=('jeo:assemble')
 
+echo "Running Maven..."
 (
   set -x
   mvn "${opts[@]}"

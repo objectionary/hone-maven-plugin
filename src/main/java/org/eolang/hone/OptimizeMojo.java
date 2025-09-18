@@ -328,6 +328,7 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private boolean phinoAvailable() {
         boolean available = false;
         try {
@@ -567,6 +568,9 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    // @checkstyle CyclomaticComplexityCheck (200 lines)
+    // @checkstyle NPathComplexityCheck (200 lines)
+    @SuppressWarnings("PMD.NPathComplexity")
     private void withoutDocker() throws IOException {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {

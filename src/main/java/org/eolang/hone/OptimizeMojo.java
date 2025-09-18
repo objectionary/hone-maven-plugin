@@ -304,23 +304,33 @@ public final class OptimizeMojo extends AbstractMojo {
     private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
 
     @Override
-    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })
     public void exec() throws IOException {
         if (!this.target.toPath().resolve(this.classes).toFile().exists()
             && this.skipIfNoClasses) {
             Logger.info(this, "The directory with classes is absent, skipping");
             return;
         }
-        final long start = System.currentTimeMillis();
         if (this.target.mkdirs()) {
             Logger.info(this, "Target directory '%s' created", this.target);
         }
+        final long start = System.currentTimeMillis();
         if (new Jaxec("phino", "--version").withCheck(false).exec().code() == 0
             && this.maybeWithoutDocker) {
             Logger.info(this, "The 'phino' executable found, no need to use Docker");
             this.withoutDocker();
-            return;
+        } else {
+            this.withDocker();
         }
+        Logger.info(
+            this,
+            "Bytecode was optimized in '%s' in %[ms]s",
+            this.target,
+            System.currentTimeMillis() - start
+        );
+    }
+
+    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })
+    private void withDocker() throws IOException {
         final String tdir = "/target";
         final String cdir = "/eo-cache";
         final Collection<String> command = new LinkedList<>(
@@ -483,12 +493,6 @@ public final class OptimizeMojo extends AbstractMojo {
             "optimize",
             () -> new Docker(this.sudo).exec(command)
         );
-        Logger.info(
-            this,
-            "Bytecode was optimized in '%s' in %[ms]s",
-            this.target,
-            System.currentTimeMillis() - start
-        );
     }
 
     private void saveExtra(final Path src, final Path target) throws IOException {
@@ -560,10 +564,10 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
                 .withEnv("RULES", this.rules)
                 .withEnv("EXTRA", temp.path().resolve("hone-extra").toString())
-                .withEnv("EO_VERSION", this.eoVersion == null ? "" : this.eoVersion)
-                .withEnv("JEO_VERSION", this.jeoVersion == null ? "" : this.jeoVersion)
-                .withEnv("INCLUDES", this.includes == null ? "" : String.join(",", this.includes))
-                .withEnv("EXCLUDES", this.excludes == null ? "" : String.join(",", this.excludes))
+                .withEnv("EO_VERSION", this.eoVersion)
+                .withEnv("JEO_VERSION", this.jeoVersion)
+                .withEnv("INCLUDES", String.join(",", this.includes))
+                .withEnv("EXCLUDES", String.join(",", this.excludes))
                 .exec();
         }
     }

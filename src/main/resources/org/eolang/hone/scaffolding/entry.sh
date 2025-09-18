@@ -2,14 +2,18 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -ex -o pipefail
+set -e -o pipefail
 
 if [ "${DEBUG}" == 'true' ]; then
   echo "We are in debug mode, printing all commands..."
   set -x
 fi
 
+set -x
+
 SELF=$(dirname "$0")
+
+cd "${SELF}" || exit 1
 
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set; make sure you do \
@@ -138,4 +142,4 @@ else
 fi
 opts+=('jeo:assemble')
 
-( set -x; mvn "${opts[@]}" )
+( set -x; mvn "${opts[@]}" 2>&1 )

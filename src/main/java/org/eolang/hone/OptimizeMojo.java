@@ -8,7 +8,6 @@ import com.jcabi.log.Logger;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.yegor256.Jaxec;
-import com.yegor256.Result;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

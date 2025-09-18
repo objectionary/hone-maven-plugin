@@ -60,14 +60,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     protected boolean sudo;
 
     /**
-     * Skip the execution, if set to TRUE.
-     *
-     * @since 0.1.0
-     */
-    @Parameter(property = "hone.skip", defaultValue = "false")
-    private boolean skip;
-
-    /**
      * Run without Docker even if phino is available.
      *
      * <p>If this is set to <tt>true</tt>, Docker is used
@@ -80,6 +72,14 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     @Parameter(property = "hone.always-with-docker", defaultValue = "false")
     @SuppressWarnings("PMD.LongVariable")
     protected boolean alwaysWithDocker;
+
+    /**
+     * Skip the execution, if set to TRUE.
+     *
+     * @since 0.1.0
+     */
+    @Parameter(property = "hone.skip", defaultValue = "false")
+    private boolean skip;
 
     @Override
     public final void execute() throws MojoExecutionException {

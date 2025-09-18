@@ -7,24 +7,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import com.yegor256.Jaxec;
 import com.yegor256.Result;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.Resource;
-import io.github.classgraph.ScanResult;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-import org.cactoos.io.OutputTo;
-import org.cactoos.io.ResourceOf;
-import org.cactoos.io.TeeInput;
-import org.cactoos.iterable.Mapped;
-import org.cactoos.scalar.IoChecked;
-import org.cactoos.scalar.LengthOf;
 
 /**
  * An abstraction of Phino in command line.

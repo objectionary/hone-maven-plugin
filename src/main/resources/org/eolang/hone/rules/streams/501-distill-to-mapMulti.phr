@@ -6,7 +6,13 @@ name: distill-to-mapMulti
 pattern: |
   ⟦
     φ ↦ Φ.jeo.class,
-    𝐵-class-head,
+    𝐵-class-head-before,
+    modifiers ↦ ⟦
+      𝐵-class-modifiers-before,
+      interface ↦ 𝑒-is-interface,
+      𝐵-class-modifiers-after
+    ⟧,
+    𝐵-class-head-after,
     𝜏-method ↦ ⟦
       φ ↦ Φ.jeo.method,
       𝐵-method-head,
@@ -33,7 +39,13 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.jeo.class,
-    𝐵-class-head,
+    𝐵-class-head-before,
+    modifiers ↦ ⟦
+      𝐵-class-modifiers-before,
+      interface ↦ 𝑒-is-interface,
+      𝐵-class-modifiers-after
+    ⟧,
+    𝐵-class-head-after,
     𝜏-method ↦ ⟦
       φ ↦ Φ.jeo.method,
       𝐵-method-head,
@@ -48,7 +60,8 @@ result: |
           lambda-signature ↦ 𝑒-lambda-signature,
           consumer ↦ 𝑒-consumer,
           stream-class ↦ 𝑒-stream-class,
-          static ↦ 𝑒-static
+          static ↦ 𝑒-static,
+          is-interface ↦ 𝑒-is-interface
         ⟧,
         𝐵-body-tail
       ⟧,
@@ -68,7 +81,7 @@ result: |
 where:
   - meta: 𝜏-distill-lambda
     function: random-tau
-    args: ['name', '𝐵-class-head', '𝐵-class-tail']
+    args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail']
   - meta: 𝑒-target-method
     function: random-string
     args: [ '"distill_%d"' ]

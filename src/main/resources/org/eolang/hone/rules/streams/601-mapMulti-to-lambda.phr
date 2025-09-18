@@ -13,7 +13,8 @@ pattern: |
     lambda-signature ↦ 𝑒-lambda-signature,
     consumer ↦ 𝑒-consumer,
     stream-class ↦ 𝑒-stream-class,
-    static ↦ 𝑒-static
+    static ↦ 𝑒-static,
+    is-interface ↦ 𝑒-is-interface
   ⟧
 result: |
   ⟦
@@ -30,7 +31,7 @@ result: |
       class ↦ 𝑒-class,
       method ↦ 𝑒-target-method,
       signature ↦ 𝑒-bridge-signature,
-      is-interface ↦ Φ̇.false
+      is-interface ↦ 𝑒-is-interface
     ⟧,
     stream ↦ ⟦
       class ↦ 𝑒-stream-class,

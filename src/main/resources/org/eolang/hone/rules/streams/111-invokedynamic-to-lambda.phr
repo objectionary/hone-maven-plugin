@@ -11,6 +11,7 @@ pattern: |
     signature ↦ 𝑒-class-signature,
     supername ↦ 𝑒-class-supername,
     interfaces ↦ 𝑒-class-interfaces,
+    modifiers ↦ 𝑒-class-modifiers,
     name ↦ 𝑒-class,
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
@@ -84,6 +85,7 @@ result: |
     signature ↦ 𝑒-class-signature,
     supername ↦ 𝑒-class-supername,
     interfaces ↦ 𝑒-class-interfaces,
+    modifiers ↦ 𝑒-class-modifiers,
     name ↦ 𝑒-class,
     𝐵-class-body-head,
     𝜏-function ↦ ⟦

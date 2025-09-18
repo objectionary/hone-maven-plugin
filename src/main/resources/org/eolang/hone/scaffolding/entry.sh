@@ -146,8 +146,6 @@ else
 fi
 opts+=('jeo:assemble')
 
-MAVEN_OPTS="-Dfile.encoding=UTF-8"
-export MAVEN_OPTS
 (
   set -x
   mvn "${opts[@]}"

@@ -571,10 +571,10 @@ public final class OptimizeMojo extends AbstractMojo {
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
             }
             if (this.includes != null && this.includes.length > 0) {
-                jaxec = jaxec.withEnv("INCLUDES", String.join(",", this.includes));
+                jaxec = jaxec.withEnv("INCLUDES", this.localPaths(this.includes));
             }
             if (this.excludes != null && this.excludes.length > 0) {
-                jaxec = jaxec.withEnv("EXCLUDES", String.join(",", this.excludes));
+                jaxec = jaxec.withEnv("EXCLUDES", this.localPaths(this.excludes));
             }
             if (this.cache != null) {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
@@ -591,6 +591,16 @@ public final class OptimizeMojo extends AbstractMojo {
             }
             jaxec.exec();
         }
+    }
+
+    private String localPaths(final String... paths) {
+        return String.join(
+            ",",
+            new Mapped<>(
+                p -> p.replaceAll("^/target", this.target.toString()),
+                paths
+            )
+        );
     }
 
     /**

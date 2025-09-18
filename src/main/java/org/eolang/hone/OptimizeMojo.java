@@ -371,40 +371,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Directory %[file]s created", extdir);
         }
         if (this.extra != null) {
-            if (extdir.toFile().mkdirs()) {
-                Logger.info(this, "Directory %[file]s created", extdir);
-            }
-            for (final String ext : this.extra) {
-                final Path src = Paths.get(ext);
-                if (src.toFile().isDirectory()) {
-                    Logger.info(
-                        this,
-                        "Scanning %[file]s for extra rules (%s)...",
-                        src, this.extraExtensions
-                    );
-                    try (Stream<Path> files = Files.list(src)) {
-                        final List<Path> yamls = files
-                            .filter(
-                                f -> {
-                                    boolean match = false;
-                                    for (final String extn : this.extraExtensions.split(",")) {
-                                        match = match || f.getFileName().toString().endsWith(
-                                            String.format(".%s", extn.trim())
-                                        );
-                                    }
-                                    return match;
-                                }
-                            )
-                            .sorted()
-                            .collect(Collectors.toList());
-                        for (final Path yaml : yamls) {
-                            this.saveExtra(yaml, extdir);
-                        }
-                    }
-                } else {
-                    this.saveExtra(src, extdir);
-                }
-            }
+            this.copyExtras(extdir);
             command.addAll(
                 Arrays.asList(
                     "--env", String.format("EXTRA=%s/hone-extra", tdir)
@@ -540,6 +507,45 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    private void copyExtras(final Path extdir) throws IOException {
+        if (this.extra != null) {
+            if (extdir.toFile().mkdirs()) {
+                Logger.info(this, "Directory %[file]s created", extdir);
+            }
+            for (final String ext : this.extra) {
+                final Path src = Paths.get(ext);
+                if (src.toFile().isDirectory()) {
+                    Logger.info(
+                        this,
+                        "Scanning %[file]s for extra rules (%s)...",
+                        src, this.extraExtensions
+                    );
+                    try (Stream<Path> files = Files.list(src)) {
+                        final List<Path> yamls = files
+                            .filter(
+                                f -> {
+                                    boolean match = false;
+                                    for (final String extn : this.extraExtensions.split(",")) {
+                                        match = match || f.getFileName().toString().endsWith(
+                                            String.format(".%s", extn.trim())
+                                        );
+                                    }
+                                    return match;
+                                }
+                            )
+                            .sorted()
+                            .collect(Collectors.toList());
+                        for (final Path yaml : yamls) {
+                            this.saveExtra(yaml, extdir);
+                        }
+                    }
+                } else {
+                    this.saveExtra(src, extdir);
+                }
+            }
+        }
+    }
+
     /**
      * Return the user and group IDs of the current user.
      *
@@ -571,6 +577,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 ).value();
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
+            this.copyExtras(temp.path().resolve("hone-extra"));
             new Jaxec(temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
                 .withEnv("EO_CACHE", "~/.eo")

@@ -15,6 +15,10 @@ if [ "${LANG}" != 'en_US.UTF-8' ]; then
   echo "Setting locale to en_US.UTF-8 from '${LANG}'"
   LANG=en_US.UTF-8
   export LANG
+  LC_ALL=en_US.UTF-8
+  export LC_ALL
+  LANGUAGE=en_US.UTF-8
+  export LANGUAGE
 fi
 
 cd "${SELF}" || exit 1

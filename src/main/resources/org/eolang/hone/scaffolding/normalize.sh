@@ -15,8 +15,13 @@ if [ "${HONE_DEBUG}" == 'true' ]; then
 fi
 
 if [ "${LANG}" != 'en_US.UTF-8' ]; then
+  echo "Setting locale to en_US.UTF-8 from '${LANG}'"
   LANG=en_US.UTF-8
   export LANG
+  LC_ALL=en_US.UTF-8
+  export LC_ALL
+  LANGUAGE=en_US.UTF-8
+  export LANGUAGE
 fi
 
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"

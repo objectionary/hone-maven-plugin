@@ -7,6 +7,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import com.yegor256.Jaxec;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +22,12 @@ import java.util.stream.Stream;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.cactoos.io.OutputTo;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.io.TeeInput;
 import org.cactoos.iterable.Mapped;
+import org.cactoos.scalar.IoChecked;
+import org.cactoos.scalar.LengthOf;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
@@ -309,6 +315,12 @@ public final class OptimizeMojo extends AbstractMojo {
         if (this.target.mkdirs()) {
             Logger.info(this, "Target directory '%s' created", this.target);
         }
+        if (new Jaxec("phino", "--version").withCheck(false).exec().code() == 0
+            && this.maybeWithoutDocker) {
+            Logger.info(this, "The 'phino' executable found, no need to use Docker");
+            this.withoutDocker();
+            return;
+        }
         final String tdir = "/target";
         final String cdir = "/eo-cache";
         final Collection<String> command = new LinkedList<>(
@@ -513,6 +525,47 @@ public final class OptimizeMojo extends AbstractMojo {
             OptimizeMojo.CLibrary.INSTANCE.getuid(),
             OptimizeMojo.CLibrary.INSTANCE.geteuid()
         );
+    }
+
+    private void withoutDocker() throws IOException {
+        try (Mktemp temp = new Mktemp()) {
+            final String[] files = {
+                "entry.sh",
+                "pom.xml",
+                "normalize.sh",
+            };
+            for (final String file : files) {
+                new IoChecked<>(
+                    new LengthOf(
+                        new TeeInput(
+                            new ResourceOf(String.format("org/eolang/hone/scaffolding/%s", file)),
+                            new OutputTo(temp.path().resolve(file))
+                        )
+                    )
+                ).value();
+            }
+            new Rules("*").copyTo(temp.path().resolve("rules"));
+            new Jaxec(temp.path().resolve("entry.sh").toString())
+                .withEnv("TARGET", this.target.toString())
+                .withEnv("EO_CACHE", "~/.eo")
+                .withEnv("DEBUG", Boolean.toString(this.debug))
+                .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
+                .withEnv("CLASSES", this.classes)
+                .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
+                .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
+                .withEnv("GREP_IN", this.grepIn)
+                .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
+                .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
+                .withEnv("THREADS", Integer.toString(this.threads))
+                .withEnv("TIMEOUT", Integer.toString(this.timeout))
+                .withEnv("RULES", this.rules)
+                .withEnv("EXTRA", temp.path().resolve("hone-extra").toString())
+                .withEnv("EO_VERSION", this.eoVersion == null ? "" : this.eoVersion)
+                .withEnv("JEO_VERSION", this.jeoVersion == null ? "" : this.jeoVersion)
+                .withEnv("INCLUDES", this.includes == null ? "" : String.join(",", this.includes))
+                .withEnv("EXCLUDES", this.excludes == null ? "" : String.join(",", this.excludes))
+                .exec();
+        }
     }
 
     /**

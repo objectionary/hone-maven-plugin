@@ -120,6 +120,7 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("debug", "true")
+                    .set("maybeWithoutDocker", "false")
                     .set("image", image);
                 f.exec("test");
                 MatcherAssert.assertThat(

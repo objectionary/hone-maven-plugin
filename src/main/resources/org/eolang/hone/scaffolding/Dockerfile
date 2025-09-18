@@ -87,7 +87,7 @@ WORKDIR /hone
 COPY --from=builder /usr/local/bin/phino /usr/bin/phino
 RUN phino --version
 
-COPY in-docker-pom.xml pom.xml
+COPY pom.xml pom.xml
 COPY extensions.xml ./.mvn/
 COPY settings.xml /hone/
 

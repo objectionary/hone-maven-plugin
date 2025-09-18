@@ -128,7 +128,7 @@ and [Docker](https://docs.docker.com/engine/install/) installed.
 
 The versions of [EO] and
 [JEO](https://github.com/objectionary/jeo-maven-plugin),
-that we use, are defined in the `in-docker-pom.xml` file.
+that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/17248340324

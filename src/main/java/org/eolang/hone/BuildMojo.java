@@ -59,7 +59,7 @@ public final class BuildMojo extends AbstractMojo {
     public void exec() throws IOException {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
-                "Dockerfile", "entry.sh", "in-docker-pom.xml",
+                "Dockerfile", "entry.sh", "pom.xml",
                 "normalize.sh", "extensions.xml", "settings.xml",
             };
             for (final String file : files) {

@@ -151,7 +151,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean skipPhino;
 
     /**
-     * Run without Docker if phino is available.
+     * Run without Docker even if phino is available.
      *
      * <p>If this is set to <tt>true</tt>, Docker is not used
      * if phino is available.</p>
@@ -159,9 +159,9 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.15.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.maybe-without-docker", defaultValue = "true")
+    @Parameter(property = "hone.always-with-docker", defaultValue = "false")
     @SuppressWarnings("PMD.LongVariable")
-    private boolean maybeWithoutDocker;
+    private boolean alwaysWithDocker;
 
     /**
      * Skip if no .class files found.
@@ -315,10 +315,10 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Target directory '%s' created", this.target);
         }
         final long start = System.currentTimeMillis();
-        if (this.maybeWithoutDocker && this.phinoAvailable()) {
-            this.withoutDocker();
-        } else {
+        if (this.alwaysWithDocker || !this.phinoAvailable()) {
             this.withDocker();
+        } else {
+            this.withoutDocker();
         }
         Logger.info(
             this,
@@ -345,14 +345,14 @@ public final class OptimizeMojo extends AbstractMojo {
             } else {
                 Logger.info(
                     this,
-                    "The 'phino' executable is found, but it doesn't work, we will use Docker"
+                    "The 'phino' executable is found, but it doesn't work, we must use Docker"
                 );
             }
         } catch (final IOException ex) {
             Logger.info(
                 this,
                 String.format(
-                    "The 'phino' executable not found, we will use Docker: %s",
+                    "The 'phino' executable not found, we must use Docker: %s",
                     ex.getMessage()
                 )
             );

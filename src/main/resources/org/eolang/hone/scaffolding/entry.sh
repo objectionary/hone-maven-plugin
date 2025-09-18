@@ -60,7 +60,6 @@ declare -a opts=(
   '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
   "-Dexec.phino.target=${TARGET}"
-  "--file=$(dirname "$0")/pom.xml"
 )
 if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
   opts+=("--settings=${WORKDIR}/settings.xml")
@@ -152,6 +151,8 @@ else
   opts+=('exec:exec')
 fi
 opts+=('jeo:assemble')
+
+tree -a
 
 (
   set -x

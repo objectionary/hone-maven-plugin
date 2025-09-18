@@ -345,6 +345,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize")
                     .configuration()
+                    .set("alwaysWithDocker", "true")
                     .set("image", image);
                 f.exec("process-classes");
                 final Path pre = f.files().file(

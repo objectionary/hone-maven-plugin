@@ -298,7 +298,9 @@ public final class OptimizeMojo extends AbstractMojo {
             return;
         }
         if (this.target.mkdirs()) {
-            Logger.info(this, "Target directory '%s' created", this.target);
+            Logger.info(this, "Target directory %[file]s created", this.target);
+        } else {
+            Logger.info(this, "Target directory %[file]s already exists", this.target);
         }
         final long start = System.currentTimeMillis();
         if (this.alwaysWithDocker || !new Phino().available()) {

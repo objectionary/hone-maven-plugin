@@ -285,7 +285,7 @@ final class OptimizeMojoTest {
                     .execution("second")
                     .phase("process-classes")
                     .goals("optimize");
-                f.exec("test", "-X");
+                f.exec("test");
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
                     f.files().file("target/generated-sources/phi-optimized/Hello.phi").exists(),

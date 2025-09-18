@@ -579,7 +579,6 @@ public final class OptimizeMojo extends AbstractMojo {
             new Rules("*").copyTo(temp.path().resolve("rules"));
             Jaxec jaxec = new Jaxec(temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
-                .withEnv("EO_CACHE", "~/.eo")
                 .withEnv("DEBUG", Boolean.toString(this.debug))
                 .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
                 .withEnv("CLASSES", this.classes)

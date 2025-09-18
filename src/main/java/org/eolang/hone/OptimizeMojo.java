@@ -156,7 +156,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>If this is set to <tt>true</tt>, Docker is not used
      * if phino is available.</p>
      *
-     * @since 0.15.0
+     * @since 0.17.0
      * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.always-with-docker", defaultValue = "false")

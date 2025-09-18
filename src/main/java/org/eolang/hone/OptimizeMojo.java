@@ -600,7 +600,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("RULES", this.rules);
             if (this.extra == null || this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
-                jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString())
+                jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
             }
             if (this.includes != null && this.includes.length > 0) {
                 jaxec = jaxec.withEnv("INCLUDES", String.join(",", this.includes));

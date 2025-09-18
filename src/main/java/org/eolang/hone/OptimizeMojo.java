@@ -8,6 +8,7 @@ import com.jcabi.log.Logger;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.yegor256.Jaxec;
+import com.yegor256.Result;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -330,9 +331,16 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean phinoAvailable() {
         boolean available = false;
         try {
-            if (new Jaxec("phino", "--version").withCheck(false).execUnsafe().code() == 0) {
+            final Result result = new Jaxec("phino", "--version").withCheck(false).execUnsafe();
+            if (result.code() == 0) {
                 available = true;
-                Logger.info(this, "The 'phino' executable found, no need to use Docker");
+                Logger.info(
+                    this,
+                    String.format(
+                        "The 'phino' executable found (%s), no need to use Docker",
+                        result.stdout().trim()
+                    )
+                );
             } else {
                 Logger.info(
                     this,

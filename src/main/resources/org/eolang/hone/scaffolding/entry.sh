@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -e -o pipefail
+set -ex -o pipefail
 
 if [ "${DEBUG}" == 'true' ]; then
   echo "We are in debug mode, printing all commands..."

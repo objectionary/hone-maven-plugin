@@ -476,13 +476,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--env",
                 String.format(
                     "RULES=%s",
-                    String.join(
-                        " ",
-                        new Mapped<>(
-                            p -> String.format("rules/%s", p),
-                            new Rules(this.rules).yamls()
-                        )
-                    )
+                    this.rulesAsString()
                 )
             )
         );
@@ -568,6 +562,16 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    private String rulesAsString() {
+        return String.join(
+            " ",
+            new Mapped<>(
+                p -> String.format("rules/%s", p),
+                new Rules(this.rules).yamls()
+            )
+        );
+    }
+
     // @checkstyle CyclomaticComplexityCheck (200 lines)
     // @checkstyle NPathComplexityCheck (200 lines)
     @SuppressWarnings("PMD.NPathComplexity")
@@ -604,7 +608,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
-                .withEnv("RULES", this.rules);
+                .withEnv("RULES", this.rulesAsString());
             if (this.extra == null || this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());

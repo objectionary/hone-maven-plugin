@@ -33,6 +33,7 @@ test {
 task hone(type: Exec, dependsOn: compileJava) {
     String ver = project.hasProperty('hone.version') ? project.property('hone.version') : '1.0-SNAPSHOT'
     commandLine 'mvn',
+        "-Dfile.encoding=UTF-8",
         "-Dhone.version=${ver}",
         "-Dhone.target=${buildDir}",
         "-Dhone.classes=${buildDir.toPath().relativize(sourceSets.main.output.classesDirs.singleFile.toPath())}",

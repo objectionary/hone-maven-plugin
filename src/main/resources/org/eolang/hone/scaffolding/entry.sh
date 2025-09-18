@@ -11,6 +11,18 @@ fi
 
 SELF=$(dirname "$0")
 
+if [ "${LANG}" != 'en_US.UTF-8' ]; then
+  echo "Setting locale to en_US.UTF-8 from '${LANG}'"
+  LANG=en_US.UTF-8
+  export LANG
+  LC_ALL=en_US.UTF-8
+  export LC_ALL
+  LANGUAGE=en_US.UTF-8
+  export LANGUAGE
+fi
+
+cd "${SELF}" || exit 1
+
 if [ -z "${TARGET}" ]; then
   echo "The \$TARGET environment variable is not set; make sure you do \
 'docker run' with the '-e TARGET=...' parameter, which points to the \
@@ -44,15 +56,19 @@ echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(f
 
 # Maven options for all steps:
 declare -a opts=(
-  '--settings=/hone/settings.xml'
   '--update-snapshots'
   '--fail-fast'
   '--strict-checksums'
   '--errors'
   '--batch-mode'
-  "-Deo.cache=/${EO_CACHE}"
-  "--file=$(dirname "$0")/pom.xml"
+  '-Dfile.encoding=UTF-8'
+  "-Deo.cache=${EO_CACHE}"
+  "-Dexec.phino.target=${TARGET}"
 )
+if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
+  opts+=("--settings=${WORKDIR}/settings.xml")
+  echo "Using Maven settings file at ${WORKDIR}"
+fi
 if [ -n "${EO_VERSION}" ]; then
   opts+=("-Deo.version=${EO_VERSION}")
   echo "Using EO version ${EO_VERSION}"
@@ -87,7 +103,9 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
-printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"
+if [ -e /proc/meminfo ]; then
+  printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"
+fi
 
 printf 'Using Java: %s\n' "$(java --version | head -1)"
 
@@ -138,4 +156,7 @@ else
 fi
 opts+=('jeo:assemble')
 
-( set -x; mvn "${opts[@]}" )
+(
+  set -x
+  mvn "${opts[@]}"
+)

@@ -7,6 +7,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import com.yegor256.Jaxec;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +22,12 @@ import java.util.stream.Stream;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.cactoos.io.OutputTo;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.io.TeeInput;
 import org.cactoos.iterable.Mapped;
+import org.cactoos.scalar.IoChecked;
+import org.cactoos.scalar.LengthOf;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
@@ -285,17 +291,33 @@ public final class OptimizeMojo extends AbstractMojo {
     private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
 
     @Override
-    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })
     public void exec() throws IOException {
         if (!this.target.toPath().resolve(this.classes).toFile().exists()
             && this.skipIfNoClasses) {
             Logger.info(this, "The directory with classes is absent, skipping");
             return;
         }
-        final long start = System.currentTimeMillis();
         if (this.target.mkdirs()) {
-            Logger.info(this, "Target directory '%s' created", this.target);
+            Logger.info(this, "Target directory %[file]s created", this.target);
+        } else {
+            Logger.info(this, "Target directory %[file]s already exists", this.target);
         }
+        final long start = System.currentTimeMillis();
+        if (this.alwaysWithDocker || !new Phino().available()) {
+            this.withDocker();
+        } else {
+            this.withoutDocker();
+        }
+        Logger.info(
+            this,
+            "Bytecode was optimized in '%s' in %[ms]s",
+            this.target,
+            System.currentTimeMillis() - start
+        );
+    }
+
+    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })
+    private void withDocker() throws IOException {
         final String tdir = "/target";
         final String cdir = "/eo-cache";
         final Collection<String> command = new LinkedList<>(
@@ -305,7 +327,8 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--volume", String.format("%s:%s", this.target, tdir),
                 "--volume", String.format("%s:%s", this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
-                "--env", String.format("EO_CACHE=%s", cdir)
+                "--env", String.format("EO_CACHE=%s", cdir),
+                "--env", "WORKDIR=/hone"
             )
         );
         final Path extdir = this.target.toPath().resolve("hone-extra");
@@ -313,40 +336,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Directory %[file]s created", extdir);
         }
         if (this.extra != null) {
-            if (extdir.toFile().mkdirs()) {
-                Logger.info(this, "Directory %[file]s created", extdir);
-            }
-            for (final String ext : this.extra) {
-                final Path src = Paths.get(ext);
-                if (src.toFile().isDirectory()) {
-                    Logger.info(
-                        this,
-                        "Scanning %[file]s for extra rules (%s)...",
-                        src, this.extraExtensions
-                    );
-                    try (Stream<Path> files = Files.list(src)) {
-                        final List<Path> yamls = files
-                            .filter(
-                                f -> {
-                                    boolean match = false;
-                                    for (final String extn : this.extraExtensions.split(",")) {
-                                        match = match || f.getFileName().toString().endsWith(
-                                            String.format(".%s", extn.trim())
-                                        );
-                                    }
-                                    return match;
-                                }
-                            )
-                            .sorted()
-                            .collect(Collectors.toList());
-                        for (final Path yaml : yamls) {
-                            this.saveExtra(yaml, extdir);
-                        }
-                    }
-                } else {
-                    this.saveExtra(src, extdir);
-                }
-            }
+            this.copyExtras(extdir);
             command.addAll(
                 Arrays.asList(
                     "--env", String.format("EXTRA=%s/hone-extra", tdir)
@@ -442,13 +432,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--env",
                 String.format(
                     "RULES=%s",
-                    String.join(
-                        " ",
-                        new Mapped<>(
-                            p -> String.format("rules/%s", p),
-                            new Rules(this.rules).yamls()
-                        )
-                    )
+                    this.rulesAsString()
                 )
             )
         );
@@ -456,12 +440,6 @@ public final class OptimizeMojo extends AbstractMojo {
         this.timings.through(
             "optimize",
             () -> new Docker(this.sudo).exec(command)
-        );
-        Logger.info(
-            this,
-            "Bytecode was optimized in '%s' in %[ms]s",
-            this.target,
-            System.currentTimeMillis() - start
         );
     }
 
@@ -488,6 +466,46 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
+    @SuppressWarnings("PMD.CognitiveComplexity")
+    private void copyExtras(final Path extdir) throws IOException {
+        if (this.extra != null) {
+            if (extdir.toFile().mkdirs()) {
+                Logger.info(this, "Directory %[file]s created", extdir);
+            }
+            for (final String ext : this.extra) {
+                final Path src = Paths.get(ext);
+                if (src.toFile().isDirectory()) {
+                    Logger.info(
+                        this,
+                        "Scanning %[file]s for extra rules (%s)...",
+                        src, this.extraExtensions
+                    );
+                    try (Stream<Path> files = Files.list(src)) {
+                        final List<Path> yamls = files
+                            .filter(
+                                f -> {
+                                    boolean match = false;
+                                    for (final String extn : this.extraExtensions.split(",")) {
+                                        match = match || f.getFileName().toString().endsWith(
+                                            String.format(".%s", extn.trim())
+                                        );
+                                    }
+                                    return match;
+                                }
+                            )
+                            .sorted()
+                            .collect(Collectors.toList());
+                        for (final Path yaml : yamls) {
+                            this.saveExtra(yaml, extdir);
+                        }
+                    }
+                } else {
+                    this.saveExtra(src, extdir);
+                }
+            }
+        }
+    }
+
     /**
      * Return the user and group IDs of the current user.
      *
@@ -498,6 +516,90 @@ public final class OptimizeMojo extends AbstractMojo {
             "%d:%d",
             OptimizeMojo.CLibrary.INSTANCE.getuid(),
             OptimizeMojo.CLibrary.INSTANCE.geteuid()
+        );
+    }
+
+    private String rulesAsString() {
+        return String.join(
+            " ",
+            new Mapped<>(
+                p -> String.format("rules/%s", p),
+                new Rules(this.rules).yamls()
+            )
+        );
+    }
+
+    // @checkstyle CyclomaticComplexityCheck (200 lines)
+    // @checkstyle NPathComplexityCheck (200 lines)
+    @SuppressWarnings("PMD.NPathComplexity")
+    private void withoutDocker() throws IOException {
+        try (Mktemp temp = new Mktemp()) {
+            final String[] files = {
+                "entry.sh",
+                "pom.xml",
+                "normalize.sh",
+            };
+            for (final String file : files) {
+                new IoChecked<>(
+                    new LengthOf(
+                        new TeeInput(
+                            new ResourceOf(String.format("org/eolang/hone/scaffolding/%s", file)),
+                            new OutputTo(temp.path().resolve(file))
+                        )
+                    )
+                ).value();
+            }
+            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+                temp.path().resolve(file).toFile().setExecutable(true);
+            }
+            new Rules("*").copyTo(temp.path().resolve("rules"));
+            Jaxec jaxec = new Jaxec(temp.path().resolve("entry.sh").toString())
+                .withEnv("TARGET", this.target.toString())
+                .withEnv("DEBUG", Boolean.toString(this.debug))
+                .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
+                .withEnv("CLASSES", this.classes)
+                .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
+                .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
+                .withEnv("GREP_IN", this.grepIn)
+                .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
+                .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
+                .withEnv("THREADS", Integer.toString(this.threads))
+                .withEnv("TIMEOUT", Integer.toString(this.timeout))
+                .withEnv("RULES", this.rulesAsString());
+            if (this.extra != null && !this.extra.isEmpty()) {
+                this.copyExtras(temp.path().resolve("hone-extra"));
+                jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
+            }
+            if (this.includes != null && this.includes.length > 0) {
+                jaxec = jaxec.withEnv("INCLUDES", this.localPaths(this.includes));
+            }
+            if (this.excludes != null && this.excludes.length > 0) {
+                jaxec = jaxec.withEnv("EXCLUDES", this.localPaths(this.excludes));
+            }
+            if (this.cache != null) {
+                jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
+            }
+            if (this.eoVersion == null) {
+                Logger.info(this, "EO version is not set, we use the default one");
+            } else {
+                jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
+            }
+            if (this.jeoVersion == null) {
+                Logger.info(this, "JEO version is not set, we use the default one");
+            } else {
+                jaxec = jaxec.withEnv("JEO_VERSION", this.jeoVersion);
+            }
+            jaxec.exec();
+        }
+    }
+
+    private String localPaths(final String... paths) {
+        return String.join(
+            ",",
+            new Mapped<>(
+                p -> p.replaceAll("^/target", this.target.toString()),
+                paths
+            )
         );
     }
 

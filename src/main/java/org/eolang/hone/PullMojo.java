@@ -26,13 +26,17 @@ public final class PullMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        this.timings.through(
-            "pull",
-            () -> new Docker(this.sudo).exec(
+        if (this.alwaysWithDocker || !new Phino().available()) {
+            this.timings.through(
                 "pull",
-                this.image
-            )
-        );
-        Logger.info(this, "Docker image '%s' was pulled", this.image);
+                () -> new Docker(this.sudo).exec(
+                    "pull",
+                    this.image
+                )
+            );
+            Logger.info(this, "Docker image '%s' was pulled", this.image);
+        } else {
+            Logger.info(this, "Docker image '%s' was NOT pulled", this.image);
+        }
     }
 }

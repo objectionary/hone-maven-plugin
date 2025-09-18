@@ -120,6 +120,7 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("debug", "true")
+                    .set("alwaysWithDocker", "true")
                     .set("image", image);
                 f.exec("test");
                 MatcherAssert.assertThat(
@@ -269,7 +270,9 @@ final class OptimizeMojoTest {
                     .plugins()
                     .appendItself()
                     .configuration()
-                    .set("image", image);
+                    .set("image", image)
+                    .set("verbose", "true")
+                    .set("timeout", "15");
                 f.build()
                     .plugins()
                     .appendItself()
@@ -342,6 +345,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("build", "optimize")
                     .configuration()
+                    .set("alwaysWithDocker", "true")
                     .set("image", image);
                 f.exec("process-classes");
                 final Path pre = f.files().file(
@@ -676,7 +680,7 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("rules", "none")
-                    .set("smallSteps", "false")
+                    .set("smallSteps", "true")
                     .set("maxDepth", "40")
                     .set(
                         "extra",

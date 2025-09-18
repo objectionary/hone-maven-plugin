@@ -80,6 +80,11 @@
   </properties>
   <dependencies>
     <dependency>
+      <groupId>com.yegor256</groupId>
+      <artifactId>jaxec</artifactId>
+      <version>0.5.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.jcabi</groupId>
       <artifactId>jcabi-log</artifactId>
       <version>0.24.3</version>
@@ -171,6 +176,22 @@
     </dependency>
   </dependencies>
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>org/eolang/hone/scaffolding/**</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>org/eolang/hone/scaffolding/**</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -350,6 +371,7 @@
                     <argument>--console=plain</argument>
                     <argument>--no-parallel</argument>
                     <argument>-Phone.version=${project.version}</argument>
+                    <argument>-Dfile.encoding=UTF-8</argument>
                     <argument>clean</argument>
                     <argument>test</argument>
                   </arguments>

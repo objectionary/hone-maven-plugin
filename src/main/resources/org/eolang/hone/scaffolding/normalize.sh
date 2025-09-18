@@ -14,6 +14,16 @@ if [ "${HONE_DEBUG}" == 'true' ]; then
   set -x
 fi
 
+if [ "${LANG}" != 'en_US.UTF-8' ]; then
+  echo "Setting locale to en_US.UTF-8 from '${LANG}'"
+  LANG=en_US.UTF-8
+  export LANG
+  LC_ALL=en_US.UTF-8
+  export LC_ALL
+  LANGUAGE=en_US.UTF-8
+  export LANGUAGE
+fi
+
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
 function rewrite {
@@ -63,7 +73,7 @@ function rewrite {
     phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}" > "${pho}"
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
-  s_lines=$(wc -l < "${pho}")
+  s_lines=$(wc -l < "${pho}" | xargs)
   per=$(perl -E "say int(${s_lines} / ($(date '+%s.%N') - ${start}))")
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
@@ -137,7 +147,9 @@ fi
 
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
-tasks=/target/hone-tasks.txt
+tasks=${TARGET}/hone-tasks.txt
+mkdir -p "$(dirname "${tasks}")"
+rm -f "${tasks}"
 verbose "Found ${total} XMIR file(s) to process"
 idx=0
 while IFS= read -r f; do
@@ -156,11 +168,13 @@ if [ "${threads}" == '0' ]; then
   threads=$(nproc)
   echo "Using ${threads} threads, by the number of CPUs"
 fi
-export PARALLEL_HOME=/target/parallel
+export PARALLEL_HOME=${TARGET}/parallel
 mkdir -p "${PARALLEL_HOME}"
+parallel --record-env
 echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
 start=$(date '+%s.%N')
-parallel --retries=0 --joblog=/target/hone-tasks.log --will-cite \
+parallel --retries=0 "--joblog=${TARGET}/hone-tasks.log" --will-cite \
   "--max-procs=${threads}" \
+  --env _ \
   --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

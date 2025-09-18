@@ -22,8 +22,8 @@ release:
     mvn versions:set "-DnewVersion=${tag}"
     sed -i -e "s/hone:latest/hone:${tag}/" src/main/java/org/eolang/hone/AbstractMojo.java
     sed -i -e "s/0.0.0/${tag}/" src/site/apt/index.apt.vm
-    sed -i -e "s/0.0.0/${tag}/" src/main/resources/org/eolang/hone/scaffolding/in-docker-pom.xml
-    git add src/main/java/org/eolang/hone/AbstractMojo.java src/site/apt/index.apt.vm src/main/resources/org/eolang/hone/scaffolding/in-docker-pom.xml
+    sed -i -e "s/0.0.0/${tag}/" src/main/resources/org/eolang/hone/scaffolding/pom.xml
+    git add src/main/java/org/eolang/hone/AbstractMojo.java src/site/apt/index.apt.vm src/main/resources/org/eolang/hone/scaffolding/pom.xml
     git commit -am "${tag}"
     export MAVEN_OPTS="--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
     mvn clean deploy -DskipTests -Dinvoker.skip -Pqulice,objectionary,sonatype -e -B -s ../settings.xml
@@ -34,8 +34,8 @@ release:
     cp -R ../rules rules
     sed -i -e "s/\"0.0.0\"/\"${tag}\"/" Dockerfile
     sed -i -e "s/0.0.0/${tag}/" entry.sh
-    sed -i -e "s/0.0.0/${tag}/" in-docker-pom.xml
-    git add Dockerfile entry.sh in-docker-pom.xml
+    sed -i -e "s/0.0.0/${tag}/" pom.xml
+    git add Dockerfile entry.sh pom.xml
     git commit -m "version set to ${tag}"
     repo=yegor256/hone
     phino_version=$(cat ../default-phino-version.txt)

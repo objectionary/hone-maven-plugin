@@ -270,7 +270,8 @@ final class OptimizeMojoTest {
                     .plugins()
                     .appendItself()
                     .configuration()
-                    .set("image", image);
+                    .set("image", image)
+                    .set("timeout", "15");
                 f.build()
                     .plugins()
                     .appendItself()

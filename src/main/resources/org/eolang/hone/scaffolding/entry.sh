@@ -51,6 +51,7 @@ declare -a opts=(
   '--strict-checksums'
   '--errors'
   '--batch-mode'
+  '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
   "--file=$(dirname "$0")/pom.xml"
 )
@@ -145,4 +146,4 @@ else
 fi
 opts+=('jeo:assemble')
 
-( set -x; mvn "${opts[@]}" )
+( set -x; mvn "${opts[@]}"; echo "Maven exited with code $?" )

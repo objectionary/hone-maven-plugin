@@ -152,8 +152,6 @@ else
 fi
 opts+=('jeo:assemble')
 
-tree -a
-
 (
   set -x
   mvn "${opts[@]}"

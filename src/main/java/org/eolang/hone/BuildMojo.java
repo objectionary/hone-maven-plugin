@@ -4,6 +4,7 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,6 +58,10 @@ public final class BuildMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
+        if (!this.alwaysWithDocker && new Phino().available()) {
+            Logger.info(this, "Docker image '%s' was NOT built", this.image);
+            return;
+        }
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
                 "Dockerfile", "entry.sh", "pom.xml",

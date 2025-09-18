@@ -23,11 +23,15 @@ public final class RmiMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        new Docker(this.sudo).exec(
-            "rmi",
-            "--no-prune",
-            this.image
-        );
-        Logger.info(this, "Docker image '%s' was removed", this.image);
+        if (this.alwaysWithDocker || !new Phino().available()) {
+            new Docker(this.sudo).exec(
+                "rmi",
+                "--no-prune",
+                this.image
+            );
+            Logger.info(this, "Docker image '%s' was removed", this.image);
+        } else {
+            Logger.info(this, "Docker image '%s' was NOT removed", this.image);
+        }
     }
 }

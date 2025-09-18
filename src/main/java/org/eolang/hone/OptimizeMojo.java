@@ -151,19 +151,6 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean skipPhino;
 
     /**
-     * Run without Docker even if phino is available.
-     *
-     * <p>If this is set to <tt>true</tt>, Docker is not used
-     * if phino is available.</p>
-     *
-     * @since 0.17.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.always-with-docker", defaultValue = "false")
-    @SuppressWarnings("PMD.LongVariable")
-    private boolean alwaysWithDocker;
-
-    /**
      * Skip if no .class files found.
      *
      * @since 0.16.0
@@ -315,7 +302,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Target directory '%s' created", this.target);
         }
         final long start = System.currentTimeMillis();
-        if (this.alwaysWithDocker || !this.phinoAvailable()) {
+        if (this.alwaysWithDocker || !new Phino().available()) {
             this.withDocker();
         } else {
             this.withoutDocker();
@@ -326,38 +313,6 @@ public final class OptimizeMojo extends AbstractMojo {
             this.target,
             System.currentTimeMillis() - start
         );
-    }
-
-    @SuppressWarnings("PMD.CognitiveComplexity")
-    private boolean phinoAvailable() {
-        boolean available = false;
-        try {
-            final Result result = new Jaxec("phino", "--version").withCheck(false).execUnsafe();
-            if (result.code() == 0) {
-                available = true;
-                Logger.info(
-                    this,
-                    String.format(
-                        "The 'phino' executable found (%s), no need to use Docker",
-                        result.stdout().trim()
-                    )
-                );
-            } else {
-                Logger.info(
-                    this,
-                    "The 'phino' executable is found, but it doesn't work, we must use Docker"
-                );
-            }
-        } catch (final IOException ex) {
-            Logger.info(
-                this,
-                String.format(
-                    "The 'phino' executable not found, we must use Docker: %s",
-                    ex.getMessage()
-                )
-            );
-        }
-        return available;
     }
 
     @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })

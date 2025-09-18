@@ -67,6 +67,20 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     @Parameter(property = "hone.skip", defaultValue = "false")
     private boolean skip;
 
+    /**
+     * Run without Docker even if phino is available.
+     *
+     * <p>If this is set to <tt>true</tt>, Docker is used
+     * even if phino is available. It is recommended to keep this parameter
+     * to <tt>false</tt>, thus making the build faster if it's possible.</p>
+     *
+     * @since 0.17.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.always-with-docker", defaultValue = "false")
+    @SuppressWarnings("PMD.LongVariable")
+    protected boolean alwaysWithDocker;
+
     @Override
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());

@@ -577,8 +577,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 ).value();
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
-            this.copyExtras(temp.path().resolve("hone-extra"));
-            new Jaxec(temp.path().resolve("entry.sh").toString())
+            Jaxec jaxec = new Jaxec(temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
                 .withEnv("EO_CACHE", "~/.eo")
                 .withEnv("DEBUG", Boolean.toString(this.debug))
@@ -591,13 +590,31 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
-                .withEnv("RULES", this.rules)
-                .withEnv("EXTRA", temp.path().resolve("hone-extra").toString())
-                .withEnv("EO_VERSION", this.eoVersion)
-                .withEnv("JEO_VERSION", this.jeoVersion)
-                .withEnv("INCLUDES", String.join(",", this.includes))
-                .withEnv("EXCLUDES", String.join(",", this.excludes))
-                .exec();
+                .withEnv("RULES", this.rules);
+            if (this.extra == null || this.extra.isEmpty()) {
+                this.copyExtras(temp.path().resolve("hone-extra"));
+                jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString())
+            }
+            if (this.includes != null && this.includes.length > 0) {
+                jaxec = jaxec.withEnv("INCLUDES", String.join(",", this.includes));
+            }
+            if (this.excludes != null && this.excludes.length > 0) {
+                jaxec = jaxec.withEnv("EXCLUDES", String.join(",", this.excludes));
+            }
+            if (this.cache != null) {
+                jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
+            }
+            if (this.eoVersion == null) {
+                Logger.info(this, "EO version is not set, we use the default one");
+            } else {
+                jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
+            }
+            if (this.jeoVersion == null) {
+                Logger.info(this, "JEO version is not set, we use the default one");
+            } else {
+                jaxec = jaxec.withEnv("JEO_VERSION", this.jeoVersion);
+            }
+            jaxec.exec();
         }
     }
 

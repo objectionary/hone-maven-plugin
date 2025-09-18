@@ -138,6 +138,7 @@ fi
 files=$(find "$(realpath "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec realpath --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
 tasks=${TARGET}/hone-tasks.txt
+rm -f "${tasks}"
 verbose "Found ${total} XMIR file(s) to process"
 idx=0
 while IFS= read -r f; do
@@ -150,6 +151,8 @@ while IFS= read -r f; do
   i="${idx}/${total}"
   printf "%s rewrite_with_timeout %s %s %s %s %s\n" "${0@Q}" "${i@Q}" "${phi@Q}" "${pho@Q}" "${xi@Q}" "${xo@Q}" >> "${tasks}"
 done <<< "${files}"
+
+echo "Task list for the 'parallel' written to ${tasks}"
 
 threads=${HONE_THREADS}
 if [ "${threads}" == '0' ]; then

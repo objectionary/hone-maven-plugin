@@ -128,16 +128,16 @@ fi
 
 opts+=(
   "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}"
-  "-Djeo.disassemble.outputDir=${TARGET}/generated-sources/jeo-disassemble"
+  "-Djeo.disassemble.outputDir=${TARGET}/hone/jeo-disassemble"
   "-Dexec.phino.script=${SELF}/normalize.sh"
   "-Dexec.phino.verbose=${VERBOSE}"
   "-Dexec.phino.debug=${DEBUG}"
   "-Dexec.phino.rules=${RULES}"
   "-Dexec.phino.grep-in=${GREP_IN}"
-  "-Dexec.phino.xmir-in=${TARGET}/generated-sources/jeo-disassemble"
-  "-Dexec.phino.from=${TARGET}/generated-sources/phi"
-  "-Dexec.phino.to=${TARGET}/generated-sources/phi-optimized"
-  "-Dexec.phino.xmir-out=${TARGET}/generated-sources/unphi"
+  "-Dexec.phino.xmir-in=${TARGET}/hone/jeo-disassemble"
+  "-Dexec.phino.from=${TARGET}/hone/phi"
+  "-Dexec.phino.to=${TARGET}/hone/phi-optimized"
+  "-Dexec.phino.xmir-out=${TARGET}/hone/unphi"
   "-Dexec.phino.small-steps=${SMALL_STEPS}"
   "-Dexec.phino.timeout=${TIMEOUT}"
   "-Dexec.phino.threads=${THREADS}"
@@ -149,9 +149,9 @@ opts+=(
 opts+=('jeo:disassemble')
 if [ "${SKIP_PHINO}" == 'true' ]; then
   echo "Skipping the phino step as requested"
-  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/jeo-disassemble")
+  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/jeo-disassemble")
 else
-  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/generated-sources/unphi")
+  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/unphi")
   opts+=('exec:exec')
 fi
 opts+=('jeo:assemble')

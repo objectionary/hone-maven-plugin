@@ -47,18 +47,18 @@ all of them to the `target/classes-before-hone/` directory (as a backup).
 transform `.class` files to
 `.xmir` [format](https://news.eolang.org/2022-11-25-xmir-guide.html),
 which is [EO](https://www.eolang.org) in XML, and place them into
-the `target/generated-sources/jeo-disassemble/` directory.
+the `target/hone/jeo-disassemble/` directory.
 1. Using [phino](https://github.com/objectionary/phino),
 convert `.xmir` files to `.phi` files
 with [𝜑-calculus](https://arxiv.org/abs/2111.13384) expressions,
-and place them into the `target/generated-sources/phi/` directory.
+and place them into the `target/hone/phi/` directory.
 1. Using [phino](https://github.com/objectionary/phino),
 apply a number of optimizations to 𝜑-calculus expressions in the `.phi` files
 and place new `.phi` files into
-the `target/generated-sources/phi-optimized/` directory.
+the `target/hone/phi-optimized/` directory.
 1. Using [phino](https://github.com/objectionary/phino),
 convert `.phi` files back to `.xmir` files and
-place them into the `target/generated-sources/unphi/` directory.
+place them into the `target/hone/unphi/` directory.
 1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
 transform `.xmir` files back to Bytecode and place `.class` files into
 the `target/classes/` directory.

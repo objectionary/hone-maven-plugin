@@ -125,7 +125,7 @@ final class OptimizeMojoTest {
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "optimized .xmir must be present",
-                    f.files().file("target/generated-sources/unphi/foo/Kid.xmir").exists(),
+                    f.files().file("target/hone/unphi/foo/Kid.xmir").exists(),
                     Matchers.is(true)
                 );
                 MatcherAssert.assertThat(
@@ -288,7 +288,7 @@ final class OptimizeMojoTest {
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
-                    f.files().file("target/generated-sources/phi-optimized/Hello.phi").exists(),
+                    f.files().file("target/hone/phi-optimized/Hello.phi").exists(),
                     Matchers.is(true)
                 );
             }
@@ -349,10 +349,10 @@ final class OptimizeMojoTest {
                     .set("image", image);
                 f.exec("process-classes");
                 final Path pre = f.files().file(
-                    "target/generated-sources/jeo-disassemble/com/sun/jna/Pointer.xmir"
+                    "target/hone/jeo-disassemble/com/sun/jna/Pointer.xmir"
                 ).path();
                 final Path xmir = f.files().file(
-                    "target/generated-sources/unphi/com/sun/jna/Pointer.xmir"
+                    "target/hone/unphi/com/sun/jna/Pointer.xmir"
                 ).path();
                 MatcherAssert.assertThat(
                     "optimized large .xmir must be present",
@@ -372,7 +372,7 @@ final class OptimizeMojoTest {
                     mtc.find(), Matchers.is(true)
                 );
                 final Path phi = f.files().file(
-                    "target/generated-sources/phi/com/sun/jna/Pointer.phi"
+                    "target/hone/phi/com/sun/jna/Pointer.phi"
                 ).path();
                 final long msec = Long.parseLong(mtc.group("msec"));
                 Files.write(
@@ -463,21 +463,21 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     "optimized IncludedClass.phi must be present",
                     f.files().file(
-                        "target/generated-sources/phi-optimized/foo/IncludedClass.phi"
+                        "target/hone/phi-optimized/foo/IncludedClass.phi"
                     ).exists(),
                     Matchers.is(true)
                 );
                 MatcherAssert.assertThat(
                     "ExcludedClass.phi must not be optimized",
                     f.files().file(
-                        "target/generated-sources/phi-optimized/foo/ExcludedClass.phi"
+                        "target/hone/phi-optimized/foo/ExcludedClass.phi"
                     ).exists(),
                     Matchers.is(false)
                 );
                 MatcherAssert.assertThat(
                     "AnotherClass.phi must not be optimized (not included)",
                     f.files().file(
-                        "target/generated-sources/phi-optimized/bar/AnotherClass.phi"
+                        "target/hone/phi-optimized/bar/AnotherClass.phi"
                     ).exists(),
                     Matchers.is(false)
                 );

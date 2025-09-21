@@ -133,7 +133,7 @@
 <a class="jxr_linenumber" name="L125" href="#L125">125</a>                 f.exec(<span class="jxr_string">"test"</span>);
 <a class="jxr_linenumber" name="L126" href="#L126">126</a>                 MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L127" href="#L127">127</a>                     <span class="jxr_string">"optimized .xmir must be present"</span>,
-<a class="jxr_linenumber" name="L128" href="#L128">128</a>                     f.files().file(<span class="jxr_string">"target/generated-sources/unphi/foo/Kid.xmir"</span>).exists(),
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>                     f.files().file(<span class="jxr_string">"target/hone/unphi/foo/Kid.xmir"</span>).exists(),
 <a class="jxr_linenumber" name="L129" href="#L129">129</a>                     Matchers.is(<strong class="jxr_keyword">true</strong>)
 <a class="jxr_linenumber" name="L130" href="#L130">130</a>                 );
 <a class="jxr_linenumber" name="L131" href="#L131">131</a>                 MatcherAssert.assertThat(
@@ -296,7 +296,7 @@
 <a class="jxr_linenumber" name="L288" href="#L288">288</a>                 f.exec(<span class="jxr_string">"test"</span>);
 <a class="jxr_linenumber" name="L289" href="#L289">289</a>                 MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L290" href="#L290">290</a>                     <span class="jxr_string">"optimized .phi must be present"</span>,
-<a class="jxr_linenumber" name="L291" href="#L291">291</a>                     f.files().file(<span class="jxr_string">"target/generated-sources/phi-optimized/Hello.phi"</span>).exists(),
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>                     f.files().file(<span class="jxr_string">"target/hone/phi-optimized/Hello.phi"</span>).exists(),
 <a class="jxr_linenumber" name="L292" href="#L292">292</a>                     Matchers.is(<strong class="jxr_keyword">true</strong>)
 <a class="jxr_linenumber" name="L293" href="#L293">293</a>                 );
 <a class="jxr_linenumber" name="L294" href="#L294">294</a>             }
@@ -357,10 +357,10 @@
 <a class="jxr_linenumber" name="L349" href="#L349">349</a>                     .set(<span class="jxr_string">"image"</span>, image);
 <a class="jxr_linenumber" name="L350" href="#L350">350</a>                 f.exec(<span class="jxr_string">"process-classes"</span>);
 <a class="jxr_linenumber" name="L351" href="#L351">351</a>                 <strong class="jxr_keyword">final</strong> Path pre = f.files().file(
-<a class="jxr_linenumber" name="L352" href="#L352">352</a>                     <span class="jxr_string">"target/generated-sources/jeo-disassemble/com/sun/jna/Pointer.xmir"</span>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>                     <span class="jxr_string">"target/hone/jeo-disassemble/com/sun/jna/Pointer.xmir"</span>
 <a class="jxr_linenumber" name="L353" href="#L353">353</a>                 ).path();
 <a class="jxr_linenumber" name="L354" href="#L354">354</a>                 <strong class="jxr_keyword">final</strong> Path xmir = f.files().file(
-<a class="jxr_linenumber" name="L355" href="#L355">355</a>                     <span class="jxr_string">"target/generated-sources/unphi/com/sun/jna/Pointer.xmir"</span>
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>                     <span class="jxr_string">"target/hone/unphi/com/sun/jna/Pointer.xmir"</span>
 <a class="jxr_linenumber" name="L356" href="#L356">356</a>                 ).path();
 <a class="jxr_linenumber" name="L357" href="#L357">357</a>                 MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L358" href="#L358">358</a>                     <span class="jxr_string">"optimized large .xmir must be present"</span>,
@@ -380,7 +380,7 @@
 <a class="jxr_linenumber" name="L372" href="#L372">372</a>                     mtc.find(), Matchers.is(<strong class="jxr_keyword">true</strong>)
 <a class="jxr_linenumber" name="L373" href="#L373">373</a>                 );
 <a class="jxr_linenumber" name="L374" href="#L374">374</a>                 <strong class="jxr_keyword">final</strong> Path phi = f.files().file(
-<a class="jxr_linenumber" name="L375" href="#L375">375</a>                     <span class="jxr_string">"target/generated-sources/phi/com/sun/jna/Pointer.phi"</span>
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>                     <span class="jxr_string">"target/hone/phi/com/sun/jna/Pointer.phi"</span>
 <a class="jxr_linenumber" name="L376" href="#L376">376</a>                 ).path();
 <a class="jxr_linenumber" name="L377" href="#L377">377</a>                 <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> msec = Long.parseLong(mtc.group(<span class="jxr_string">"msec"</span>));
 <a class="jxr_linenumber" name="L378" href="#L378">378</a>                 Files.write(
@@ -471,21 +471,21 @@
 <a class="jxr_linenumber" name="L463" href="#L463">463</a>                 MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L464" href="#L464">464</a>                     <span class="jxr_string">"optimized IncludedClass.phi must be present"</span>,
 <a class="jxr_linenumber" name="L465" href="#L465">465</a>                     f.files().file(
-<a class="jxr_linenumber" name="L466" href="#L466">466</a>                         <span class="jxr_string">"target/generated-sources/phi-optimized/foo/IncludedClass.phi"</span>
+<a class="jxr_linenumber" name="L466" href="#L466">466</a>                         <span class="jxr_string">"target/hone/phi-optimized/foo/IncludedClass.phi"</span>
 <a class="jxr_linenumber" name="L467" href="#L467">467</a>                     ).exists(),
 <a class="jxr_linenumber" name="L468" href="#L468">468</a>                     Matchers.is(<strong class="jxr_keyword">true</strong>)
 <a class="jxr_linenumber" name="L469" href="#L469">469</a>                 );
 <a class="jxr_linenumber" name="L470" href="#L470">470</a>                 MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L471" href="#L471">471</a>                     <span class="jxr_string">"ExcludedClass.phi must not be optimized"</span>,
 <a class="jxr_linenumber" name="L472" href="#L472">472</a>                     f.files().file(
-<a class="jxr_linenumber" name="L473" href="#L473">473</a>                         <span class="jxr_string">"target/generated-sources/phi-optimized/foo/ExcludedClass.phi"</span>
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>                         <span class="jxr_string">"target/hone/phi-optimized/foo/ExcludedClass.phi"</span>
 <a class="jxr_linenumber" name="L474" href="#L474">474</a>                     ).exists(),
 <a class="jxr_linenumber" name="L475" href="#L475">475</a>                     Matchers.is(false)
 <a class="jxr_linenumber" name="L476" href="#L476">476</a>                 );
 <a class="jxr_linenumber" name="L477" href="#L477">477</a>                 MatcherAssert.assertThat(
 <a class="jxr_linenumber" name="L478" href="#L478">478</a>                     <span class="jxr_string">"AnotherClass.phi must not be optimized (not included)"</span>,
 <a class="jxr_linenumber" name="L479" href="#L479">479</a>                     f.files().file(
-<a class="jxr_linenumber" name="L480" href="#L480">480</a>                         <span class="jxr_string">"target/generated-sources/phi-optimized/bar/AnotherClass.phi"</span>
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>                         <span class="jxr_string">"target/hone/phi-optimized/bar/AnotherClass.phi"</span>
 <a class="jxr_linenumber" name="L481" href="#L481">481</a>                     ).exists(),
 <a class="jxr_linenumber" name="L482" href="#L482">482</a>                     Matchers.is(false)
 <a class="jxr_linenumber" name="L483" href="#L483">483</a>                 );

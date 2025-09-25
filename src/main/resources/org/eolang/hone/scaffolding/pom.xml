@@ -11,7 +11,7 @@
   <version>0.0.0</version>
   <name>hone</name>
   <properties>
-    <jeo.version>0.14.11</jeo.version>
+    <jeo.version>0.14.12</jeo.version>
   </properties>
   <build>
     <pluginManagement>

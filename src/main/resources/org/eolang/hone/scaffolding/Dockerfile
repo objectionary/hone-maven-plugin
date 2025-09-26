@@ -41,7 +41,7 @@ RUN cabal update \
   && chmod +x /usr/local/bin/phino \
   && /usr/local/bin/phino --version
 
-FROM eclipse-temurin:21.0.8_9-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"

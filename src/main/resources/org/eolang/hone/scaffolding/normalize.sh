@@ -45,7 +45,7 @@ function rewrite {
     echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
     return
   fi
-  phino rewrite "${phinopts[@]}" --input=xmir --sweet --nothing "${xi}" > "${phi}"
+  phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}" > "${phi}"
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"
   pos=0
@@ -80,7 +80,7 @@ function rewrite {
   else
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): $(diff "${phi}" "${pho}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
   fi
-  phino rewrite "${phinopts[@]}" --nothing --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
+  phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
   verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then
     verbose "No changes made to ${idx} $(basename "${xi}")"

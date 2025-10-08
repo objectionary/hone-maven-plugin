@@ -354,20 +354,9 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
-        if (this.jeoVersion == null) {
-            final String ver = new IoCheckedText(
-                new TextOf(
-                    new ResourceOf(
-                        "org/eolang/hone/default-jeo-version.txt"
-                    )
-                )
-            ).asString().trim();
-            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
-            this.jeoVersion = ver;
-        }
         command.addAll(
             Arrays.asList(
-                "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
+                "--env", String.format("JEO_VERSION=%s", this.jeoVer())
             )
         );
         command.addAll(
@@ -589,22 +578,11 @@ public final class OptimizeMojo extends AbstractMojo {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
             }
             if (this.eoVersion == null) {
-                final String ver = new IoCheckedText(
-                    new TextOf(
-                        new ResourceOf(
-                            "org/eolang/hone/default-jeo-version.txt"
-                        )
-                    )
-                ).asString().trim();
-                Logger.info(this, "EO version is not set, we use the default one: %s", ver);
-                this.eoVersion = ver;
-            }
-            jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
-            if (this.jeoVersion == null) {
-                Logger.info(this, "JEO version is not set, we use the default one");
+                Logger.info(this, "EO version is not set, we use the default one");
             } else {
-                jaxec = jaxec.withEnv("JEO_VERSION", this.jeoVersion);
+                jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
             }
+            jaxec = jaxec.withEnv("JEO_VERSION", this.jeoVer());
             jaxec.exec();
         }
     }
@@ -617,6 +595,21 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    private String jeoVer() throws IOException {
+        String ver = this.jeoVersion;
+        if (ver == null) {
+            ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/default-jeo-version.txt"
+                    )
+                )
+            ).asString().trim();
+            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
+        }
+        return ver;
     }
 
     /**

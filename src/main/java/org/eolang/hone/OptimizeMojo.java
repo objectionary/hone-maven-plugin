@@ -112,15 +112,6 @@ public final class OptimizeMojo extends AbstractMojo {
     private String eoVersion;
 
     /**
-     * JEO version to use.
-     *
-     * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.jeo-version")
-    private String jeoVersion;
-
-    /**
      * Grep XMIR files to rewrite.
      *
      * <p>Using this regular expression, you can filter in (include) XMIR files that
@@ -356,7 +347,7 @@ public final class OptimizeMojo extends AbstractMojo {
         }
         command.addAll(
             Arrays.asList(
-                "--env", String.format("JEO_VERSION=%s", this.jeoVer())
+                "--env", String.format("JEO_VERSION=%s", this.jeo())
             )
         );
         command.addAll(
@@ -582,7 +573,7 @@ public final class OptimizeMojo extends AbstractMojo {
             } else {
                 jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
             }
-            jaxec = jaxec.withEnv("JEO_VERSION", this.jeoVer());
+            jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();
         }
     }
@@ -595,21 +586,6 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
-    }
-
-    private String jeoVer() throws IOException {
-        String ver = this.jeoVersion;
-        if (ver == null) {
-            ver = new IoCheckedText(
-                new TextOf(
-                    new ResourceOf(
-                        "org/eolang/hone/default-jeo-version.txt"
-                    )
-                )
-            ).asString().trim();
-            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
-        }
-        return ver;
     }
 
     /**

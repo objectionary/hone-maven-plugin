@@ -94,6 +94,8 @@ public final class BuildMojo extends AbstractMojo {
             args.add("--progress=plain");
             args.add("--build-arg");
             args.add(String.format("PHINO_VERSION=%s", this.phino()));
+            args.add("--build-arg");
+            args.add(String.format("JEO_VERSION=%s", this.jeo()));
             args.add("--tag");
             args.add(this.image);
             args.add(temp.path().toString());

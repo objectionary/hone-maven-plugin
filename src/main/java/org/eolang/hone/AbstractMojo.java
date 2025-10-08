@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 import org.slf4j.impl.StaticLoggerBinder;
 
 /**
@@ -81,6 +84,15 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     @Parameter(property = "hone.skip", defaultValue = "false")
     private boolean skip;
 
+    /**
+     * JEO version to use.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.jeo-version")
+    private String jeoVersion;
+
     @Override
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
@@ -94,6 +106,27 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         } catch (final IOException ex) {
             throw new MojoExecutionException(ex);
         }
+    }
+
+    /**
+     * Get the JEO version to use.
+     * If not set, read it from the default resource file.
+     * @return JEO version
+     * @throws IOException If reading the version fails
+     */
+    protected String jeo() throws IOException {
+        String ver = this.jeoVersion;
+        if (ver == null) {
+            ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/default-jeo-version.txt"
+                    )
+                )
+            ).asString().trim();
+            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
+        }
+        return ver;
     }
 
     /**

@@ -589,10 +589,17 @@ public final class OptimizeMojo extends AbstractMojo {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
             }
             if (this.eoVersion == null) {
-                Logger.info(this, "EO version is not set, we use the default one");
-            } else {
-                jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
+                final String ver = new IoCheckedText(
+                    new TextOf(
+                        new ResourceOf(
+                            "org/eolang/hone/scaffolding/default-jeo-version.txt"
+                        )
+                    )
+                ).asString().trim();
+                Logger.info(this, "EO version is not set, we use the default one: %s", ver);
+                this.eoVersion = ver;
             }
+            jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
             if (this.jeoVersion == null) {
                 Logger.info(this, "JEO version is not set, we use the default one");
             } else {

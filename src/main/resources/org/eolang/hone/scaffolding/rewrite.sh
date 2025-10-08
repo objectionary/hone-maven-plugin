@@ -98,6 +98,10 @@ function rewrite_with_timeout {
   start=$(date '+%s.%N')
   if ! timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@"; then
     sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
+    if [ "${sec}" == 0 ]; then
+      echo "Failure in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
+      exit 1
+    fi
     echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
     cp "${xi}" "${xo}"
   fi
@@ -137,6 +141,10 @@ echo "Hone version: ${HONE_VERSION}"
 
 echo "Phino version: $(phino --version | xargs)"
 
+if [ "${HONE_TIMEOUT}" -lt 5 ]; then
+  echo "Timeout is too low: ${HONE_TIMEOUT} seconds"
+  exit 1
+fi
 echo "Timeout: ${HONE_TIMEOUT} seconds"
 
 echo "Using ${#rules[@]} rewriting rule(s)"

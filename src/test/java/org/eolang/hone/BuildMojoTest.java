@@ -92,7 +92,7 @@ final class BuildMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("generate-resources")
-                    .goals("build")
+                    .goals("rmi", "build")
                     .configuration()
                     .set("image", image);
                 f.exec("generate-resources");
@@ -119,7 +119,7 @@ final class BuildMojoTest {
             new TextOf(new InputOf(process.getInputStream())).asString(),
             Matchers.allOf(
                 Matchers.containsString("entry.sh"),
-                Matchers.containsString("normalize.sh"),
+                Matchers.containsString("rewrite.sh"),
                 Matchers.containsString("none.yml"),
                 Matchers.containsString("701-static-lambda-to-invokedynamic.phr")
             )

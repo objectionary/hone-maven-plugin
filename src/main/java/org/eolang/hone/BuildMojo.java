@@ -56,6 +56,15 @@ public final class BuildMojo extends AbstractMojo {
     @Parameter(property = "hone.use-buildx", defaultValue = "true")
     private boolean useBuildx;
 
+    /**
+     * JEO version to use.
+     *
+     * @since 0.20.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.jeo-version")
+    private String jeoVersion;
+
     @Override
     public void exec() throws IOException {
         if (!this.alwaysWithDocker && new Phino().available()) {
@@ -65,7 +74,7 @@ public final class BuildMojo extends AbstractMojo {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
                 "Dockerfile", "entry.sh", "pom.xml",
-                "normalize.sh", "extensions.xml", "settings.xml",
+                "rewrite.sh", "extensions.xml", "settings.xml",
             };
             for (final String file : files) {
                 new IoChecked<>(
@@ -78,7 +87,7 @@ public final class BuildMojo extends AbstractMojo {
                 ).value();
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
-            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+            for (final String file : new String[] {"entry.sh", "rewrite.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             final List<String> args = new LinkedList<>();
@@ -94,6 +103,8 @@ public final class BuildMojo extends AbstractMojo {
             args.add("--progress=plain");
             args.add("--build-arg");
             args.add(String.format("PHINO_VERSION=%s", this.phino()));
+            args.add("--build-arg");
+            args.add(String.format("JEO_VERSION=%s", this.jeo()));
             args.add("--tag");
             args.add(this.image);
             args.add(temp.path().toString());
@@ -106,6 +117,27 @@ public final class BuildMojo extends AbstractMojo {
                 ).value()
             );
         }
+    }
+
+    /**
+     * Get the JEO version to use.
+     * If not set, read it from the default resource file.
+     * @return JEO version
+     * @throws IOException If reading the version fails
+     */
+    private String jeo() throws IOException {
+        String ver = this.jeoVersion;
+        if (ver == null) {
+            ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/default-jeo-version.txt"
+                    )
+                )
+            ).asString().trim();
+            Logger.info(this, "JEO version is not set, we build with the default one: %s", ver);
+        }
+        return ver;
     }
 
     private String phino() throws IOException {

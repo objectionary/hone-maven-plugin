@@ -28,6 +28,8 @@ import org.cactoos.io.TeeInput;
 import org.cactoos.iterable.Mapped;
 import org.cactoos.scalar.IoChecked;
 import org.cactoos.scalar.LengthOf;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
@@ -108,15 +110,6 @@ public final class OptimizeMojo extends AbstractMojo {
      */
     @Parameter(property = "hone.eo-version")
     private String eoVersion;
-
-    /**
-     * JEO version to use.
-     *
-     * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.jeo-version")
-    private String jeoVersion;
 
     /**
      * Grep XMIR files to rewrite.
@@ -278,6 +271,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private String[] excludes;
 
     /**
+     * JEO version to use.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.jeo-version")
+    private String jeoVersion;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -352,15 +354,11 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
-        if (this.jeoVersion == null) {
-            Logger.info(this, "JEO version is not set, we use the default one");
-        } else {
-            command.addAll(
-                Arrays.asList(
-                    "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
-                )
-            );
-        }
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("JEO_VERSION=%s", this.jeo())
+            )
+        );
         command.addAll(
             Arrays.asList(
                 "--env", String.format("CLASSES=%s", this.classes)
@@ -537,7 +535,7 @@ public final class OptimizeMojo extends AbstractMojo {
             final String[] files = {
                 "entry.sh",
                 "pom.xml",
-                "normalize.sh",
+                "rewrite.sh",
             };
             for (final String file : files) {
                 new IoChecked<>(
@@ -549,7 +547,7 @@ public final class OptimizeMojo extends AbstractMojo {
                     )
                 ).value();
             }
-            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+            for (final String file : new String[] {"entry.sh", "rewrite.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
@@ -584,11 +582,7 @@ public final class OptimizeMojo extends AbstractMojo {
             } else {
                 jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
             }
-            if (this.jeoVersion == null) {
-                Logger.info(this, "JEO version is not set, we use the default one");
-            } else {
-                jaxec = jaxec.withEnv("JEO_VERSION", this.jeoVersion);
-            }
+            jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();
         }
     }
@@ -601,6 +595,27 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    /**
+     * Get the JEO version to use.
+     * If not set, read it from the default resource file.
+     * @return JEO version
+     * @throws IOException If reading the version fails
+     */
+    private String jeo() throws IOException {
+        String ver = this.jeoVersion;
+        if (ver == null) {
+            ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/default-jeo-version.txt"
+                    )
+                )
+            ).asString().trim();
+            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
+        }
+        return ver;
     }
 
     /**

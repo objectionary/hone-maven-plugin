@@ -7,9 +7,10 @@ SHELL := bash
 .SECONDARY:
 .PHONY: all clean test env diff jeo-test run
 
-RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules/streams
+ROOT=../../../../../../../..
+RULES_DIR=$(ROOT)/src/main/resources/org/eolang/hone/rules/streams
 TESTS_DIR=lints
-TARGET=../../../../../../../../target/foo
+TARGET=$(ROOT)/target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)
 RULES=$(sort $(subst $(RULES_DIR)/,,$(RULE_FILES)))
@@ -17,7 +18,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=0.14.8
+JEO_VERSION=$(shell cat "$(ROOT)/src/main/resources/org/eolang/hone/default-jeo-version.txt" | xargs)
 
 all: env test jeo-test run
 
@@ -52,7 +53,7 @@ test: $(TEST_FILES)
 		n=$$(echo "$${t}" | sed 's/-.*$$//g')
 		rule=$$(find "$(RULES_DIR)/" -name "$${n}-*.phr")
 		printf "\nParsing \e[1m%s\e[0m...\n" "$${t}"
-		phino rewrite --sweet --nothing "$(TESTS_DIR)/$${t}.phi" > /dev/null
+		phino rewrite --sweet "$(TESTS_DIR)/$${t}.phi" > /dev/null
 		printf "Testing \e[1m%s\e[0m against \e[1m%s\e[0m...\n" "$${t}" "$${rule}"
 		phino rewrite --sweet --must=1 --rule "$${rule}" "$(TESTS_DIR)/$${t}.phi" > "$(TARGET)/tests-output/$${t}.phi"
 	done
@@ -69,7 +70,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 	@$(call check_xml,$@,"after-disassemble")
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
-	phino rewrite --sweet --input=xmir --nothing < $< > $@
+	phino rewrite --sweet --input=xmir < $< > $@
 
 .SILENT:
 $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
@@ -77,7 +78,7 @@ $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
 
 .SILENT:
 $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)/after
-	phino rewrite --sweet --nothing < $< > $@
+	phino rewrite --sweet < $< > $@
 	for r in $(RULE_NAMES); do
 		n="$$(dirname $@)/$$(echo "$${r}" | sed 's/-.*$$//g').phi"
 	    printf 'Applying %s rule...\n' "$${r}"
@@ -90,7 +91,7 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 	done
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
-	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
+	phino rewrite --output=xmir --omit-comments --omit-listing < $< > $@
 	@$(call check_xml,$@,"after-phino")
 
 .SILENT:

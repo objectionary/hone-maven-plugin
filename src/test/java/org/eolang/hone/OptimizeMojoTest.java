@@ -63,7 +63,7 @@ final class OptimizeMojoTest {
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -140,7 +140,7 @@ final class OptimizeMojoTest {
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     void transformsSimpleAppWithoutPhino(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -201,7 +201,7 @@ final class OptimizeMojoTest {
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     void optimizesExecutableJavaApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
@@ -249,7 +249,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesTwice(@Mktmp final Path home,
@@ -411,7 +411,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesWithIncludesAndExcludes(@Mktmp final Path home,
@@ -487,7 +487,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesWithExtraRules(@Mktmp final Path home,
@@ -595,7 +595,7 @@ final class OptimizeMojoTest {
 
     @Test
     @Tag("deep")
-    @Timeout(6000L)
+    @Timeout(180L)
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
     void optimizesWithSmallSteps(@Mktmp final Path home,

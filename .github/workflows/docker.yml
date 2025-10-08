@@ -18,4 +18,4 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - run: docker build --build-arg PHINO_VERSION=0.0.0.40 src/main/resources/org/eolang/hone/scaffolding -t hone
+      - run: docker build --build-arg PHINO_VERSION=0.0.0.43 --build-arg JEO_VERSION=0.14.14 src/main/resources/org/eolang/hone/scaffolding -t hone

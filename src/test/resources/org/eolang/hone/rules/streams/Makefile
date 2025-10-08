@@ -7,9 +7,10 @@ SHELL := bash
 .SECONDARY:
 .PHONY: all clean test env diff jeo-test run
 
-RULES_DIR=../../../../../../../main/resources/org/eolang/hone/rules/streams
+ROOT=../../../../../../../..
+RULES_DIR=$(ROOT)/src/main/resources/org/eolang/hone/rules/streams
 TESTS_DIR=lints
-TARGET=../../../../../../../../target/foo
+TARGET=$(ROOT)/target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)
 RULES=$(sort $(subst $(RULES_DIR)/,,$(RULE_FILES)))
@@ -17,7 +18,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=0.14.8
+JEO_VERSION=$(shell cat "$(ROOT)/src/main/resources/org/eolang/hone/default-phino-version.txt" | xargs)
 
 all: env test jeo-test run
 

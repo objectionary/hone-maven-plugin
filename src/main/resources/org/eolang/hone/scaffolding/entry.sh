@@ -129,7 +129,7 @@ fi
 opts+=(
   "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}"
   "-Djeo.disassemble.outputDir=${TARGET}/hone/jeo-disassemble"
-  "-Dexec.phino.script=${SELF}/normalize.sh"
+  "-Dexec.phino.script=${SELF}/rewrite.sh"
   "-Dexec.phino.verbose=${VERBOSE}"
   "-Dexec.phino.debug=${DEBUG}"
   "-Dexec.phino.rules=${RULES}"

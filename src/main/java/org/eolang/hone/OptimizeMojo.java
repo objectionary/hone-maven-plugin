@@ -346,6 +346,15 @@ public final class OptimizeMojo extends AbstractMojo {
             );
         }
         if (this.eoVersion == null) {
+            Logger.info(this, "EO version is not set, we use the default one");
+        } else {
+            command.addAll(
+                Arrays.asList(
+                    "--env", String.format("EO_VERSION=%s", this.eoVersion)
+                )
+            );
+        }
+        if (this.jeoVersion == null) {
             final String ver = new IoCheckedText(
                 new TextOf(
                     new ResourceOf(
@@ -353,23 +362,14 @@ public final class OptimizeMojo extends AbstractMojo {
                     )
                 )
             ).asString().trim();
-            Logger.info(this, "EO version is not set, we use the default one: %s", ver);
-            this.eoVersion = ver;
+            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
+            this.jeoVersion = ver;
         }
         command.addAll(
             Arrays.asList(
-                "--env", String.format("EO_VERSION=%s", this.eoVersion)
+                "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
             )
         );
-        if (this.jeoVersion == null) {
-            Logger.info(this, "JEO version is not set, we use the default one");
-        } else {
-            command.addAll(
-                Arrays.asList(
-                    "--env", String.format("JEO_VERSION=%s", this.jeoVersion)
-                )
-            );
-        }
         command.addAll(
             Arrays.asList(
                 "--env", String.format("CLASSES=%s", this.classes)

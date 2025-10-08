@@ -104,8 +104,8 @@ ENV JAVA_OPTS=-Xmx16g
 
 COPY entry.sh ./
 RUN chmod a+x entry.sh
-COPY normalize.sh ./
-RUN chmod a+x normalize.sh
+COPY rewrite.sh ./
+RUN chmod a+x rewrite.sh
 COPY rules/ ./rules/
 
 ENTRYPOINT ["/hone/entry.sh"]

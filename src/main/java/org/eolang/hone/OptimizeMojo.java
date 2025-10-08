@@ -537,7 +537,7 @@ public final class OptimizeMojo extends AbstractMojo {
             final String[] files = {
                 "entry.sh",
                 "pom.xml",
-                "normalize.sh",
+                "rewrite.sh",
             };
             for (final String file : files) {
                 new IoChecked<>(
@@ -549,7 +549,7 @@ public final class OptimizeMojo extends AbstractMojo {
                     )
                 ).value();
             }
-            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+            for (final String file : new String[] {"entry.sh", "rewrite.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));

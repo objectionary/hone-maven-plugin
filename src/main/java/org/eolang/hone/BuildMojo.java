@@ -65,7 +65,7 @@ public final class BuildMojo extends AbstractMojo {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
                 "Dockerfile", "entry.sh", "pom.xml",
-                "normalize.sh", "extensions.xml", "settings.xml",
+                "rewrite.sh", "extensions.xml", "settings.xml",
             };
             for (final String file : files) {
                 new IoChecked<>(
@@ -78,7 +78,7 @@ public final class BuildMojo extends AbstractMojo {
                 ).value();
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
-            for (final String file : new String[] {"entry.sh", "normalize.sh"}) {
+            for (final String file : new String[] {"entry.sh", "rewrite.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             final List<String> args = new LinkedList<>();

@@ -39,7 +39,8 @@ release:
     git commit -m "version set to ${tag}"
     repo=yegor256/hone
     phino_version=$(cat ../default-phino-version.txt)
-    sudo docker build --build-arg "PHINO_VERSION=${phino_version}" "$(pwd)" --tag "${repo}:${tag}"
-    sudo docker build --build-arg "PHINO_VERSION=${phino_version}" "$(pwd)" --tag "${repo}:latest"
+    jeo_version=$(cat ../default-jeo-version.txt)
+    sudo docker build --build-arg "PHINO_VERSION=${phino_version}" --build-arg "JEOO_VERSION=${jeo_version}" "$(pwd)" --tag "${repo}:${tag}"
+    sudo docker build --build-arg "PHINO_VERSION=${phino_version}" --build-arg "JEOO_VERSION=${jeo_version}" "$(pwd)" --tag "${repo}:latest"
     sudo docker push "${repo}:${tag}"
     sudo docker push "${repo}:latest"

@@ -56,6 +56,15 @@ public final class BuildMojo extends AbstractMojo {
     @Parameter(property = "hone.use-buildx", defaultValue = "true")
     private boolean useBuildx;
 
+    /**
+     * JEO version to use.
+     *
+     * @since 0.20.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.jeo-version")
+    private String jeoVersion;
+
     @Override
     public void exec() throws IOException {
         if (!this.alwaysWithDocker && new Phino().available()) {
@@ -108,6 +117,27 @@ public final class BuildMojo extends AbstractMojo {
                 ).value()
             );
         }
+    }
+
+    /**
+     * Get the JEO version to use.
+     * If not set, read it from the default resource file.
+     * @return JEO version
+     * @throws IOException If reading the version fails
+     */
+    private String jeo() throws IOException {
+        String ver = this.jeoVersion;
+        if (ver == null) {
+            ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/default-jeo-version.txt"
+                    )
+                )
+            ).asString().trim();
+            Logger.info(this, "JEO version is not set, we build with the default one: %s", ver);
+        }
+        return ver;
     }
 
     private String phino() throws IOException {

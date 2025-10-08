@@ -271,6 +271,15 @@ public final class OptimizeMojo extends AbstractMojo {
     private String[] excludes;
 
     /**
+     * JEO version to use.
+     *
+     * @since 0.1.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.jeo-version")
+    private String jeoVersion;
+
+    /**
      * EO cache directory.
      *
      * @since 0.1.0
@@ -586,6 +595,27 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    /**
+     * Get the JEO version to use.
+     * If not set, read it from the default resource file.
+     * @return JEO version
+     * @throws IOException If reading the version fails
+     */
+    private String jeo() throws IOException {
+        String ver = this.jeoVersion;
+        if (ver == null) {
+            ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/default-jeo-version.txt"
+                    )
+                )
+            ).asString().trim();
+            Logger.info(this, "JEO version is not set, we use the default one: %s", ver);
+        }
+        return ver;
     }
 
     /**

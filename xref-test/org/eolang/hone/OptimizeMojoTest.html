@@ -71,7 +71,7 @@
 <a class="jxr_linenumber" name="L63" href="#L63">63</a>      @Test
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>      @Tag(<span class="jxr_string">"deep"</span>)
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>      @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>      @Timeout(6000L)
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      @Timeout(180L)
 <a class="jxr_linenumber" name="L67" href="#L67">67</a>      @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L68" href="#L68">68</a>      <strong class="jxr_keyword">void</strong> optimizesSimpleApp(@Mktmp <strong class="jxr_keyword">final</strong> Path home,
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>          @RandomImage <strong class="jxr_keyword">final</strong> String image) <strong class="jxr_keyword">throws</strong> Exception {
@@ -148,7 +148,7 @@
 <a class="jxr_linenumber" name="L140" href="#L140">140</a>     @Test
 <a class="jxr_linenumber" name="L141" href="#L141">141</a>     @Tag(<span class="jxr_string">"deep"</span>)
 <a class="jxr_linenumber" name="L142" href="#L142">142</a>     @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
-<a class="jxr_linenumber" name="L143" href="#L143">143</a>     @Timeout(6000L)
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>     @Timeout(180L)
 <a class="jxr_linenumber" name="L144" href="#L144">144</a>     @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L145" href="#L145">145</a>     <strong class="jxr_keyword">void</strong> transformsSimpleAppWithoutPhino(@Mktmp <strong class="jxr_keyword">final</strong> Path home,
 <a class="jxr_linenumber" name="L146" href="#L146">146</a>         @RandomImage <strong class="jxr_keyword">final</strong> String image) <strong class="jxr_keyword">throws</strong> Exception {
@@ -209,7 +209,7 @@
 <a class="jxr_linenumber" name="L201" href="#L201">201</a>     @Test
 <a class="jxr_linenumber" name="L202" href="#L202">202</a>     @Tag(<span class="jxr_string">"deep"</span>)
 <a class="jxr_linenumber" name="L203" href="#L203">203</a>     @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
-<a class="jxr_linenumber" name="L204" href="#L204">204</a>     @Timeout(6000L)
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>     @Timeout(180L)
 <a class="jxr_linenumber" name="L205" href="#L205">205</a>     @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L206" href="#L206">206</a>     <strong class="jxr_keyword">void</strong> optimizesExecutableJavaApp(@Mktmp <strong class="jxr_keyword">final</strong> Path home,
 <a class="jxr_linenumber" name="L207" href="#L207">207</a>         @RandomImage <strong class="jxr_keyword">final</strong> String image) <strong class="jxr_keyword">throws</strong> Exception {
@@ -257,7 +257,7 @@
 <a class="jxr_linenumber" name="L249" href="#L249">249</a> 
 <a class="jxr_linenumber" name="L250" href="#L250">250</a>     @Test
 <a class="jxr_linenumber" name="L251" href="#L251">251</a>     @Tag(<span class="jxr_string">"deep"</span>)
-<a class="jxr_linenumber" name="L252" href="#L252">252</a>     @Timeout(6000L)
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>     @Timeout(180L)
 <a class="jxr_linenumber" name="L253" href="#L253">253</a>     @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L254" href="#L254">254</a>     @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
 <a class="jxr_linenumber" name="L255" href="#L255">255</a>     <strong class="jxr_keyword">void</strong> optimizesTwice(@Mktmp <strong class="jxr_keyword">final</strong> Path home,
@@ -419,7 +419,7 @@
 <a class="jxr_linenumber" name="L411" href="#L411">411</a> 
 <a class="jxr_linenumber" name="L412" href="#L412">412</a>     @Test
 <a class="jxr_linenumber" name="L413" href="#L413">413</a>     @Tag(<span class="jxr_string">"deep"</span>)
-<a class="jxr_linenumber" name="L414" href="#L414">414</a>     @Timeout(6000L)
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>     @Timeout(180L)
 <a class="jxr_linenumber" name="L415" href="#L415">415</a>     @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L416" href="#L416">416</a>     @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
 <a class="jxr_linenumber" name="L417" href="#L417">417</a>     <strong class="jxr_keyword">void</strong> optimizesWithIncludesAndExcludes(@Mktmp <strong class="jxr_keyword">final</strong> Path home,
@@ -495,7 +495,7 @@
 <a class="jxr_linenumber" name="L487" href="#L487">487</a> 
 <a class="jxr_linenumber" name="L488" href="#L488">488</a>     @Test
 <a class="jxr_linenumber" name="L489" href="#L489">489</a>     @Tag(<span class="jxr_string">"deep"</span>)
-<a class="jxr_linenumber" name="L490" href="#L490">490</a>     @Timeout(6000L)
+<a class="jxr_linenumber" name="L490" href="#L490">490</a>     @Timeout(180L)
 <a class="jxr_linenumber" name="L491" href="#L491">491</a>     @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L492" href="#L492">492</a>     @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
 <a class="jxr_linenumber" name="L493" href="#L493">493</a>     <strong class="jxr_keyword">void</strong> optimizesWithExtraRules(@Mktmp <strong class="jxr_keyword">final</strong> Path home,
@@ -603,7 +603,7 @@
 <a class="jxr_linenumber" name="L595" href="#L595">595</a> 
 <a class="jxr_linenumber" name="L596" href="#L596">596</a>     @Test
 <a class="jxr_linenumber" name="L597" href="#L597">597</a>     @Tag(<span class="jxr_string">"deep"</span>)
-<a class="jxr_linenumber" name="L598" href="#L598">598</a>     @Timeout(6000L)
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>     @Timeout(180L)
 <a class="jxr_linenumber" name="L599" href="#L599">599</a>     @DisabledWithoutDocker
 <a class="jxr_linenumber" name="L600" href="#L600">600</a>     @ExtendWith(MayBeSlow.<strong class="jxr_keyword">class</strong>)
 <a class="jxr_linenumber" name="L601" href="#L601">601</a>     <strong class="jxr_keyword">void</strong> optimizesWithSmallSteps(@Mktmp <strong class="jxr_keyword">final</strong> Path home,

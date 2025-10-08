@@ -349,7 +349,7 @@ public final class OptimizeMojo extends AbstractMojo {
             final String ver = new IoCheckedText(
                 new TextOf(
                     new ResourceOf(
-                        "org/eolang/hone/scaffolding/default-jeo-version.txt"
+                        "org/eolang/hone/default-jeo-version.txt"
                     )
                 )
             ).asString().trim();
@@ -592,7 +592,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 final String ver = new IoCheckedText(
                     new TextOf(
                         new ResourceOf(
-                            "org/eolang/hone/scaffolding/default-jeo-version.txt"
+                            "org/eolang/hone/default-jeo-version.txt"
                         )
                     )
                 ).asString().trim();

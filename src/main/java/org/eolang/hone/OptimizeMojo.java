@@ -28,6 +28,8 @@ import org.cactoos.io.TeeInput;
 import org.cactoos.iterable.Mapped;
 import org.cactoos.scalar.IoChecked;
 import org.cactoos.scalar.LengthOf;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 
 /**
  * Converts Bytecode to Bytecode in order to make it faster.
@@ -344,14 +346,21 @@ public final class OptimizeMojo extends AbstractMojo {
             );
         }
         if (this.eoVersion == null) {
-            Logger.info(this, "EO version is not set, we use the default one");
-        } else {
-            command.addAll(
-                Arrays.asList(
-                    "--env", String.format("EO_VERSION=%s", this.eoVersion)
+            final String ver = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf(
+                        "org/eolang/hone/scaffolding/default-jeo-version.txt"
+                    )
                 )
-            );
+            ).asString().trim();
+            Logger.info(this, "EO version is not set, we use the default one: %s", ver);
+            this.eoVersion = ver;
         }
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("EO_VERSION=%s", this.eoVersion)
+            )
+        );
         if (this.jeoVersion == null) {
             Logger.info(this, "JEO version is not set, we use the default one");
         } else {

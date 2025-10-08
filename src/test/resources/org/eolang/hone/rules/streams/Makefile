@@ -18,7 +18,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
 TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
-JEO_VERSION=$(shell cat "$(ROOT)/src/main/resources/org/eolang/hone/default-phino-version.txt" | xargs)
+JEO_VERSION=$(shell cat "$(ROOT)/src/main/resources/org/eolang/hone/default-jeo-version.txt" | xargs)
 
 all: env test jeo-test run
 

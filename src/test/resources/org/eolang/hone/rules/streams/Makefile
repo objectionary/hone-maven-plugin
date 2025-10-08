@@ -52,7 +52,7 @@ test: $(TEST_FILES)
 		n=$$(echo "$${t}" | sed 's/-.*$$//g')
 		rule=$$(find "$(RULES_DIR)/" -name "$${n}-*.phr")
 		printf "\nParsing \e[1m%s\e[0m...\n" "$${t}"
-		phino rewrite --sweet --nothing "$(TESTS_DIR)/$${t}.phi" > /dev/null
+		phino rewrite --sweet "$(TESTS_DIR)/$${t}.phi" > /dev/null
 		printf "Testing \e[1m%s\e[0m against \e[1m%s\e[0m...\n" "$${t}" "$${rule}"
 		phino rewrite --sweet --must=1 --rule "$${rule}" "$(TESTS_DIR)/$${t}.phi" > "$(TARGET)/tests-output/$${t}.phi"
 	done
@@ -69,7 +69,7 @@ $(TARGET)/before/%.xmir: $(TARGET)/before/%.class Makefile
 	@$(call check_xml,$@,"after-disassemble")
 
 $(TARGET)/before/%.phi: $(TARGET)/before/%.xmir Makefile
-	phino rewrite --sweet --input=xmir --nothing < $< > $@
+	phino rewrite --sweet --input=xmir < $< > $@
 
 .SILENT:
 $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
@@ -77,7 +77,7 @@ $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
 
 .SILENT:
 $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)/after
-	phino rewrite --sweet --nothing < $< > $@
+	phino rewrite --sweet < $< > $@
 	for r in $(RULE_NAMES); do
 		n="$$(dirname $@)/$$(echo "$${r}" | sed 's/-.*$$//g').phi"
 	    printf 'Applying %s rule...\n' "$${r}"
@@ -90,7 +90,7 @@ $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)
 	done
 
 $(TARGET)/after/%.xmir: $(TARGET)/after/%.phi Makefile
-	phino rewrite --nothing --output=xmir --omit-comments --omit-listing < $< > $@
+	phino rewrite --output=xmir --omit-comments --omit-listing < $< > $@
 	@$(call check_xml,$@,"after-phino")
 
 .SILENT:

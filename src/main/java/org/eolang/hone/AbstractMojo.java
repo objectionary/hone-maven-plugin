@@ -9,9 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.cactoos.io.ResourceOf;
-import org.cactoos.text.IoCheckedText;
-import org.cactoos.text.TextOf;
 import org.slf4j.impl.StaticLoggerBinder;
 
 /**

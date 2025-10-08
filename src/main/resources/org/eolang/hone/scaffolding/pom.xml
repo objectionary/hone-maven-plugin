@@ -8,10 +8,10 @@
   <groupId>org.eolang</groupId>
   <artifactId>hone</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.0</version>
+  <version>0.20.2</version>
   <name>hone</name>
   <properties>
-    <jeo.version>0.0.0</jeo.version>
+    <jeo.version>0.20.2</jeo.version>
   </properties>
   <build>
     <pluginManagement>

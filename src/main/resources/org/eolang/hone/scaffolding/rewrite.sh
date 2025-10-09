@@ -184,6 +184,6 @@ start=$(date '+%s.%N')
 parallel --retries=0 "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
   "--max-procs=${threads}" \
   "--tmpdir=${PARALLEL_HOME}/tmp" \
-  --env _ --plain \
+  --env _ \
   --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

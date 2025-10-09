@@ -56,7 +56,7 @@ function rewrite {
     for rule in "${rules[@]}"; do
       m=$(basename "${rule}" .yml)
       pos=$(( pos + 1 ))
-      t="${pho}.${pos}"
+      t="${pho}.$(printf '%002d' "${pos}")"
       phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}" > "${t}"
       if cmp -s "${pho}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"
@@ -98,7 +98,7 @@ function rewrite_with_timeout {
   start=$(date '+%s.%N')
   if ! timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@"; then
     sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
-    if [ "${sec}" == 0 ]; then
+    if [ "${sec}" -eq 0 ]; then
       echo "Failure in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
       exit 1
     fi
@@ -181,8 +181,9 @@ mkdir -p "${PARALLEL_HOME}"
 parallel --record-env
 echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
 start=$(date '+%s.%N')
-parallel --retries=0 "--joblog=${TARGET}/hone-tasks.log" --will-cite \
+parallel --retries=0 "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
   "--max-procs=${threads}" \
-  --env _ \
+  "--tmpdir=${PARALLEL_HOME}/tmp" \
+  --env _ --plain \
   --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

@@ -43,23 +43,23 @@ The plugin will do exactly the following:
 
 1. Take Bytecode `.class` files from the `target/classes/` directory and copy
 all of them to the `target/classes-before-hone/` directory (as a backup).
-1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
+1. Using [jeo-maven-plugin],
 transform `.class` files to
-`.xmir` [format](https://news.eolang.org/2022-11-25-xmir-guide.html),
-which is [EO](https://www.eolang.org) in XML, and place them into
+`.xmir` [format][XMIR],
+which is [EO] in XML, and place them into
 the `target/hone/jeo-disassemble/` directory.
-1. Using [phino](https://github.com/objectionary/phino),
+1. Using [phino],
 convert `.xmir` files to `.phi` files
-with [𝜑-calculus](https://arxiv.org/abs/2111.13384) expressions,
+with [𝜑-calculus] expressions,
 and place them into the `target/hone/phi/` directory.
-1. Using [phino](https://github.com/objectionary/phino),
+1. Using [phino],
 apply a number of optimizations to 𝜑-calculus expressions in the `.phi` files
 and place new `.phi` files into
 the `target/hone/phi-optimized/` directory.
-1. Using [phino](https://github.com/objectionary/phino),
+1. Using [phino],
 convert `.phi` files back to `.xmir` files and
 place them into the `target/hone/unphi/` directory.
-1. Using [jeo-maven-plugin](https://github.com/objectionary/jeo-maven-plugin),
+1. Using [jeo-maven-plugin],
 transform `.xmir` files back to Bytecode and place `.class` files into
 the `target/classes/` directory.
 
@@ -67,6 +67,8 @@ The effect of the plugin should be performance-positive (your code should
 work faster) along with no functionality degradation (your code should work
 exactly the same as it worked before optimizations). If any of these
 is not true, [submit a ticket], we will try to fix.
+
+To make it work faster, you may install [phino] on your machine beforehand.
 
 ## How to Use in Gradle
 
@@ -138,3 +140,7 @@ that we use, are defined in the `pom.xml` file.
 [Docker]: https://docs.docker.com/engine/install/
 [submit a ticket]: https://github.com/objectionary/hone-maven-plugin/issues
 [Gradle]: https://gradle.org/
+[phino]: https://github.com/objectionary/phino
+[jeo-maven-plugin]: https://github.com/objectionary/jeo-maven-plugin
+[𝜑-calculus]: https://arxiv.org/abs/2111.13384
+[XMIR]: https://news.eolang.org/2022-11-25-xmir-guide.html

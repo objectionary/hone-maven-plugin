@@ -172,9 +172,9 @@ while IFS= read -r f; do
 done <<< "${files}"
 
 threads=${HONE_THREADS}
-if [ "${threads}" == '0' ]; then
+if [ -z "${threads}" ] || [ "${threads}" == '0' ]; then
   threads=$(nproc)
-  echo "Using ${threads} threads, by the number of CPUs"
+  echo "Using ${threads} threads, by the number of CPU cores"
 fi
 export PARALLEL_HOME=${TARGET}/parallel
 mkdir -p "${PARALLEL_HOME}"

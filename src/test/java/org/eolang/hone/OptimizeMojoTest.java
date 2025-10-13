@@ -701,4 +701,91 @@ final class OptimizeMojoTest {
             }
         );
     }
+
+    @Test
+    @Tag("deep")
+    @Timeout(180L)
+    @DisabledWithoutDocker
+    @ExtendWith(MayBeSlow.class)
+    void optimizesWithSmallConsecutiveSteps(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/rules/first.yaml")
+                    .write(
+                        """
+                        name: 321-to-567
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/rules/second.yaml")
+                    .write(
+                        """
+                        name: 567-to-987
+                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/main/java/Books.java")
+                    .write(
+                        """
+                            class Books {
+                                int countThem() {
+                                    return 321;
+                                }
+                            }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/test/java/SmallsTest.java")
+                    .write(
+                        """
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class BooksTest {
+                            @Test
+                            void worksAfterOptimizationWithSmallConsecutiveSteps() {
+                                Assertions.assertEquals(
+                                    987,
+                                    new Books().countThem()
+                                );
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("rules", "none")
+                    .set("smallSteps", "true")
+                    .set(
+                        "extra",
+                        new String[] {
+                            "src/rules/first.yaml",
+                            "src/rules/second.yaml",
+                        }
+                    )
+                    .set("image", image);
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "the build must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
 }

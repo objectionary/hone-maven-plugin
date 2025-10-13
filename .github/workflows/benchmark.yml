@@ -29,7 +29,7 @@ jobs:
       - run: |
           git fetch --tags --force
           latest=$(git tag --sort=creatordate | tail -1)
-          docker pull yegor256/hone:${latest}
+          docker pull "yegor256/hone:${latest}"
       - run: mvn clean test -Dtest=OptimizeMojoTest#optimizesJustOneLargeJnaClass --errors --batch-mode -DexcludedGroups=
       - run: |
           set -x

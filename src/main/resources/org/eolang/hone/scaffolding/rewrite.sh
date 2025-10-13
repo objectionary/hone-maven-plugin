@@ -180,7 +180,9 @@ fi
 start=$(date '+%s.%N')
 if [ "${threads}" -eq 1 ]; then
   echo "Starting to rewrite ${total} file(s)..."
-  /bin/bash -c "$(head -1 "${tasks}")"
+  while IFS= read -r cmd; do
+    /bin/bash -c "${cmd}"
+  done <<< "$(cat "${tasks}")"
 else
   echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
   export PARALLEL_HOME=${TARGET}/parallel

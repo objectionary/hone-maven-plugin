@@ -572,6 +572,7 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("rules", "none")
+                    .set("threads", "1")
                     .set("smallSteps", "true")
                     .set("maxDepth", "10")
                     .set(

@@ -41,8 +41,6 @@ function rewrite {
   mkdir -p "$(dirname "${xo}")"
   if [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ]; then
     echo "Target $(basename "${pho}") is newer than source $(basename "${phi}"); skipping transformation for ${idx}"
-    phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
-    verbose "Converted existing PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
     return 0
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"

@@ -39,12 +39,13 @@ function rewrite {
   mkdir -p "$(dirname "${phi}")"
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
-  verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
-  if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
-    cp "${xi}" "${xo}"
-    echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
-    return
+  if [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ]; then
+    echo "Target $(basename "${pho}") is newer than source $(basename "${phi}"); skipping transformation for ${idx}"
+    phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
+    verbose "Converted existing PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
+    return 0
   fi
+  verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
   phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}" > "${phi}"
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"

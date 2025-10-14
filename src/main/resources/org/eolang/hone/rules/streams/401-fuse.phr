@@ -43,8 +43,7 @@ result: |
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
       body ↦ ⟦
-        𝐵-first-body,
-        𝐵-second-body,
+        𝐵-body,
         ρ ↦ ∅
       ⟧
     ⟧,
@@ -60,3 +59,6 @@ where:
       - 𝑒-both-statics
       - '"s/truetrue/true/g"'
       - '"s/.*false.*/false/g"'
+  - meta: 𝐵-body
+    function: join
+    args: [𝐵-first-body, 𝐵-second-body]

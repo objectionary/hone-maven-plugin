@@ -39,6 +39,10 @@ function rewrite {
   mkdir -p "$(dirname "${phi}")"
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
+  if [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ]; then
+    echo "Target $(basename "${pho}") is newer than source $(basename "${phi}"); skipping transformation for ${idx}"
+    return
+  fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
   if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
     cp "${xi}" "${xo}"

@@ -8,12 +8,14 @@
     interfaces ↦ ⟦
       φ ↦ Φ.jeo.seq.of0
     ⟧,
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
     name ↦ "Foo",
     j$main ↦ ⟦
       φ ↦ Φ.jeo.method,
       access ↦ 4096,
       descriptor ↦ "()V",
       signature ↦ "",
+      exceptions ↦ "Exceptions",
       maxs ↦ ⟦
         φ ↦ Φ.jeo.seq.of2,
         v1 ↦ 5,
@@ -21,12 +23,13 @@
       ⟧,
       params ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
       modifiers ↦ ⟦ static ↦ Φ̇.true ⟧,
+      annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of2,
         i2186 ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokedynamic,
           v2194 ↦ "apply",
-          v2196 ↦ "(Lcom/jcabi/xml/XSL;)Ljava/util/function/Function;",
+          v2196 ↦ "()Ljava/util/function/Function;",
           h2198 ↦ ⟦
             φ ↦ Φ.jeo.handle,
             v2199 ↦ 6,
@@ -43,7 +46,7 @@
             φ ↦ Φ.jeo.handle,
             v2249 ↦ 9,
             v2250 ↦ "com/jcabi/xml/XSL",
-            v2251 ↦ "transform",
+            v2251 ↦ "lambda$1",
             v2252 ↦ "(Lcom/jcabi/xml/XML;)Lcom/jcabi/xml/XML;",
             v2254 ↦ Φ̇.true
           ⟧,
@@ -60,6 +63,7 @@
           v2376 ↦ Φ̇.true
         ⟧
       ⟧,
+      trycatchblocks ↦ ⟦⟧,
       local-variable-table ↦ ⟦⟧,
       name ↦ "main"
     ⟧

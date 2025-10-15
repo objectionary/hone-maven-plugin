@@ -9,7 +9,7 @@ SHELL := bash
 
 ROOT=../../../../../../../..
 RULES_DIR=$(ROOT)/src/main/resources/org/eolang/hone/rules/streams
-TESTS_DIR=lints
+TESTS_DIR=expressions
 TARGET=$(ROOT)/target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)

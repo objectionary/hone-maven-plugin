@@ -63,7 +63,7 @@
         <configuration>
           <image>larger-hone:local</image>
           <rules>none</rules>
-          <threads>1</threads>
+          <threads>0</threads>
           <timeout>10</timeout>
         </configuration>
         <executions>

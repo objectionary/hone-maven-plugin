@@ -34,7 +34,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({ "PMD.AvoidDuplicateLiterals", "PMD.TooManyMethods" })
 final class OptimizeMojoTest {
 
     @Test

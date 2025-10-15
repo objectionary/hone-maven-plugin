@@ -180,14 +180,22 @@ if [ -z "${threads}" ] || [ "${threads}" == '0' ]; then
   threads=$(nproc)
   echo "Using ${threads} threads, by the number of CPU cores"
 fi
-export PARALLEL_HOME=${TARGET}/parallel
-mkdir -p "${PARALLEL_HOME}"
-parallel --record-env
-echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
+
 start=$(date '+%s.%N')
-parallel --retries=0 "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
-  "--max-procs=${threads}" \
-  "--tmpdir=${PARALLEL_HOME}/tmp" \
-  --env _ \
-  --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
+if [ "${threads}" -eq 1 ]; then
+  echo "Starting to rewrite ${total} file(s)..."
+  while IFS= read -r cmd; do
+    /bin/bash -c "${cmd}"
+  done <<< "$(cat "${tasks}")"
+else
+  echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
+  export PARALLEL_HOME=${TARGET}/parallel
+  mkdir -p "${PARALLEL_HOME}"
+  parallel --record-env
+  parallel --retries=0 "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
+    "--max-procs=${threads}" \
+    "--tmpdir=${PARALLEL_HOME}/tmp" \
+    --env _ \
+    --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
+fi
 echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"

@@ -97,20 +97,12 @@ from [JNA](https://github.com/java-native-access/jna):
 
 <!-- benchmark_begin -->
 ```text
-Input: com/sun/jna/Pointer.class
-Size of .class: 22Kb (22Kb bytes)
-Size of .xmir after disassemble: 2Mb (2Mb bytes, 55205 lines)
-Size of .phi: 837Kb (837Kb bytes, 26376 lines)
-Size of .xmir after unphi: 2Mb (2Mb bytes, 55190 lines)
-Optimization time: 9s (9189 ms)
 
-jeo-maven-plugin:disassemble  3.149  51.21%
-exec-maven-plugin:exec        2.289  37.23%
-jeo-maven-plugin:assemble     0.711  11.56%
+
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2025-09-18 at 15:08,
+on 2025-10-15 at 11:01,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
@@ -133,7 +125,7 @@ The versions of [EO] and
 that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/17832772192
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/18526638177
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

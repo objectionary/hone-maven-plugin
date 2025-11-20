@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: src/main/resources/org/eolang/hone/scaffolding/Dockerfile

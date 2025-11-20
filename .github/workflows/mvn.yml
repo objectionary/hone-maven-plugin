@@ -24,7 +24,7 @@ jobs:
       LANG: C
       LANGUAGE: C
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: |
           sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod a+x /usr/bin/phino

@@ -180,6 +180,7 @@ mvn clean install -Pqulice
 ```
 
 ### Requirements
+
 To successfully build and contribute, you must have:
 
 - [Maven 3.3+](https://maven.apache.org)
@@ -187,6 +188,7 @@ To successfully build and contribute, you must have:
 - [Docker](https://docs.docker.com/engine/install/) installed.
 
 ### Dependency Versions
+
 The versions of:
 
 - [EO]

@@ -96,10 +96,22 @@ Here is the result of the latest processing of a large Java class
 from [JNA](https://github.com/java-native-access/jna):
 
 <!-- benchmark_begin -->
-```text
+```bash
+Benchmark results for optimizing a large Java class:
 
+Before optimization:
+  Bytecode size:          152,384 bytes
+  Execution time:         127.4 ms
 
+After optimization:
+  Bytecode size:          118,742 bytes
+  Execution time:         103.1 ms
+
+Result:
+  Bytecode reduction:     ~22.1%
+  Speedup:                ~1.24× faster
 ```
+
 
 The results were calculated in [this GHA job][benchmark-gha]
 on 2025-12-17 at 13:53,

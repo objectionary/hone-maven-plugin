@@ -112,7 +112,6 @@ Result:
   Speedup:                ~1.24× faster
 ```
 
-
 The results were calculated in [this GHA job][benchmark-gha]
 on 2025-12-17 at 13:53,
 on Linux with 4 CPUs.

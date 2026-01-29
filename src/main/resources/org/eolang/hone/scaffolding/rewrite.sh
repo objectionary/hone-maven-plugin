@@ -4,6 +4,11 @@
 
 set -e -o pipefail
 
+if ! realpath --version >/dev/null; then
+  echo "The system doesn't have GNU Coreutils installed, can't rewrite"
+  exit 1
+fi
+
 function verbose {
   if [ "${HONE_VERBOSE}" == 'true' ]; then
     echo "$@"
@@ -188,7 +193,7 @@ if [ "${threads}" -eq 1 ]; then
     /bin/bash -c "${cmd}"
   done <<< "$(cat "${tasks}")"
 else
-  if ! parallel --help >/dev/null; then
+  if ! parallel --version >/dev/null; then
     echo "The system doesn't have GNU Parallel installed, can't rewrite in ${threads} threads"
     exit 1
   fi

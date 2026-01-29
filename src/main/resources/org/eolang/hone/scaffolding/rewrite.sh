@@ -188,6 +188,10 @@ if [ "${threads}" -eq 1 ]; then
     /bin/bash -c "${cmd}"
   done <<< "$(cat "${tasks}")"
 else
+  if ! parallel --help >/dev/null; then
+    echo "The system doesn't have GNU Parallel installed, can't rewrite in ${threads} threads"
+    exit 1
+  fi
   echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
   export PARALLEL_HOME=${TARGET}/parallel
   mkdir -p "${PARALLEL_HOME}"

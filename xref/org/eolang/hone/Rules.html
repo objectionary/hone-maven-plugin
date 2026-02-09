@@ -7,7 +7,7 @@
 <body>
 <div id="overview"><a href="../../../../apidocs/org/eolang/hone/Rules.html">View Javadoc</a></div><pre>
 <a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
-<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * SPDX-FileCopyrightText: Copyright (c) 2024-2025 Objectionary.com</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com</em>
 <a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> * SPDX-License-Identifier: MIT</em>
 <a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> */</em>
 <a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">package</strong> org.eolang.hone;
@@ -73,7 +73,7 @@
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>          <strong class="jxr_keyword">return</strong> String.join(
 <a class="jxr_linenumber" name="L66" href="#L66">66</a>              <span class="jxr_string">" "</span>,
 <a class="jxr_linenumber" name="L67" href="#L67">67</a>              <strong class="jxr_keyword">new</strong> Mapped&lt;&gt;(
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>                  t -&gt; t.toString(),
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>                  Object::toString,
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>                  <strong class="jxr_keyword">this</strong>.patterns
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>              )
 <a class="jxr_linenumber" name="L71" href="#L71">71</a>          );
@@ -210,6 +210,6 @@
 <a class="jxr_linenumber" name="L202" href="#L202">202</a> }
 </pre>
 <hr/>
-<div id="footer">© 2024–2025 <a href="https://github.com/objectionary">Objectionary</a></div>
+<div id="footer">© 2024–2026 <a href="https://github.com/objectionary">Objectionary</a></div>
 </body>
 </html>

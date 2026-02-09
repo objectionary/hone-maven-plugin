@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 import org.slf4j.impl.StaticLoggerBinder;
 
 /**
@@ -60,6 +63,15 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     protected boolean sudo;
 
     /**
+     * Phino version to use.
+     *
+     * @since 0.21.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.phino-version")
+    private String phinoVersion;
+
+    /**
      * Run without Docker even if phino is available.
      *
      * <p>If this is set to <tt>true</tt>, Docker is used
@@ -101,4 +113,16 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
+
+    protected String phino() throws IOException {
+        String version = this.phinoVersion;
+        if (version == null || version.isEmpty()) {
+            version = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf("org/eolang/hone/default-phino-version.txt")
+                )
+            ).asString().trim();
+        }
+        return version;
+    }
 }

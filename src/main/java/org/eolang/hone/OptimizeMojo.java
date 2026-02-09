@@ -305,7 +305,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Target directory %[file]s already exists", this.target);
         }
         final long start = System.currentTimeMillis();
-        if (this.alwaysWithDocker || !new Phino().available()) {
+        if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
             this.withDocker();
         } else {
             this.withoutDocker();
@@ -357,6 +357,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("JEO_VERSION=%s", this.jeo())
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("PHINO_VERSION=%s", this.phino())
             )
         );
         command.addAll(

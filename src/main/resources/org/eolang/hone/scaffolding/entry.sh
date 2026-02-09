@@ -54,6 +54,16 @@ fi
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
 echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -print | wc -l | xargs) files)"
 
+if [ -z "${PHINO_VERSION}" ]; then
+  echo "PHINO_VERSION is not set"
+  exit 1
+fi
+v=$(phino --version)
+if [ "${v}" != "${PHINO_VERSION}" ]; then
+  echo "Phino version is '${v}', while '${PHINO_VERSION}' expected"
+  exit 1
+fi
+
 # Maven options for all steps:
 declare -a opts=(
   '--update-snapshots'

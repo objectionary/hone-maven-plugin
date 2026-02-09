@@ -20,7 +20,7 @@ Just add this to your `pom.xml` file (you must have [Docker] installed too):
       <plugin>
         <groupId>org.eolang</groupId>
         <artifactId>hone-maven-plugin</artifactId>
-        <version>0.20.3</version>
+        <version>0.21.0</version>
         <executions>
           <execution>
             <goals>

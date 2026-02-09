@@ -43,6 +43,7 @@ final class Timings {
      * @param action The action to execute and measure
      * @throws IOException If recording the timing fails
      */
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     public void through(final String name, final Timings.Action action) throws IOException {
         final long start = System.currentTimeMillis();
         try {
@@ -67,6 +68,7 @@ final class Timings {
      *
      * @since 0.1.0
      */
+    @FunctionalInterface
     public interface Action {
         /**
          * Execute the action.

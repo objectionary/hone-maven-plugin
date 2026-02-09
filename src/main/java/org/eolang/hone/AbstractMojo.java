@@ -63,15 +63,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     protected boolean sudo;
 
     /**
-     * Phino version to use.
-     *
-     * @since 0.21.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.phino-version")
-    private String phinoVersion;
-
-    /**
      * Run without Docker even if phino is available.
      *
      * <p>If this is set to <tt>true</tt>, Docker is used
@@ -82,8 +73,16 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.always-with-docker", defaultValue = "false")
-    @SuppressWarnings("PMD.LongVariable")
     protected boolean alwaysWithDocker;
+
+    /**
+     * Phino version to use.
+     *
+     * @since 0.21.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.phino-version")
+    private String phinoVersion;
 
     /**
      * Skip the execution, if set to TRUE.
@@ -109,11 +108,10 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     /**
-     * Execute the specific goal implementation.
-     * @throws IOException If execution fails
+     * Returns the phino version to use.
+     * @return The phino version
+     * @throws IOException If reading the default version fails
      */
-    abstract void exec() throws IOException;
-
     protected String phino() throws IOException {
         String version = this.phinoVersion;
         if (version == null || version.isEmpty()) {
@@ -125,4 +123,10 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         }
         return version;
     }
+
+    /**
+     * Execute the specific goal implementation.
+     * @throws IOException If execution fails
+     */
+    abstract void exec() throws IOException;
 }

@@ -18,10 +18,9 @@ final class Phino {
 
     /**
      * Is it available?
-     * @param ver This is the expected version
+     * @param expected This is the expected version
      * @return TRUE if available
      */
-    @SuppressWarnings("PMD.CognitiveComplexity")
     public boolean available(final String expected) {
         boolean available = false;
         try {

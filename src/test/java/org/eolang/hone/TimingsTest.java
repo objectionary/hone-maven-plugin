@@ -4,6 +4,7 @@
  */
 package org.eolang.hone;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 final class TimingsTest {
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void savesTime() throws Exception {
         try (Mktemp temp = new Mktemp()) {
             final Path file = temp.path().resolve("foo.csv");
@@ -31,7 +33,7 @@ final class TimingsTest {
             timings.through("bar", () -> { });
             MatcherAssert.assertThat(
                 "file must have two lines",
-                new String(Files.readAllBytes(file)),
+                new String(Files.readAllBytes(file), StandardCharsets.UTF_8),
                 Matchers.allOf(
                     Matchers.containsString("foo,"),
                     Matchers.containsString("\nbar,")

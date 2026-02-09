@@ -76,11 +76,13 @@ final class Docker {
      * @return Exit code (always 0 on success)
      * @throws IOException If the command fails or returns non-zero exit code
      */
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));
-        final ProcessBuilder bldr = new ProcessBuilder(command);
-        try (VerboseProcess proc = new VerboseProcess(bldr, Level.INFO, Level.INFO)) {
+        try (VerboseProcess proc = new VerboseProcess(
+            new ProcessBuilder(command), Level.INFO, Level.INFO
+        )) {
             final VerboseProcess.Result ret = proc.waitFor();
             Logger.info(
                 this, "+ %s -> 0x%04x in %[ms]s",

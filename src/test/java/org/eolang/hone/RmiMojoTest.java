@@ -27,6 +27,7 @@ final class RmiMojoTest {
     @Tag("deep")
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void pullsAndRemovesDockerImage(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

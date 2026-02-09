@@ -26,7 +26,7 @@ public final class PullMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        if (this.alwaysWithDocker || !new Phino().available()) {
+        if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
             this.timings.through(
                 "pull",
                 () -> new Docker(this.sudo).exec(

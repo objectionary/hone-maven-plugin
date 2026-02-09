@@ -34,7 +34,11 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
-@SuppressWarnings({ "PMD.AvoidDuplicateLiterals", "PMD.TooManyMethods" })
+@SuppressWarnings({
+    "PMD.AvoidDuplicateLiterals",
+    "PMD.TooManyMethods",
+    "PMD.UnitTestShouldIncludeAssert"
+})
 final class OptimizeMojoTest {
 
     @Test
@@ -326,6 +330,7 @@ final class OptimizeMojoTest {
     @Tag("deep")
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final String path = "com/sun/jna/Pointer.class";

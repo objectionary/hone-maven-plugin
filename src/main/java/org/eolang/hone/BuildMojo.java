@@ -39,15 +39,6 @@ import org.cactoos.text.TextOf;
 public final class BuildMojo extends AbstractMojo {
 
     /**
-     * Phino version to use.
-     *
-     * @since 0.2.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.phino-version")
-    private String phinoVersion;
-
-    /**
      * Shall we use buildx?
      *
      * @since 0.8.0
@@ -67,7 +58,7 @@ public final class BuildMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        if (!this.alwaysWithDocker && new Phino().available()) {
+        if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
             Logger.info(this, "Docker image '%s' was NOT built", this.image);
             return;
         }
@@ -138,17 +129,5 @@ public final class BuildMojo extends AbstractMojo {
             Logger.info(this, "JEO version is not set, we build with the default one: %s", ver);
         }
         return ver;
-    }
-
-    private String phino() throws IOException {
-        String version = this.phinoVersion;
-        if (version == null || version.isEmpty()) {
-            version = new IoCheckedText(
-                new TextOf(
-                    new ResourceOf("org/eolang/hone/default-phino-version.txt")
-                )
-            ).asString().trim();
-        }
-        return version;
     }
 }

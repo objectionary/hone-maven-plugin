@@ -65,7 +65,7 @@ final class Rules {
         return String.join(
             " ",
             new Mapped<>(
-                t -> t.toString(),
+                Object::toString,
                 this.patterns
             )
         );

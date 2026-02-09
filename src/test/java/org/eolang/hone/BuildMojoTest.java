@@ -10,7 +10,6 @@ import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 import org.cactoos.io.InputOf;
 import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
@@ -32,6 +31,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 final class BuildMojoTest {
 
     @Test
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {
@@ -58,6 +58,7 @@ final class BuildMojoTest {
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @DisabledWithoutDocker
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void buildsDockerImage(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         new Farea(dir).together(
@@ -86,7 +87,6 @@ final class BuildMojoTest {
     @DisabledWithoutDocker
     void buildsImageAndVerifiesFileStructure(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
-        Stream.of("a", "b").map(s -> s.length()).map((Integer x) -> x + 1);
         new Farea(dir).together(
             f -> {
                 f.build()

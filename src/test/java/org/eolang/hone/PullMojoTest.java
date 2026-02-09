@@ -27,6 +27,7 @@ final class PullMojoTest {
     @Tag("deep")
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void pullsDockerImage(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

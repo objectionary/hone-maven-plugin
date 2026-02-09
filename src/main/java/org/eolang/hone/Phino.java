@@ -18,22 +18,31 @@ final class Phino {
 
     /**
      * Is it available?
+     * @param expected This is the expected version
      * @return TRUE if available
      */
-    @SuppressWarnings("PMD.CognitiveComplexity")
-    public boolean available() {
+    public boolean available(final String expected) {
         boolean available = false;
         try {
             final Result result = new Jaxec("phino", "--version").withCheck(false).execUnsafe();
             if (result.code() == 0) {
-                available = true;
-                Logger.info(
-                    this,
-                    String.format(
-                        "The 'phino' executable found (%s), no need to use Docker",
-                        result.stdout().trim()
-                    )
-                );
+                final String version = result.stdout().trim();
+                if (version.equals(expected)) {
+                    available = true;
+                    Logger.info(
+                        this,
+                        String.format(
+                            "The 'phino' executable found (%s), no need to use Docker",
+                            version
+                        )
+                    );
+                } else {
+                    Logger.info(
+                        this,
+                        "The 'phino' executable is found, but its version (%s) is not equal to the expected one (%s)",
+                        version, expected
+                    );
+                }
             } else {
                 Logger.info(
                     this,

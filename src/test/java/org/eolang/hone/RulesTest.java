@@ -33,6 +33,7 @@ final class RulesTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void skipsSome(@Mktmp final Path temp) throws Exception {
         final Rules rules = new Rules("!none,33*");
         rules.copyTo(temp.resolve("a/b/c"));

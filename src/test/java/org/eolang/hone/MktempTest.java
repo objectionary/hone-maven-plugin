@@ -4,6 +4,7 @@
  */
 package org.eolang.hone;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
@@ -21,7 +22,7 @@ final class MktempTest {
     void runsInDirectory() throws Exception {
         try (Mktemp temp = new Mktemp()) {
             final Path file = temp.path().resolve("test.txt");
-            Files.write(file, "Hello, world!".getBytes());
+            Files.write(file, "Hello, world!".getBytes(StandardCharsets.UTF_8));
             MatcherAssert.assertThat(
                 "file must be written",
                 file.toFile().exists(),
@@ -35,7 +36,7 @@ final class MktempTest {
         try (Mktemp temp = new Mktemp()) {
             temp.path().resolve("a").resolve("b").toFile().mkdirs();
             final Path file = temp.path().resolve("a/b/test.txt");
-            Files.write(file, "Hello, world!".getBytes());
+            Files.write(file, "Hello, world!".getBytes(StandardCharsets.UTF_8));
             MatcherAssert.assertThat(
                 "file must be written",
                 file.toFile().exists(),

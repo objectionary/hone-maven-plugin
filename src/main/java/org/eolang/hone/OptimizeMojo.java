@@ -304,8 +304,13 @@ public final class OptimizeMojo extends AbstractMojo {
         } else {
             Logger.info(this, "Target directory %[file]s already exists", this.target);
         }
+        this.optimize();
+    }
+
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
+    private void optimize() throws IOException {
         final long start = System.currentTimeMillis();
-        if (this.alwaysWithDocker || !new Phino().available()) {
+        if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
             this.withDocker();
         } else {
             this.withoutDocker();
@@ -318,7 +323,6 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
-    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.NPathComplexity", "PMD.NcssCount" })
     private void withDocker() throws IOException {
         final String tdir = "/target";
         final String cdir = "/eo-cache";
@@ -357,6 +361,11 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(
             Arrays.asList(
                 "--env", String.format("JEO_VERSION=%s", this.jeo())
+            )
+        );
+        command.addAll(
+            Arrays.asList(
+                "--env", String.format("PHINO_VERSION=%s", this.phino())
             )
         );
         command.addAll(
@@ -442,9 +451,9 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     private void saveExtra(final Path src, final Path target) throws IOException {
-        final int already = Files.list(target).collect(Collectors.toList()).size();
         final String name = String.format(
-            "%04d-%s.yml", already,
+            "%04d-%s.yml",
+            Files.list(target).collect(Collectors.toList()).size(),
             src.getFileName().toString().replaceAll("\\.[a-zA-Z0-9]+$", "")
         );
         final Path copy = target.resolve(name);

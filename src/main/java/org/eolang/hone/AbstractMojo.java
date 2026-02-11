@@ -101,6 +101,15 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     @Parameter(property = "hone.skipWithoutDocker", defaultValue = "false")
     private boolean skipWithoutDocker;
 
+    /**
+     * Skip the execution, if it's Windows.
+     *
+     * @since 0.23.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skipOnWindows", defaultValue = "false")
+    private boolean skipOnWindows;
+
     @Override
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
@@ -108,6 +117,8 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
             Logger.info(this, "Execution skipped due to hone.skip=true");
         } else if (this.skipWithoutDocker && !new Docker(this.sudo).available()) {
             Logger.info(this, "Execution skipped due to hone.skipWithoutDocker=true");
+        } else if (this.skipOnWindows && AbstractMojo.windows()) {
+            Logger.info(this, "Execution skipped due to hone.skipOnWindows=true");
         } else {
             this.timings = new Timings(this.target.toPath().resolve("hone-timings.csv"));
             try {
@@ -140,4 +151,14 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
+
+    /**
+     * Check if the current operating system is Windows.
+     * @return True if running on Windows
+     */
+    private static boolean windows() {
+        return System.getProperty("os.name")
+            .toLowerCase(java.util.Locale.ENGLISH)
+            .startsWith("win");
+    }
 }

@@ -55,6 +55,21 @@ final class Docker {
     }
 
     /**
+     * Docker executable is available?
+     * @return TRUE if Docker is here
+     */
+    public boolean available() {
+        boolean yes = true;
+        try {
+            this.exec("--version");
+        } catch (final IOException ex) {
+            Logger.warn(this, "Docker is not available: %s", ex.getMessage());
+            yes = false;
+        }
+        return yes;
+    }
+
+    /**
      * Execute a Docker command with the given arguments.
      * @param args Docker command arguments as a collection
      * @return Exit code (always 0 on success)

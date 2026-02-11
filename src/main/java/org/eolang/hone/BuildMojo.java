@@ -59,7 +59,11 @@ public final class BuildMojo extends AbstractMojo {
     @Override
     public void exec() throws IOException {
         if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
-            Logger.info(this, "Docker image '%s' was NOT built", this.image);
+            Logger.info(
+                this,
+                "The executable 'phino' is available, no need to build Docker image '%s'",
+                this.image
+            );
             return;
         }
         try (Mktemp temp = new Mktemp()) {

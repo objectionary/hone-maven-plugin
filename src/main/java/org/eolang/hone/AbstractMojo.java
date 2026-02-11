@@ -92,18 +92,29 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     @Parameter(property = "hone.skip", defaultValue = "false")
     private boolean skip;
 
+    /**
+     * Skip the execution, if Docker is not available.
+     *
+     * @since 0.22.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skipWithoutDocker", defaultValue = "false")
+    private boolean skipWithoutDocker;
+
     @Override
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
         if (this.skip) {
             Logger.info(this, "Execution skipped due to hone.skip=true");
-            return;
-        }
-        this.timings = new Timings(this.target.toPath().resolve("hone-timings.csv"));
-        try {
-            this.exec();
-        } catch (final IOException ex) {
-            throw new MojoExecutionException(ex);
+        } else if (this.skipWithoutDocker && !new Docker(this.sudo).available()) {
+            Logger.info(this, "Execution skipped due to hone.skipWithoutDocker=true");
+        } else {
+            this.timings = new Timings(this.target.toPath().resolve("hone-timings.csv"));
+            try {
+                this.exec();
+            } catch (final IOException ex) {
+                throw new MojoExecutionException(ex);
+            }
         }
     }
 

@@ -28,6 +28,15 @@ final class DockerTest {
     }
 
     @Test
+    void checksDockerPresence() {
+        MatcherAssert.assertThat(
+            "checks if docker is present",
+            new Docker().available(),
+            Matchers.either(Matchers.is(true)).or(Matchers.is(false))
+        );
+    }
+
+    @Test
     void makesNiceImageName(@RandomImage final String image) {
         MatcherAssert.assertThat(
             "random image name is in a proper format",

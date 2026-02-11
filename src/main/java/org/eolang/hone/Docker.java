@@ -62,7 +62,7 @@ final class Docker {
         boolean yes = true;
         try {
             this.exec("--version");
-        } catch (final IOException ex) {
+        } catch (final IOException | IllegalStateException ex) {
             Logger.warn(this, "Docker is not available: %s", ex.getMessage());
             yes = false;
         }

@@ -10,3 +10,8 @@
 node_modules/
 target
 target/
+.aidy/
+debug/
+.classpath
+.project
+.settings/

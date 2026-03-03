@@ -4,6 +4,16 @@
 
 set -e -o pipefail
 
+RP=""
+if command -v realpath >/dev/null 2>&1 && realpath --version >/dev/null 2>&1 && realpath --version 2>&1 | head -1 | grep -q 'GNU coreutils'; then
+  RP="realpath"
+elif command -v grealpath >/dev/null 2>&1 && grealpath --version >/dev/null 2>&1; then
+  RP="grealpath"
+else
+  echo "No suitable realpath utility found (need GNU realpath or grealpath), can't rewrite"
+  exit 1
+fi
+
 if [ "${DEBUG}" == 'true' ]; then
   echo "We are in debug mode, printing all commands..."
   set -x
@@ -94,7 +104,7 @@ opts+=(
 opts+=("-Deo.xslMeasuresFile=${TARGET}/xsl-measures.csv")
 
 if [ -z "${RULES}" ]; then
-  RULES=$(find "${SELF}/rules" -name '*.yml' -exec realpath {} \;)
+  RULES=$(find "${SELF}/rules" -name '*.yml' -exec ${RP} {} \;)
 fi
 for rule in ${RULES}; do
   if [ ! -e "${rule}" ]; then
@@ -104,7 +114,7 @@ for rule in ${RULES}; do
   fi
 done
 if [ -n "${EXTRA}" ]; then
-  e=$(find "${EXTRA}" -name '*.yml' -exec realpath {} \; | sort | tr '\n' ' ')
+  e=$(find "${EXTRA}" -name '*.yml' -exec ${RP} {} \; | sort | tr '\n' ' ')
   if [ -n "${e}" ]; then
     echo "Extra rules found in ${EXTRA}: ${e}"
     RULES="${RULES} ${e}"

@@ -68,6 +68,65 @@ final class OptimizeMojoTest {
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @Timeout(180L)
+    @DisabledWithoutPhino
+    void optimizesSimpleAppWithoutDocker(@Mktmp final Path home) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/foo/Bytes.java")
+                    .write(
+                        """
+                        package foo;
+                        class Bytes {
+                            byte[] foo() {
+                                return new byte[] {(byte) 0x01, (byte) 0x02};
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/test/java/foo/KidTest.java")
+                    .write(
+                        """
+                        package foo;
+                        import org.junit.jupiter.api.Assertions;
+                        import org.junit.jupiter.api.Test;
+                        class BytesTest {
+                            @Test
+                            void worksAfterOptimization() {
+                                Assertions.assertEquals(2, new Bytes().foo().length);
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-engine", "5.10.2");
+                f.dependencies()
+                    .append("org.junit.jupiter", "junit-jupiter-params", "5.10.2");
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("debug", "true")
+                    .set("alwaysWithDocker", "false");
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "optimized .xmir must be present",
+                    f.files().file("target/hone/unphi/foo/Bytes.xmir").exists(),
+                    Matchers.is(true)
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(180L)
     @DisabledWithoutDocker
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {

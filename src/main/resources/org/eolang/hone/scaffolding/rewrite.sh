@@ -14,7 +14,7 @@ else
   exit 1
 fi
 
-if ! ${RP} --version >/dev/null; then
+if ! "${RP}" --version >/dev/null; then
   echo "The system doesn't have GNU Coreutils installed, can't rewrite"
   exit 1
 fi
@@ -172,7 +172,7 @@ if [ -n "${HONE_GREP_IN}" ]; then
   echo "Grep-in: ${HONE_GREP_IN}"
 fi
 
-files=$(find "$(${RP} "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec ${RP} --relative-to="${HONE_XMIR_IN}" {} \; | sort)
+files=$(find "$("${RP}" "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec "${RP}" --relative-to="${HONE_XMIR_IN}" {} \; | sort)
 total=$(echo "${files}" | wc -l | xargs)
 tasks=${TARGET}/hone-tasks.txt
 mkdir -p "$(dirname "${tasks}")"

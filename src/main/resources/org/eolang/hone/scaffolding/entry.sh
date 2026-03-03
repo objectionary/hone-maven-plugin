@@ -104,7 +104,7 @@ opts+=(
 opts+=("-Deo.xslMeasuresFile=${TARGET}/xsl-measures.csv")
 
 if [ -z "${RULES}" ]; then
-  RULES=$(find "${SELF}/rules" -name '*.yml' -exec ${RP} {} \;)
+  RULES=$(find "${SELF}/rules" -name '*.yml' -exec "${RP}" {} \;)
 fi
 for rule in ${RULES}; do
   if [ ! -e "${rule}" ]; then
@@ -114,7 +114,7 @@ for rule in ${RULES}; do
   fi
 done
 if [ -n "${EXTRA}" ]; then
-  e=$(find "${EXTRA}" -name '*.yml' -exec ${RP} {} \; | sort | tr '\n' ' ')
+  e=$(find "${EXTRA}" -name '*.yml' -exec "${RP}" {} \; | sort | tr '\n' ' ')
   if [ -n "${e}" ]; then
     echo "Extra rules found in ${EXTRA}: ${e}"
     RULES="${RULES} ${e}"

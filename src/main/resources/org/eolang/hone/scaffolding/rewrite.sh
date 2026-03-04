@@ -115,8 +115,8 @@ function rewrite {
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    changed=$(diff "${phi}" "${pho}" | grep -cE '^[><]')/${s_lines}
-    echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed} lines changed, ${per} lps"
+    changed=$(diff "${phi}" "${pho}" | grep -cE '^[><]')
+    echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
   phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
   verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"

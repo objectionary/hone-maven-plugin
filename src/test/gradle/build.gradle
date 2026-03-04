@@ -38,6 +38,7 @@ task hone(type: Exec, dependsOn: compileJava) {
         "-Dhone.target=${buildDir}",
         "-Dhone.classes=${buildDir.toPath().relativize(sourceSets.main.output.classesDirs.singleFile.toPath())}",
         '-Dhone.rules=33-to-42',
+        "-Dhone.debug=true",
         "org.eolang:hone-maven-plugin:${ver}:build",
         "org.eolang:hone-maven-plugin:${ver}:optimize"
 }

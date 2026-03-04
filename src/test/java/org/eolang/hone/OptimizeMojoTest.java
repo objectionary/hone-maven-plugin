@@ -10,6 +10,7 @@ import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +60,144 @@ final class OptimizeMojoTest {
                     "the build must be successful",
                     f.log(),
                     RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(180L)
+    @DisabledWithoutPhino
+    void generatesStatisticsWithoutDocker(@Mktmp final Path home) throws IOException {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/statistics/Statistics.java")
+                    .write(
+                        """
+                        package statistics;
+                        class Statistics {
+                            byte[] foo() {
+                                return new byte[] {(byte) 0x01, (byte) 0x02};
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.files()
+                    .file("src/main/java/statistics/SntatisticsSecond.java")
+                    .write(
+                        """
+                        package statistics;
+                        class StatisticsSecond {
+                            byte[] foo() {
+                                return new byte[] {(byte) 0x01, (byte) 0x02};
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("debug", "true")
+                    .set("alwaysWithDocker", "false");
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "a statistics file must be created and the content of the statistics file must be correct",
+                    f.files().file("target/hone-statistics.csv").content(),
+                    Matchers.allOf(
+                        Matchers.containsString("ID,Before,After,Changed,LinesPerSec"),
+                        Matchers.containsString(
+                            String.format(
+                                "%s,\"%s\",\"%s\",%d",
+                                "1/2",
+                                f.files()
+                                    .file("target/hone/phi/statistics/Statistics.phi")
+                                    .path(),
+                                f.files()
+                                    .file("target/hone/phi-optimized/statistics/Statistics.phi")
+                                    .path(),
+                                0
+                            )
+                        ),
+                        Matchers.containsString(
+                            String.format(
+                                "%s,\"%s\",\"%s\",%d",
+                                f.files().file(
+                                    "target/hone/phi/statistics/StatisticsSecond.phi"
+                                ).path(),
+                                f.files().file(
+                                    "target/hone/phi-optimized/statistics/StatisticsSecond.phi"
+                                ).path(),
+                                0
+                            )
+                        )
+                    )
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(180L)
+    @DisabledWithoutDocker
+    void generatesStatisticsWithDocker(
+        @Mktmp final Path home,
+        @RandomImage final String image
+    ) throws IOException {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/statistics/StatisticsFromDocker.java")
+                    .write(
+                        """
+                        package statistics;
+                        class StatisticsFromDocker {
+                            byte[] foo() {
+                                return new byte[] {(byte) 0x01, (byte) 0x02};
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("debug", "true")
+                    .set("alwaysWithDocker", "true")
+                    .set("image", image);
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "a statistics file mus be created and the content of statistics file must be correct",
+                    f.files().file("target/hone-statistics.csv").content(),
+                    Matchers.allOf(
+                        Matchers.containsString("ID,Before,After,Changed,LinesPerSec"),
+                        Matchers.containsString(
+                            String.format(
+                                "%s,\"%s\",\"%s\",%d",
+                                "1/1",
+                                f.files().file(
+                                    "target/hone/phi/statistics/StatisticsFromDocker.phi"
+                                ).path(),
+                                f.files().file(
+                                    "target/hone/phi-optimized/statistics/StatisticsFromDocker.phi"
+                                ).path(),
+                                0
+                            )
+                        )
+                    )
                 );
             }
         );

@@ -432,6 +432,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
+        command.addAll(Arrays.asList("--env", "HONE_STATISTICS=true"));
         command.add("--user");
         command.add(OptimizeMojo.whoami());
         command.addAll(
@@ -563,6 +564,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Jaxec jaxec = new Jaxec(temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
                 .withEnv("PHINO_VERSION", this.phino())
+                .withEnv("HONE_STATISTICS", "true")
                 .withEnv("DEBUG", Boolean.toString(this.debug))
                 .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
                 .withEnv("CLASSES", this.classes)

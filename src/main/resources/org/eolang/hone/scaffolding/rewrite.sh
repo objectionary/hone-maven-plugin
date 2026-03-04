@@ -19,9 +19,26 @@ if ! "${RP}" --version >/dev/null; then
   exit 1
 fi
 
+statistics_csv="${TARGET}/hone-statistics.csv"
+
 function verbose {
   if [ "${HONE_VERBOSE}" == 'true' ]; then
     echo "$@"
+  fi
+}
+
+function statistics_header {
+  if [ "${HONE_STATISTICS}" == 'true' ]; then
+    local csv="${1}"
+    echo "ID,Before,After,Changed,LinesPerSec" > "${csv}"
+  fi
+}
+
+function statistics_row {
+  if [ "${HONE_STATISTICS}" == 'true' ]; then
+    local csv="${1}"
+    local line="${2}"
+    echo "${line}" >> "${csv}"
   fi
 }
 
@@ -94,13 +111,16 @@ function rewrite {
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}" | xargs)
   per=$(perl -E "say int(${s_lines} / ($(date '+%s.%N') - ${start}))")
+  changed=0
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    echo "Modified ${idx} $(basename "${phi}") (${s_size}): $(diff "${phi}" "${pho}" | grep -cE '^[><]')/${s_lines} lines changed, ${per} lps"
+    changed=$(diff "${phi}" "${pho}" | grep -cE '^[><]')/${s_lines}
+    echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed} lines changed, ${per} lps"
   fi
   phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
   verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
+  statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",${changed},${per}"
   if cmp -s "${xi}" "${xo}"; then
     verbose "No changes made to ${idx} $(basename "${xi}")"
   else
@@ -155,6 +175,8 @@ verbose "Target directory for PHI files: ${HONE_TO}"
 
 mkdir -p "${HONE_XMIR_OUT}"
 verbose "Output directory for XMIR files: ${HONE_XMIR_OUT}"
+
+statistics_header "${statistics_csv}"
 
 echo "Hone version: ${HONE_VERSION}"
 

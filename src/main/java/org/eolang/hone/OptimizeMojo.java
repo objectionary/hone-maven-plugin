@@ -58,7 +58,11 @@ import org.cactoos.text.TextOf;
  * @checkstyle ExecutableStatementCountCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
-@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.TooManyFields"})
+@SuppressWarnings({
+    "PMD.AvoidDuplicateLiterals",
+    "PMD.TooManyFields",
+    "PMD.TooManyMethods"
+})
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
@@ -294,9 +298,8 @@ public final class OptimizeMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        if (!this.target.toPath().resolve(this.classes).toFile().exists()
-            && this.skipIfNoClasses) {
-            Logger.info(this, "The directory with classes is absent, skipping");
+        if (this.withoutClasses() && this.skipIfNoClasses) {
+            Logger.info(this, "The directory with classes is absent or empty, skipping");
             return;
         }
         if (this.target.mkdirs()) {
@@ -305,6 +308,36 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Target directory %[file]s already exists", this.target);
         }
         this.optimize();
+    }
+
+    /**
+    * Check if the classes directory is absent or doesn't have classes.
+    *
+    * @return True if there are no class files, false otherwise.
+    */
+    private boolean withoutClasses() {
+        final Path dir = this.target.toPath().resolve(this.classes);
+        final boolean exists = dir.toFile().exists();
+        final boolean without;
+        if (exists) {
+            try (Stream<Path> files = Files.walk(dir)) {
+                without = !files
+                    .filter(f -> f.toString().endsWith(".class"))
+                    .findAny()
+                    .isPresent();
+            } catch (final IOException exception) {
+                throw new IllegalStateException(
+                    String.format(
+                        "Failed to walk through classes directory '%s'",
+                        dir
+                    ),
+                    exception
+                );
+            }
+        } else {
+            without = true;
+        }
+        return without;
     }
 
     @SuppressWarnings("PMD.UnnecessaryLocalRule")

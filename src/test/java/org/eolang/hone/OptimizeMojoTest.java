@@ -991,4 +991,38 @@ final class OptimizeMojoTest {
             }
         );
     }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(180L)
+    @DisabledWithoutPhino
+    void doesNothingWhenNoClasses(@Mktmp final Path home) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("debug", "true")
+                    .set("alwaysWithDocker", "false");
+                f.files()
+                    .file("src/main/resources/dummy.txt")
+                    .write(
+                        "This populates target/classes/ without .class files"
+                        .getBytes(StandardCharsets.UTF_8)
+                    );
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "the build must be successful, even if there are no classes",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
 }

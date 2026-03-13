@@ -142,6 +142,16 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
                     new ResourceOf("org/eolang/hone/default-phino-version.txt")
                 )
             ).asString().trim();
+            Logger.info(
+                this,
+                "Phino version is not set, we use the default one: %s",
+                version
+            );
+        }
+        if (version.isEmpty()) {
+            throw new IllegalStateException(
+                "Phino version is empty, check default-phino-version.txt"
+            );
         }
         return version;
     }

@@ -594,9 +594,10 @@ public final class OptimizeMojo extends AbstractMojo {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
+            final String pver = this.phino();
             Jaxec jaxec = new Jaxec(temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
-                .withEnv("PHINO_VERSION", this.phino())
+                .withEnv("PHINO_VERSION", pver)
                 .withEnv("HONE_STATISTICS", "true")
                 .withEnv("DEBUG", Boolean.toString(this.debug))
                 .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))

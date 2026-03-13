@@ -18,10 +18,9 @@ final class AbstractMojoTest {
 
     @Test
     void returnsDefaultPhinoVersion() throws IOException {
-        final FakeAbstractMojo mojo = new FakeAbstractMojo();
         MatcherAssert.assertThat(
             "the default phino version must be returned from resource file",
-            mojo.phino(),
+            new FakeAbstractMojo().phino(),
             Matchers.matchesPattern("\\d+\\.\\d+\\.\\d+\\.\\d+")
         );
     }
@@ -29,12 +28,10 @@ final class AbstractMojoTest {
     @Test
     void returnsSamePhinoVersionOnMultipleCalls() throws IOException {
         final FakeAbstractMojo mojo = new FakeAbstractMojo();
-        final String first = mojo.phino();
-        final String second = mojo.phino();
         MatcherAssert.assertThat(
             "the phino version must be consistent across multiple calls",
-            first,
-            Matchers.equalTo(second)
+            mojo.phino(),
+            Matchers.equalTo(mojo.phino())
         );
     }
 

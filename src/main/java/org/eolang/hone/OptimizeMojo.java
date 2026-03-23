@@ -128,10 +128,12 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>Here, <tt>66-69-6C-74-65-72</tt> stands for the <tt>"filter"</tt>
      * and <tt>6D-61-70</tt> for the <tt>"map"</tt>, in hexadecimal format.</p>
      *
+     * <p>To rewrite all files, use the <tt>.*</tt> pattern</p>
+     *
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.grep-in", defaultValue = ".*")
+    @Parameter(property = "hone.grep-in", defaultValue = "(66-69-6C-74-65-72|6D-61-70)")
     private String grepIn;
 
     /**

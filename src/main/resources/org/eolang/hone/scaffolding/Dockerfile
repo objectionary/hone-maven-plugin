@@ -27,12 +27,11 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
 
 ARG GHC=9.6.7
 ARG CABAL=3.12.1.0
-RUN gpg --batch --recv-keys ECA44F5A172EDAD947F39E3D4275CDA6A29BED43 \
-  && curl -sSL https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup -o /usr/bin/ghcup \
-  && chmod +x /usr/bin/ghcup \
-  && ghcup config set gpg-setting GPGStrict \
-  && ghcup -v install ghc --isolate /usr/local --force "${GHC}" \
-  && ghcup -v install cabal --isolate /usr/local/bin --force "${CABAL}"
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+ENV PATH="/root/.ghcup/bin:${PATH}"
+RUN ghcup -v install ghc --isolate /usr/local --force "${GHC}" && \
+    ghcup -v install cabal --isolate /usr/local/bin --force "${CABAL}"
 
 ARG PHINO_VERSION=0.0.0.0
 RUN cabal update \

@@ -66,6 +66,99 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void doesNotSkipOptimizationDueGrepInOption(@Mktmp final Path dir)
+    throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/mapped/X.java")
+                    .write(
+                        """
+                        package mapped;
+                        import java.util.*;
+                        import java.util.stream.*;
+
+                        class X {
+                            public static void main(String[] a) {
+                              List<Integer> r = Arrays.asList(1,2,3,4).stream()
+                                  .map(n->n*2)
+                                  .filter(n->n%2==0)
+                                  .map(n->n+1)
+                                  .map(n->n+2)
+                                  .collect(Collectors.toList());
+                              System.out.println(r);
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("rules", "streams/*");
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "phino should optimize (rewrite) exactly one file",
+                    f.log().content(),
+                    Matchers.allOf(
+                        Matchers.containsString("Modified 1/1 X.phi"),
+                        Matchers.containsString("Finished rewriting 1 file"),
+                        Matchers.containsString("BUILD SUCCESS")
+                    )
+                );
+            }
+        );
+    }
+
+    @Test
+    void skipsOptimizationDueGrepInOption(@Mktmp final Path dir)
+    throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/rand/X.java")
+                    .write(
+                        """
+                        package rand;
+                        import java.util.*;
+                        import java.util.stream.*;
+
+                        class X {
+                            public static void main(String[] a) {
+                              System.out.println("Don't optimize me, pls");
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("rules", "streams/*");
+                    // .set("grepIn","(66-69-6C-74-65-72|6D-61-70)");
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "phino should skip optimization if the default grep-in does not match any of the instructions",
+                    f.log().content(),
+                    Matchers.allOf(
+                        Matchers.containsString("No grep-in match for 1/1 X.xmir"),
+                        Matchers.containsString("Finished rewriting 1 file"),
+                        Matchers.containsString("BUILD SUCCESS")
+                    )
+                );
+            }
+        );
+    }
+
+    @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @Timeout(180L)
@@ -106,7 +199,8 @@ final class OptimizeMojoTest {
                     .goals("optimize")
                     .configuration()
                     .set("debug", "true")
-                    .set("alwaysWithDocker", "false");
+                    .set("alwaysWithDocker", "false")
+                    .set("grepIn", ".*");
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "a statistics file must be created and the content of the statistics file must be correct",
@@ -129,6 +223,7 @@ final class OptimizeMojoTest {
                         Matchers.containsString(
                             String.format(
                                 "%s,\"%s\",\"%s\",%d",
+                                "2/2",
                                 f.files().file(
                                     "target/hone/phi/statistics/StatisticsSecond.phi"
                                 ).path(),
@@ -173,11 +268,12 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("optimize")
+                    .goals("build", "optimize")
                     .configuration()
                     .set("debug", "true")
                     .set("alwaysWithDocker", "true")
-                    .set("image", image);
+                    .set("image", image)
+                    .set("grepIn", ".*");
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "a statistics file mus be created and the content of statistics file must be correct",
@@ -188,12 +284,8 @@ final class OptimizeMojoTest {
                             String.format(
                                 "%s,\"%s\",\"%s\",%d",
                                 "1/1",
-                                f.files().file(
-                                    "target/hone/phi/statistics/StatisticsFromDocker.phi"
-                                ).path(),
-                                f.files().file(
-                                    "target/hone/phi-optimized/statistics/StatisticsFromDocker.phi"
-                                ).path(),
+                                "/target/hone/phi/statistics/StatisticsFromDocker.phi",
+                                "/target/hone/phi-optimized/statistics/StatisticsFromDocker.phi",
                                 0
                             )
                         )
@@ -323,7 +415,8 @@ final class OptimizeMojoTest {
                     .configuration()
                     .set("debug", "true")
                     .set("alwaysWithDocker", "true")
-                    .set("image", image);
+                    .set("image", image)
+                    .set("grepIn", ".*");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "optimized .xmir must be present",
@@ -480,13 +573,17 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("first")
                     .phase("process-classes")
-                    .goals("build", "optimize");
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("grepIn", ".*");
                 f.build()
                     .plugins()
                     .appendItself()
                     .execution("second")
                     .phase("process-classes")
-                    .goals("optimize");
+                    .goals("optimize")
+                    .configuration()
+                    .set("grepIn", ".*");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "optimized .phi must be present",
@@ -549,7 +646,8 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("alwaysWithDocker", "true")
-                    .set("image", image);
+                    .set("image", image)
+                    .set("grepIn", ".*");
                 f.exec("process-classes");
                 final Path pre = f.files().file(
                     "target/hone/jeo-disassemble/com/sun/jna/Pointer.xmir"
@@ -661,7 +759,8 @@ final class OptimizeMojoTest {
                     .configuration()
                     .set("image", image)
                     .set("includes", "/target/classes/foo/Included*")
-                    .set("excludes", "/target/classes/foo/Excluded*");
+                    .set("excludes", "/target/classes/foo/Excluded*")
+                    .set("grepIn", ".*");
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "optimized IncludedClass.phi must be present",
@@ -786,7 +885,8 @@ final class OptimizeMojoTest {
                             "src/rules/a-few",
                         }
                     )
-                    .set("image", image);
+                    .set("image", image)
+                    .set("grepIn", ".*");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",
@@ -894,7 +994,8 @@ final class OptimizeMojoTest {
                             "src/rules/a-few",
                         }
                     )
-                    .set("image", image);
+                    .set("image", image)
+                    .set("grepIn", ".*");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",
@@ -981,7 +1082,8 @@ final class OptimizeMojoTest {
                             "src/rules/second.yaml",
                         }
                     )
-                    .set("image", image);
+                    .set("image", image)
+                    .set("grepIn", ".*");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "the build must be successful",

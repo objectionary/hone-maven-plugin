@@ -268,7 +268,7 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("optimize")
+                    .goals("build", "optimize")
                     .configuration()
                     .set("debug", "true")
                     .set("alwaysWithDocker", "true")
@@ -284,12 +284,8 @@ final class OptimizeMojoTest {
                             String.format(
                                 "%s,\"%s\",\"%s\",%d",
                                 "1/1",
-                                f.files().file(
-                                    "target/hone/phi/statistics/StatisticsFromDocker.phi"
-                                ).path(),
-                                f.files().file(
-                                    "target/hone/phi-optimized/statistics/StatisticsFromDocker.phi"
-                                ).path(),
+                                "/target/hone/phi/statistics/StatisticsFromDocker.phi",
+                                "/target/hone/phi-optimized/statistics/StatisticsFromDocker.phi",
                                 0
                             )
                         )

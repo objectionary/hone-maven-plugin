@@ -4,6 +4,8 @@
  */
 package org.eolang.hone;
 
+import com.yegor256.Mktmp;
+import com.yegor256.MktmpResolver;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.cactoos.bytes.BytesOf;
@@ -13,8 +15,6 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import com.yegor256.Mktmp;
-import com.yegor256.MktmpResolver;
 
 /**
  * Test case for {@link Rules}.
@@ -26,12 +26,9 @@ final class SummaryTest {
 
     @Test
     void compilesCommonSummaryStatistics(@Mktmp final Path temp) throws Exception {
-        final Path dir = SummaryTest.modular(temp);
-        final Summary summary = new Summary(dir);
-        final Path report = summary.collect();
         MatcherAssert.assertThat(
             "report must contain statistics from both modules",
-            new TextOf(report).asString(),
+            new TextOf(new Summary(SummaryTest.modular(temp)).collect()).asString(),
             Matchers.allOf(
                 Matchers.containsString(
                     "\"/phi/org/eolang/hone/client/Client.phi\",\"/phi-optimized/org/eolang/hone/client/Client.phi\",2,4000"
@@ -48,11 +45,9 @@ final class SummaryTest {
         final Path dir = SummaryTest.modular(temp);
         Files.deleteIfExists(dir.resolve("server/hone-statistics.csv"));
         Files.deleteIfExists(dir.resolve("client/hone-statistics.csv"));
-        final Summary summary = new Summary(dir);
-        final Path report = summary.collect();
         MatcherAssert.assertThat(
             "report shouldn't be generated if no statistics found",
-            Matchers.not(report.toFile().exists())
+            Matchers.not(new Summary(dir).collect().toFile().exists())
         );
     }
 

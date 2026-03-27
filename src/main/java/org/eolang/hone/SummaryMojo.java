@@ -11,9 +11,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
- * Build summary statistics. 
+ * Build summary statistics.
  *
- * <p>This goal tries to find all the statistics in child modules and 
+ * <p>This goal tries to find all the statistics in child modules and
  * build a single summary report.</p>
  *
  * @since 0.1.0

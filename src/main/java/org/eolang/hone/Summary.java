@@ -14,32 +14,49 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Build summary statistics. 
+ * Build summary statistics.
  *
  * @since 0.1.0
  */
 public final class Summary {
 
+    /**
+     * Where to look for statistics.
+     */
     private final Path root;
+
+    /**
+     * Where to save the summary report.
+     */
     private final Path target;
 
+    /**
+     * Constructor.
+     *
+     * @param root Root directory to search for statistics.
+     */
     Summary(final Path root) {
         this(root, root);
     }
 
+    /**
+     * Constructor.
+     *
+     * @param root Root directory to search for statistics.
+     * @param target Directory to save the summary report.
+     */
     Summary(final Path root, final Path target) {
         this.root = root;
         this.target = target;
     }
 
     /**
-     * Collects summary statistics from all child modules and builds a single summary report.
+     * Collects summary statistics from all child modules.
      *
      * @return The path to the generated summary report.
-    */
-
+     */
     Path collect() {
-        List<CSV> found = new ArrayList<>(0);
+        final List<CSV> found = new ArrayList<>(0);
         try (Stream<Path> paths = Files.walk(this.root)) {
             paths.filter(Files::isRegularFile)
                 .filter(
@@ -72,16 +89,17 @@ public final class Summary {
         return new CSV(
             Stream.concat(
                 Stream.of(String.join(",", csvs.get(0).header())),
-                lines.stream().map(row -> 
-                    String.format(
-                        "%d/%d,%s,%s,%s,%s",
-                        index.getAndIncrement(),
-                        total,
-                        row.get(1),
-                        row.get(2),
-                        row.get(3),
-                        row.get(4)
-                    )
+                lines.stream().map(
+                    row ->
+                        String.format(
+                            "%d/%d,%s,%s,%s,%s",
+                            index.getAndIncrement(),
+                            total,
+                            row.get(1),
+                            row.get(2),
+                            row.get(3),
+                            row.get(4)
+                        )
                 )
             ).collect(Collectors.joining("\n"))
         );

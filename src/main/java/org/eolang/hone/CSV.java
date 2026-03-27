@@ -18,19 +18,38 @@ import org.cactoos.text.UncheckedText;
  * CSV summary .
  *
  * @since 0.1.0
+ * @checkstyle AbbreviationAsWordInNameCheck (3 lines)
  */
 public final class CSV {
 
+    /**
+     * CSV content.
+     */
     private final String content;
 
+    /**
+     * Constructor.
+     *
+     * @param root CSV file path
+     */
     CSV(final Path root) {
         this(new UncheckedText(new TextOf(root)).asString());
     }
 
+    /**
+     * Constructor.
+     *
+     * @param content CSV content
+     */
     CSV(final String content) {
         this.content = content;
     }
 
+    /**
+     * Retrieves the header of the CSV as a list of column names.
+     *
+     * @return List of column names from the CSV header
+     */
     List<String> header() {
         return Arrays.stream(this.content.split("\n"))
             .findFirst()
@@ -38,6 +57,14 @@ public final class CSV {
             .orElseThrow(() -> new IllegalStateException("CSV content is empty"));
     }
 
+    /**
+     * Retrieves the rows of the CSV as a list of lists of strings.
+     * Each inner list represents a row of the CSV, and each string in the
+     * inner list represents a cell value.
+     * The method skips the header row and processes only the data rows.
+     *
+     * @return List of rows, where each row is a list of string values.
+     */
     List<List<String>> rows() {
         return Arrays.stream(this.content.split("\n"))
             .skip(1)
@@ -45,11 +72,12 @@ public final class CSV {
             .collect(Collectors.toList());
     }
 
-    void append(final String row) {
-        this.content.concat("\n").concat(row);
-    }
-
-    public void flush(Path res) {
+    /**
+     * Flushes the CSV content to the specified file path.
+     *
+     * @param res The path to the file where the CSV content should be written.
+     */
+    void flush(final Path res) {
         try {
             Files.write(res, this.content.getBytes(StandardCharsets.UTF_8));
         } catch (final IOException exception) {

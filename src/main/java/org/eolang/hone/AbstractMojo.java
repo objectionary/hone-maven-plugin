@@ -40,6 +40,17 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     protected File target;
 
     /**
+     * The base directory of the Maven project.
+     * @since 0.1.0
+     */
+    @Parameter(
+        property = "hone.basedir",
+        defaultValue = "${project.basedir}",
+        readonly = true
+    )
+    protected File basedir;
+
+    /**
      * Timings tracker for performance measurements.
      *
      * @since 0.1.0

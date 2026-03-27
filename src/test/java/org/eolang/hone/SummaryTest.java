@@ -47,7 +47,8 @@ final class SummaryTest {
         Files.deleteIfExists(dir.resolve("client/hone-statistics.csv"));
         MatcherAssert.assertThat(
             "report shouldn't be generated if no statistics found",
-            Matchers.not(new Summary(dir).collect().toFile().exists())
+            new Summary(dir).collect().toFile().exists(),
+            Matchers.is(true)
         );
     }
 

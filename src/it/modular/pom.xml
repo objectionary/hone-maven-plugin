@@ -42,20 +42,5 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.eolang</groupId>
-        <artifactId>hone-maven-plugin</artifactId>
-        <version>@project.version@</version>
-        <inherited>false</inherited>
-          <executions>
-            <execution>
-              <goals>
-                <goal>summary</goal>
-              </goals>
-            </execution>
-          </executions>
-      </plugin>
-    </plugins>
   </build>
 </project>

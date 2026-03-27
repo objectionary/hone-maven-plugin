@@ -7,7 +7,6 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
@@ -20,8 +19,6 @@ import org.apache.maven.plugins.annotations.Mojo;
  */
 @Mojo(
     name = "summary",
-    defaultPhase = LifecyclePhase.VERIFY,
-    requiresProject = false,
     aggregator = true
 )
 public final class SummaryMojo extends AbstractMojo {

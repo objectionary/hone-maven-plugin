@@ -133,7 +133,10 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.grep-in", defaultValue = "(66-69-6C-74-65-72|6D-61-70)")
+    @Parameter(
+        property = "hone.grep-in",
+        defaultValue = "<o>(66-69-6C-74-65-72|6D-61-70)</o>"
+    )
     private String grepIn;
 
     /**

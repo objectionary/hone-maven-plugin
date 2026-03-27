@@ -143,10 +143,51 @@ final class OptimizeMojoTest {
                     .goals("optimize")
                     .configuration()
                     .set("rules", "streams/*");
-                    // .set("grepIn","(66-69-6C-74-65-72|6D-61-70)");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "phino should skip optimization if the default grep-in does not match any of the instructions",
+                    f.log().content(),
+                    Matchers.allOf(
+                        Matchers.containsString("No grep-in match for 1/1 X.xmir"),
+                        Matchers.containsString("Finished rewriting 1 file"),
+                        Matchers.containsString("BUILD SUCCESS")
+                    )
+                );
+            }
+        );
+    }
+
+    @Test
+    void skipsOptimizationWhenDefaultGrepInMatchesOnlyClassNamePath(@Mktmp final Path dir)
+    throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.clean();
+                f.files()
+                    .file("src/main/java/mapped/X.java")
+                    .write(
+                        """
+                        package mapped;
+
+                        class X {
+                            public static void main(String[] a) {
+                              byte[] r = new byte[] {(byte) 0x01, (byte) 0x02};
+                              System.out.println(r);
+                            }
+                        }
+                        """.getBytes(StandardCharsets.UTF_8)
+                    );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("rules", "streams/*");
+                f.exec("test");
+                MatcherAssert.assertThat(
+                    "default grep-in should not match method names inside class/package path hex",
                     f.log().content(),
                     Matchers.allOf(
                         Matchers.containsString("No grep-in match for 1/1 X.xmir"),

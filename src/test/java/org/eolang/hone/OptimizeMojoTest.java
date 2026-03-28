@@ -97,9 +97,10 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("optimize")
+                    .goals("build", "optimize", "rmi")
                     .configuration()
-                    .set("rules", "streams/*");
+                    .set("rules", "streams/*")
+                    .set("alwaysWithDocker", "true");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "phino should optimize (rewrite) exactly one file",
@@ -140,10 +141,10 @@ final class OptimizeMojoTest {
                     .appendItself()
                     .execution("default")
                     .phase("process-classes")
-                    .goals("optimize")
+                    .goals("build", "optimize", "rmi")
                     .configuration()
-                    .set("rules", "streams/*");
-                    // .set("grepIn","(66-69-6C-74-65-72|6D-61-70)");
+                    .set("rules", "streams/*")
+                    .set("alwaysWithDocker", "true");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "phino should skip optimization if the default grep-in does not match any of the instructions",

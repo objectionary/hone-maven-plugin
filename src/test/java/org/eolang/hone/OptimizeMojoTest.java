@@ -66,8 +66,10 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void doesNotSkipOptimizationDueGrepInOption(@Mktmp final Path dir)
-    throws Exception {
+    void doesNotSkipOptimizationDueGrepInOption(
+        @Mktmp final Path dir,
+        @RandomImage final String image
+    ) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.clean();
@@ -100,7 +102,9 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize", "rmi")
                     .configuration()
                     .set("rules", "streams/*")
-                    .set("alwaysWithDocker", "true");
+                    .set("alwaysWithDocker", "true")
+                    .set("image", image)
+                    .set("debug", "true");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "phino should optimize (rewrite) exactly one file",
@@ -116,8 +120,10 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void skipsOptimizationDueGrepInOption(@Mktmp final Path dir)
-    throws Exception {
+    void skipsOptimizationDueGrepInOption(
+        @Mktmp final Path dir,
+        @RandomImage final String image
+    ) throws Exception {
         new Farea(dir).together(
             f -> {
                 f.clean();
@@ -144,7 +150,9 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize", "rmi")
                     .configuration()
                     .set("rules", "streams/*")
-                    .set("alwaysWithDocker", "true");
+                    .set("alwaysWithDocker", "true")
+                    .set("image", image)
+                    .set("debug", "true");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "phino should skip optimization if the default grep-in does not match any of the instructions",

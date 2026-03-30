@@ -105,7 +105,7 @@ final class OptimizeMojoTest {
                     .set("alwaysWithDocker", "true")
                     .set("image", image)
                     .set("debug", "true");
-                f.exec("test");
+                f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "phino should optimize (rewrite) exactly one file",
                     f.log().content(),
@@ -153,7 +153,7 @@ final class OptimizeMojoTest {
                     .set("alwaysWithDocker", "true")
                     .set("image", image)
                     .set("debug", "true");
-                f.exec("test");
+                f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "phino should skip optimization if the default grep-in does not match any of the instructions",
                     f.log().content(),

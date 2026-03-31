@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: mvn-on-rultor-image
+'on':
+  push:
+    branches:
+      - master
+    paths-ignore: [ 'README.md' ]
+  pull_request:
+    branches:
+      - master
+    paths-ignore: [ 'README.md' ]
+jobs:
+  mvn:
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04 ]
+    runs-on: ${{ matrix.os }}
+    container: yegor256/java
+    steps:
+      - uses: actions/checkout@v6
+      - name: Fix Git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-yegor-java-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-yegor-java-maven-
+      - run: mvn clean install --errors -Dinvoker.skip --batch-mode
+      - run: mvn clean test -Pgradle

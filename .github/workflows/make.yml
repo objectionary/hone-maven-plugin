@@ -23,7 +23,7 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get -y install libxml2-utils
-          sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
+          sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-0.0.0.43
           sudo chmod +x /usr/bin/phino
           phino --version
       - run: make -C src/test/resources/org/eolang/hone/rules/streams

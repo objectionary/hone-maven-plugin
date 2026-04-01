@@ -15,4 +15,3 @@ debug/
 .classpath
 .project
 .settings/
-run-docker.sh

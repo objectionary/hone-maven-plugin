@@ -18,7 +18,8 @@ jobs:
       matrix:
         os: [ ubuntu-24.04 ]
     runs-on: ${{ matrix.os }}
-    container: yegor256/java
+    container:
+      image: yegor256/java
     steps:
       - uses: actions/checkout@v6
       - name: Fix Git safe directory
@@ -29,5 +30,4 @@ jobs:
           key: ${{ runner.os }}-yegor-java-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-yegor-java-maven-
-      - run: mvn clean install --errors -Dinvoker.skip --batch-mode
-      - run: mvn clean test -Pgradle
+      - run: mvn clean install -Dinvoker.skip -Pqulice -e -B -Dstyle.color=never

@@ -66,6 +66,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
+    @DisabledWithoutDocker
     void doesNotSkipOptimizationDueGrepInOption(@Mktmp final Path dir)
     throws Exception {
         new Farea(dir).together(
@@ -115,6 +117,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
+    @DisabledWithoutDocker
     void skipsOptimizationDueGrepInOption(@Mktmp final Path dir)
     throws Exception {
         new Farea(dir).together(
@@ -143,7 +147,6 @@ final class OptimizeMojoTest {
                     .goals("optimize")
                     .configuration()
                     .set("rules", "streams/*");
-                    // .set("grepIn","(66-69-6C-74-65-72|6D-61-70)");
                 f.exec("test");
                 MatcherAssert.assertThat(
                     "phino should skip optimization if the default grep-in does not match any of the instructions",

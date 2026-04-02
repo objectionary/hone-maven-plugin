@@ -48,7 +48,7 @@ final class SummaryTest {
         MatcherAssert.assertThat(
             "report shouldn't be generated if no statistics found",
             new Summary(dir).collect().toFile().exists(),
-            Matchers.is(true)
+            Matchers.is(false)
         );
     }
 

@@ -20,7 +20,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -76,7 +75,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Disabled
+    @Tag("deep")
+    @DisabledWithoutDocker
     void doesNotSkipOptimizationDueGrepInOption(@Mktmp final Path dir)
     throws Exception {
         new Farea(dir).together(
@@ -126,7 +126,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    @Disabled
+    @Tag("deep")
+    @DisabledWithoutDocker
     void skipsOptimizationDueGrepInOption(@Mktmp final Path dir)
     throws Exception {
         new Farea(dir).together(

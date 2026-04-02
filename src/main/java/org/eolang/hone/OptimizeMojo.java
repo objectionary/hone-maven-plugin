@@ -470,6 +470,9 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(Arrays.asList("--env", "HONE_STATISTICS=true"));
         command.add("--user");
         command.add(OptimizeMojo.whoami());
+        command.add("--privileged");
+        command.add("-v");
+        command.add("/var/run/docker.sock:/var/run/docker.sock");
         command.addAll(
             Arrays.asList(
                 "--env",

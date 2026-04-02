@@ -90,6 +90,18 @@ classes.dependsOn hone
 
 See how it works in [this example](src/test/gradle).
 
+## How to Use in Docker
+
+If you ran `hone-maven-plugin` in a Docker container, you might face issues if
+your Docker image doesn't have [phino](https://github.com/objectionary/phino)
+installed. In this case, `hone-maven-plugin`
+will try to run a Docker container inside your Docker container (DinD).
+This might lead to problems with
+[volume mounting](https://github.com/objectionary/hone-maven-plugin/pull/458).
+
+While it's technically possible to implement this (by specifying correct
+volumes on your host machine), we highly recommend **avoiding** such a setup.
+
 ## Benchmark
 
 Here is the result of the latest processing of a large Java class

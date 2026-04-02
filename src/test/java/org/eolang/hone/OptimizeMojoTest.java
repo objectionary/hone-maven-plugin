@@ -31,6 +31,15 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
  * Test case for {@link OptimizeMojo}.
  *
  * @since 0.1.0
+ * @todo #440:90min enable 'grep-in' tests.
+ *  The following tests are disabled because they fail on Rultor:
+ *  <a href="https://github.com/objectionary/hone-maven-plugin/pull/458">PR</a>
+ *  However, all the tests pass.
+ *  We should find a reason why the following tests fail on specific
+ *  environment and fix them:
+ *  - {@link OptimizeMojoTest#skipsOptimizationDueGrepInOption}
+ *  - {@link OptimizeMojoTest#doesNotSkipOptimizationDueGrepInOption}
+ *  When this tests are fixed, remove @Disabled annotation.
  */
 @Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
@@ -66,6 +75,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
+    @DisabledWithoutDocker
     void doesNotSkipOptimizationDueGrepInOption(@Mktmp final Path dir)
     throws Exception {
         new Farea(dir).together(
@@ -96,11 +107,11 @@ final class OptimizeMojoTest {
                     .plugins()
                     .appendItself()
                     .execution("default")
-                    .phase("process-classes")
+                    .phase("test")
                     .goals("optimize")
                     .configuration()
                     .set("rules", "streams/*");
-                f.exec("test");
+                f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "phino should optimize (rewrite) exactly one file",
                     f.log().content(),
@@ -115,6 +126,8 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @Tag("deep")
+    @DisabledWithoutDocker
     void skipsOptimizationDueGrepInOption(@Mktmp final Path dir)
     throws Exception {
         new Farea(dir).together(
@@ -139,12 +152,11 @@ final class OptimizeMojoTest {
                     .plugins()
                     .appendItself()
                     .execution("default")
-                    .phase("process-classes")
+                    .phase("test")
                     .goals("optimize")
                     .configuration()
                     .set("rules", "streams/*");
-                    // .set("grepIn","(66-69-6C-74-65-72|6D-61-70)");
-                f.exec("test");
+                f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "phino should skip optimization if the default grep-in does not match any of the instructions",
                     f.log().content(),

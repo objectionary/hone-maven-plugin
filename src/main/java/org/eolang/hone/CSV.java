@@ -4,15 +4,22 @@
  */
 package org.eolang.hone;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.cactoos.text.TextOf;
-import org.cactoos.text.UncheckedText;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
+import org.cactoos.list.ListOf;
 
 /**
  * CSV summary .
@@ -23,9 +30,14 @@ import org.cactoos.text.UncheckedText;
 public final class CSV {
 
     /**
-     * CSV content.
+    * CSV header.
+    */
+    private final List<String> headers;
+
+    /**
+     * CSV rows.
      */
-    private final String content;
+    private final List<Map<String, String>> records;
 
     /**
      * Constructor.
@@ -33,43 +45,78 @@ public final class CSV {
      * @param root CSV file path
      */
     CSV(final Path root) {
-        this(new UncheckedText(new TextOf(root)).asString());
+        this(CSV.from(root));
     }
 
     /**
      * Constructor.
      *
-     * @param content CSV content
+     * @param records CSV records
      */
-    CSV(final String content) {
-        this.content = content;
+    private CSV(final List<CSVRecord> records) {
+        this(
+            new ListOf<>(records.get(0).toMap().keySet()),
+            CSV.rows(records)
+        );
     }
 
     /**
-     * Retrieves the header of the CSV as a list of column names.
+     * Constructor.
      *
-     * @return List of column names from the CSV header
+     * @param headers CSV headers
+     * @param records CSV records
      */
-    List<String> header() {
-        return Arrays.stream(this.content.split("\n"))
-            .findFirst()
-            .map(line -> Arrays.asList(line.split(",")))
-            .orElseThrow(() -> new IllegalStateException("CSV content is empty"));
+    private CSV(
+        final List<String> headers,
+        final List<Map<String, String>> records
+    ) {
+        this.headers = headers;
+        this.records = records;
     }
 
     /**
-     * Retrieves the rows of the CSV as a list of lists of strings.
-     * Each inner list represents a row of the CSV, and each string in the
-     * inner list represents a cell value.
-     * The method skips the header row and processes only the data rows.
+     * Combines this CSV with another CSV, concatenating their records.
      *
-     * @return List of rows, where each row is a list of string values.
+     * @param other The other CSV to combine with this one.
+     * @return A new CSV instance containing the combined records of both CSVs.
      */
-    List<List<String>> rows() {
-        return Arrays.stream(this.content.split("\n"))
-            .skip(1)
-            .map(line -> Arrays.asList(line.split(",")))
-            .collect(Collectors.toList());
+    CSV add(final CSV other) {
+        final List<Map<String, String>> combined = new ArrayList<>(this.records);
+        combined.addAll(other.records);
+        return new CSV(this.headers, combined);
+    }
+
+    /**
+    * Number of records in the CSV.
+    *
+    * @return The number of records in the CSV.
+    */
+    int size() {
+        return this.records.size();
+    }
+
+    /**
+     * Recomputes the values of a column using a transformation function.
+     *
+     * @param header The name of the column to recompute.
+     * @param modification Transformation function.
+     * @return A new CSV instance with the recomputed values.
+     */
+    CSV recompute(
+        final String header,
+        final Function<String, String> modification
+    ) {
+        return new CSV(
+            this.headers,
+            this.records.stream()
+                .map(
+                    row -> {
+                        final Map<String, String> data = new HashMap<>(row);
+                        data.put(header, modification.apply(row.get(header)));
+                        return data;
+                    }
+                ).collect(Collectors.toList())
+        );
     }
 
     /**
@@ -78,14 +125,45 @@ public final class CSV {
      * @param res The path to the file where the CSV content should be written.
      */
     void flush(final Path res) {
-        try {
-            Files.write(res, this.content.getBytes(StandardCharsets.UTF_8));
+        try (
+            CSVPrinter printer = new CSVPrinter(
+                Files.newBufferedWriter(res, StandardCharsets.UTF_8),
+                CSVFormat.DEFAULT.builder().setHeader(this.headers.toArray(new String[0])).get()
+            )
+        ) {
+            for (final Map<String, String> record : this.records) {
+                printer.printRecord(
+                    this.headers.stream().map(record::get).collect(Collectors.toList())
+                );
+            }
         } catch (final IOException exception) {
             throw new IllegalStateException(
-                String.format(
-                    "Failed to write CSV content to file: %s",
-                    res.toString()
-                ),
+                String.format("Failed to flush CSV content to file: %s", res),
+                exception
+            );
+        }
+    }
+
+    private static List<Map<String, String>> rows(final Collection<CSVRecord> records) {
+        return records.stream()
+            .map(CSVRecord::toMap)
+            .collect(Collectors.toList());
+    }
+
+    @SuppressWarnings({"PMD.AvoidFileStream", "PMD.RelianceOnDefaultCharset"})
+    private static List<CSVRecord> from(final Path csv) {
+        try {
+            return new ListOf<>(
+                CSVFormat.DEFAULT.builder()
+                    .setHeader()
+                    .setSkipHeaderRecord(false)
+                    .get()
+                    .parse(new FileReader(csv.toFile()))
+                    .iterator()
+            );
+        } catch (final IOException exception) {
+            throw new IllegalStateException(
+                String.format("Failed to read CSV file: %s", csv),
                 exception
             );
         }

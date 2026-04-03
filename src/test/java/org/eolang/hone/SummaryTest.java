@@ -31,10 +31,10 @@ final class SummaryTest {
             new TextOf(new Summary(SummaryTest.modular(temp)).collect()).asString(),
             Matchers.allOf(
                 Matchers.containsString(
-                    "\"/phi/org/eolang/hone/client/Client.phi\",\"/phi-optimized/org/eolang/hone/client/Client.phi\",2,4000"
+                    "/phi/org/eolang/hone/client/Client.phi,/phi-optimized/org/eolang/hone/client/Client.phi,2,4000"
                 ),
                 Matchers.containsString(
-                    "\"/phi/org/eolang/hone/server/Server.phi\",\"/phi-optimized/org/eolang/hone/server/Server.phi\",10,3200"
+                    "/phi/org/eolang/hone/server/Server.phi,/phi-optimized/org/eolang/hone/server/Server.phi,10,3200"
                 )
             )
         );

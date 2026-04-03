@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -74,34 +73,22 @@ public final class Summary {
         }
         final Path destination = this.target.resolve("hone-statistics.csv");
         if (!found.isEmpty()) {
-            reduce(found).flush(destination);
+            Summary.reduce(found).flush(destination);
         }
         return destination;
     }
 
     private static CSV reduce(final List<CSV> csvs) {
-        final List<List<String>> lines = csvs.stream()
-            .map(CSV::rows)
-            .flatMap(List::stream)
-            .collect(Collectors.toList());
-        final int total = lines.size();
         final AtomicInteger index = new AtomicInteger(1);
-        return new CSV(
-            Stream.concat(
-                Stream.of(String.join(",", csvs.get(0).header())),
-                lines.stream().map(
-                    row ->
-                        String.format(
-                            "%d/%d,%s,%s,%s,%s",
-                            index.getAndIncrement(),
-                            total,
-                            row.get(1),
-                            row.get(2),
-                            row.get(3),
-                            row.get(4)
-                        )
-                )
-            ).collect(Collectors.joining("\n"))
+        final CSV res = csvs.stream().reduce(CSV::add).orElseThrow(
+            () -> new IllegalStateException(
+                "Failed to reduce summary statistics: no CSV files found."
+            )
+        );
+        final int size = res.size();
+        return res.recompute(
+            "ID",
+            ignore -> String.format("%d/%d", index.getAndIncrement(), size)
         );
     }
 }

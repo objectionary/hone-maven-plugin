@@ -53,7 +53,7 @@ that Docker is misconfigured; the directory must exist even if there are no .cla
   exit 1
 fi
 
-if [ ! -e "${TARGET}/${CLASSES}" ] && [ "${SKIP_IF_NO_CLASSES}" != 'true' ]; then
+if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \
 after the 'compile' phase is finished; this is what is in the '${TARGET}' directory:"

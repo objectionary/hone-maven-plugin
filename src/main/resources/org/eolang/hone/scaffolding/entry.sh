@@ -58,8 +58,15 @@ if [ ! -e "${TARGET}/${CLASSES}" ]; then
 that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \
 after the 'compile' phase is finished; this is what is in the '${TARGET}' directory:"
   tree "${TARGET}"
-  exit 1
+  if [ "${SKIP_IF_NO_CLASSES}" == 'true' ]; then
+    echo "We don't fail but quit quietly, because of skipIfNoClasses=true"
+    exit
+  else
+    echo "We can't continue and must fail here. Set skipIfNoClasses to 'true' if you need a quiet pass."
+    exit 1
+  fi
 fi
+
 # In order to save them "as is", just in case:
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
 echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -print | wc -l | xargs) files)"
@@ -70,7 +77,7 @@ if [ -z "${PHINO_VERSION}" ]; then
 fi
 v=$(phino --version)
 if [ "${v}" != "${PHINO_VERSION}" ]; then
-  echo "Phino version is '${v}', while '${PHINO_VERSION}' expected"
+  echo "Phino version is '${v}', while '${PHINO_VERSION}' was expected"
   exit 1
 fi
 

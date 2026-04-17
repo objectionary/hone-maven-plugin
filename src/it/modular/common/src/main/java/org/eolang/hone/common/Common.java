@@ -9,4 +9,3 @@ public class Common {
         System.out.println("Hello from Common!");
     }
 }
-

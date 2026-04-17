@@ -420,6 +420,11 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         command.addAll(
             Arrays.asList(
+                "--env", String.format("SKIP_IF_NO_CLASSES=%s", this.skipIfNoClasses)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
                 "--env", String.format("VERBOSE=%s", Logger.isDebugEnabled(this))
             )
         );

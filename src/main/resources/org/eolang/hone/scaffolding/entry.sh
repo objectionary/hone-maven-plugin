@@ -53,12 +53,16 @@ that Docker is misconfigured; the directory must exist even if there are no .cla
   exit 1
 fi
 
-if [ ! -e "${TARGET}/${CLASSES}" ]; then
+if [ ! -e "${TARGET}/${CLASSES}" ] && [ "${SKIP_IF_NO_CLASSES}" != 'true' ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \
 after the 'compile' phase is finished; this is what is in the '${TARGET}' directory:"
   tree "${TARGET}"
-  exit 1
+  if [ "${SKIP_IF_NO_CLASSES}" == 'true' ]; then
+    echo "The build continues, because of skipIfNoClasses=true"
+  else
+    exit 1
+  fi
 fi
 # In order to save them "as is", just in case:
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"

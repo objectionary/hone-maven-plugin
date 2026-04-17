@@ -44,7 +44,7 @@ FROM eclipse-temurin:25.0.2_10-jre-jammy
 
 LABEL "repository"="https://github.com/objectionary/hone-maven-plugin"
 LABEL "maintainer"="Yegor Bugayenko"
-LABEL "version"="0.0.0"
+LABEL "version"="0.23.3"
 
 ENV HOME=/root
 

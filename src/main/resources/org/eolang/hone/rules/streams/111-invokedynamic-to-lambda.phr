@@ -8,25 +8,25 @@ pattern: |
     φ ↦ Φ.jeo.class,
     version ↦ 𝑒-class-version,
     access ↦ 𝑒-class-access,
-    signature ↦ 𝑒-class-signature,
-    supername ↦ 𝑒-class-supername,
-    interfaces ↦ 𝑒-class-interfaces,
     modifiers ↦ 𝑒-class-modifiers,
     name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
       φ ↦ Φ.jeo.method,
       access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
       descriptor ↦ 𝑒-method-descriptor,
       signature ↦ 𝑒-method-signature,
       exceptions ↦ 𝑒-method-exceptions,
       maxs ↦ 𝑒-method-maxs,
       params ↦ 𝑒-method-params,
-      modifiers ↦ ⟦
-        𝐵-modifiers-before,
-        static ↦ Φ̇.true,
-        𝐵-modifiers-after
-      ⟧,
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
         𝐵-body-head,
@@ -40,7 +40,7 @@ pattern: |
             𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
             𝜏8 ↦ "metafactory",
             𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-            𝜏10 ↦ Φ̇.false,
+            𝜏10 ↦ Φ.false,
             ρ ↦ ∅
           ⟧,
           𝜏11 ↦ ⟦
@@ -69,14 +69,13 @@ pattern: |
           𝜏24 ↦ 𝑒-stream-class,
           𝜏25 ↦ 𝑒-stream-method,
           𝜏26 ↦ 𝑒-stream-signature,
-          𝜏27 ↦ Φ̇.true,
+          𝜏27 ↦ Φ.true,
           ρ ↦ ∅
         ⟧,
         𝐵-body-tail
       ⟧,
       𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
       local-variable-table ↦ 𝑒-lvt,
-      name ↦ 𝑒-function,
       ρ ↦ ∅
     ⟧,
     𝐵-class-body-tail
@@ -86,25 +85,25 @@ result: |
     φ ↦ Φ.jeo.class,
     version ↦ 𝑒-class-version,
     access ↦ 𝑒-class-access,
-    signature ↦ 𝑒-class-signature,
-    supername ↦ 𝑒-class-supername,
-    interfaces ↦ 𝑒-class-interfaces,
     modifiers ↦ 𝑒-class-modifiers,
     name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
     𝐵-class-body-head,
     𝜏-function ↦ ⟦
       φ ↦ Φ.jeo.method,
       access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
       descriptor ↦ 𝑒-method-descriptor,
       signature ↦ 𝑒-method-signature,
       exceptions ↦ 𝑒-method-exceptions,
       maxs ↦ 𝑒-method-maxs,
       params ↦ 𝑒-method-params,
-      modifiers ↦ ⟦
-        𝐵-modifiers-before,
-        static ↦ Φ̇.true,
-        𝐵-modifiers-after
-      ⟧,
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
         𝐵-body-head,
@@ -134,7 +133,6 @@ result: |
       ⟧,
       𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
       local-variable-table ↦ 𝑒-lvt,
-      name ↦ 𝑒-function,
       ρ ↦ ∅
     ⟧,
     𝐵-class-body-tail

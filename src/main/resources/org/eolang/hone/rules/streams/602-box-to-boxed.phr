@@ -14,5 +14,5 @@ result: |
     i1 ↦ 𝑒-stream-class,
     i2 ↦ "boxed",
     i3 ↦ "()Ljava/util/stream/Stream;",
-    i4 ↦ Φ̇.true
+    i4 ↦ Φ.true
   ⟧

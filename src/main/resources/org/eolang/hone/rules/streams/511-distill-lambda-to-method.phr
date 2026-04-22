@@ -56,7 +56,7 @@ result: |
         i2 ↦ 𝑒-consumer-class,
         i3 ↦ "accept",
         i4 ↦ 𝑒-invokeinterface-signature,
-        i5 ↦ Φ̇.true
+        i5 ↦ Φ.true
       ⟧,
       i-return ↦ ⟦
         φ ↦ Φ.jeo.opcode.return

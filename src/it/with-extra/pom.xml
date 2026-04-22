@@ -35,6 +35,7 @@
               <extra>
                 <rule>${basedir}/src/main/rules/sevens-to-fives.yml</rule>
               </extra>
+              <grepIn>.*</grepIn>
             </configuration>
           </execution>
         </executions>

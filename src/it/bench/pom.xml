@@ -34,6 +34,7 @@
               <rules>streams/*</rules>
               <debug>true</debug>
               <threads>1</threads>
+              <smallSteps>true</smallSteps>
             </configuration>
           </execution>
         </executions>

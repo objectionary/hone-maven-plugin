@@ -43,7 +43,7 @@ result: |
         class ↦ 𝑒-unbox-target-class,
         method ↦ 𝑒-unbox-target-method,
         signature ↦ 𝑒-unbox-target-signature,
-        is-interface ↦ Φ̇.false
+        is-interface ↦ Φ.false
       ⟧
     ⟧,
     𝐵-after

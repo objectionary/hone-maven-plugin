@@ -3,16 +3,17 @@
     φ ↦ Φ.jeo.class,
     version ↦ 66,
     access ↦ 33,
-    signature ↦ "",
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+    name ↦ "Foo",
     supername ↦ "java/lang/Object",
     interfaces ↦ ⟦
       φ ↦ Φ.jeo.seq.of0
     ⟧,
-    modifiers ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
-    name ↦ "Foo",
     j$main ↦ ⟦
       φ ↦ Φ.jeo.method,
       access ↦ 4096,
+      modifiers ↦ ⟦ static ↦ Φ.true ⟧,
+      name ↦ "main",
       descriptor ↦ "()V",
       signature ↦ "",
       exceptions ↦ "Exceptions",
@@ -22,7 +23,6 @@
         v2 ↦ 5
       ⟧,
       params ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
-      modifiers ↦ ⟦ static ↦ Φ̇.true ⟧,
       annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of2,
@@ -36,7 +36,7 @@
             v2201 ↦ "java/lang/invoke/LambdaMetafactory",
             v2202 ↦ "metafactory",
             v2203 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-            v2204 ↦ Φ̇.false
+            v2204 ↦ Φ.false
           ⟧,
           t2214 ↦ ⟦
             φ ↦ Φ.jeo.type,
@@ -48,7 +48,7 @@
             v2250 ↦ "com/jcabi/xml/XSL",
             v2251 ↦ "lambda$1",
             v2252 ↦ "(Lcom/jcabi/xml/XML;)Lcom/jcabi/xml/XML;",
-            v2254 ↦ Φ̇.true
+            v2254 ↦ Φ.true
           ⟧,
           t2271 ↦ ⟦
             φ ↦ Φ.jeo.type,
@@ -60,12 +60,12 @@
           v2369 ↦ "java/util/stream/Stream",
           v2371 ↦ "map",
           v2372 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
-          v2376 ↦ Φ̇.true
+          v2376 ↦ Φ.true
         ⟧
       ⟧,
       trycatchblocks ↦ ⟦⟧,
-      local-variable-table ↦ ⟦⟧,
-      name ↦ "main"
-    ⟧
+      local-variable-table ↦ ⟦⟧
+    ⟧,
+    signature ↦ ""
   ⟧
 ⟧}

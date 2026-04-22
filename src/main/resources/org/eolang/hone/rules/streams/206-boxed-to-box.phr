@@ -9,7 +9,7 @@ pattern: |
     𝜏-target-stream-class ↦ 𝑒-target-stream-class,
     𝜏-method ↦ "boxed",
     𝜏-result-stream-class ↦ "()Ljava/util/stream/Stream;",
-    𝜏-flag ↦ Φ̇.true,
+    𝜏-flag ↦ Φ.true,
     ρ ↦ ∅
   ⟧
 result: |

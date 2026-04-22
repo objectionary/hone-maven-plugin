@@ -47,7 +47,7 @@ result: |
         i2 ↦ "java/lang/invoke/LambdaMetafactory",
         i3 ↦ "metafactory",
         i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-        i5 ↦ Φ̇.false
+        i5 ↦ Φ.false
       ⟧,
       i5 ↦ ⟦
         φ ↦ Φ.jeo.type,
@@ -71,7 +71,7 @@ result: |
       i2 ↦ 𝑒-stream-class,
       i3 ↦ 𝑒-stream-method,
       i4 ↦ 𝑒-stream-signature,
-      i5 ↦ Φ̇.true
+      i5 ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧

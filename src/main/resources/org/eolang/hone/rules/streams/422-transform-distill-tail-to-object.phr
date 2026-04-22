@@ -32,7 +32,7 @@ result: |
         i2 ↦ 𝑒-transform-class,
         i3 ↦ "valueOf",
         i4 ↦ 𝑒-transform-signature,
-        i5 ↦ Φ̇.false
+        i5 ↦ Φ.false
       ⟧,
       ρ ↦ ∅
     ⟧

@@ -44,7 +44,7 @@ result: |
         i1 ↦ "java/lang/Boolean",
         i2 ↦ "booleanValue",
         i3 ↦ "()Z",
-        i4 ↦ Φ̇.false
+        i4 ↦ Φ.false
       ⟧,
       i3 ↦ ⟦
         φ ↦ Φ.jeo.opcode.ifne,

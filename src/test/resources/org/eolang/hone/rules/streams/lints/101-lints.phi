@@ -20,7 +20,7 @@
             signature-pre ↦ "",
             value-pre ↦ ⟦
               φ ↦ Φ.jeo.nullable,
-              n4 ↦ Φ̇.bytes(
+              n4 ↦ Φ.bytes(
                 ⟦
                   Δ ⤍ --
                 ⟧
@@ -42,19 +42,19 @@
             ⟧,
             modifiers ↦ ⟦
               φ ↦ Φ.jeo.modifiers,
-              public ↦ Φ̇.false,
-              private ↦ Φ̇.false,
-              protected ↦ Φ̇.false,
-              static ↦ Φ̇.false,
-              final ↦ Φ̇.false,
-              synchronized ↦ Φ̇.false,
-              bridge ↦ Φ̇.false,
-              varargs ↦ Φ̇.false,
-              native ↦ Φ̇.false,
-              abstract ↦ Φ̇.false,
-              strict ↦ Φ̇.false,
-              synthetic ↦ Φ̇.false,
-              mandated ↦ Φ̇.false
+              public ↦ Φ.false,
+              private ↦ Φ.false,
+              protected ↦ Φ.false,
+              static ↦ Φ.false,
+              final ↦ Φ.false,
+              synchronized ↦ Φ.false,
+              bridge ↦ Φ.false,
+              varargs ↦ Φ.false,
+              native ↦ Φ.false,
+              abstract ↦ Φ.false,
+              strict ↦ Φ.false,
+              synthetic ↦ Φ.false,
+              mandated ↦ Φ.false
             ⟧,
             annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
             body ↦ ⟦
@@ -105,14 +105,14 @@
                 v49 ↦ "org/cactoos/io/ResourceOf",
                 v50 ↦ "<init>",
                 v51 ↦ "(Ljava/lang/CharSequence;)V",
-                v52 ↦ Φ̇.false
+                v52 ↦ Φ.false
               ⟧,
               i58 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.invokespecial,
                 v59 ↦ "org/cactoos/io/UncheckedInput",
                 v60 ↦ "<init>",
                 v61 ↦ "(Lorg/cactoos/Input;)V",
-                v62 ↦ Φ̇.false
+                v62 ↦ Φ.false
               ⟧,
               l65 ↦ ⟦
                 φ ↦ Φ.jeo.label,
@@ -131,14 +131,14 @@
                 v79 ↦ "org/cactoos/io/UncheckedInput",
                 v80 ↦ "stream",
                 v81 ↦ "()Ljava/io/InputStream;",
-                v82 ↦ Φ̇.false
+                v82 ↦ Φ.false
               ⟧,
               i88 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.invokespecial,
                 v89 ↦ "com/jcabi/xml/XSLDocument",
                 v90 ↦ "<init>",
                 v91 ↦ "(Ljava/io/InputStream;)V",
-                v92 ↦ Φ̇.false
+                v92 ↦ Φ.false
               ⟧,
               i95 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.new,
@@ -152,7 +152,7 @@
                 v105 ↦ "com/jcabi/xml/ClasspathSources",
                 v106 ↦ "<init>",
                 v107 ↦ "()V",
-                v108 ↦ Φ̇.false
+                v108 ↦ Φ.false
               ⟧,
               l111 ↦ ⟦
                 φ ↦ Φ.jeo.label,
@@ -171,7 +171,7 @@
                 v125 ↦ "com/jcabi/xml/XSLDocument",
                 v126 ↦ "with",
                 v127 ↦ "(Lcom/jcabi/xml/Sources;)Lcom/jcabi/xml/XSL;",
-                v128 ↦ Φ̇.false
+                v128 ↦ Φ.false
               ⟧,
               l131 ↦ ⟦
                 φ ↦ Φ.jeo.label,
@@ -190,7 +190,7 @@
                 v145 ↦ "org/eolang/lints/LtAtomIsNotUnique",
                 v146 ↦ "<init>",
                 v147 ↦ "(Lcom/jcabi/xml/XSL;)V",
-                v148 ↦ Φ̇.false
+                v148 ↦ Φ.false
               ⟧,
               l151 ↦ ⟦
                 φ ↦ Φ.jeo.label,
@@ -253,19 +253,19 @@
             ⟧,
             modifiers ↦ ⟦
               φ ↦ Φ.jeo.modifiers,
-              public ↦ Φ̇.false,
-              private ↦ Φ̇.false,
-              protected ↦ Φ̇.false,
-              static ↦ Φ̇.false,
-              final ↦ Φ̇.false,
-              synchronized ↦ Φ̇.false,
-              bridge ↦ Φ̇.false,
-              varargs ↦ Φ̇.false,
-              native ↦ Φ̇.false,
-              abstract ↦ Φ̇.false,
-              strict ↦ Φ̇.false,
-              synthetic ↦ Φ̇.false,
-              mandated ↦ Φ̇.false
+              public ↦ Φ.false,
+              private ↦ Φ.false,
+              protected ↦ Φ.false,
+              static ↦ Φ.false,
+              final ↦ Φ.false,
+              synchronized ↦ Φ.false,
+              bridge ↦ Φ.false,
+              varargs ↦ Φ.false,
+              native ↦ Φ.false,
+              abstract ↦ Φ.false,
+              strict ↦ Φ.false,
+              synthetic ↦ Φ.false,
+              mandated ↦ Φ.false
             ⟧,
             annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
             body ↦ ⟦
@@ -291,7 +291,7 @@
                 v197 ↦ "java/lang/Object",
                 v198 ↦ "<init>",
                 v199 ↦ "()V",
-                v200 ↦ Φ̇.false
+                v200 ↦ Φ.false
               ⟧,
               l203 ↦ ⟦
                 φ ↦ Φ.jeo.label,
@@ -389,19 +389,19 @@
             ⟧,
             modifiers ↦ ⟦
               φ ↦ Φ.jeo.modifiers,
-              public ↦ Φ̇.true,
-              private ↦ Φ̇.false,
-              protected ↦ Φ̇.false,
-              static ↦ Φ̇.false,
-              final ↦ Φ̇.false,
-              synchronized ↦ Φ̇.false,
-              bridge ↦ Φ̇.false,
-              varargs ↦ Φ̇.false,
-              native ↦ Φ̇.false,
-              abstract ↦ Φ̇.false,
-              strict ↦ Φ̇.false,
-              synthetic ↦ Φ̇.false,
-              mandated ↦ Φ̇.false
+              public ↦ Φ.true,
+              private ↦ Φ.false,
+              protected ↦ Φ.false,
+              static ↦ Φ.false,
+              final ↦ Φ.false,
+              synchronized ↦ Φ.false,
+              bridge ↦ Φ.false,
+              varargs ↦ Φ.false,
+              native ↦ Φ.false,
+              abstract ↦ Φ.false,
+              strict ↦ Φ.false,
+              synthetic ↦ Φ.false,
+              mandated ↦ Φ.false
             ⟧,
             annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
             body ↦ ⟦
@@ -471,13 +471,13 @@
             ⟧,
             modifiers ↦ ⟦
               φ ↦ Φ.jeo.modifiers,
-              public ↦ Φ̇.true,
-              private ↦ Φ̇.false,
-              protected ↦ Φ̇.false,
-              static ↦ Φ̇.false,
-              final ↦ Φ̇.false,
-              synchronized ↦ Φ̇.false,
-              bridge ↦ Φ̇.false,
+              public ↦ Φ.true,
+              private ↦ Φ.false,
+              protected ↦ Φ.false,
+              static ↦ Φ.false,
+              final ↦ Φ.false,
+              synchronized ↦ Φ.false,
+              bridge ↦ Φ.false,
               varargs ↦ Φ̇.false,
               native ↦ Φ̇.false,
               abstract ↦ Φ̇.false,

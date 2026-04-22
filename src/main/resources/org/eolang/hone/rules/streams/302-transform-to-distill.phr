@@ -32,7 +32,7 @@ result: |
         i2 ↦ 𝑒-target-class,
         i3 ↦ 𝑒-target-method,
         i4 ↦ 𝑒-target-signature,
-        i5 ↦ Φ̇.false
+        i5 ↦ Φ.false
       ⟧
     ⟧
   ⟧

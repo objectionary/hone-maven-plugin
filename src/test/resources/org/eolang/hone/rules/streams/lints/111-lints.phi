@@ -6,17 +6,16 @@
           φ ↦ Φ.jeo.class,
           version ↦ 55,
           access ↦ 48,
-          signature ↦ "Ljava/lang/Object;Lorg/eolang/lints/Lint<Ljava/util/Map<Ljava/lang/String;Lcom/jcabi/xml/XML;>;>;",
+          modifiers ↦ ⟦
+            φ ↦ Φ.jeo.modifiers,
+            interface ↦ Φ.false
+          ⟧,
+          name ↦ "org/eolang/lints/LtAtomIsNotUnique",
           supername ↦ "java/lang/Object",
           interfaces ↦ ⟦
             φ ↦ Φ.jeo.seq.of1,
             x0 ↦ "org/eolang/lints/Lint"
           ⟧,
-          modifiers ↦ ⟦
-            φ ↦ Φ.jeo.modifiers,
-            interface ↦ Φ̇.false
-          ⟧,
-          name ↦ "org/eolang/lints/LtAtomIsNotUnique",
           j$pre ↦ ⟦
             φ ↦ Φ.jeo.field,
             access-pre ↦ 18,
@@ -24,7 +23,7 @@
             signature-pre ↦ "",
             value-pre ↦ ⟦
               φ ↦ Φ.jeo.nullable,
-              n4 ↦ Φ̇.bytes(
+              n4 ↦ Φ.bytes(
                 ⟦
                   Δ ⤍ --
                 ⟧
@@ -34,6 +33,23 @@
           j$defects ↦ ⟦
             φ ↦ Φ.jeo.method,
             access ↦ 1,
+            modifiers ↦ ⟦
+              φ ↦ Φ.jeo.modifiers,
+              public ↦ Φ.true,
+              private ↦ Φ.false,
+              protected ↦ Φ.false,
+              static ↦ Φ.false,
+              final ↦ Φ.false,
+              synchronized ↦ Φ.false,
+              bridge ↦ Φ.false,
+              varargs ↦ Φ.false,
+              native ↦ Φ.false,
+              abstract ↦ Φ.false,
+              strict ↦ Φ.false,
+              synthetic ↦ Φ.false,
+              mandated ↦ Φ.false
+            ⟧,
+            name ↦ "defects",
             descriptor ↦ "(Ljava/util/Map;)Ljava/util/Collection;",
             signature ↦ "(Ljava/util/Map<Ljava/lang/String;Lcom/jcabi/xml/XML;>;)Ljava/util/Collection<Lorg/eolang/lints/Defect;>;",
             maxs ↦ ⟦
@@ -49,22 +65,6 @@
                 access ↦ 0,
                 type ↦ "Ljava/util/Map;"
               ⟧
-            ⟧,
-            modifiers ↦ ⟦
-              φ ↦ Φ.jeo.modifiers,
-              public ↦ Φ̇.true,
-              private ↦ Φ̇.false,
-              protected ↦ Φ̇.false,
-              static ↦ Φ̇.false,
-              final ↦ Φ̇.false,
-              synchronized ↦ Φ̇.false,
-              bridge ↦ Φ̇.false,
-              varargs ↦ Φ̇.false,
-              native ↦ Φ̇.false,
-              abstract ↦ Φ̇.false,
-              strict ↦ Φ̇.false,
-              synthetic ↦ Φ̇.false,
-              mandated ↦ Φ̇.false
             ⟧,
             annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
             body ↦ ⟦
@@ -96,7 +96,7 @@
                 v321 ↦ "java/util/ArrayList",
                 v322 ↦ "<init>",
                 v323 ↦ "(I)V",
-                v324 ↦ Φ̇.false
+                v324 ↦ Φ.false
               ⟧,
               i327 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.astore,
@@ -123,14 +123,14 @@
                 v349 ↦ "java/util/Map",
                 v350 ↦ "values",
                 v351 ↦ "()Ljava/util/Collection;",
-                v352 ↦ Φ̇.true
+                v352 ↦ Φ.true
               ⟧,
               i358 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.invokeinterface,
                 v359 ↦ "java/util/Collection",
                 v360 ↦ "stream",
                 v361 ↦ "()Ljava/util/stream/Stream;",
-                v362 ↦ Φ̇.true
+                v362 ↦ Φ.true
               ⟧,
               i365 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.aload,
@@ -162,7 +162,7 @@
                 v393 ↦ "java/util/Objects",
                 v394 ↦ "requireNonNull",
                 v395 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
-                v396 ↦ Φ̇.false
+                v396 ↦ Φ.false
               ⟧,
               i398 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.pop
@@ -177,7 +177,7 @@
                   v423 ↦ "java/lang/invoke/LambdaMetafactory",
                   v424 ↦ "metafactory",
                   v425 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-                  v426 ↦ Φ̇.false
+                  v426 ↦ Φ.false
                 ⟧,
                 t427 ↦ ⟦
                   φ ↦ Φ.jeo.type,
@@ -189,7 +189,7 @@
                   v431 ↦ "com/jcabi/xml/XSL",
                   v432 ↦ "transform",
                   v433 ↦ "(Lcom/jcabi/xml/XML;)Lcom/jcabi/xml/XML;",
-                  v434 ↦ Φ̇.true
+                  v434 ↦ Φ.true
                 ⟧,
                 t435 ↦ ⟦
                   φ ↦ Φ.jeo.type,
@@ -201,7 +201,7 @@
                 v443 ↦ "java/util/stream/Stream",
                 v444 ↦ "map",
                 v445 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
-                v446 ↦ Φ̇.true
+                v446 ↦ Φ.true
               ⟧,
               i466 ↦ ⟦
                 φ ↦ Φ.jeo.opcode.invokedynamic,
@@ -213,7 +213,7 @@
                   v471 ↦ "java/lang/invoke/LambdaMetafactory",
                   v472 ↦ "metafactory",
                   v473 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-                  v474 ↦ Φ̇.false
+                  v474 ↦ Φ.false
                 ⟧,
                 t475 ↦ ⟦
                   φ ↦ Φ.jeo.type,
@@ -225,7 +225,7 @@
                   v479 ↦ "org/eolang/lints/LtAtomIsNotUnique",
                   v480 ↦ "lambda$defects$0",
                   v481 ↦ "(Lcom/jcabi/xml/XML;)Lcom/github/lombrozo/xnav/Xnav;",
-                  v482 ↦ Φ̇.false
+                  v482 ↦ Φ.false
                 ⟧,
                 t483 ↦ ⟦
                   φ ↦ Φ.jeo.type,
@@ -237,11 +237,11 @@
                 v501 ↦ "java/util/stream/Stream",
                 v502 ↦ "map",
                 v503 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
-                v504 ↦ Φ̇.true
+                v504 ↦ Φ.true
               ⟧
-            ⟧,
-            name ↦ "defects"
-          ⟧
+            ⟧
+          ⟧,
+          signature ↦ "Ljava/lang/Object;Lorg/eolang/lints/Lint<Ljava/util/Map<Ljava/lang/String;Lcom/jcabi/xml/XML;>;>;"
         ⟧,
         λ ⤍ Package
       ⟧,

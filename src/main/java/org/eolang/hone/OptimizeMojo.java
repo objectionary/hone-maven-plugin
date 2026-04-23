@@ -356,6 +356,16 @@ public final class OptimizeMojo extends AbstractMojo {
             this.target,
             System.currentTimeMillis() - start
         );
+        final Path stats = this.target.toPath().resolve("hone-statistics.csv");
+        if (stats.toFile().exists()) {
+            final CSV csv = new CSV(stats);
+            Logger.info(
+                this,
+                "Total optimized files: %d/%d",
+                csv.count("Changed", v -> Integer.parseInt(v) > 0),
+                csv.size()
+            );
+        }
     }
 
     private void withDocker() throws IOException {

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -93,6 +94,19 @@ public final class CSV {
     */
     int size() {
         return this.records.size();
+    }
+
+    /**
+     * Counts rows where a column value matches the given condition.
+     *
+     * @param header The column name to check.
+     * @param condition Predicate applied to the column value.
+     * @return Number of matching rows.
+     */
+    int count(final String header, final Predicate<String> condition) {
+        return (int) this.records.stream()
+            .filter(row -> condition.test(row.get(header)))
+            .count();
     }
 
     /**

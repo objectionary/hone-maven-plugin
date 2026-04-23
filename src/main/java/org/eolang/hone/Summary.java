@@ -54,6 +54,7 @@ public final class Summary {
      *
      * @return The path to the generated summary report.
      */
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
         final String stats = "hone-statistics.csv";

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * Test case for {@link CSV}.
  *
  * @since 0.1.0
+ * @checkstyle AbbreviationAsWordInNameCheck (3 lines)
  */
 @ExtendWith(MktmpResolver.class)
 final class CSVTest {

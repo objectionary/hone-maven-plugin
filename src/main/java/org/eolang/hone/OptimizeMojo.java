@@ -68,12 +68,17 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Default value for {@link #grepIn}.
      *
-     * <p>Exposed as a constant so that tests can reference the exact regex
-     * that is applied when the user does not override <tt>hone.grep-in</tt>.</p>
+     * <p>Anchors the hex-byte alternatives between <tt>&gt;</tt> and
+     * <tt>&lt;</tt> (the XML tag boundaries that delimit a single PHI bytes
+     * literal inside a {@code .xmir} file) so that the bytes of
+     * <tt>"map"</tt> or <tt>"filter"</tt> only match when they are the
+     * <em>entire</em> content of an {@code <o>} element — not when they
+     * happen to appear as a prefix or suffix of a longer byte sequence
+     * (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>). See issue #449.</p>
      *
      * @since 0.19.0
      */
-    static final String DEFAULT_GREP_IN = "(66-69-6C-74-65-72|6D-61-70)";
+    static final String DEFAULT_GREP_IN = ">(66-69-6C-74-65-72|6D-61-70)<";
 
     /**
      * Location of <tt>.class</tt> files to optimize inside

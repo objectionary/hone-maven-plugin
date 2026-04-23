@@ -33,4 +33,7 @@ assert main.toFile().text.contains("Common.phi");
 assert main.toFile().text.contains("Client.phi");
 assert main.toFile().text.contains("Server.phi");
 
+assert log =~ /Optimized \d+\/1 files/: "per-module 'Optimized X/1 files' must appear in log";
+assert log =~ /Optimized \d+\/3 files/: "summary 'Optimized X/3 files' must appear in log";
+
 true

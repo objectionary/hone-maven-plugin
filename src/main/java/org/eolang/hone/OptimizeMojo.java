@@ -361,7 +361,7 @@ public final class OptimizeMojo extends AbstractMojo {
             final CSV csv = new CSV(stats);
             Logger.info(
                 this,
-                "Total optimized files: %d/%d",
+                "Optimized %d/%d files",
                 csv.count("Changed", v -> Integer.parseInt(v) > 0),
                 csv.size()
             );

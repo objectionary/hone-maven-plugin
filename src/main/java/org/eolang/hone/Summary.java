@@ -56,12 +56,13 @@ public final class Summary {
      */
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
+        final String stats = "hone-statistics.csv";
         try (Stream<Path> paths = Files.walk(this.root)) {
             paths.filter(Files::isRegularFile)
                 .filter(
                     path -> path.getFileName()
                         .toString()
-                        .equals("hone-statistics.csv")
+                        .equals(stats)
                 )
                 .map(CSV::new)
                 .forEach(found::add);
@@ -71,7 +72,7 @@ public final class Summary {
                 exception
             );
         }
-        final Path destination = this.target.resolve("hone-statistics.csv");
+        final Path destination = this.target.resolve(stats);
         if (!found.isEmpty()) {
             Summary.reduce(found).flush(destination);
         }

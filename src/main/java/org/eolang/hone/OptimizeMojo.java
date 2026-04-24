@@ -66,6 +66,21 @@ import org.cactoos.text.TextOf;
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
+     * Default value for {@link #grepIn}.
+     *
+     * <p>Anchors the hex-byte alternatives between <tt>&gt;</tt> and
+     * <tt>&lt;</tt> (the XML tag boundaries that delimit a single PHI bytes
+     * literal inside a {@code .xmir} file) so that the bytes of
+     * <tt>"map"</tt> or <tt>"filter"</tt> only match when they are the
+     * <em>entire</em> content of an {@code <o>} element — not when they
+     * happen to appear as a prefix or suffix of a longer byte sequence
+     * (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>). See issue #449.</p>
+     *
+     * @since 0.19.0
+     */
+    static final String DEFAULT_GREP_IN = ">(66-69-6C-74-65-72|6D-61-70)<";
+
+    /**
      * Location of <tt>.class</tt> files to optimize inside
      * the {@code target} directory.
      *
@@ -133,7 +148,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.grep-in", defaultValue = "(66-69-6C-74-65-72|6D-61-70)")
+    @Parameter(property = "hone.grep-in", defaultValue = OptimizeMojo.DEFAULT_GREP_IN)
     private String grepIn;
 
     /**

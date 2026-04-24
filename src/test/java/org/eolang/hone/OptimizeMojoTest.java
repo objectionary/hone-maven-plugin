@@ -1139,4 +1139,48 @@ final class OptimizeMojoTest {
             }
         );
     }
+
+    @Test
+    void matchesStandaloneMapByteSequenceInDefaultGrepIn() {
+        MatcherAssert.assertThat(
+            "default grep-in must match a standalone 'map' byte sequence",
+            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
+                "<o as=\"α0\">6D-61-70</o>"
+            ).find(),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void matchesStandaloneFilterByteSequenceInDefaultGrepIn() {
+        MatcherAssert.assertThat(
+            "default grep-in must match a standalone 'filter' byte sequence",
+            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
+                "<o as=\"α0\">66-69-6C-74-65-72</o>"
+            ).find(),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void ignoresMapBytesEmbeddedInLongerStringInDefaultGrepIn() {
+        MatcherAssert.assertThat(
+            "default grep-in must not match 'map' bytes embedded in 'mapped/X' (see #449)",
+            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
+                "<o as=\"α0\">6D-61-70-70-65-64-2F-58</o>"
+            ).find(),
+            Matchers.is(false)
+        );
+    }
+
+    @Test
+    void ignoresFilterBytesEmbeddedInLongerStringInDefaultGrepIn() {
+        MatcherAssert.assertThat(
+            "default grep-in must not match 'filter' bytes embedded in 'filtered'",
+            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
+                "<o as=\"α0\">66-69-6C-74-65-72-65-64</o>"
+            ).find(),
+            Matchers.is(false)
+        );
+    }
 }

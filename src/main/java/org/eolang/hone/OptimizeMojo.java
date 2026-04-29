@@ -337,7 +337,7 @@ public final class OptimizeMojo extends AbstractMojo {
         return String.format(
             "%d:%d",
             lib.getuid(),
-            lib.geteuid()
+            lib.getgid()
         );
     }
 

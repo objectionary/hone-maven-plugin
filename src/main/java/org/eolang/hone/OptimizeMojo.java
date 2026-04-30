@@ -328,6 +328,20 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     /**
+     * Return the user and group IDs of the current user, using the given C library.
+     *
+     * @param lib The C library to query for the IDs
+     * @return A string in the format "uid:gid"
+     */
+    static String whoami(final OptimizeMojo.CLibrary lib) {
+        return String.format(
+            "%d:%d",
+            lib.getuid(),
+            lib.getgid()
+        );
+    }
+
+    /**
     * Check if the classes directory is absent or doesn't have classes.
     *
     * @return True if there are no class files, false otherwise.
@@ -588,11 +602,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @return A string in the format "uid:gid"
      */
     private static String whoami() {
-        return String.format(
-            "%d:%d",
-            OptimizeMojo.CLibrary.INSTANCE.getuid(),
-            OptimizeMojo.CLibrary.INSTANCE.geteuid()
-        );
+        return OptimizeMojo.whoami(OptimizeMojo.CLibrary.INSTANCE);
     }
 
     private String rulesAsString() {
@@ -727,5 +737,12 @@ public final class OptimizeMojo extends AbstractMojo {
          * @return The effective user ID
          */
         int geteuid();
+
+        /**
+         * Get the group ID of the calling process.
+         *
+         * @return The group ID
+         */
+        int getgid();
     }
 }

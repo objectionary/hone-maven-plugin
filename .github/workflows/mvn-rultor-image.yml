@@ -30,4 +30,4 @@ jobs:
           key: ${{ runner.os }}-yegor-java-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-yegor-java-maven-
-      - run: mvn clean install -Dinvoker.skip -Pqulice -e -B -Dstyle.color=never
+      - run: mvn clean install -ntp -Dinvoker.skip -Pqulice -e -B -Dstyle.color=never

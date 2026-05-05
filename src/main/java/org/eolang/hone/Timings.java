@@ -44,7 +44,7 @@ final class Timings {
      * @throws IOException If recording the timing fails
      */
     @SuppressWarnings("PMD.UnnecessaryLocalRule")
-    public void through(final String name, final Timings.Action action) throws IOException {
+    void through(final String name, final Timings.Action action) throws IOException {
         final long start = System.currentTimeMillis();
         try {
             action.exec();
@@ -56,7 +56,7 @@ final class Timings {
             Files.write(
                 this.path,
                 String.format(
-                    "%s,%d\n", name, System.currentTimeMillis() - start
+                    "%s,%d%n", name, System.currentTimeMillis() - start
                 ).getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.APPEND, StandardOpenOption.CREATE
             );
@@ -65,16 +65,15 @@ final class Timings {
 
     /**
      * Functional interface for actions that can be timed.
-     *
      * @since 0.1.0
      */
     @FunctionalInterface
-    public interface Action {
+    interface Action {
+
         /**
          * Execute the action.
          * @throws IOException If execution fails
          */
         void exec() throws IOException;
     }
-
 }

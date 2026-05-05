@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 
 /**
  * Build summary statistics.
- *
  * @since 0.1.0
  */
 public final class Summary {
@@ -31,8 +30,7 @@ public final class Summary {
 
     /**
      * Constructor.
-     *
-     * @param root Root directory to search for statistics.
+     * @param root Root directory to search for statistics
      */
     Summary(final Path root) {
         this(root, root);
@@ -40,9 +38,8 @@ public final class Summary {
 
     /**
      * Constructor.
-     *
-     * @param root Root directory to search for statistics.
-     * @param target Directory to save the summary report.
+     * @param root Root directory to search for statistics
+     * @param target Directory to save the summary report
      */
     Summary(final Path root, final Path target) {
         this.root = root;
@@ -51,20 +48,14 @@ public final class Summary {
 
     /**
      * Collects summary statistics from all child modules.
-     *
-     * @return The path to the generated summary report.
+     * @return The path to the generated summary report
      */
-    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
         final String stats = "hone-statistics.csv";
         try (Stream<Path> paths = Files.walk(this.root)) {
             paths.filter(Files::isRegularFile)
-                .filter(
-                    path -> path.getFileName()
-                        .toString()
-                        .equals(stats)
-                )
+                .filter(path -> stats.equals(path.getFileName().toString()))
                 .map(CSV::new)
                 .forEach(found::add);
         } catch (final IOException exception) {
@@ -80,17 +71,17 @@ public final class Summary {
         return destination;
     }
 
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private static CSV reduce(final List<CSV> csvs) {
-        final AtomicInteger index = new AtomicInteger(1);
         final CSV res = csvs.stream().reduce(CSV::add).orElseThrow(
             () -> new IllegalStateException(
                 "Failed to reduce summary statistics: no CSV files found."
             )
         );
-        final int size = res.size();
+        final AtomicInteger index = new AtomicInteger(1);
         return res.recompute(
             "ID",
-            ignore -> String.format("%d/%d", index.getAndIncrement(), size)
+            ignore -> String.format("%d/%d", index.getAndIncrement(), res.size())
         );
     }
 }

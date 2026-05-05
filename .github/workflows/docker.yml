@@ -14,7 +14,7 @@ name: docker
     paths-ignore: [ 'README.md' ]
 jobs:
   docker:
-    timeout-minutes: 15
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6

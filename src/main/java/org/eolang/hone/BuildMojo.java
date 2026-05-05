@@ -6,7 +6,7 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -40,7 +40,6 @@ public final class BuildMojo extends AbstractMojo {
 
     /**
      * Shall we use buildx?
-     *
      * @since 0.8.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -49,7 +48,6 @@ public final class BuildMojo extends AbstractMojo {
 
     /**
      * JEO version to use.
-     *
      * @since 0.20.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -85,7 +83,7 @@ public final class BuildMojo extends AbstractMojo {
             for (final String file : new String[] {"entry.sh", "rewrite.sh"}) {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
-            final List<String> args = new LinkedList<>();
+            final List<String> args = new ArrayList<>(0);
             if (this.useBuildx) {
                 args.add("buildx");
             }

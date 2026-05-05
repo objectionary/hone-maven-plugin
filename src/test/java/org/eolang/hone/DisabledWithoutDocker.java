@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * This annotation disables JUnit tests when Docker is
  * not runnable in command line.
- *
  * @since 0.1.0
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })

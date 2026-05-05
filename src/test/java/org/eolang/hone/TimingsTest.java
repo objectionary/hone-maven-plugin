@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Test case for {@link Timings}.
- *
  * @since 0.1.0
  */
 final class TimingsTest {
@@ -36,7 +35,7 @@ final class TimingsTest {
                 new String(Files.readAllBytes(file), StandardCharsets.UTF_8),
                 Matchers.allOf(
                     Matchers.containsString("foo,"),
-                    Matchers.containsString("\nbar,")
+                    Matchers.containsString(String.format("%nbar,"))
                 )
             );
         }

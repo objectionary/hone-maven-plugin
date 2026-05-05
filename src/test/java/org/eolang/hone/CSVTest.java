@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Test case for {@link CSV}.
- *
  * @since 0.1.0
  * @checkstyle AbbreviationAsWordInNameCheck (3 lines)
  */
@@ -28,7 +27,14 @@ final class CSVTest {
         final Path path = temp.resolve("test.csv");
         Files.write(
             path,
-            "ID,Before,After,Changed,LinesPerSec\n1/3,a.phi,b.phi,5,1000\n2/3,c.phi,d.phi,0,0\n3/3,e.phi,f.phi,3,800\n".getBytes(StandardCharsets.UTF_8)
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/3,a.phi,b.phi,5,1000",
+                "2/3,c.phi,d.phi,0,0",
+                "3/3,e.phi,f.phi,3,800",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
         );
         MatcherAssert.assertThat(
             "two files have Changed > 0",
@@ -42,7 +48,13 @@ final class CSVTest {
         final Path path = temp.resolve("test.csv");
         Files.write(
             path,
-            "ID,Before,After,Changed,LinesPerSec\n1/2,a.phi,b.phi,0,0\n2/2,c.phi,d.phi,0,0\n".getBytes(StandardCharsets.UTF_8)
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/2,a.phi,b.phi,0,0",
+                "2/2,c.phi,d.phi,0,0",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
         );
         MatcherAssert.assertThat(
             "no files have Changed > 0",

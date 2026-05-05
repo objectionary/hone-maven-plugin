@@ -10,10 +10,10 @@ import io.github.classgraph.Resource;
 import io.github.classgraph.ScanResult;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -41,6 +41,11 @@ final class Rules {
     private static final String RULES_PATH = "org/eolang/hone/rules";
 
     /**
+     * Splitter for pattern strings.
+     */
+    private static final Pattern SEPARATOR = Pattern.compile("\\s*,\\s*");
+
+    /**
      * Compiled regex patterns for rule matching with inclusion/exclusion flags.
      */
     private final Map<Pattern, Boolean> patterns;
@@ -55,6 +60,7 @@ final class Rules {
     /**
      * Creates a rule manager with specific patterns.
      * @param ptns Comma-separated patterns (e.g., "simple,b*,!abc")
+     * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
     Rules(final String ptns) {
         this.patterns = Rules.regexs(ptns);
@@ -77,8 +83,8 @@ final class Rules {
      * this method will return "none.yml 33-to-42.yml".</p>
      * @return Iterable of YAML file names for matching rules
      */
-    public Iterable<String> yamls() {
-        final Collection<String> files = new LinkedList<>();
+    Iterable<String> yamls() {
+        final Collection<String> files = new ArrayList<>(0);
         for (final String name : Rules.discover()) {
             if (!this.matches(name)) {
                 Logger.debug(this, "Rule %s doesn't match", name);
@@ -96,7 +102,7 @@ final class Rules {
      * @param dir Destination directory where rule files will be copied
      * @throws IOException If copying files fails
      */
-    public void copyTo(final Path dir) throws IOException {
+    void copyTo(final Path dir) throws IOException {
         if (dir.toFile().mkdirs()) {
             Logger.info(this, "Directory created at %[file]s", dir);
         }
@@ -145,26 +151,26 @@ final class Rules {
      */
     private static Map<Pattern, Boolean> regexs(final String ptns) {
         final Map<Pattern, Boolean> list = new HashMap<>(0);
-        for (final String ptn : ptns.split("\\s*,\\s*")) {
-            if (ptn.isEmpty()) {
-                continue;
+        Rules.SEPARATOR.splitAsStream(ptns).filter(ptn -> !ptn.isEmpty()).forEach(
+            ptn -> {
+                final boolean negative = ptn.charAt(0) == '!';
+                final String body;
+                if (negative) {
+                    body = ptn.substring(1);
+                } else {
+                    body = ptn;
+                }
+                list.put(
+                    Pattern.compile(
+                        String.format(
+                            "^\\Q%s\\E\\.(yml|phr)$",
+                            body.replace("*", "\\E.*\\Q")
+                        ).replace("\\Q\\E", "")
+                    ),
+                    !negative
+                );
             }
-            boolean negative = false;
-            String body = ptn;
-            if (ptn.charAt(0) == '!') {
-                negative = true;
-                body = body.substring(1);
-            }
-            list.put(
-                Pattern.compile(
-                    String.format(
-                        "^\\Q%s\\E\\.(yml|phr)$",
-                        body.replace("*", "\\E.*\\Q")
-                    ).replace("\\Q\\E", "")
-                ),
-                !negative
-            );
-        }
+        );
         return list;
     }
 
@@ -173,10 +179,12 @@ final class Rules {
      * @return Array of rule names discovered from classpath resources
      */
     private static String[] discover() {
-        final List<String> names = new LinkedList<>();
-        try (ScanResult scan = new ClassGraph()
-            .acceptPaths(Rules.RULES_PATH)
-            .scan()) {
+        final List<String> names = new ArrayList<>(0);
+        try (
+            ScanResult scan = new ClassGraph()
+                .acceptPaths(Rules.RULES_PATH)
+                .scan()
+        ) {
             for (final Resource resource : scan.getAllResources()) {
                 final String path = resource.getPath();
                 if (!path.endsWith(".phr") && !path.endsWith(".yml")) {

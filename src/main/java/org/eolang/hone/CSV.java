@@ -4,8 +4,9 @@
  */
 package org.eolang.hone;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +25,6 @@ import org.cactoos.list.ListOf;
 
 /**
  * CSV summary .
- *
  * @since 0.1.0
  * @checkstyle AbbreviationAsWordInNameCheck (3 lines)
  */
@@ -42,8 +42,8 @@ public final class CSV {
 
     /**
      * Constructor.
-     *
      * @param root CSV file path
+     * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
     CSV(final Path root) {
         this(CSV.from(root));
@@ -51,8 +51,8 @@ public final class CSV {
 
     /**
      * Constructor.
-     *
      * @param records CSV records
+     * @checkstyle ConstructorsCodeFreeCheck (5 lines)
      */
     private CSV(final List<CSVRecord> records) {
         this(
@@ -63,7 +63,6 @@ public final class CSV {
 
     /**
      * Constructor.
-     *
      * @param headers CSV headers
      * @param records CSV records
      */
@@ -77,9 +76,8 @@ public final class CSV {
 
     /**
      * Combines this CSV with another CSV, concatenating their records.
-     *
-     * @param other The other CSV to combine with this one.
-     * @return A new CSV instance containing the combined records of both CSVs.
+     * @param other The other CSV to combine with this one
+     * @return A new CSV instance containing the combined records of both CSVs
      */
     CSV add(final CSV other) {
         final List<Map<String, String>> combined = new ArrayList<>(this.records);
@@ -89,8 +87,7 @@ public final class CSV {
 
     /**
     * Number of records in the CSV.
-    *
-    * @return The number of records in the CSV.
+    * @return The number of records in the CSV
     */
     int size() {
         return this.records.size();
@@ -98,10 +95,9 @@ public final class CSV {
 
     /**
      * Counts rows where a column value matches the given condition.
-     *
-     * @param header The column name to check.
-     * @param condition Predicate applied to the column value.
-     * @return Number of matching rows.
+     * @param header The column name to check
+     * @param condition Predicate applied to the column value
+     * @return Number of matching rows
      */
     int count(final String header, final Predicate<String> condition) {
         return (int) this.records.stream()
@@ -111,10 +107,9 @@ public final class CSV {
 
     /**
      * Recomputes the values of a column using a transformation function.
-     *
-     * @param header The name of the column to recompute.
-     * @param modification Transformation function.
-     * @return A new CSV instance with the recomputed values.
+     * @param header The name of the column to recompute
+     * @param modification Transformation function
+     * @return A new CSV instance with the recomputed values
      */
     CSV recompute(
         final String header,
@@ -122,21 +117,19 @@ public final class CSV {
     ) {
         return new CSV(
             this.headers,
-            this.records.stream()
-                .map(
-                    row -> {
-                        final Map<String, String> data = new HashMap<>(row);
-                        data.put(header, modification.apply(row.get(header)));
-                        return data;
-                    }
-                ).collect(Collectors.toList())
+            this.records.stream().map(
+                row -> {
+                    final Map<String, String> data = new HashMap<>(row);
+                    data.put(header, modification.apply(row.get(header)));
+                    return data;
+                }
+            ).collect(Collectors.toList())
         );
     }
 
     /**
      * Flushes the CSV content to the specified file path.
-     *
-     * @param res The path to the file where the CSV content should be written.
+     * @param res The path to the file where the CSV content should be written
      */
     void flush(final Path res) {
         try (
@@ -164,15 +157,20 @@ public final class CSV {
             .collect(Collectors.toList());
     }
 
-    @SuppressWarnings({"PMD.AvoidFileStream", "PMD.RelianceOnDefaultCharset"})
+    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private static List<CSVRecord> from(final Path csv) {
-        try {
+        try (
+            Reader reader = new InputStreamReader(
+                Files.newInputStream(csv),
+                StandardCharsets.UTF_8
+            )
+        ) {
             return new ListOf<>(
                 CSVFormat.DEFAULT.builder()
                     .setHeader()
                     .setSkipHeaderRecord(false)
                     .get()
-                    .parse(new FileReader(csv.toFile()))
+                    .parse(reader)
                     .iterator()
             );
         } catch (final IOException exception) {

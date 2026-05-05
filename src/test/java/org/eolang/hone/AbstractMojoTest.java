@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Test case for {@link AbstractMojo}.
- *
  * @since 0.1.0
  */
 final class AbstractMojoTest {
@@ -20,14 +19,14 @@ final class AbstractMojoTest {
     void returnsDefaultPhinoVersion() throws IOException {
         MatcherAssert.assertThat(
             "the default phino version must be returned from resource file",
-            new FakeAbstractMojo().phino(),
+            new AbstractMojoTest.FakeAbstractMojo().phino(),
             Matchers.matchesPattern("\\d+\\.\\d+\\.\\d+\\.\\d+")
         );
     }
 
     @Test
     void returnsSamePhinoVersionOnMultipleCalls() throws IOException {
-        final FakeAbstractMojo mojo = new FakeAbstractMojo();
+        final AbstractMojoTest.FakeAbstractMojo mojo = new AbstractMojoTest.FakeAbstractMojo();
         MatcherAssert.assertThat(
             "the phino version must be consistent across multiple calls",
             mojo.phino(),
@@ -37,7 +36,6 @@ final class AbstractMojoTest {
 
     /**
      * Fake implementation of AbstractMojo for testing.
-     *
      * @since 0.1.0
      */
     private static final class FakeAbstractMojo extends AbstractMojo {

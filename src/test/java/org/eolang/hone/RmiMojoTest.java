@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Test case for {@link RmiMojo}.
- *
  * @since 0.1.0
  */
 @ExtendWith(MktmpResolver.class)
@@ -27,7 +26,6 @@ final class RmiMojoTest {
     @Tag("deep")
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
     void pullsAndRemovesDockerImage(@Mktmp final Path dir) throws Exception {
         new Farea(dir).together(
             f -> {

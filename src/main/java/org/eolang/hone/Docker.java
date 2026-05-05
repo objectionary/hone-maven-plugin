@@ -7,9 +7,9 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import com.jcabi.log.VerboseProcess;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -50,7 +50,7 @@ final class Docker {
      * @return Exit code (always 0 on success)
      * @throws IOException If the command fails or returns non-zero exit code
      */
-    public int exec(final String... args) throws IOException {
+    int exec(final String... args) throws IOException {
         return this.exec(Arrays.asList(args));
     }
 
@@ -58,7 +58,7 @@ final class Docker {
      * Docker executable is available?
      * @return TRUE if Docker is here
      */
-    public boolean available() {
+    boolean available() {
         boolean yes = true;
         try {
             this.exec("--version");
@@ -75,8 +75,8 @@ final class Docker {
      * @return Exit code (always 0 on success)
      * @throws IOException If the command fails or returns non-zero exit code
      */
-    public int exec(final Collection<String> args) throws IOException {
-        final List<String> command = new LinkedList<>();
+    int exec(final Collection<String> args) throws IOException {
+        final List<String> command = new ArrayList<>(args.size() + 2);
         if (this.sudo) {
             command.add("sudo");
         }
@@ -95,9 +95,13 @@ final class Docker {
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));
-        try (VerboseProcess proc = new VerboseProcess(
-            new ProcessBuilder(command), Level.INFO, Level.INFO
-        )) {
+        try (
+            VerboseProcess proc = new VerboseProcess(
+                new ProcessBuilder(command),
+                Level.INFO,
+                Level.INFO
+            )
+        ) {
             final VerboseProcess.Result ret = proc.waitFor();
             Logger.info(
                 this, "+ %s -> 0x%04x in %[ms]s",
@@ -115,5 +119,4 @@ final class Docker {
         }
         return 0;
     }
-
 }

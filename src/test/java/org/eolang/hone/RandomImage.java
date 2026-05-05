@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
  * This annotation is used in unit tests in order to signal
  * to JUnit that a certain method argument must be generated
  * through the {@link RandomImageResolver}.
- *
  * @since 0.1.0
  */
 @Target(ElementType.PARAMETER)

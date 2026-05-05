@@ -30,7 +30,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * The "target/" directory of Maven project.
-     *
      * @since 0.1.0
      */
     @Parameter(
@@ -52,14 +51,12 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Timings tracker for performance measurements.
-     *
      * @since 0.1.0
      */
     protected Timings timings;
 
     /**
      * Docker image to use.
-     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.image", defaultValue = "yegor256/hone:latest")
@@ -67,7 +64,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Whether to use "sudo" when executing Docker commands.
-     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.sudo", defaultValue = "false")
@@ -88,7 +84,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Phino version to use.
-     *
      * @since 0.21.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -97,7 +92,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Skip the execution, if set to TRUE.
-     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.skip", defaultValue = "false")
@@ -105,7 +99,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Skip the execution, if Docker is not available.
-     *
      * @since 0.22.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -114,7 +107,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Skip the execution, if it's Windows.
-     *
      * @since 0.23.0
      * @checkstyle MemberNameCheck (6 lines)
      */

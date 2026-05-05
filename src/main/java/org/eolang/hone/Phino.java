@@ -11,7 +11,6 @@ import java.io.IOException;
 
 /**
  * An abstraction of Phino in command line.
- *
  * @since 0.17.0
  */
 final class Phino {
@@ -21,7 +20,7 @@ final class Phino {
      * @param expected This is the expected version
      * @return TRUE if available
      */
-    public boolean available(final String expected) {
+    boolean available(final String expected) {
         boolean available = false;
         try {
             final Result result = new Jaxec("phino", "--version").withCheck(false).execUnsafe();
@@ -31,10 +30,8 @@ final class Phino {
                     available = true;
                     Logger.info(
                         this,
-                        String.format(
-                            "The 'phino' executable found (%s), no need to use Docker",
-                            version
-                        )
+                        "The 'phino' executable found (%s), no need to use Docker",
+                        version
                     );
                 } else {
                     Logger.info(
@@ -52,13 +49,10 @@ final class Phino {
         } catch (final IOException ex) {
             Logger.info(
                 this,
-                String.format(
-                    "The 'phino' executable not found, we must use Docker: %s",
-                    ex.getMessage()
-                )
+                "The 'phino' executable not found, we must use Docker: %s",
+                ex.getMessage()
             );
         }
         return available;
     }
-
 }

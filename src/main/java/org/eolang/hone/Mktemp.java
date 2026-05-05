@@ -31,17 +31,10 @@ final class Mktemp implements Closeable {
     /**
      * Creates a new temporary directory.
      * @throws IOException If directory creation fails
+     * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
     Mktemp() throws IOException {
         this.dir = Files.createTempDirectory("tmp");
-    }
-
-    /**
-     * Get the path to the temporary directory.
-     * @return Path of the temporary directory
-     */
-    public Path path() {
-        return this.dir;
     }
 
     @Override
@@ -52,5 +45,13 @@ final class Mktemp implements Closeable {
                 .sorted(Comparator.reverseOrder())
                 .forEach(File::delete);
         }
+    }
+
+    /**
+     * Get the path to the temporary directory.
+     * @return Path of the temporary directory
+     */
+    Path path() {
+        return this.dir;
     }
 }

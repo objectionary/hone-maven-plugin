@@ -13,10 +13,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -81,9 +82,13 @@ public final class OptimizeMojo extends AbstractMojo {
     static final String DEFAULT_GREP_IN = ">(66-69-6C-74-65-72|6D-61-70)<";
 
     /**
+     * Splitter for comma-separated values (with optional whitespace).
+     */
+    private static final Pattern COMMA = Pattern.compile("\\s*,\\s*");
+
+    /**
      * Location of <tt>.class</tt> files to optimize inside
      * the {@code target} directory.
-     *
      * @since 0.8.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -114,7 +119,6 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * List of extra rules to use for optimization, provided as
      * YAML files.
-     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -123,7 +127,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * EO version to use.
-     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -165,7 +168,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * Skip if no .class files found.
-     *
      * @since 0.16.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -256,7 +258,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * The list of all file extensions for the extra rules.
-     *
      * @since 0.5.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -293,7 +294,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * JEO version to use.
-     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -302,7 +302,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * EO cache directory.
-     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (7 lines)
      * @checkstyle VisibilityModifierCheck (10 lines)
@@ -329,7 +328,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * Return the user and group IDs of the current user, using the given C library.
-     *
      * @param lib The C library to query for the IDs
      * @return A string in the format "uid:gid"
      */
@@ -343,8 +341,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
     * Check if the classes directory is absent or doesn't have classes.
-    *
-    * @return True if there are no class files, false otherwise.
+    * @return True if there are no class files, false otherwise
     */
     private boolean withoutClasses() {
         final Path dir = this.target.toPath().resolve(this.classes);
@@ -400,7 +397,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private void withDocker() throws IOException {
         final String tdir = "/target";
         final String cdir = "/eo-cache";
-        final Collection<String> command = new LinkedList<>(
+        final Collection<String> command = new ArrayList<>(
             Arrays.asList(
                 "run",
                 "--rm",
@@ -534,9 +531,13 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     private void saveExtra(final Path src, final Path target) throws IOException {
+        final long count;
+        try (Stream<Path> stream = Files.list(target)) {
+            count = stream.count();
+        }
         final String name = String.format(
             "%04d-%s.yml",
-            Files.list(target).collect(Collectors.toList()).size(),
+            count,
             src.getFileName().toString().replaceAll("\\.[a-zA-Z0-9]+$", "")
         );
         final Path copy = target.resolve(name);
@@ -556,7 +557,6 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
-    @SuppressWarnings("PMD.CognitiveComplexity")
     private void copyExtras(final Path extdir) throws IOException {
         if (this.extra != null) {
             if (extdir.toFile().mkdirs()) {
@@ -570,21 +570,15 @@ public final class OptimizeMojo extends AbstractMojo {
                         "Scanning %[file]s for extra rules (%s)...",
                         src, this.extraExtensions
                     );
+                    final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
                     try (Stream<Path> files = Files.list(src)) {
-                        final List<Path> yamls = files
-                            .filter(
-                                f -> {
-                                    boolean match = false;
-                                    for (final String extn : this.extraExtensions.split(",")) {
-                                        match = match || f.getFileName().toString().endsWith(
-                                            String.format(".%s", extn.trim())
-                                        );
-                                    }
-                                    return match;
-                                }
+                        final List<Path> yamls = files.filter(
+                            f -> Arrays.stream(exts).anyMatch(
+                                extn -> f.getFileName().toString().endsWith(
+                                    String.format(".%s", extn.trim())
+                                )
                             )
-                            .sorted()
-                            .collect(Collectors.toList());
+                        ).sorted().collect(Collectors.toList());
                         for (final Path yaml : yamls) {
                             this.saveExtra(yaml, extdir);
                         }
@@ -598,7 +592,6 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * Return the user and group IDs of the current user.
-     *
      * @return A string in the format "uid:gid"
      */
     private static String whoami() {
@@ -717,6 +710,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.6.0
      */
     public interface CLibrary extends Library {
+
         /**
          * Instance of the C library.
          *
@@ -726,21 +720,18 @@ public final class OptimizeMojo extends AbstractMojo {
 
         /**
          * Get the user ID of the calling process.
-         *
          * @return The user ID
          */
         int getuid();
 
         /**
          * Get the effective user ID of the calling process.
-         *
          * @return The effective user ID
          */
         int geteuid();
 
         /**
          * Get the group ID of the calling process.
-         *
          * @return The group ID
          */
         int getgid();

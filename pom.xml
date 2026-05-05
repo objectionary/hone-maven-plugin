@@ -325,7 +325,7 @@
           <plugin>
             <groupId>com.qulice</groupId>
             <artifactId>qulice-maven-plugin</artifactId>
-            <version>0.25.1</version>
+            <version>0.27.6</version>
             <configuration>
               <excludes>
                 <exclude>pmd:/src/it/.*</exclude>
@@ -335,6 +335,7 @@
                 <exclude>checkstyle:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
                 <exclude>checkstyle:/src/test/java/org/eolang/hone/OptimizeMojoTest.java</exclude>
                 <exclude>pmd:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
+                <exclude>errorprone:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
                 <exclude>duplicatefinder:.*</exclude>
               </excludes>
             </configuration>

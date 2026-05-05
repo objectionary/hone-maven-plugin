@@ -11,10 +11,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 /**
  * This annotation disables JUnit tests when phino is
  * not runnable in command line.
- *
  * @since 0.1.0
  */
 public final class DisabledWithoutPhinoCondition implements ExecutionCondition {
+
     @Override
     @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
     public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext ctx) {

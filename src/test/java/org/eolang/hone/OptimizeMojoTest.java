@@ -29,7 +29,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link OptimizeMojo}.
- *
  * @since 0.1.0
  * @todo #440:90min enable 'grep-in' tests.
  *  The following tests are disabled because they fail on Rultor:
@@ -46,8 +45,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @ExtendWith(MktmpResolver.class)
 @SuppressWarnings({
     "PMD.AvoidDuplicateLiterals",
-    "PMD.TooManyMethods",
-    "PMD.UnitTestShouldIncludeAssert"
+    "PMD.TooManyMethods"
 })
 final class OptimizeMojoTest {
 
@@ -637,7 +635,6 @@ final class OptimizeMojoTest {
     @Tag("deep")
     @DisabledWithoutDocker
     @ExtendWith(MayBeSlow.class)
-    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     void optimizesJustOneLargeJnaClass(@Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final String path = "com/sun/jna/Pointer.class";
@@ -1199,7 +1196,6 @@ final class OptimizeMojoTest {
      * Fixed-value stub of {@link OptimizeMojo.CLibrary} that returns
      * distinct values for uid, euid, and gid so callers can be checked
      * for picking up the right one.
-     *
      * @since 0.6.0
      */
     private static final class FakeCLibrary implements OptimizeMojo.CLibrary {

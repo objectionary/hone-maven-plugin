@@ -114,7 +114,7 @@ from [JNA](https://github.com/java-native-access/jna):
 ```
 
 The results were calculated in [this GHA job][benchmark-gha]
-on 2025-12-17 at 13:53,
+on 2026-05-05 at 09:40,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
@@ -137,7 +137,7 @@ The versions of [EO] and
 that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
-[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/20305168836
+[benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/25369001843
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

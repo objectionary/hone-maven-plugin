@@ -66,8 +66,7 @@ public final class BuildMojo extends AbstractMojo {
         }
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
-                "Dockerfile", "entry.sh", "pom.xml",
-                "rewrite.sh", "extensions.xml", "settings.xml",
+                "Dockerfile", "entry.sh", "rewrite.sh", "settings.xml",
             };
             for (final String file : files) {
                 new IoChecked<>(

@@ -184,7 +184,7 @@ function record_timing {
 }
 
 function elapsed {
-  perl -E "say sprintf('%.3f', $(date '+%s.%N') - ${1})"
+  awk -v start="${1}" -v end="$(date '+%s.%N')" 'BEGIN { printf "%.3f\n", end - start }'
 }
 
 start=$(date '+%s.%N')

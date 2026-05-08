@@ -36,8 +36,8 @@ final class Phino {
                 } else {
                     Logger.info(
                         this,
-                        "The 'phino' executable is found, but its version (%s) is not equal to the expected one (%s)",
-                        version, expected
+                        "The 'phino' executable is found, but its version (%s) is not equal to the expected one (%s); you can upgrade it via 'cabal update && cabal install --overwrite-policy=always phino-%s' (see https://github.com/objectionary/phino for details)",
+                        version, expected, expected
                     );
                 }
             } else {

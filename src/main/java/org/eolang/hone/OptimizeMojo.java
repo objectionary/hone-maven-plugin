@@ -614,7 +614,6 @@ public final class OptimizeMojo extends AbstractMojo {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
                 "entry.sh",
-                "pom.xml",
                 "rewrite.sh",
             };
             for (final String file : files) {

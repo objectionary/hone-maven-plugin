@@ -81,7 +81,12 @@ if [ "${v}" != "${PHINO_VERSION}" ]; then
   exit 1
 fi
 
-# Maven options for all steps:
+if [ -z "${JEO_VERSION}" ]; then
+  echo "JEO_VERSION is not set"
+  exit 1
+fi
+
+# Maven options shared by both jeo invocations:
 declare -a opts=(
   '--update-snapshots'
   '--fail-fast'
@@ -90,7 +95,7 @@ declare -a opts=(
   '--batch-mode'
   '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
-  "-Dexec.phino.target=${TARGET}"
+  "-Djeo.version=${JEO_VERSION}"
 )
 if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
   opts+=("--settings=${WORKDIR}/settings.xml")
@@ -100,15 +105,7 @@ if [ -n "${EO_VERSION}" ]; then
   opts+=("-Deo.version=${EO_VERSION}")
   echo "Using EO version ${EO_VERSION}"
 fi
-if [ -n "${JEO_VERSION}" ]; then
-  opts+=("-Djeo.version=${JEO_VERSION}")
-  echo "Using JEO version ${JEO_VERSION}"
-fi
-opts+=(
-  "-Dbuildtime.output.csv=true"
-  "-Dbuildtime.output.csv.file=${TARGET}/timings.csv"
-)
-opts+=("-Deo.xslMeasuresFile=${TARGET}/xsl-measures.csv")
+echo "Using JEO version ${JEO_VERSION}"
 
 if [ -z "${RULES}" ]; then
   RULES=$(find "${SELF}/rules" -name '*.yml' -exec "${RP}" {} \;)
@@ -144,46 +141,87 @@ printf 'Using the following %d rules:\n\t%b\n' \
   "$(( "$(echo "${RULES}" | grep -o ' ' | wc -l)" + 1))" \
   "${RULES// /\\n\\t}"
 
-if [ -n "${INCLUDES}" ]; then
-  opts+=("-Djeo.disassemble.includes=${INCLUDES}")
-  opts+=("-Djeo.assemble.includes=${INCLUDES}")
-fi
-if [ -n "${EXCLUDES}" ]; then
-  opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
-  opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
-fi
-
-opts+=(
+declare -a disassemble_opts=(
+  "${opts[@]}"
   "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}"
   "-Djeo.disassemble.outputDir=${TARGET}/hone/jeo-disassemble"
-  "-Dexec.phino.script=${SELF}/rewrite.sh"
-  "-Dexec.phino.verbose=${VERBOSE}"
-  "-Dexec.phino.debug=${DEBUG}"
-  "-Dexec.phino.rules=${RULES}"
-  "-Dexec.phino.grep-in=${GREP_IN}"
-  "-Dexec.phino.xmir-in=${TARGET}/hone/jeo-disassemble"
-  "-Dexec.phino.from=${TARGET}/hone/phi"
-  "-Dexec.phino.to=${TARGET}/hone/phi-optimized"
-  "-Dexec.phino.xmir-out=${TARGET}/hone/unphi"
-  "-Dexec.phino.small-steps=${SMALL_STEPS}"
-  "-Dexec.phino.timeout=${TIMEOUT}"
-  "-Dexec.phino.threads=${THREADS}"
-  "-Dexec.phino.max-depth=${MAX_DEPTH}"
-  "-Dexec.phino.max-cycles=${MAX_CYCLES}"
-  "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}"
+  "-Djeo.disassemble.mode=debug"
+  "-Djeo.disassemble.xmir.modifiers=true"
+  "-Djeo.disassemble.omitComments=true"
+  "-Djeo.disassemble.omitListings=true"
+  "-Djeo.disassemble.prettyXmir=true"
+  "-Djeo.disassemble.xmir.verification=false"
 )
-
-opts+=('jeo:disassemble')
+declare -a assemble_opts=(
+  "${opts[@]}"
+  "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}"
+  "-Djeo.assemble.xmir.verification=false"
+  "-Djeo.assemble.skip.verification=true"
+)
+if [ -n "${INCLUDES}" ]; then
+  disassemble_opts+=("-Djeo.disassemble.includes=${INCLUDES}")
+  assemble_opts+=("-Djeo.assemble.includes=${INCLUDES}")
+fi
+if [ -n "${EXCLUDES}" ]; then
+  disassemble_opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
+  assemble_opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
+fi
 if [ "${SKIP_PHINO}" == 'true' ]; then
   echo "Skipping the phino step as requested"
-  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/jeo-disassemble")
+  assemble_opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/jeo-disassemble")
 else
-  opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/unphi")
-  opts+=('exec:exec')
+  assemble_opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/unphi")
 fi
-opts+=('jeo:assemble')
 
+timings_csv="${TARGET}/timings.csv"
+mkdir -p "$(dirname "${timings_csv}")"
+echo '"Module";"Mojo";"Time"' > "${timings_csv}"
+
+function record_timing {
+  local mojo="${1}"
+  local seconds="${2}"
+  printf '"hone";"%s";"%s"\n' "${mojo}" "${seconds}" >> "${timings_csv}"
+}
+
+function elapsed {
+  awk -v start="${1}" -v end="$(date '+%s.%N')" 'BEGIN { printf "%.3f\n", end - start }'
+}
+
+start=$(date '+%s.%N')
 (
   set -x
-  mvn "${opts[@]}"
+  mvn "${disassemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:disassemble"
 )
+record_timing "jeo-maven-plugin:disassemble (default-cli)" "$(elapsed "${start}")"
+
+if [ "${SKIP_PHINO}" != 'true' ]; then
+  export TARGET
+  export HONE_VERSION
+  export HONE_VERBOSE="${VERBOSE}"
+  export HONE_DEBUG="${DEBUG}"
+  export HONE_RULES="${RULES}"
+  export HONE_GREP_IN="${GREP_IN}"
+  export HONE_XMIR_IN="${TARGET}/hone/jeo-disassemble"
+  export HONE_FROM="${TARGET}/hone/phi"
+  export HONE_TO="${TARGET}/hone/phi-optimized"
+  export HONE_XMIR_OUT="${TARGET}/hone/unphi"
+  export HONE_SMALL_STEPS="${SMALL_STEPS}"
+  export HONE_MAX_DEPTH="${MAX_DEPTH}"
+  export HONE_MAX_CYCLES="${MAX_CYCLES}"
+  export HONE_THREADS="${THREADS}"
+  export HONE_TIMEOUT="${TIMEOUT}"
+  export HONE_STATISTICS
+  start=$(date '+%s.%N')
+  (
+    set -x
+    "${SELF}/rewrite.sh"
+  )
+  record_timing "phino:rewrite (default-cli)" "$(elapsed "${start}")"
+fi
+
+start=$(date '+%s.%N')
+(
+  set -x
+  mvn "${assemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:assemble"
+)
+record_timing "jeo-maven-plugin:assemble (default-cli)" "$(elapsed "${start}")"

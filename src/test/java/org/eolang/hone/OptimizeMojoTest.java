@@ -1200,6 +1200,19 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void createsParallelTmpdirBeforeRunningParallel() throws Exception {
+        MatcherAssert.assertThat(
+            "rewrite.sh must create the parallel tmpdir before invoking 'parallel', otherwise GNU parallel fails with 'Cant dup STDOUT: No such file or directory' (see #506)",
+            new IoCheckedText(
+                new TextOf(
+                    new ResourceOf("org/eolang/hone/scaffolding/rewrite.sh")
+                )
+            ).asString(),
+            Matchers.containsString("mkdir -p \"${PARALLEL_HOME}/tmp\"")
+        );
+    }
+
+    @Test
     void formatsWhoamiAsUidColonGid() {
         MatcherAssert.assertThat(
             "whoami must format the Docker --user value as 'uid:gid', not 'uid:euid' (see #492)",

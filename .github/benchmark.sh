@@ -7,6 +7,8 @@ set -e -o pipefail
 git fetch --tags --force
 latest=$(git tag --sort=creatordate | tail -1)
 docker pull "yegor256/hone:${latest}"
+test -s target/jna-summary.txt || { echo "target/jna-summary.txt missing or empty, run the JNA benchmark test first" >&2; exit 1; }
+test -s target/timings.csv || { echo "target/timings.csv missing or empty, run the JNA benchmark test first" >&2; exit 1; }
 sum=$(
   printf "\`\`\`text\n"
   cat target/jna-summary.txt

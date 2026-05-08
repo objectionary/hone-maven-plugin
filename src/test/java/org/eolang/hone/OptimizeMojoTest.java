@@ -18,6 +18,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
@@ -1178,6 +1181,21 @@ final class OptimizeMojoTest {
                 "<o as=\"α0\">66-69-6C-74-65-72-65-64</o>"
             ).find(),
             Matchers.is(false)
+        );
+    }
+
+    @Test
+    void hasZeroDefaultThreadsInPluginDescriptor() throws Exception {
+        MatcherAssert.assertThat(
+            "default 'threads' parameter must be 0 so that all CPUs are used by default (see #500)",
+            new IoCheckedText(
+                new TextOf(
+                    new ResourceOf("META-INF/maven/plugin.xml")
+                )
+            ).asString(),
+            Matchers.containsString(
+                "<threads implementation=\"int\" default-value=\"0\">"
+            )
         );
     }
 

@@ -243,17 +243,16 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * How many threads to use for rewriting?
      *
-     * <p>By default, it's a single-threaded process. However, it may be
-     * rather slow for large projects. It is recommended to use values
-     * that are close to the number of CPUs you have on your machine.</p>
-     *
-     * <p>If you set this parameter to zero, the number of threads
-     * will be set to the number of CPUs on the machine.</p>
+     * <p>By default, it is set to zero, which means the number of threads
+     * will be set to the number of CPUs on the machine. This is normally
+     * the most efficient choice for large projects. Set it to <tt>1</tt>
+     * to disable parallelism, or to any positive value to cap the number
+     * of worker threads.</p>
      *
      * @since 0.11.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.threads", defaultValue = "1")
+    @Parameter(property = "hone.threads", defaultValue = "0")
     private int threads;
 
     /**

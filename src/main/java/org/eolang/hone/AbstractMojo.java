@@ -59,7 +59,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * Docker image to use.
      * @since 0.1.0
      */
-    @Parameter(property = "hone.image", defaultValue = "yegor256/hone:latest")
+    @Parameter(property = "hone.image", defaultValue = "yegor256/hone:0.26.2")
     protected String image;
 
     /**

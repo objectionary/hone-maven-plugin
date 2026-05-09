@@ -232,11 +232,9 @@ else
   echo "Starting to rewrite ${total} file(s) in ${threads} thread(s)..."
   export PARALLEL_HOME=${TARGET}/parallel
   mkdir -p "${PARALLEL_HOME}"
-  mkdir -p "${PARALLEL_HOME}/tmp"
   parallel --record-env
   parallel --retries=0 "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
     "--max-procs=${threads}" \
-    "--tmpdir=${PARALLEL_HOME}/tmp" \
     --env _ \
     --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 fi

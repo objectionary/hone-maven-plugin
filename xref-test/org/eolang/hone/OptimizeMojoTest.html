@@ -1208,15 +1208,15 @@
 <a class="jxr_linenumber" name="L1200" href="#L1200">1200</a>     }
 <a class="jxr_linenumber" name="L1201" href="#L1201">1201</a> 
 <a class="jxr_linenumber" name="L1202" href="#L1202">1202</a>     @Test
-<a class="jxr_linenumber" name="L1203" href="#L1203">1203</a>     <strong class="jxr_keyword">void</strong> createsParallelTmpdirBeforeRunningParallel() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L1203" href="#L1203">1203</a>     <strong class="jxr_keyword">void</strong> doesNotPlaceParallelTmpdirOnHostMountedVolume() <strong class="jxr_keyword">throws</strong> Exception {
 <a class="jxr_linenumber" name="L1204" href="#L1204">1204</a>         MatcherAssert.assertThat(
-<a class="jxr_linenumber" name="L1205" href="#L1205">1205</a>             <span class="jxr_string">"rewrite.sh must create the parallel tmpdir before invoking 'parallel', otherwise GNU parallel fails with 'Cant dup STDOUT: No such file or directory' (see #506)"</span>,
+<a class="jxr_linenumber" name="L1205" href="#L1205">1205</a>             <span class="jxr_string">"rewrite.sh must not point parallel --tmpdir at the host-mounted ${TARGET} volume, since virtiofs (Docker Desktop on macOS) makes fstat fail with ENOENT on deleted-but-open files, which breaks parallel's grouped output and triggers 'Cant dup STDOUT: No such file or directory' (see #506)"</span>,
 <a class="jxr_linenumber" name="L1206" href="#L1206">1206</a>             <strong class="jxr_keyword">new</strong> IoCheckedText(
 <a class="jxr_linenumber" name="L1207" href="#L1207">1207</a>                 <strong class="jxr_keyword">new</strong> TextOf(
 <a class="jxr_linenumber" name="L1208" href="#L1208">1208</a>                     <strong class="jxr_keyword">new</strong> ResourceOf(<span class="jxr_string">"org/eolang/hone/scaffolding/rewrite.sh"</span>)
 <a class="jxr_linenumber" name="L1209" href="#L1209">1209</a>                 )
 <a class="jxr_linenumber" name="L1210" href="#L1210">1210</a>             ).asString(),
-<a class="jxr_linenumber" name="L1211" href="#L1211">1211</a>             Matchers.containsString(<span class="jxr_string">"mkdir -p \&quot;${PARALLEL_HOME}/tmp\&quot;"</span>)
+<a class="jxr_linenumber" name="L1211" href="#L1211">1211</a>             Matchers.not(Matchers.containsString(<span class="jxr_string">"--tmpdir=${PARALLEL_HOME}"</span>))
 <a class="jxr_linenumber" name="L1212" href="#L1212">1212</a>         );
 <a class="jxr_linenumber" name="L1213" href="#L1213">1213</a>     }
 <a class="jxr_linenumber" name="L1214" href="#L1214">1214</a> 

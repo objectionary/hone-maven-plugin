@@ -814,8 +814,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: fifty-to-sixty
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -823,8 +823,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: thirty-three-to-one
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -832,8 +832,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: hello-to-bye
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -841,8 +841,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: mama-to-papa
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -924,8 +924,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: fifty-to-sixty
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -933,8 +933,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: thirty-three-to-one
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -942,8 +942,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: hello-to-bye
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -951,8 +951,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: mama-to-papa
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1033,8 +1033,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: 321-to-567
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1042,8 +1042,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: 567-to-987
-                        pattern: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.org.eolang.bytes ( α0 ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()

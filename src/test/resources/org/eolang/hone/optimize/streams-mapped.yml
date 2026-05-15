@@ -25,5 +25,6 @@ log:
 opcodes:
   invokespecial: 1
   invokestatic: 13
+  invokevirtual: 5
   invokedynamic: 2
   return: 4

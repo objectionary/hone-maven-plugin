@@ -48,5 +48,6 @@ log:
 opcodes:
   invokespecial: 1
   invokestatic: 19
+  invokevirtual: 11
   invokedynamic: 16
   return: 9

@@ -179,6 +179,36 @@
       <version>0.0.4</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.eolang</groupId>
+      <artifactId>jucs</artifactId>
+      <version>0.2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>2.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-util</artifactId>
+      <version>9.7.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-tree</artifactId>
+      <version>9.7.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>9.9.1</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <resources>

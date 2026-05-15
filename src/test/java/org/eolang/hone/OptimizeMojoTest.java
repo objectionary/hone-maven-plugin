@@ -16,11 +16,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.cactoos.io.ResourceOf;
+import org.cactoos.iterable.Mapped;
 import org.cactoos.text.IoCheckedText;
 import org.cactoos.text.TextOf;
+import org.eolang.jucs.ClasspathSource;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
@@ -29,19 +34,20 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Test case for {@link OptimizeMojo}.
  * @since 0.1.0
  * @todo #440:90min enable 'grep-in' tests.
- *  The following tests are disabled because they fail on Rultor:
+ *  The following test is disabled because it fails on Rultor:
  *  <a href="https://github.com/objectionary/hone-maven-plugin/pull/458">PR</a>
- *  However, all the tests pass.
- *  We should find a reason why the following tests fail on specific
- *  environment and fix them:
- *  - {@link OptimizeMojoTest#skipsOptimizationDueGrepInOption}
- *  - {@link OptimizeMojoTest#doesNotSkipOptimizationDueGrepInOption}
- *  When this tests are fixed, remove @Disabled annotation.
+ *  However, all the tests pass locally.
+ *  We should find a reason why the following test fails on specific
+ *  environment and fix it:
+ *  - {@link OptimizeMojoTest#optimizesAsSpecifiedInYamlPack}
+ *  When this test is fixed, remove @Disabled annotation.
  */
 @Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
@@ -75,98 +81,92 @@ final class OptimizeMojoTest {
         );
     }
 
-    @Test
+    @ParameterizedTest
     @Tag("deep")
+    @Timeout(180L)
+    @ExtendWith(MayBeSlow.class)
     @DisabledWithoutDocker
-    void doesNotSkipOptimizationDueGrepInOption(@Mktmp final Path dir)
-    throws Exception {
-        new Farea(dir).together(
-            f -> {
-                f.clean();
-                f.files()
-                    .file("src/main/java/mapped/X.java")
-                    .write(
-                        """
-                        package mapped;
-                        import java.util.*;
-                        import java.util.stream.*;
-
-                        class X {
-                            public static void main(String[] a) {
-                              List<Integer> r = Arrays.asList(1,2,3,4).stream()
-                                  .map(n->n*2)
-                                  .filter(n->n%2==0)
-                                  .map(n->n+1)
-                                  .map(n->n+2)
-                                  .collect(Collectors.toList());
-                              System.out.println(r);
-                            }
-                        }
-                        """.getBytes(StandardCharsets.UTF_8)
-                    );
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("test")
-                    .goals("optimize")
-                    .configuration()
-                    .set("rules", "streams/*");
-                f.exec("process-classes");
-                MatcherAssert.assertThat(
-                    "phino should optimize (rewrite) exactly one file",
-                    f.log().content(),
-                    Matchers.allOf(
-                        Matchers.containsString("Modified 1/1 X.phi"),
-                        Matchers.containsString("Finished rewriting 1 file"),
-                        Matchers.containsString("BUILD SUCCESS")
-                    )
-                );
-            }
+    @ClasspathSource(value = "org/eolang/hone/optimize", glob = "**.yml")
+    @SuppressWarnings("unchecked")
+    void optimizesAsSpecifiedInYamlPack(final String yaml, @Mktmp final Path dir,
+        @RandomImage final String image) throws Exception {
+        final Map<String, Object> pack = new Yaml().load(yaml);
+        final String code = (String) pack.get("java");
+        final Map<String, Integer> opcodes = (Map<String, Integer>) pack.get("opcodes");
+        final Matcher pkg = Pattern.compile("package\\s+([\\w.]+)\\s*;").matcher(code);
+        if (!pkg.find()) {
+            throw new IllegalStateException(
+                String.format("YAML pack lacks 'package' declaration in 'java' field: %s", yaml)
+            );
+        }
+        final Matcher cls = Pattern.compile("class\\s+(\\w+)").matcher(code);
+        if (!cls.find()) {
+            throw new IllegalStateException(
+                String.format("YAML pack lacks 'class' declaration in 'java' field: %s", yaml)
+            );
+        }
+        final String path = String.format(
+            "src/main/java/%s/%s.java",
+            pkg.group(1).replace('.', '/'),
+            cls.group(1)
         );
-    }
-
-    @Test
-    @Tag("deep")
-    @DisabledWithoutDocker
-    void skipsOptimizationDueGrepInOption(@Mktmp final Path dir)
-    throws Exception {
+        final String bytecode = String.format(
+            "target/classes/%s/%s.class",
+            pkg.group(1).replace('.', '/'),
+            cls.group(1)
+        );
         new Farea(dir).together(
             f -> {
                 f.clean();
                 f.files()
-                    .file("src/main/java/rand/X.java")
-                    .write(
-                        """
-                        package rand;
-                        import java.util.*;
-                        import java.util.stream.*;
-
-                        class X {
-                            public static void main(String[] a) {
-                              System.out.println("Don't optimize me, pls");
-                            }
-                        }
-                        """.getBytes(StandardCharsets.UTF_8)
-                    );
+                    .file(path)
+                    .write(code.getBytes(StandardCharsets.UTF_8));
                 f.build()
                     .plugins()
                     .appendItself()
                     .execution("default")
-                    .phase("test")
-                    .goals("optimize")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
                     .configuration()
-                    .set("rules", "streams/*");
+                    .set("rules", "streams/*")
+                    .set("image", image);
+                f.build()
+                    .plugins()
+                    .append("org.codehaus.mojo", "exec-maven-plugin", "3.5.0")
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("java")
+                    .configuration()
+                    .set("mainClass", String.format("%s.%s", pkg.group(1), cls.group(1)));
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
-                    "phino should skip optimization if the default grep-in does not match any of the instructions",
+                    String.format(
+                        "log lacks one of the expected substrings for pack at %s",
+                        path
+                    ),
                     f.log().content(),
                     Matchers.allOf(
-                        Matchers.containsString("No grep-in match for 1/1 X.xmir"),
-                        Matchers.containsString("Finished rewriting 1 file"),
-                        Matchers.containsString("BUILD SUCCESS")
+                        new Mapped<>(Matchers::containsString, (List<String>) pack.get("log"))
                     )
                 );
+                if (opcodes != null) {
+                    final Map<String, Integer> actual = new ClassOpcodes(
+                        f.files().file(bytecode).path()
+                    ).counts();
+                    final List<org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>> checks =
+                        new ArrayList<>(opcodes.size());
+                    for (final Map.Entry<String, Integer> entry : opcodes.entrySet()) {
+                        checks.add(Matchers.hasEntry(entry.getKey(), entry.getValue()));
+                    }
+                    MatcherAssert.assertThat(
+                        String.format(
+                            "opcode counts in %s do not match YAML expectations, actual: %s",
+                            bytecode, actual
+                        ),
+                        actual,
+                        Matchers.allOf(checks)
+                    );
+                }
             }
         );
     }

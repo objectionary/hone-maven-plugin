@@ -13,10 +13,14 @@ concurrency:
   cancel-in-progress: true
 jobs:
   codecov:
-    timeout-minutes: 15
+    timeout-minutes: 60
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+      - run: docker --version
+      - run: |
+          sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
+          sudo chmod a+x /usr/bin/phino
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -27,7 +31,7 @@ jobs:
           key: maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             maven-
-      - run: mvn clean install -ntp -Pjacoco -Dinvoker.skip --errors --batch-mode '-Dgroups=!deep'
+      - run: mvn clean install -ntp -Pjacoco -Pdeep -Dinvoker.skip --errors --batch-mode
       - uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

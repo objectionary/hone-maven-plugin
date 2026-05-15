@@ -17,7 +17,7 @@ java: |
         System.out.printf("The result is %d\n", r);
       }
   }
-expected:
+log:
   - "Modified 1/1 X.phi"
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"

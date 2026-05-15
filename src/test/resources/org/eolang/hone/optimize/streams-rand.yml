@@ -10,7 +10,7 @@ java: |
         System.out.println("Dont optimize me, pls");
       }
   }
-expected:
+log:
   - "No grep-in match for 1/1 X.xmir"
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"

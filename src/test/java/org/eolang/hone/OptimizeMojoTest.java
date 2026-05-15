@@ -91,7 +91,7 @@ final class OptimizeMojoTest {
         final Map<String, Object> pack = new Yaml().load(yaml);
         final String code = (String) pack.get("java");
         @SuppressWarnings("unchecked")
-        final List<String> expected = (List<String>) pack.get("expected");
+        final List<String> log = (List<String>) pack.get("log");
         final Matcher pkg = Pattern.compile("package\\s+([\\w.]+)\\s*;").matcher(code);
         if (!pkg.find()) {
             throw new IllegalStateException(
@@ -141,7 +141,7 @@ final class OptimizeMojoTest {
                     ),
                     f.log().content(),
                     Matchers.allOf(
-                        new Mapped<>(Matchers::containsString, expected)
+                        new Mapped<>(Matchers::containsString, log)
                     )
                 );
             }

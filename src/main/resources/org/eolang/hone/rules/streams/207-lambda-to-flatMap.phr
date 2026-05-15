@@ -31,7 +31,10 @@ result: |
     φ ↦ Φ.hone.flatMap,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
-    bridge-signature ↦ 𝑒-bridge-signature,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
@@ -41,3 +44,42 @@ result: |
       is-interface ↦ 𝑒-target-is-interface
     ⟧
   ⟧
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\).*/$1/g"'
+  - meta: 𝑒-bridge-output
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'
+  - meta: 𝑒-target-class-pattern
+    function: sed
+    args:
+      - 𝑒-target-class
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-virtual-accepted-pattern
+    function: concat
+    args: ['"s/\\(\\).+/L"', 𝑒-target-class-pattern, '";/g"']
+  - meta: 𝑒-bridge-input-pattern
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-java-object-pattern
+    function: concat
+    args: ['"s/\\(Ljava\\/lang\\/Object;\\).+/"', 𝑒-bridge-input-pattern, '"/g"']
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - 𝑒-virtual-accepted-pattern
+      - 𝑒-java-object-pattern
+      - '"s/\\((.+)\\).+/$1/g"'
+  - meta: 𝑒-returned
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'

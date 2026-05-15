@@ -8,7 +8,10 @@ pattern: |
     φ ↦ Φ.hone.flatMap,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
-    bridge-signature ↦ 𝑒-bridge-signature,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
@@ -41,3 +44,7 @@ result: |
       signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
     ⟧
   ⟧
+where:
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-bridge-input, '")"', 𝑒-bridge-output]

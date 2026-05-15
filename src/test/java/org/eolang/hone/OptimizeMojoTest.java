@@ -82,10 +82,12 @@ final class OptimizeMojoTest {
 
     @ParameterizedTest
     @Tag("deep")
+    @Timeout(180L)
+    @ExtendWith(MayBeSlow.class)
     @DisabledWithoutDocker
     @ClasspathSource(value = "org/eolang/hone/optimize", glob = "**.yml")
-    void optimizesAsSpecifiedInYamlPack(final String yaml, @Mktmp final Path dir)
-    throws Exception {
+    void optimizesAsSpecifiedInYamlPack(final String yaml, @Mktmp final Path dir,
+        @RandomImage final String image) throws Exception {
         final Map<String, Object> pack = new Yaml().load(yaml);
         final String code = (String) pack.get("java");
         @SuppressWarnings("unchecked")
@@ -107,6 +109,7 @@ final class OptimizeMojoTest {
             pkg.group(1).replace('.', '/'),
             cls.group(1)
         );
+        final String main = String.format("%s.%s", pkg.group(1), cls.group(1));
         new Farea(dir).together(
             f -> {
                 f.clean();
@@ -117,10 +120,19 @@ final class OptimizeMojoTest {
                     .plugins()
                     .appendItself()
                     .execution("default")
-                    .phase("test")
-                    .goals("optimize")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
                     .configuration()
-                    .set("rules", "streams/*");
+                    .set("rules", "streams/*")
+                    .set("image", image);
+                f.build()
+                    .plugins()
+                    .append("org.codehaus.mojo", "exec-maven-plugin", "3.5.0")
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("java")
+                    .configuration()
+                    .set("mainClass", main);
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     String.format(

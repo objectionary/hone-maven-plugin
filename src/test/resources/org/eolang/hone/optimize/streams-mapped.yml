@@ -5,18 +5,20 @@ java: |
   package mapped;
   import java.util.*;
   import java.util.stream.*;
-  class X {
+  public class X {
       public static void main(String[] a) {
-        List<Integer> r = Arrays.asList(1,2,3,4).stream()
+        int r = Arrays.asList(1,2,3,4).stream()
             .map(n->n*2)
             .filter(n->n%2==0)
             .map(n->n+1)
             .map(n->n+2)
-            .collect(Collectors.toList());
-        System.out.println(r);
+            .mapToInt(Integer::intValue)
+            .sum();
+        System.out.printf("The result is %d\n", r);
       }
   }
 expected:
   - "Modified 1/1 X.phi"
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
+  - "The result is 32"

@@ -141,7 +141,7 @@ The `.phi` file that arrives from [jeo-maven-plugin]
   (its name, access flags, methods, line numbers, ...)
   sits alongside as ordinary bindings.
 The rules in `streams/` then walk this expression through
-  six stages of rewriting,
+  seven stages of rewriting,
   turning a sequence of low-level instructions
   into a single fused stream operation
   while keeping the resulting expression
@@ -243,21 +243,35 @@ Rule `501-distill-to-mapMulti` rewrites the `distill` pragma
   into a real private static method on the class
   so that it can be invoked through a method handle.
 
-**Stage 6 (rules `601-` to `702-`): re-emit instructions and `invokedynamic`.**
-The last stage is the inverse of the first two:
-  the pragmas are no longer needed
-  and must turn back into something jeo will accept.
+**Stage 6 (rules `601-` to `603-`): pragmas back to lambdas and `invokeinterface`.**
+Once the optimizer has done its job,
+  the `Φ.hone.*` pragmas have to disappear:
+  jeo doesn't know about them and can't translate them to bytecode.
 Rule `601-mapMulti-to-lambda` rewrites the `Φ.hone.mapMulti` pragma
-  back into a `Φ.hone.lambda` paired with an `invokeinterface`
-  on `Stream.mapMulti`,
-  `602-box-to-boxed` and `603-unbox-to-lambda`
-  do the same for the remaining `box`/`unbox` pragmas,
-  and `701-static-lambda-to-invokedynamic`,
-  `702-nonstatic-lambda-to-invokedynamic`
-  lower every `Φ.hone.lambda` formation
-  back into a `Φ.jeo.opcode.invokedynamic` formation
-  with all the `LambdaMetafactory` boilerplate
-  and method-handle data restored.
+  back into a `Φ.hone.lambda` formation paired with an `invokeinterface`
+  call on `Stream.mapMulti`,
+  reversing the recognition that stages 2 and 5 performed.
+Rule `602-box-to-boxed` rewrites the `Φ.hone.box` pragma
+  directly into an `invokeinterface` on `Integer.valueOf` (and its siblings),
+  since boxing is just a static method call and does not need a lambda.
+Rule `603-unbox-to-lambda` rewrites the `Φ.hone.unbox` pragma
+  back into a `Φ.hone.lambda` formation,
+  matching the shape that `205-lambda-to-unbox` originally consumed.
+After this stage, every pragma is gone;
+  what remains are `Φ.hone.lambda` formations and ordinary bytecode opcodes.
+
+**Stage 7 (rules `701-` and `702-`): lambdas back to `invokedynamic`.**
+This stage is the inverse of stage 1 and the final bytecode-level fixup.
+Rule `701-static-lambda-to-invokedynamic` handles
+  the lambdas whose body is a static method,
+  and `702-nonstatic-lambda-to-invokedynamic`
+  handles the ones that capture a `this` reference.
+Both rules lower a `Φ.hone.lambda` formation
+  into a full `Φ.jeo.opcode.invokedynamic` formation,
+  reconstructing the `LambdaMetafactory.metafactory` call site,
+  the bridge and target method handles,
+  and the method-type descriptors
+  that the JVM expects to find on the constant pool side of an `invokedynamic`.
 The result is a `.phi` file
   that contains regular bytecode instructions again,
   just fewer of them and arranged for a single pass through the stream,
@@ -271,7 +285,7 @@ Even when the fusion stage produces a method body
   reference types in succession),
   the JVM itself does not type-check locals at runtime,
   so the resulting `.class` file still verifies and executes.
-The paper at [hone-paper] discusses this property,
+The [hone paper][hone-paper] discusses this property,
   along with the cases (mixing primitives and wrappers across a fuse)
   where an explicit boxing `distill` must be inserted to keep the JVM happy.
 

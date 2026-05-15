@@ -6,39 +6,39 @@ java: |
   import java.util.*;
   import java.util.stream.*;
   public class X {
-      public static void main(String[] a) {
-        double r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
-            .filter(n -> n > 0)
-            .map(n -> n + 1)
-            .peek(n -> {})
-            .distinct()
-            .sorted()
-            .takeWhile(n -> n < 100)
-            .dropWhile(n -> n < 0)
-            .limit(20L)
-            .skip(0L)
-            .flatMap(n -> Stream.of(n))
-            .<Integer>mapMulti((n, c) -> c.accept(n))
-            .mapToInt(Integer::intValue)
-            .mapToObj(Integer::valueOf)
-            .mapToLong(Integer::longValue)
-            .boxed()
-            .mapToDouble(Long::doubleValue)
-            .boxed()
-            .flatMapToInt(d -> IntStream.of(d.intValue()))
-            .boxed()
-            .flatMapToLong(n -> LongStream.of(n.longValue()))
-            .boxed()
-            .flatMapToDouble(n -> DoubleStream.of(n.doubleValue()))
-            .boxed()
-            .mapMultiToInt((d, c) -> c.accept(d.intValue()))
-            .boxed()
-            .mapMultiToLong((n, c) -> c.accept(n.longValue()))
-            .boxed()
-            .mapMultiToDouble((n, c) -> c.accept(n.doubleValue()))
-            .sum();
-        System.out.printf("The result is %d\n", (int) r);
-      }
+    public static void main(String[] a) {
+      double r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
+        .filter(n -> n > 0)
+        .map(n -> n + 1)
+        .peek(n -> {})
+        .distinct()
+        .sorted()
+        .takeWhile(n -> n < 100)
+        .dropWhile(n -> n < 0)
+        .limit(20L)
+        .skip(0L)
+        .flatMap(n -> Stream.of(n))
+        .<Integer>mapMulti((n, c) -> c.accept(n))
+        .mapToInt(Integer::intValue)
+        .mapToObj(Integer::valueOf)
+        .mapToLong(Integer::longValue)
+        .boxed()
+        .mapToDouble(Long::doubleValue)
+        .boxed()
+        .flatMapToInt(d -> IntStream.of(d.intValue()))
+        .boxed()
+        .flatMapToLong(n -> LongStream.of(n.longValue()))
+        .boxed()
+        .flatMapToDouble(n -> DoubleStream.of(n.doubleValue()))
+        .boxed()
+        .mapMultiToInt((d, c) -> c.accept(d.intValue()))
+        .boxed()
+        .mapMultiToLong((n, c) -> c.accept(n.longValue()))
+        .boxed()
+        .mapMultiToDouble((n, c) -> c.accept(n.doubleValue()))
+        .sum();
+      System.out.printf("The result is %d\n", (int) r);
+    }
   }
 log:
   - "Modified 1/1 X.phi"

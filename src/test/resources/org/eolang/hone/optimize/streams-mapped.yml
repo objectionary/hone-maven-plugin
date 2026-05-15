@@ -6,16 +6,16 @@ java: |
   import java.util.*;
   import java.util.stream.*;
   public class X {
-      public static void main(String[] a) {
-        int r = Arrays.asList(1,2,3,4).stream()
-            .map(n->n*2)
-            .filter(n->n%2==0)
-            .map(n->n+1)
-            .map(n->n+2)
-            .mapToInt(Integer::intValue)
-            .sum();
-        System.out.printf("The result is %d\n", r);
-      }
+    public static void main(String[] a) {
+      int r = Arrays.asList(1,2,3,4).stream()
+        .map(n->n*2)
+        .filter(n->n%2==0)
+        .map(n->n+1)
+        .map(n->n+2)
+        .mapToInt(Integer::intValue)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
   }
 log:
   - "Modified 1/1 X.phi"

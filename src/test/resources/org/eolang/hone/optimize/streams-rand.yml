@@ -6,9 +6,9 @@ java: |
   import java.util.*;
   import java.util.stream.*;
   public class X {
-      public static void main(String[] a) {
-        System.out.println("Dont optimize me, pls");
-      }
+    public static void main(String[] a) {
+      System.out.println("Dont optimize me, pls");
+    }
   }
 log:
   - "No grep-in match for 1/1 X.xmir"

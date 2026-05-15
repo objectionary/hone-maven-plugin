@@ -22,3 +22,7 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "The result is 32"
+opcodes:
+  invokespecial: 1
+  invokedynamic: 2
+  return: 4

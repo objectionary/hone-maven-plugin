@@ -15,3 +15,9 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "Dont optimize me, pls"
+opcodes:
+  invokespecial: 1
+  invokevirtual: 1
+  getstatic: 1
+  ldc: 1
+  return: 2

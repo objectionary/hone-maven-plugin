@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -86,12 +87,12 @@ final class OptimizeMojoTest {
     @ExtendWith(MayBeSlow.class)
     @DisabledWithoutDocker
     @ClasspathSource(value = "org/eolang/hone/optimize", glob = "**.yml")
+    @SuppressWarnings("unchecked")
     void optimizesAsSpecifiedInYamlPack(final String yaml, @Mktmp final Path dir,
         @RandomImage final String image) throws Exception {
         final Map<String, Object> pack = new Yaml().load(yaml);
         final String code = (String) pack.get("java");
-        @SuppressWarnings("unchecked")
-        final List<String> log = (List<String>) pack.get("log");
+        final Map<String, Integer> opcodes = (Map<String, Integer>) pack.get("opcodes");
         final Matcher pkg = Pattern.compile("package\\s+([\\w.]+)\\s*;").matcher(code);
         if (!pkg.find()) {
             throw new IllegalStateException(
@@ -109,7 +110,11 @@ final class OptimizeMojoTest {
             pkg.group(1).replace('.', '/'),
             cls.group(1)
         );
-        final String main = String.format("%s.%s", pkg.group(1), cls.group(1));
+        final String bytecode = String.format(
+            "target/classes/%s/%s.class",
+            pkg.group(1).replace('.', '/'),
+            cls.group(1)
+        );
         new Farea(dir).together(
             f -> {
                 f.clean();
@@ -132,7 +137,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("java")
                     .configuration()
-                    .set("mainClass", main);
+                    .set("mainClass", String.format("%s.%s", pkg.group(1), cls.group(1)));
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     String.format(
@@ -141,9 +146,27 @@ final class OptimizeMojoTest {
                     ),
                     f.log().content(),
                     Matchers.allOf(
-                        new Mapped<>(Matchers::containsString, log)
+                        new Mapped<>(Matchers::containsString, (List<String>) pack.get("log"))
                     )
                 );
+                if (opcodes != null) {
+                    final Map<String, Integer> actual = new ClassOpcodes(
+                        f.files().file(bytecode).path()
+                    ).counts();
+                    final List<org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>> checks =
+                        new ArrayList<>(opcodes.size());
+                    for (final Map.Entry<String, Integer> entry : opcodes.entrySet()) {
+                        checks.add(Matchers.hasEntry(entry.getKey(), entry.getValue()));
+                    }
+                    MatcherAssert.assertThat(
+                        String.format(
+                            "opcode counts in %s do not match YAML expectations, actual: %s",
+                            bytecode, actual
+                        ),
+                        actual,
+                        Matchers.allOf(checks)
+                    );
+                }
             }
         );
     }

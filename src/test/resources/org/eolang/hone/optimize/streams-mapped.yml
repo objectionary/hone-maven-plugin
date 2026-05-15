@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+java: |
+  package mapped;
+  import java.util.*;
+  import java.util.stream.*;
+  class X {
+      public static void main(String[] a) {
+        List<Integer> r = Arrays.asList(1,2,3,4).stream()
+            .map(n->n*2)
+            .filter(n->n%2==0)
+            .map(n->n+1)
+            .map(n->n+2)
+            .collect(Collectors.toList());
+        System.out.println(r);
+      }
+  }
+expected:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"

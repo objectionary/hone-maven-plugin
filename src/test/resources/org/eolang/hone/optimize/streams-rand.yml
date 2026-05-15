@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+java: |
+  package rand;
+  import java.util.*;
+  import java.util.stream.*;
+  class X {
+      public static void main(String[] a) {
+        System.out.println("Dont optimize me, pls");
+      }
+  }
+expected:
+  - "No grep-in match for 1/1 X.xmir"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"

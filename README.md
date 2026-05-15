@@ -129,6 +129,152 @@ The "small-steps" mode (`<smallSteps>true</smallSteps>`)
   so that a `diff` between two adjacent files
   reveals exactly which rule changed what.
 
+## Optimization Pipeline
+
+The `.phi` file that arrives from [jeo-maven-plugin]
+  contains the bytecode of one Java class
+  re-encoded as a single 𝜑-expression:
+  every instruction (`iload`, `imul`, `invokedynamic`, ...)
+  becomes a small formation
+  whose `φ` attribute dispatches to a name under `Φ.jeo.opcode`,
+  and the metadata of the class
+  (its name, access flags, methods, line numbers, ...)
+  sits alongside as ordinary bindings.
+The rules in `streams/` then walk this expression through
+  six stages of rewriting,
+  turning a sequence of low-level instructions
+  into a single fused stream operation
+  while keeping the resulting expression
+  re-assemblable back to valid `.class` bytes by jeo.
+The pipeline below mirrors the one described in the [hone paper][hone-paper].
+
+**Stage 1 (rules `101-` to `141-`): clean up and lower `invokedynamic`.**
+The Java compiler emits a stream pipeline as a chain of
+  `invokedynamic`+`invokeinterface` pairs
+  plus a synthetic static method per lambda;
+  before anything else can be recognised,
+  the noise around those instructions must go.
+Rule `101-remove-self-reference-labels` deletes labels and line-number
+  entries that no longer point anywhere meaningful,
+  `111-invokedynamic-to-lambda` rewrites the `invokedynamic` formation
+  into a higher-level `Φ.hone.lambda` pragma that exposes
+  the interface, the target method, and the captured arguments,
+  `121-` and `131-` normalise the static-vs-instance shape
+  of the produced lambda,
+  and `141-set-opcode-in-lambda` records the original opcode
+  on the pragma so that later stages can reverse the lowering.
+
+**Stage 2 (rules `201-` to `282-`): recognise stream operations as pragmas.**
+A `Φ.hone.lambda` immediately followed by an `invokeinterface`
+  on a `java.util.stream` class is, semantically, one operation:
+  rules `201-lambda-to-filter`, `202-lambda-to-map`,
+  `203-lambda-to-primitive-filter`, `204-lambda-to-primitive-map`,
+  and `205-lambda-to-unbox`
+  match exactly that pair and replace it with a single
+  `Φ.hone.filter` / `Φ.hone.map` / `Φ.hone.unbox` pragma.
+The paper calls these synthetic formations _pragmas_:
+  they look like bytecode instructions
+  but carry the information needed to reconstruct one later.
+Rules `206-` through `261-` then tidy up the boxing and primitive
+  conversions that the compiler inserted around the lambda
+  (for example moving an `Integer.valueOf` call from outside the lambda
+  into a `Φ.hone.box` pragma),
+  and `271-`, `272-` remove the now-useless `CHECKCAST` and
+  object-to-primitive conversions that the pragma made redundant.
+Rules `281-` and `282-` insert a `DUP` in front of every `filter`
+  so the value can be both tested and forwarded
+  without re-running the predicate.
+
+**Stage 3 (rules `301-` to `311-`): fold every operation into `distill`.**
+Mapping and filtering still look different at this point:
+  `map` rewrites a value, `filter` drops one.
+The third stage erases that difference
+  by rewriting every `Φ.hone.map`, `Φ.hone.filter`,
+  and their primitive variants
+  into a uniform `Φ.hone.distill` pragma
+  whose body is a piece of bytecode that accepts an item
+  and either falls through (keep), returns early (drop),
+  or replaces the local variable (transform).
+Rules `301-dup-to-distill`, `302-transform-to-distill`,
+  `303-type-to-distill`, `304-primitive-filter-to-distill`,
+  `305-object-filter-to-distill`, and `306-map-to-distill`
+  handle the individual cases,
+  and `311-load-this-in-pre-distill` prepares the stack
+  for instance-method lambdas.
+After this stage,
+  a pipeline of `.map().filter().mapToInt()...`
+  has been reduced to a flat list of `distill` pragmas
+  inside the same method.
+
+**Stage 4 (rules `401-` to `431-`): fuse adjacent `distill` pragmas.**
+This is the optimization that actually saves work at runtime.
+Rule `401-fuse` looks for two consecutive `distill` pragmas
+  inside the same method body
+  and concatenates their lambda bodies into a single `distill`,
+  so that the JVM has to traverse the stream pipeline only once
+  instead of pumping every element through several `Consumer` objects.
+The rule fires repeatedly under phino's fixed-point evaluation:
+  if a method had five chained operations,
+  `401-fuse` will fire four times,
+  collapsing all of them into one.
+Concatenation only works when the type that flows between
+  two pragmas is the same;
+  when one pragma returns a primitive and the next expects a wrapper
+  (or vice versa),
+  rule `411-box-distill-unbox-to-primitive-distill`
+  unifies the boundary
+  by pushing the boxing/unboxing inside the body,
+  and `421-`/`422-` align the head and tail types
+  with the surrounding bytecode.
+Rule `431-dup-before-filter-distill` re-applies the `DUP`
+  fix-up after a fusion changed which value is being filtered.
+
+**Stage 5 (rules `501-` and `511-`): emit a single `mapMulti` call.**
+At this point each fused `distill` is one big anonymous function
+  that consumes an item.
+The JDK already offers an idiomatic shape for exactly that,
+  `Stream.mapMulti(BiConsumer)`,
+  whose second argument is the downstream sink.
+Rule `501-distill-to-mapMulti` rewrites the `distill` pragma
+  into a `Φ.hone.mapMulti` pragma
+  by appending a `c.accept(x)` call to the body
+  (where `c` is the `BiConsumer` argument),
+  and `511-distill-lambda-to-method` extracts the body
+  into a real private static method on the class
+  so that it can be invoked through a method handle.
+
+**Stage 6 (rules `601-` to `702-`): re-emit instructions and `invokedynamic`.**
+The last stage is the inverse of the first two:
+  the pragmas are no longer needed
+  and must turn back into something jeo will accept.
+Rule `601-mapMulti-to-lambda` rewrites the `Φ.hone.mapMulti` pragma
+  back into a `Φ.hone.lambda` paired with an `invokeinterface`
+  on `Stream.mapMulti`,
+  `602-box-to-boxed` and `603-unbox-to-lambda`
+  do the same for the remaining `box`/`unbox` pragmas,
+  and `701-static-lambda-to-invokedynamic`,
+  `702-nonstatic-lambda-to-invokedynamic`
+  lower every `Φ.hone.lambda` formation
+  back into a `Φ.jeo.opcode.invokedynamic` formation
+  with all the `LambdaMetafactory` boilerplate
+  and method-handle data restored.
+The result is a `.phi` file
+  that contains regular bytecode instructions again,
+  just fewer of them and arranged for a single pass through the stream,
+  ready to be converted back to `.xmir` by phino
+  and then to `.class` by jeo.
+
+This pipeline never invents bytecode that the JVM cannot run.
+Even when the fusion stage produces a method body
+  that the Java compiler would reject
+  (for example one local variable holding values of two unrelated
+  reference types in succession),
+  the JVM itself does not type-check locals at runtime,
+  so the resulting `.class` file still verifies and executes.
+The paper at [hone-paper] discusses this property,
+  along with the cases (mixing primitives and wrappers across a fuse)
+  where an explicit boxing `distill` must be inserted to keep the JVM happy.
+
 ## How to Use in Gradle
 
 You can use this plugin with [Gradle] too, but it requires
@@ -212,3 +358,4 @@ that we use, are defined in the `pom.xml` file.
 [jeo-maven-plugin]: https://github.com/objectionary/jeo-maven-plugin
 [𝜑-calculus]: https://arxiv.org/abs/2111.13384
 [XMIR]: https://news.eolang.org/2022-11-25-xmir-guide.html
+[hone-paper]: https://github.com/objectionary/hone-paper

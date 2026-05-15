@@ -70,6 +70,65 @@ is not true, [submit a ticket], we will try to fix.
 
 To make it work faster, you may install [phino] on your machine beforehand.
 
+## How It Works
+
+The most interesting step of the pipeline is the phi-to-phi rewriting,
+  where [phino] turns one 𝜑-calculus expression into another
+  by applying a fixed set of rules to every `.phi` file
+  in `target/hone/phi/` and writing the result into `target/hone/phi-optimized/`.
+
+Each rule lives in its own `.phr` file under
+  [`src/main/resources/org/eolang/hone/rules/`](src/main/resources/org/eolang/hone/rules)
+  and has the same three-part shape:
+  `pattern` describes the sub-expression to look for,
+  `result` describes what to put in its place,
+  and an optional `where` block defines auxiliary metavariables
+  computed by small string functions such as `concat`, `sed`, `join`, and `tau`.
+Inside the 𝜑-calculus body,
+  identifiers prefixed with `𝐵-` capture whole groups of bindings,
+  those prefixed with `𝜏-` capture a single binding name,
+  and those prefixed with `𝑒-` capture an atomic sub-expression,
+  so that a single rule can match an entire family of concrete expressions.
+
+When the plugin is configured with `<rules>streams/*</rules>`,
+  the `Rules` class scans the classpath under that directory,
+  collects every `.phr` (and `.yml`) file that matches the pattern,
+  and sorts the resulting names alphabetically before passing them on
+  (see `Collections.sort(names)` in `Rules.discover()`).
+Each filename begins with a numeric prefix
+  (for example `101-`, `111-`, `121-`, ..., `701-`, `702-`),
+  so the alphabetical sort produces the exact sequence
+  in which the rules are intended to fire,
+  one by one.
+The prefixes also reveal the logical phases of the pipeline:
+  the `1xx` group prepares the input
+  (it removes self-referencing labels and lowers `invokedynamic` to a lambda),
+  the `2xx` group recognises stream operations
+  (`filter`, `map`, their primitive variants, `unbox` and `box`),
+  the `3xx` group folds every recognised operation
+  into a uniform internal `distill` node,
+  the `4xx` group fuses adjacent `distill` nodes
+  into a single combined one,
+  the `5xx` group rewrites the fused chain into one `mapMulti` call,
+  the `6xx` group lowers `mapMulti` back into a lambda,
+  and the `7xx` group re-introduces `invokedynamic`
+  so that the bytecode emitted by JEO is shaped the way the JVM expects.
+
+In the default "big-steps" mode,
+  the `rewrite.sh` script invokes `phino rewrite` once per `.phi` file
+  and passes every selected rule on the same command line
+  as a sequence of `--rule=` arguments in their alphabetical order.
+Phino itself then walks through that list,
+  trying each rule against every position in the expression tree
+  and re-trying until no rule matches anymore,
+  capped by the `maxDepth` and `maxCycles` parameters.
+The "small-steps" mode (`<smallSteps>true</smallSteps>`)
+  is meant for debugging the rules:
+  it invokes `phino rewrite` separately for each rule
+  and saves the intermediate result as `Foo.phi.01`, `Foo.phi.02`, and so on,
+  so that a `diff` between two adjacent files
+  reveals exactly which rule changed what.
+
 ## How to Use in Gradle
 
 You can use this plugin with [Gradle] too, but it requires

@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: lambda-to-flatMap
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "apply",
+    interface ↦ "()Ljava/util/function/Function;",
+    lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "flatMap",
+      signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.flatMap,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧

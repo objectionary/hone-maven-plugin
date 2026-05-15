@@ -19,6 +19,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.cactoos.list.ListOf;
@@ -51,14 +52,11 @@ public final class CSV {
 
     /**
      * Constructor.
-     * @param records CSV records
-     * @checkstyle ConstructorsCodeFreeCheck (5 lines)
+     * @param other The CSV to copy fields from
+     * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
-    private CSV(final List<CSVRecord> records) {
-        this(
-            new ListOf<>(records.get(0).toMap().keySet()),
-            CSV.rows(records)
-        );
+    private CSV(final CSV other) {
+        this(other.headers, other.records);
     }
 
     /**
@@ -158,20 +156,21 @@ public final class CSV {
     }
 
     @SuppressWarnings("PMD.UnnecessaryLocalRule")
-    private static List<CSVRecord> from(final Path csv) {
+    private static CSV from(final Path csv) {
         try (
             Reader reader = new InputStreamReader(
                 Files.newInputStream(csv),
                 StandardCharsets.UTF_8
-            )
+            );
+            CSVParser parser = CSVFormat.DEFAULT.builder()
+                .setHeader()
+                .setSkipHeaderRecord(false)
+                .get()
+                .parse(reader)
         ) {
-            return new ListOf<>(
-                CSVFormat.DEFAULT.builder()
-                    .setHeader()
-                    .setSkipHeaderRecord(false)
-                    .get()
-                    .parse(reader)
-                    .iterator()
+            return new CSV(
+                new ListOf<>(parser.getHeaderNames()),
+                CSV.rows(parser.getRecords())
             );
         } catch (final IOException exception) {
             throw new IllegalStateException(

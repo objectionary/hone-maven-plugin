@@ -62,4 +62,40 @@ final class CSVTest {
             Matchers.is(0)
         );
     }
+
+    @Test
+    void parsesHeaderOnlyCsv(@Mktmp final Path temp) throws Exception {
+        final Path path = temp.resolve("test.csv");
+        Files.write(
+            path,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "header-only CSV has zero data rows",
+            new CSV(path).size(),
+            Matchers.is(0)
+        );
+    }
+
+    @Test
+    void countsZeroOnHeaderOnlyCsv(@Mktmp final Path temp) throws Exception {
+        final Path path = temp.resolve("test.csv");
+        Files.write(
+            path,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "header-only CSV reports zero matches",
+            new CSV(path).count("Changed", v -> Integer.parseInt(v) > 0),
+            Matchers.is(0)
+        );
+    }
 }

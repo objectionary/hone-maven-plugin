@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Stream.concat takes two streams (each pre-built with its own map
+# pipeline) and produces a single stream. The rule pipeline therefore
+# sees three independent lambda groups in the same method — two
+# pre-concat and one post-concat. They must each be rewritten
+# correctly without crossing references.
+java: |
+  package concat;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int r = Stream.concat(
+          Stream.of(1, 2, 3).map(n -> n * 10),
+          Stream.of(4, 5, 6).map(n -> n * 100)
+        )
+        .filter(n -> n > 15)
+        .mapToInt(Integer::intValue)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 1550"

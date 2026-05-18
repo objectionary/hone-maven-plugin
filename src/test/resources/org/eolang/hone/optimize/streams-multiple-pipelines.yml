@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Two independent Stream pipelines in the same method. Each lambda
+# generates its own synthetic lambda$main$N method, so the rule
+# pipeline must rewrite both correctly without crossing references —
+# in particular, 511 must produce two distinct private static helper
+# methods rather than collapsing them.
+java: |
+  package multiple;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int r1 = Stream.of(1, 2, 3, 4)
+        .filter(n -> n > 1)
+        .map(n -> n * 2)
+        .mapToInt(Integer::intValue)
+        .sum();
+      int r2 = Stream.of(10, 20, 30)
+        .filter(n -> n < 25)
+        .map(n -> n + 5)
+        .mapToInt(Integer::intValue)
+        .sum();
+      System.out.printf("The result is %d\n", r1 + r2);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 58"

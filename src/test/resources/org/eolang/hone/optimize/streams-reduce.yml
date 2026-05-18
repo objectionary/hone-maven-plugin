@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Confirms that a Stream pipeline terminating in reduce() with an
+# identity value and a method-reference accumulator survives the
+# roundtrip. Integer::sum is a static method reference that turns
+# into a lambda metafactory bootstrap call, so this test cross-checks
+# that 111 + 121 + 701 chain through cleanly even when the lambda is
+# fed to a non-intermediate stage.
+java: |
+  package reduce;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int r = Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > 1)
+        .map(n -> n + 10)
+        .reduce(0, Integer::sum);
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 54"

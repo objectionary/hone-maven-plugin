@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Drives a Stream pipeline whose every intermediate operation uses a
+# method reference rather than a lambda body. Method references can
+# produce no synthetic 'lambda$' bridge methods at all when their
+# signature is already exact, so the rule pipeline must cope with
+# bootstrap method calls whose implementation is a direct
+# H_INVOKESTATIC/H_INVOKEVIRTUAL handle.
+java: |
+  package methodrefs;
+  import java.util.stream.Stream;
+  public class X {
+    static boolean isOdd(int n) { return (n & 1) == 1; }
+    static int triple(int n) { return n * 3; }
+    public static void main(String[] a) {
+      int r = Stream.of(1, 2, 3, 4, 5, 6)
+        .mapToInt(Integer::intValue)
+        .filter(X::isOdd)
+        .map(X::triple)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 27"

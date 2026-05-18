@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Terminates a Stream<Integer> pipeline with toArray(IntFunction).
+# The IntFunction generator (Integer[]::new) is yet another lambda
+# metafactory shape — a constructor reference — and must survive the
+# rewrite without losing the Integer[] return type.
+java: |
+  package toarray;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      Integer[] r = Stream.of(1, 2, 3, 4)
+        .filter(n -> n > 1)
+        .map(n -> n * n)
+        .toArray(Integer[]::new);
+      System.out.printf("The result is %d\n", r.length);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3"

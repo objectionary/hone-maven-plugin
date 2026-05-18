@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Drives a DoubleStream through map/filter/sum to confirm that the
+# double-primitive lowering path survives the roundtrip. The integer
+# part of the sum is asserted, so the test is insensitive to any
+# floating-point rounding that may occur during jeo-disassemble or
+# the rewriting itself.
+java: |
+  package doublestream;
+  import java.util.stream.DoubleStream;
+  public class X {
+    public static void main(String[] a) {
+      double r = DoubleStream.of(1.5, 2.5, 3.5, 4.5, 5.5)
+        .filter(d -> d > 2.0)
+        .map(d -> d + 1.0)
+        .sum();
+      System.out.printf("The result is %d\n", (int) r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 20"

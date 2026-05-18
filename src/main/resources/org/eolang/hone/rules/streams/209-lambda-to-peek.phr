@@ -1,0 +1,87 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognizes a Φ.hone.lambda whose stream call is Stream.peek(Consumer)
+# and converts it to Φ.hone.peek — analogous to lambda-to-map. peek is
+# a pass-through observer: the consumer is invoked with each element and
+# the same element is re-emitted downstream. The bridge-output, returned
+# and bridge-input are therefore all identical to the input type.
+name: lambda-to-peek
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "accept",
+    interface ↦ "()Ljava/util/function/Consumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;)V",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "peek",
+      signature ↦ "(Ljava/util/function/Consumer;)Ljava/util/stream/Stream;"
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.peek,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-bridge-input,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+when:
+  eq: [𝑒-static, '"true"']
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    # "(Ljava/lang/Integer;)V"
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\)V/$1/g"'
+  - meta: 𝑒-target-class-pattern
+    function: sed
+    # java\\/lang\\/String
+    args:
+      - 𝑒-target-class
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-virtual-accepted-pattern
+    function: concat
+    # s/\\(\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(\\).+/L"', 𝑒-target-class-pattern, '";/g"']
+  - meta: 𝑒-bridge-input-pattern
+    function: sed
+    # Ljava\\/lang\\/String;
+    args:
+      - 𝑒-bridge-input
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-java-object-pattern
+    function: concat
+    # s/\\(Ljava\\/lang\\/Object;\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(Ljava\\/lang\\/Object;\\).+/"', 𝑒-bridge-input-pattern, '"/g"']
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - 𝑒-virtual-accepted-pattern
+      - 𝑒-java-object-pattern
+      - '"s/\\((.+)\\).+/$1/g"'

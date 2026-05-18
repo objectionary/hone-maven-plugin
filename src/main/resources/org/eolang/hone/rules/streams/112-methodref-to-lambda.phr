@@ -13,6 +13,17 @@
 # them too. The promotion is reversible: if no later rule fires on the
 # resulting Φ.hone.lambda, 701 lowers it back to the original
 # invokedynamic + invokeinterface pair with no bytecode change.
+#
+# Restricted to target handle kinds 5 (REF_invokeVirtual) and 6
+# (REF_invokeStatic). Kinds 7/8/9 (REF_invokeSpecial,
+# REF_newInvokeSpecial, REF_invokeInterface) are deliberately
+# excluded: 141-set-opcode-in-lambda derives the call opcode from
+# the target signature alone, which can only produce invokevirtual
+# or invokestatic, and downstream wrap-method synthesis (e.g. 513)
+# would emit the wrong bytecode for constructor references
+# (Foo::new needs new/dup/invokespecial) and interface method
+# references (need invokeinterface). Widening the gate has to wait
+# until 141 (or its consumers) learn those shapes.
 name: methodref-to-lambda
 pattern: |
   ⟦
@@ -157,6 +168,9 @@ when:
         matches:
           - 'lambda\$.+'
           - 𝑒-target-method
+    - or:
+        - eq: [𝑒-target-handle, '5']
+        - eq: [𝑒-target-handle, '6']
 where:
   - meta: 𝜏-lambda
     function: random-tau

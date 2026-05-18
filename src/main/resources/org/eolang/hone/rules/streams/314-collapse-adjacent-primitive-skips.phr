@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 314-collapse-adjacent-primitive-skips
+#
+# Primitive-stream counterpart of 312. Collapses two adjacent
+# Φ.hone.primitive-skip ops on the same primitive stream (IntStream
+# / LongStream / DoubleStream — both ops must agree on stream-class)
+# into a single Φ.hone.primitive-skip whose count is the sum of the
+# two originals.
+#
+# The same Φ.number-only gating as 312 applies — string-typed
+# count="0" / count="1" forms produced by 222 / 224 are folded by
+# their own rules (313 nop, 356 mapMulti) on a separate pass.
+name: collapse-adjacent-primitive-skips
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.primitive-skip,
+      stream-class ↦ 𝑒-stream-class,
+      stream-signature ↦ 𝑒-stream-signature,
+      count ↦ 𝑒-count-first
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.primitive-skip,
+      stream-class ↦ 𝑒-stream-class,
+      stream-signature ↦ 𝑒-stream-signature,
+      count ↦ 𝑒-count-second
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-merged ↦ ⟦
+      φ ↦ Φ.hone.primitive-skip,
+      stream-class ↦ 𝑒-stream-class,
+      stream-signature ↦ 𝑒-stream-signature,
+      count ↦ 𝑒-count-sum
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - not:
+        eq: [ 𝑒-count-first, '"0"' ]
+    - not:
+        eq: [ 𝑒-count-first, '"1"' ]
+    - not:
+        eq: [ 𝑒-count-second, '"0"' ]
+    - not:
+        eq: [ 𝑒-count-second, '"1"' ]
+    - or:
+        - and:
+            - eq: [ 𝑒-stream-class, '"java/util/stream/IntStream"' ]
+            - eq: [ 𝑒-stream-signature, '"(J)Ljava/util/stream/IntStream;"' ]
+        - and:
+            - eq: [ 𝑒-stream-class, '"java/util/stream/LongStream"' ]
+            - eq: [ 𝑒-stream-signature, '"(J)Ljava/util/stream/LongStream;"' ]
+        - and:
+            - eq: [ 𝑒-stream-class, '"java/util/stream/DoubleStream"' ]
+            - eq: [ 𝑒-stream-signature, '"(J)Ljava/util/stream/DoubleStream;"' ]
+where:
+  - meta: 𝑒-count-sum
+    function: sum
+    args: [𝑒-count-first, 𝑒-count-second]
+  - meta: 𝜏-merged
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after' ]

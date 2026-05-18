@@ -4,7 +4,7 @@
 # yamllint disable rule:line-length
 # 351-take-while-to-mapMulti
 #
-# Lowers Φ.hone.take-while (object Stream variant produced by 209) into:
+# Lowers Φ.hone.take-while (object Stream variant produced by 213) into:
 #   * Raw bytecode that allocates a boolean[1] guard array on the stack
 #     (iconst_1 + newarray boolean)
 #   * A Φ.hone.lambda pragma that creates a BiConsumer capturing that

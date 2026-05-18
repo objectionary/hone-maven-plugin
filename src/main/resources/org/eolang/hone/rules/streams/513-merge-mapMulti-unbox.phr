@@ -1,0 +1,323 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Merges an adjacent Φ.hone.mapMulti followed by Φ.hone.unbox into a
+# single Stream.mapMultiToInt/Long/Double pipeline op. The Φ.hone.unbox
+# is the canonical form 205 emits for .mapToInt/.mapToLong/.mapToDouble.
+# Two static methods are synthesized on the class:
+#
+#   merged(T t, IntConsumer ic) {
+#     b1(t, r -> wrap(ic, r));    // b1 is the upstream mapMulti target
+#   }
+#   wrap(IntConsumer ic, R r) {
+#     ic.accept(b2(r));            // b2 is the unbox target
+#   }
+#
+# A single Φ.hone.lambda with stream.method = mapMultiToInt (or Long /
+# Double) replaces both pragmas. 701 lowers it to invokedynamic and
+# invokeinterface in the usual way.
+name: merge-mapMulti-unbox
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-caller-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-first ↦ ⟦
+          φ ↦ Φ.hone.mapMulti,
+          class ↦ 𝑒-class,
+          target-method ↦ 𝑒-b1-target-method,
+          bridge-input ↦ 𝑒-b1-bridge-input,
+          map-multi-consumer ↦ "Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          consumer ↦ "Ljava/util/function/Consumer;",
+          stream-class ↦ "java/util/stream/Stream",
+          static ↦ "true",
+          is-interface ↦ 𝑒-b1-is-interface
+        ⟧,
+        𝜏-second ↦ ⟦
+          φ ↦ Φ.hone.unbox,
+          opcode ↦ 𝑒-unbox-opcode,
+          class ↦ 𝑒-class,
+          bridge-signature ↦ 𝑒-unbox-bridge-signature,
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 𝑒-unbox-target-handle,
+            class ↦ 𝑒-unbox-target-class,
+            method ↦ 𝑒-unbox-target-method,
+            signature ↦ 𝑒-unbox-target-signature,
+            is-interface ↦ 𝑒-unbox-target-is-interface
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-method-tail,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-caller-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-first ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-merged-signature,
+          static ↦ "true",
+          opcode ↦ "",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class,
+            method ↦ 𝑒-merged-name,
+            signature ↦ 𝑒-merged-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ 𝑒-stream-method,
+            signature ↦ 𝑒-stream-signature
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-method-tail,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-tail,
+    𝜏-merged-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      name ↦ 𝑒-merged-name,
+      descriptor ↦ 𝑒-merged-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 2,
+        max-locals ↦ 2
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ 𝑒-b1-bridge-input
+        ⟧,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 1,
+          access ↦ 0,
+          type ↦ 𝑒-prim-consumer
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.aload,
+          i1 ↦ 0
+        ⟧,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.aload,
+          i1 ↦ 1
+        ⟧,
+        i3 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          i2 ↦ "accept",
+          i3 ↦ 𝑒-wrap-factory-signature,
+          i4 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            i1 ↦ 6,
+            i2 ↦ "java/lang/invoke/LambdaMetafactory",
+            i3 ↦ "metafactory",
+            i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            i5 ↦ Φ.false
+          ⟧,
+          i5 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            i1 ↦ "(Ljava/lang/Object;)V"
+          ⟧,
+          i6 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            i1 ↦ 6,
+            i2 ↦ 𝑒-class,
+            i3 ↦ 𝑒-wrap-name,
+            i4 ↦ 𝑒-wrap-signature,
+            i5 ↦ Φ.false
+          ⟧,
+          i7 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            i1 ↦ 𝑒-wrap-instantiated
+          ⟧
+        ⟧,
+        i4 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-class,
+          i3 ↦ 𝑒-b1-target-method,
+          i4 ↦ 𝑒-b1-target-signature,
+          i5 ↦ 𝑒-b1-is-interface
+        ⟧,
+        i5 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.return
+        ⟧
+      ⟧
+    ⟧,
+    𝜏-wrap-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      name ↦ 𝑒-wrap-name,
+      descriptor ↦ 𝑒-wrap-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 𝑒-wrap-max-stack,
+        max-locals ↦ 2
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 0,
+          access ↦ 0,
+          type ↦ 𝑒-prim-consumer
+        ⟧,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.param,
+          index ↦ 1,
+          access ↦ 0,
+          type ↦ 𝑒-r-type
+        ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.aload,
+          i1 ↦ 0
+        ⟧,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.aload,
+          i1 ↦ 1
+        ⟧,
+        i3 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.𝜏-unbox-target-opcode,
+          i2 ↦ 𝑒-unbox-target-class,
+          i3 ↦ 𝑒-unbox-target-method,
+          i4 ↦ 𝑒-unbox-target-signature,
+          i5 ↦ 𝑒-unbox-target-is-interface
+        ⟧,
+        i4 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ 𝑒-prim-consumer-class,
+          i3 ↦ "accept",
+          i4 ↦ 𝑒-prim-consumer-accept-sig,
+          i5 ↦ Φ.true
+        ⟧,
+        i5 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.return
+        ⟧
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-unbox-bridge-signature
+      - '"s/\\(L.+;\\)(.)/$1/g"'
+  - meta: 𝑒-r-type
+    function: sed
+    args:
+      - 𝑒-unbox-bridge-signature
+      - '"s/\\((L.+;)\\)./$1/g"'
+  - meta: 𝑒-prim-consumer
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/function\\/LongConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
+  - meta: 𝑒-prim-consumer-class
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/java\\/util\\/function\\/IntConsumer/g"'
+      - '"s/^J$/java\\/util\\/function\\/LongConsumer/g"'
+      - '"s/^D$/java\\/util\\/function\\/DoubleConsumer/g"'
+  - meta: 𝑒-prim-consumer-accept-sig
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/(I)V/g"'
+      - '"s/^J$/(J)V/g"'
+      - '"s/^D$/(D)V/g"'
+  - meta: 𝑒-stream-method
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/mapMultiToInt/g"'
+      - '"s/^J$/mapMultiToLong/g"'
+      - '"s/^D$/mapMultiToDouble/g"'
+  - meta: 𝑒-output-stream-class
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream;/g"'
+  - meta: 𝑒-stream-signature
+    function: concat
+    args: ['"(Ljava/util/function/BiConsumer;)"', 𝑒-output-stream-class]
+  - meta: 𝑒-merged-signature
+    function: concat
+    args: ['"("', 𝑒-b1-bridge-input, 𝑒-prim-consumer, '")V"']
+  - meta: 𝑒-b1-target-signature
+    function: concat
+    args: ['"("', 𝑒-b1-bridge-input, '"Ljava/util/function/Consumer;)V"']
+  - meta: 𝑒-wrap-signature
+    function: concat
+    args: ['"("', 𝑒-prim-consumer, 𝑒-r-type, '")V"']
+  - meta: 𝑒-wrap-instantiated
+    function: concat
+    args: ['"("', 𝑒-r-type, '")V"']
+  - meta: 𝑒-wrap-factory-signature
+    function: concat
+    args: ['"("', 𝑒-prim-consumer, '")Ljava/util/function/Consumer;"']
+  - meta: 𝑒-wrap-max-stack-str
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/2/g"'
+      - '"s/^J$/3/g"'
+      - '"s/^D$/3/g"'
+  - meta: 𝑒-wrap-max-stack
+    function: number
+    args: [𝑒-wrap-max-stack-str]
+  - meta: 𝑒-merged-name
+    function: random-string
+    args: ['"merged_mapMultiToPrim_%d"']
+  - meta: 𝑒-wrap-name
+    function: random-string
+    args: ['"merged_prim_wrap_%d"']
+  - meta: 𝜏-unbox-target-opcode
+    function: tau
+    args: [𝑒-unbox-opcode]
+  - meta: 𝜏-merged-method
+    function: random-tau
+    args: ['𝐵-class-head', '𝐵-class-tail', '𝜏-caller-method']
+  - meta: 𝜏-wrap-method
+    function: random-tau
+    args: ['𝐵-class-head', '𝐵-class-tail', '𝜏-caller-method', '𝜏-merged-method']

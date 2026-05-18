@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 209 recognizes a Φ.hone.lambda whose stream call is Stream.takeWhile
+# 213 recognizes a Φ.hone.lambda whose stream call is Stream.takeWhile
 # (i.e. a source-level .takeWhile(Predicate) invocation on the object
 # Stream) and converts it into a Φ.hone.take-while pragma. This is
-# analogous to 201 (filter); see issue #539. Folding into distill is
-# left to a follow-up — for now 605 unrecognises the pragma so the
-# pipeline stays roundtrip-safe.
+# analogous to 201 (filter); see issue #539. 351 then folds the pragma
+# into Stream.mapMulti with a captured boolean[] guard; 605 is the
+# unrecognise fallback for pragmas not consumed by 351.
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/209-lambda-to-take-while.phr
+  - src/main/resources/org/eolang/hone/rules/streams/213-lambda-to-take-while.phr
 input: |
   {⟦
     φ ↦ Φ.hone.lambda,

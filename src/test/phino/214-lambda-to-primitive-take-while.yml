@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 210 recognizes a Φ.hone.lambda whose stream call is one of the
+# 214 recognizes a Φ.hone.lambda whose stream call is one of the
 # primitive {Int,Long,Double}Stream.takeWhile(...) variants and rewrites
 # it into a Φ.hone.primitive-take-while pragma. Analogous to 203
 # (primitive-filter); see issue #539.
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/210-lambda-to-primitive-take-while.phr
+  - src/main/resources/org/eolang/hone/rules/streams/214-lambda-to-primitive-take-while.phr
 input: |
   {⟦
     φ ↦ Φ.hone.lambda,

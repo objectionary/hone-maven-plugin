@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Asserts that `.skip(0L)` in a Stream pipeline is eliminated as a
+# no-op. The recognition rule (210) folds the `lconst_0 +
+# invokeinterface Stream.skip:(J)Ljava/util/stream/Stream;` pair into a
+# single Φ.hone.skip block, and the matching fold (311) then replaces
+# it with Φ.jeo.opcode.nop. Without the rules, the skip stage would
+# remain an opaque pass-through invokeinterface.
+java: |
+  package skipped;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long r = Stream.of(1, 2, 3, 4, 5)
+        .skip(0L)
+        .count();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 5"

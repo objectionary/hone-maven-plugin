@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Asserts that a non-zero `.skip(N)` is folded into a state-carrying
+# mapMulti BiConsumer (via 220 + 353) and then fuses with the adjacent
+# `.map(...)` mapMulti via 512. Without the 353 fold, .skip would stay
+# as `ldc + invokeinterface skip` and the map's mapMulti could not
+# absorb it, leaving two separate stream stages. With the fold and
+# fusion, the .map().skip() pair collapses into a single mapMulti
+# call, so invokedynamic drops to 1 (the fused BiConsumer) and only
+# .count() remains as a separate stream method invocation.
+java: |
+  package skippedfused;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long r = Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + 1)
+        .skip(2L)
+        .count();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3"
+opcodes:
+  invokedynamic: 1

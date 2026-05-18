@@ -23,7 +23,7 @@ log:
   - "The result is 87"
 opcodes:
   invokespecial: 1
-  invokestatic: 11
+  invokestatic: 12
   invokevirtual: 4
   invokedynamic: 4
-  return: 4
+  return: 5

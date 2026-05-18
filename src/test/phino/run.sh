@@ -36,6 +36,7 @@ for yml in "${tests[@]}"; do
   name="$(basename "${yml}" .yml)"
   echo "Running ${name}..."
   tmp="$(mktemp -d)"
+  trap 'rm -rf -- "${tmp}"' EXIT INT TERM
   input="${tmp}/input.phi"
   output="${tmp}/output.phi"
   raw="$(yq -r '.input' "${yml}")"

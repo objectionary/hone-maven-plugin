@@ -14,7 +14,7 @@ pattern: |
     𝐵-before,
     𝜏-skip ↦ ⟦
       φ ↦ Φ.hone.skip,
-      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
       count ↦ "0",
       ρ ↦ ∅
     ⟧,

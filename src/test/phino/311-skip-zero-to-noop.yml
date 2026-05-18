@@ -14,7 +14,7 @@ input: |
     body ↦ ⟦
       i1 ↦ ⟦
         φ ↦ Φ.hone.skip,
-        class ↦ "java/util/stream/Stream",
+        stream-class ↦ "java/util/stream/Stream",
         count ↦ "0"
       ⟧
     ⟧

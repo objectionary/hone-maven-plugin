@@ -27,7 +27,7 @@ expected:
       𝐵-before,
       𝜏-skip ↦ ⟦
         φ ↦ Φ.hone.skip,
-        class ↦ "java/util/stream/Stream",
+        stream-class ↦ "java/util/stream/Stream",
         count ↦ "0"
       ⟧,
       𝐵-after

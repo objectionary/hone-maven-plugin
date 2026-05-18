@@ -1,0 +1,317 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 355-primitive-skip-to-mapMulti
+#
+# Primitive-stream counterpart of 353. Lowers Φ.hone.primitive-skip
+# (produced by 226 for the ldc form on IntStream / LongStream /
+# DoubleStream) into:
+#   * Raw bytecode that allocates a long[1] counter array on the stack
+#     (iconst_1 + newarray long + dup + iconst_0 + ldc Φ.jeo.long(N) +
+#     lastore)
+#   * A Φ.hone.lambda pragma that creates a primitive MapMultiConsumer
+#     capturing that counter, then calls
+#     IntStream.mapMulti(IntMapMultiConsumer) (or the Long / Double
+#     equivalent).
+#   * A new synthetic private static wrapper method that implements
+#     skip semantics: while counter[0] > 0 it decrements and drops the
+#     element, otherwise it forwards the primitive value to the
+#     downstream primitive Consumer.
+#
+# All three primitive stream classes are dispatched through a single
+# rule via sed substitution on 𝑒-primitive (I / J / D), producing the
+# correct lambda interface, bridge / lambda signatures, wrapper
+# signature, wrapper bytecode (iload / lload / dload, aload index,
+# max-locals) and invokeinterface signature.
+#
+# Fires only when count was captured as a Φ.number (the ldc form). The
+# string-typed count="0" / count="1" cases stay on the 313 / 356 paths.
+#
+# Same known limitations as 353 (counter-init bytecode placement w.r.t.
+# 512 cross-stage fusion; no eager negative-count check).
+name: primitive-skip-to-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.primitive-skip,
+          stream-class ↦ 𝑒-stream-class,
+          stream-signature ↦ 𝑒-stream-signature,
+          count ↦ 𝑒-count
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-iconst-1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.iconst_1
+        ⟧,
+        𝜏-newarray ↦ ⟦
+          φ ↦ Φ.jeo.opcode.newarray,
+          i1 ↦ 11
+        ⟧,
+        𝜏-dup ↦ ⟦
+          φ ↦ Φ.jeo.opcode.dup
+        ⟧,
+        𝜏-iconst-0 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.iconst_0
+        ⟧,
+        𝜏-ldc ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ldc,
+          i1 ↦ ⟦
+            φ ↦ Φ.jeo.long,
+            i1 ↦ 𝑒-count
+          ⟧
+        ⟧,
+        𝜏-lastore ↦ ⟦
+          φ ↦ Φ.jeo.opcode.lastore
+        ⟧,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ 𝑒-interface,
+          lambda-signature ↦ 𝑒-lambda-signature,
+          bridge-signature ↦ 𝑒-lambda-signature,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-wrapper-method,
+            signature ↦ 𝑒-wrapper-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ 𝑒-stream-class,
+            method ↦ "mapMulti",
+            signature ↦ 𝑒-stream-mapMulti-signature
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-wrapper-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 6,
+        max-locals ↦ 𝑒-max-locals
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ "[J" ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-primitive-type ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 𝑒-consumer-index, access ↦ 0, type ↦ 𝑒-consumer-type ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        w0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w2 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+        w3 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+        w4 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+        w5 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifle,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+        ⟧,
+        w6 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w8 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w10 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+        w11 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+        w12 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+        w13 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+        w14 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        w15 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+        w16 ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 3,
+          nlocal ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+          nstack ↦ 0,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+        ⟧,
+        w17 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 𝑒-consumer-index ⟧,
+        w18 ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-value-load, i1 ↦ 1 ⟧,
+        w19 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ 𝑒-consumer-class,
+          i3 ↦ "accept",
+          i4 ↦ 𝑒-consumer-accept-sig,
+          i5 ↦ Φ.true
+        ⟧,
+        w20 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-method
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+when:
+  and:
+    - not:
+        eq: [ 𝑒-count, '"0"' ]
+    - not:
+        eq: [ 𝑒-count, '"1"' ]
+    - or:
+        - and:
+            - eq: [ 𝑒-stream-class, '"java/util/stream/IntStream"' ]
+            - eq: [ 𝑒-stream-signature, '"(J)Ljava/util/stream/IntStream;"' ]
+        - and:
+            - eq: [ 𝑒-stream-class, '"java/util/stream/LongStream"' ]
+            - eq: [ 𝑒-stream-signature, '"(J)Ljava/util/stream/LongStream;"' ]
+        - and:
+            - eq: [ 𝑒-stream-class, '"java/util/stream/DoubleStream"' ]
+            - eq: [ 𝑒-stream-signature, '"(J)Ljava/util/stream/DoubleStream;"' ]
+where:
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-stream-class
+      - '"s/^java\\/util\\/stream\\/IntStream$/I/g"'
+      - '"s/^java\\/util\\/stream\\/LongStream$/J/g"'
+      - '"s/^java\\/util\\/stream\\/DoubleStream$/D/g"'
+  - meta: 𝑒-primitive-type
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/I/g"'
+      - '"s/^J$/J/g"'
+      - '"s/^D$/D/g"'
+  - meta: 𝑒-consumer-type
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/function\\/LongConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
+  - meta: 𝑒-consumer-class
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/java\\/util\\/function\\/IntConsumer/g"'
+      - '"s/^J$/java\\/util\\/function\\/LongConsumer/g"'
+      - '"s/^D$/java\\/util\\/function\\/DoubleConsumer/g"'
+  - meta: 𝑒-consumer-accept-sig
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/(I)V/g"'
+      - '"s/^J$/(J)V/g"'
+      - '"s/^D$/(D)V/g"'
+  - meta: 𝑒-consumer-index-str
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/2/g"'
+      - '"s/^J$/3/g"'
+      - '"s/^D$/3/g"'
+  - meta: 𝑒-consumer-index
+    function: number
+    args: [𝑒-consumer-index-str]
+  - meta: 𝑒-max-locals-str
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/3/g"'
+      - '"s/^J$/4/g"'
+      - '"s/^D$/4/g"'
+  - meta: 𝑒-max-locals
+    function: number
+    args: [𝑒-max-locals-str]
+  - meta: 𝑒-value-load-opcode-str
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/iload/g"'
+      - '"s/^J$/lload/g"'
+      - '"s/^D$/dload/g"'
+  - meta: 𝜏-value-load
+    function: tau
+    args: [𝑒-value-load-opcode-str]
+  - meta: 𝑒-sam-class
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream$IntMapMultiConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream$LongMapMultiConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream$DoubleMapMultiConsumer;/g"'
+  - meta: 𝑒-interface
+    function: concat
+    args: [ '"([J)"', 𝑒-sam-class ]
+  - meta: 𝑒-output-stream-type
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream;/g"'
+  - meta: 𝑒-stream-mapMulti-signature
+    function: concat
+    args: [ '"("', 𝑒-sam-class, '")"', 𝑒-output-stream-type ]
+  - meta: 𝑒-lambda-signature
+    function: concat
+    args: [ '"("', 𝑒-primitive-type, 𝑒-consumer-type, '")V"' ]
+  - meta: 𝑒-wrapper-signature
+    function: concat
+    args: [ '"([J"', 𝑒-primitive-type, 𝑒-consumer-type, '")V"' ]
+  - meta: 𝜏-iconst-1
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail' ]
+  - meta: 𝜏-newarray
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1' ]
+  - meta: 𝜏-dup
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray' ]
+  - meta: 𝜏-iconst-0
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup' ]
+  - meta: 𝜏-ldc
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup', '𝜏-iconst-0' ]
+  - meta: 𝜏-lastore
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup', '𝜏-iconst-0', '𝜏-ldc' ]
+  - meta: 𝜏-lambda
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup', '𝜏-iconst-0', '𝜏-ldc', '𝜏-lastore' ]
+  - meta: 𝑒-wrapper-method
+    function: random-string
+    args: [ '"hone_primitive_skip_%d"' ]
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: [ 'name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail', '𝜏-caller' ]
+  - meta: 𝑒-label-accept
+    function: random-string
+    args: [ '"LprimitiveSkipAccept%d"' ]

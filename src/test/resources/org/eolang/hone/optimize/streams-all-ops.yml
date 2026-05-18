@@ -46,8 +46,8 @@ log:
   - "BUILD SUCCESS"
   - "The result is 54"
 opcodes:
-  invokespecial: 1
+  invokespecial: 2
   invokestatic: 25
-  invokevirtual: 11
-  invokedynamic: 15
-  return: 15
+  invokevirtual: 12
+  invokedynamic: 16
+  return: 16

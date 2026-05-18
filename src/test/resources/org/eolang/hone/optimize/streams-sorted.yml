@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Confirms that .sorted(Comparator) in a Stream pipeline round-trips
+# through the optimizer: 212 recognises the Φ.hone.lambda whose stream
+# call is Stream.sorted(Comparator) and converts it into a Φ.hone.sorted
+# barrier pragma; 607 then converts the pragma back into a Φ.hone.lambda
+# so the 7xx phase can lower it to invokedynamic + invokeinterface. The
+# bytecode for the sort call itself must remain a Comparator lambda plus
+# the Stream.sorted invokeinterface, and the program must compute the
+# same result as without the optimization. See issue #549.
+java: |
+  package sorted;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long r = Stream.of(5, 3, 8, 1, 4)
+        .map(n -> n + 1)
+        .sorted((x, y) -> y - x)
+        .count();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 5"

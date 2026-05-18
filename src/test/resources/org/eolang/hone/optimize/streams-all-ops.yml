@@ -47,7 +47,7 @@ log:
   - "The result is 54"
 opcodes:
   invokespecial: 2
-  invokestatic: 25
-  invokevirtual: 12
+  invokestatic: 26
+  invokevirtual: 13
   invokedynamic: 16
-  return: 16
+  return: 18

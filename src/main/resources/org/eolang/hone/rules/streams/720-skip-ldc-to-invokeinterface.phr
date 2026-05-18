@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Inverse of 220: lowers Φ.hone.skip whose count was captured as a
+# Φ.number (ldc-based recognition) back into the `ldc Φ.jeo.long(N) +
+# invokeinterface java/util/stream/Stream.skip:(J)Ljava/util/stream/
+# Stream;` byte pair. Only matches when count is a Φ.number, so the
+# string-typed count="0" / count="1" cases (handled by 311 / 710) are
+# left alone. The when-clause excludes count=0 so the rule never
+# round-trips a no-op back to bytecode after 311 elimination would
+# have applied.
+name: skip-ldc-to-invokeinterface
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      stream-class ↦ 𝑒-stream-class,
+      count ↦ 𝑒-count,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦
+      φ ↦ Φ.jeo.opcode.ldc,
+      i1 ↦ ⟦
+        φ ↦ Φ.jeo.long,
+        i1 ↦ 𝑒-count
+      ⟧
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-push
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after' ]
+  - meta: 𝜏-invokeinterface
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after', '𝜏-push' ]

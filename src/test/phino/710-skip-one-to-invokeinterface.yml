@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 710 is the inverse of 212: a Φ.hone.skip block with count="1" that
+# survived to the 7xx lowering phase is rewritten back into the
+# `lconst_1 + invokeinterface java/util/stream/Stream.skip:(J)Ljava/
+# util/stream/Stream;` byte pair. This is the bytecode fallback when
+# no fold consumed the pragma.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/710-skip-one-to-invokeinterface.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      i1 ↦ ⟦
+        φ ↦ Φ.hone.skip,
+        stream-class ↦ "java/util/stream/Stream",
+        count ↦ "1"
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      𝐵-before,
+      𝜏-push ↦ ⟦
+        φ ↦ Φ.jeo.opcode.lconst_1
+      ⟧,
+      𝜏-invokeinterface ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/stream/Stream",
+        i3 ↦ "skip",
+        i4 ↦ "(J)Ljava/util/stream/Stream;",
+        i5 ↦ Φ.true
+      ⟧,
+      𝐵-after
+    ⟧

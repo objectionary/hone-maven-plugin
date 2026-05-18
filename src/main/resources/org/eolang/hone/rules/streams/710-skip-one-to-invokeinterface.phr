@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Inverse of 212: lowers Φ.hone.skip with count="1" back into the
+# `lconst_1 + invokeinterface java/util/stream/Stream.skip:(J)Ljava/
+# util/stream/Stream;` byte pair. Fires only when no earlier rule has
+# folded the skip into something else; ensures any recognized `.skip(1L)`
+# is always emitted as valid bytecode by 7xx, even when the eventual
+# state-carrying fusion path is not yet in place.
+name: skip-one-to-invokeinterface
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      stream-class ↦ 𝑒-stream-class,
+      count ↦ "1",
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦
+      φ ↦ Φ.jeo.opcode.lconst_1
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-push
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after' ]
+  - meta: 𝜏-invokeinterface
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after', '𝜏-push' ]

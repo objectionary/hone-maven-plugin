@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 212 recognizes the bytecode pair `lconst_1` + `invokeinterface
+# java/util/stream/Stream.skip:(J)Ljava/util/stream/Stream;` and folds
+# it into a single Φ.hone.skip block carrying count="1" — the
+# canonical `.skip(1L)` idiom that 710 mirrors back to bytecode when
+# no later rule has folded it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/212-recognize-skip-one.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      i2 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v1 ↦ "java/util/stream/Stream",
+        v2 ↦ "skip",
+        v3 ↦ "(J)Ljava/util/stream/Stream;",
+        v4 ↦ Φ.true
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      𝐵-before,
+      𝜏-skip ↦ ⟦
+        φ ↦ Φ.hone.skip,
+        stream-class ↦ "java/util/stream/Stream",
+        count ↦ "1"
+      ⟧,
+      𝐵-after
+    ⟧

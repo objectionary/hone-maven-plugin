@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Asserts that a non-zero `.skip(N)` survives the rewrite pipeline
+# unchanged in observable behavior. 220 recognizes `ldc Φ.jeo.long +
+# invokeinterface Stream.skip(J)` into Φ.hone.skip; without a fold the
+# 720 mirror lowers it back, so the runtime output is identical. This
+# is the round-trip regression guard for the non-zero variants until
+# a state-carrying fusion lands.
+java: |
+  package skippednonzero;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long r = Stream.of(1, 2, 3, 4, 5)
+        .skip(2L)
+        .count();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3"
+opcodes:
+  invokeinterface: 2

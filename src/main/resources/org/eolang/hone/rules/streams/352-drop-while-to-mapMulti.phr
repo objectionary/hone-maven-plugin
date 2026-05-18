@@ -2,17 +2,18 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 351-take-while-to-mapMulti
+# 352-drop-while-to-mapMulti
 #
-# Lowers Φ.hone.take-while (object Stream variant produced by 213) into:
+# Lowers Φ.hone.drop-while (object Stream variant produced by 217) into:
 #   * Raw bytecode that allocates a boolean[1] guard array on the stack
 #     (iconst_1 + newarray boolean)
 #   * A Φ.hone.lambda pragma that creates a BiConsumer capturing that
 #     guard, then calls Stream.mapMulti(BiConsumer)
 #   * A new synthetic private static wrapper method that implements
-#     takeWhile semantics: short-circuits once the original predicate
-#     first returns false (via guard[0] = true), and forwards accepted
-#     elements to the mapMulti Consumer.
+#     dropWhile semantics: drops elements while the original predicate
+#     returns true and the guard cell is unset, flips guard[0] = true
+#     on the first false the predicate returns, and from that moment
+#     forwards every element to the mapMulti Consumer.
 #
 # After this rule:
 #   * 701 picks up the Φ.hone.lambda and lowers it to invokedynamic +
@@ -20,11 +21,10 @@
 #   * The original predicate lambda$N method is untouched; the wrapper
 #     calls it via invokestatic.
 #
-# This is the takeWhile counterpart of the filter chain 201 → 305 → 501
-# → 511 → 601 → 701, but in a single rule because Stream.takeWhile's
-# once-false-always-false semantics need a captured state cell that the
-# stateless distill pipeline cannot express.
-name: take-while-to-mapMulti
+# Mirror of 351 with inverted control flow: guard means "have we started
+# emitting yet" rather than "have we stopped"; the predicate's truth value
+# means "still dropping" rather than "still taking".
+name: drop-while-to-mapMulti
 pattern: |
   ⟦
     φ ↦ Φ.jeo.class,
@@ -36,8 +36,8 @@ pattern: |
       𝐵-caller-head,
       body ↦ ⟦
         𝐵-body-head,
-        𝜏-take-while ↦ ⟦
-          φ ↦ Φ.hone.take-while,
+        𝜏-drop-while ↦ ⟦
+          φ ↦ Φ.hone.drop-while,
           opcode ↦ 𝑒-opcode,
           class ↦ 𝑒-class,
           bridge-signature ↦ 𝑒-bridge-signature,
@@ -125,7 +125,7 @@ result: |
         w2 ↦ ⟦ φ ↦ Φ.jeo.opcode.baload ⟧,
         w3 ↦ ⟦
           φ ↦ Φ.jeo.opcode.ifne,
-          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
         ⟧,
         w4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
         w5 ↦ ⟦
@@ -137,15 +137,14 @@ result: |
         ⟧,
         w6 ↦ ⟦
           φ ↦ Φ.jeo.opcode.ifne,
-          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧
         ⟧,
         w7 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
         w8 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
         w9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
         w10 ↦ ⟦ φ ↦ Φ.jeo.opcode.bastore ⟧,
-        w11 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-        w12 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
-        w13 ↦ ⟦
+        w11 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+        w12 ↦ ⟦
           φ ↦ Φ.jeo.frame,
           type ↦ 3,
           nlocal ↦ 0,
@@ -153,17 +152,17 @@ result: |
           nstack ↦ 0,
           stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
         ⟧,
-        w14 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
-        w15 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
-        w16 ↦ ⟦
+        w13 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
+        w14 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        w15 ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
           i2 ↦ "java/util/function/Consumer",
           i3 ↦ "accept",
           i4 ↦ "(Ljava/lang/Object;)V",
           i5 ↦ Φ.true
         ⟧,
-        w17 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧,
-        w18 ↦ ⟦
+        w16 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧,
+        w17 ↦ ⟦
           φ ↦ Φ.jeo.frame,
           type ↦ 3,
           nlocal ↦ 0,
@@ -171,7 +170,7 @@ result: |
           nstack ↦ 0,
           stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
         ⟧,
-        w19 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        w18 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
         ρ ↦ ∅
       ⟧,
       name ↦ 𝑒-wrapper-method
@@ -194,7 +193,7 @@ where:
     args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray']
   - meta: 𝑒-wrapper-method
     function: random-string
-    args: ['"hone_takeWhile_%d"']
+    args: ['"hone_dropWhile_%d"']
   - meta: 𝜏-wrapper
     function: random-tau
     args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail', '𝜏-caller']
@@ -211,7 +210,7 @@ where:
     args: ['"("', 𝑒-item-type, '"Ljava/util/function/Consumer;)V"']
   - meta: 𝑒-label-end
     function: random-string
-    args: ['"LtakeWhileEnd%d"']
+    args: ['"LdropWhileEnd%d"']
   - meta: 𝑒-label-accept
     function: random-string
-    args: ['"LtakeWhileAccept%d"']
+    args: ['"LdropWhileAccept%d"']

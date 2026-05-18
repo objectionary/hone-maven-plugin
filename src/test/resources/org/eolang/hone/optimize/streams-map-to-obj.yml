@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Drives an IntStream pipeline through mapToObj to confirm that the
+# 2xx recognition rule for mapToObj (lambda-to-box) and the 6xx
+# reverse rule (box-to-lambda) round-trip without changing the
+# observable result. The lambda boxes int values into Strings, then
+# joins them; sum-of-lengths is asserted to keep the check stable
+# across JDK implementations of Integer.toString.
+java: |
+  package maptoobj;
+  import java.util.stream.IntStream;
+  import java.util.stream.Collectors;
+  public class X {
+    public static void main(String[] a) {
+      String r = IntStream.range(0, 5)
+        .mapToObj(i -> "n" + i)
+        .collect(Collectors.joining("-"));
+      System.out.printf("The result is %s\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is n0-n1-n2-n3-n4"

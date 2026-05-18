@@ -78,7 +78,21 @@ for yml in "${tests[@]}"; do
     continue
   fi
   ok=true
+  if [ "$(yq -r 'has("expected")' "${yml}")" != 'true' ]; then
+    echo "  FAIL: 'expected' key is missing in ${name}.yml"
+    failed=$(( failed + 1 ))
+    failed_names+=("${name}")
+    rm -rf "${tmp}"
+    continue
+  fi
   count="$(yq -r '.expected | length' "${yml}")"
+  if [ "${count}" -eq 0 ]; then
+    echo "  FAIL: 'expected' is empty in ${name}.yml, must list at least one pattern"
+    failed=$(( failed + 1 ))
+    failed_names+=("${name}")
+    rm -rf "${tmp}"
+    continue
+  fi
   for (( i = 0; i < count; i++ )); do
     pattern="$(yq -r ".expected[${i}]" "${yml}")"
     if ! phino match --pattern "${pattern}" "${output}" > "${tmp}/match" 2>&1; then

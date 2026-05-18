@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 513 fuses an adjacent Φ.hone.mapMulti and Φ.hone.unbox in a caller's
+# body into a single Φ.hone.lambda whose stream call is
+# Stream.mapMultiToInt (or Long/Double). Two static methods are
+# synthesized on the class: merged and wrap. 701 then lowers the
+# resulting lambda the usual way.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/513-merge-mapMulti-unbox.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        i0 ↦ ⟦
+          φ ↦ Φ.hone.mapMulti,
+          class ↦ "Foo",
+          target-method ↦ "b1_target",
+          bridge-input ↦ "Ljava/lang/Integer;",
+          map-multi-consumer ↦ "Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          consumer ↦ "Ljava/util/function/Consumer;",
+          stream-class ↦ "java/util/stream/Stream",
+          static ↦ "true",
+          is-interface ↦ Φ.false
+        ⟧,
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.unbox,
+          opcode ↦ "invokevirtual",
+          class ↦ "Foo",
+          bridge-signature ↦ "(Ljava/lang/Integer;)I",
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "java/lang/Integer",
+            method ↦ "intValue",
+            signature ↦ "()I",
+            is-interface ↦ Φ.false
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      𝐵-class-pre,
+      𝜏-caller ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        𝐵-method-pre,
+        body ↦ ⟦
+          𝜏-only ↦ ⟦
+            φ ↦ Φ.hone.lambda,
+            𝐵-lambda-pre,
+            stream ↦ ⟦
+              𝐵-stream-pre,
+              method ↦ "mapMultiToInt",
+              𝐵-stream-post
+            ⟧,
+            𝐵-lambda-post
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-method-post
+      ⟧,
+      𝐵-class-post
+    ⟧
+  - |
+    ⟦
+      𝐵-pre,
+      𝜏-merged ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        𝐵-pre-desc,
+        descriptor ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+        𝐵-post-desc
+      ⟧,
+      𝐵-post
+    ⟧
+  - |
+    ⟦
+      𝐵-pre,
+      𝜏-wrap ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        𝐵-pre-desc,
+        descriptor ↦ "(Ljava/util/function/IntConsumer;Ljava/lang/Integer;)V",
+        𝐵-post-desc
+      ⟧,
+      𝐵-post
+    ⟧

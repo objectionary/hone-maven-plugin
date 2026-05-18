@@ -20,6 +20,7 @@ binary is found.
 
 ## Where to look
 
+<!-- markdownlint-disable MD013 -->
 | Concern                              | File                                                                  |
 | ------------------------------------ | --------------------------------------------------------------------- |
 | Stream rules (one per file)          | `src/main/resources/org/eolang/hone/rules/streams/NNN-name.phr`       |
@@ -31,6 +32,7 @@ binary is found.
 | Mojo with all user-facing knobs      | `src/main/java/org/eolang/hone/OptimizeMojo.java`                     |
 | End-to-end test fixtures             | `src/test/resources/org/eolang/hone/optimize/streams-*.yml`           |
 | Single-rule expression tests         | `src/test/resources/org/eolang/hone/rules/streams/expressions/*.phi`  |
+<!-- markdownlint-enable MD013 -->
 
 ## Anatomy of a `.phr` file
 
@@ -91,7 +93,7 @@ puts them in alphabetical order. Phino is then invoked with the rules in
 that same order. The `NNN-` prefix is *the* mechanism that defines the
 pipeline stages:
 
-```
+```text
 1xx  prep         remove dead labels, lower invokedynamic to Φ.hone.lambda
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
@@ -160,11 +162,13 @@ The output is the rewritten expression on stdout.
    are not enforced by the tool but make rules readable.
 3. **Run small-steps locally** on a representative `.phi` to see what
    your rule produces:
+
    ```bash
    mvn -Dhone.small-steps=true -Dhone.rules='streams/*' \
        org.eolang:hone-maven-plugin:build \
        org.eolang:hone-maven-plugin:optimize
    ```
+
    Inspect `target/hone/phi-optimized/...phi.NN` files to verify the
    delta.
 4. **Add a single-expression test** under

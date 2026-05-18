@@ -1,23 +1,29 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-# Full non-terminal stream coverage test. The pipeline contains only
-# operators from the 21 non-terminal Stream API methods of Java 21:
-# distinct, dropWhile, filter, flatMap, flatMapToDouble, flatMapToInt,
+# Full non-terminal stream coverage test. The pipeline exercises every
+# one of the 21 non-terminal operators of the Java 21 Stream API
+# (distinct, dropWhile, filter, flatMap, flatMapToDouble, flatMapToInt,
 # flatMapToLong, limit, map, mapMulti, mapMultiToDouble, mapMultiToInt,
 # mapMultiToLong, mapToDouble, mapToInt, mapToLong, peek, skip, sorted,
-# sorted(Comparator), takeWhile. No other stream operator (boxed,
-# mapToObj, asLongStream, ...) is used. The opcodes assertion fixes the
-# long-term optimisation goal: the streams/* rule pack must collapse
-# every such pipeline into a single mapMulti emitter, so the optimised
-# class contains exactly one invokedynamic. See issue #556.
+# sorted(Comparator), takeWhile). The Stream<T> operators appear twice
+# each, the nine *To{Int,Long,Double} variants appear once each with
+# boxed() between them as the only bridge back to Stream<T> (boxed is
+# not itself one of the 21 but is unavoidable for the type system).
+# The opcodes assertion fixes the long-term optimisation goal: the
+# streams/* rule pack must collapse every such pipeline into a single
+# mapMulti emitter, so the optimised class contains exactly one
+# invokedynamic. See issue #556.
 java: |
   package allnonterminal;
   import java.util.Comparator;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
   import java.util.stream.Stream;
   public class X {
     public static void main(String[] a) {
-      int r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
+      double r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
         .filter(n -> n > 0)
         .map(n -> n + 1)
         .peek(n -> {})
@@ -28,11 +34,39 @@ java: |
         .dropWhile(n -> n < 0)
         .limit(20L)
         .skip(0L)
+        .flatMap(n -> Stream.of(n, n))
+        .<Integer>mapMulti((n, c) -> c.accept(n))
+        .filter(n -> n != null)
+        .map(n -> n + 0)
+        .peek(n -> {})
+        .sorted(Comparator.reverseOrder())
+        .sorted()
+        .distinct()
+        .takeWhile(n -> n >= 0)
+        .dropWhile(n -> n < -1)
+        .limit(100L)
+        .skip(0L)
         .flatMap(n -> Stream.of(n))
         .<Integer>mapMulti((n, c) -> c.accept(n))
         .mapToInt(Integer::intValue)
+        .boxed()
+        .mapToLong(Integer::longValue)
+        .boxed()
+        .mapToDouble(Long::doubleValue)
+        .boxed()
+        .flatMapToInt(d -> IntStream.of(d.intValue()))
+        .boxed()
+        .flatMapToLong(n -> LongStream.of(n.longValue()))
+        .boxed()
+        .flatMapToDouble(n -> DoubleStream.of(n.doubleValue()))
+        .boxed()
+        .mapMultiToInt((d, c) -> c.accept(d.intValue()))
+        .boxed()
+        .mapMultiToLong((n, c) -> c.accept(n.longValue()))
+        .boxed()
+        .mapMultiToDouble((n, c) -> c.accept(n.doubleValue()))
         .sum();
-      System.out.printf("The result is %d\n", r);
+      System.out.printf("The result is %d\n", (int) r);
     }
   }
 log:

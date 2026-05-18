@@ -81,7 +81,7 @@ result: |
           method ↦ "accept",
           interface ↦ "([Z)Ljava/util/function/BiConsumer;",
           lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-          bridge-signature ↦ 𝑒-wrapper-signature,
+          bridge-signature ↦ 𝑒-bridge-signature-sam,
           static ↦ "true",
           opcode ↦ "invokestatic",
           target ↦ ⟦
@@ -205,6 +205,9 @@ where:
   - meta: 𝑒-wrapper-signature
     function: concat
     args: ['"([Z"', 𝑒-item-type, '"Ljava/util/function/Consumer;)V"']
+  - meta: 𝑒-bridge-signature-sam
+    function: concat
+    args: ['"("', 𝑒-item-type, '"Ljava/util/function/Consumer;)V"']
   - meta: 𝑒-label-end
     function: random-string
     args: ['"LtakeWhileEnd%d"']

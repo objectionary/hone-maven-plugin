@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognizes a Φ.hone.lambda whose stream call is Stream.mapMulti
+# (i.e., a source-level .mapMulti(BiConsumer) invocation) and converts
+# it to the canonical Φ.hone.mapMulti pragma — the same form 501 emits
+# for distill-derived mapMultis. This lets 512 fuse adjacent mapMultis
+# from any source uniformly.
+name: lambda-to-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "accept",
+    interface ↦ "()Ljava/util/function/BiConsumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "mapMulti",
+      signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.mapMulti,
+    class ↦ 𝑒-class,
+    target-method ↦ 𝑒-target-method,
+    bridge-input ↦ 𝑒-bridge-input,
+    map-multi-consumer ↦ "Ljava/util/function/BiConsumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    stream-class ↦ "java/util/stream/Stream",
+    static ↦ "true",
+    is-interface ↦ 𝑒-target-is-interface
+  ⟧
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.+)Ljava\\/util\\/function\\/Consumer;\\)V/$1/g"'

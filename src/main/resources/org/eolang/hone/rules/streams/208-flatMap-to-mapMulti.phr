@@ -47,26 +47,16 @@ result: |
       body ↦ ⟦
         𝐵-caller-body-head,
         𝜏-flatMap-pragma ↦ ⟦
-          φ ↦ Φ.hone.lambda,
+          φ ↦ Φ.hone.mapMulti,
           class ↦ 𝑒-class,
-          method ↦ "accept",
-          interface ↦ "()Ljava/util/function/BiConsumer;",
+          target-method ↦ 𝑒-wrapper-name,
+          bridge-input ↦ 𝑒-bridge-input,
+          map-multi-consumer ↦ "Ljava/util/function/BiConsumer;",
           lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-          bridge-signature ↦ 𝑒-new-bridge-signature,
+          consumer ↦ "Ljava/util/function/Consumer;",
+          stream-class ↦ "java/util/stream/Stream",
           static ↦ "true",
-          opcode ↦ "invokestatic",
-          target ↦ ⟦
-            handle ↦ 6,
-            class ↦ 𝑒-class,
-            method ↦ 𝑒-wrapper-name,
-            signature ↦ 𝑒-new-bridge-signature,
-            is-interface ↦ Φ.false
-          ⟧,
-          stream ↦ ⟦
-            class ↦ "java/util/stream/Stream",
-            method ↦ "mapMulti",
-            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
-          ⟧
+          is-interface ↦ Φ.false
         ⟧,
         𝐵-caller-body-tail
       ⟧,

@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds Φ.hone.peek into the uniform Φ.hone.distill form. The body
+# duplicates the element on the stack, invokes the consumer (which
+# pops one copy) and leaves the original element behind for the
+# downstream stage. The matching 209 rule restricts to static=true,
+# so this rule does not need to handle pre-distill (instance) targets.
+name: peek-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.peek,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "peek",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
+      i2 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-opcode,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]
+  - meta: 𝑒-dup
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+  - meta: 𝜏-dup
+    function: tau
+    args: [𝑒-dup]

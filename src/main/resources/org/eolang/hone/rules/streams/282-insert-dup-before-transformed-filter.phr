@@ -76,6 +76,7 @@ when:
         - eq: [𝜏-one, 'map']
         - eq: [𝜏-one, 'o-filter']
         - eq: [𝜏-one, 'p-filter']
+        - eq: [𝜏-one, 'peek']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

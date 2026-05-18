@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 730 is the unrecognise fallback for Φ.hone.distinct pragmas that were
+# not consumed by 353 — it lowers them back into a bare `invokeinterface
+# java/util/stream/Stream.distinct:()Ljava/util/stream/Stream;` opcode,
+# the same shape produced by javac and recognized by 216. See issue
+# #547. Mirror of 710 / 720 for skip.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/730-distinct-to-invokeinterface.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      a1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      𝐵-before,
+      𝜏-invokeinterface ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/stream/Stream",
+        i3 ↦ "distinct",
+        i4 ↦ "()Ljava/util/stream/Stream;",
+        i5 ↦ Φ.true
+      ⟧,
+      𝐵-after
+    ⟧

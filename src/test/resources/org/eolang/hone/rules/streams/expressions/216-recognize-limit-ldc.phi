@@ -1,0 +1,49 @@
+{⟦
+  j$Foo ↦ ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦
+      φ ↦ Φ.jeo.seq.of0
+    ⟧,
+    j$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      modifiers ↦ ⟦ static ↦ Φ.true ⟧,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      signature ↦ "",
+      exceptions ↦ "Exceptions",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        v1 ↦ 5,
+        v2 ↦ 5
+      ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
+      annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of2 ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        i2186 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ldc,
+          v2194 ↦ ⟦
+            φ ↦ Φ.jeo.long,
+            v2196 ↦ 20
+          ⟧
+        ⟧,
+        i2362 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          v2369 ↦ "java/util/stream/Stream",
+          v2371 ↦ "limit",
+          v2372 ↦ "(J)Ljava/util/stream/Stream;",
+          v2376 ↦ Φ.true
+        ⟧
+      ⟧,
+      trycatchblocks ↦ ⟦⟧,
+      local-variable-table ↦ ⟦⟧
+    ⟧,
+    signature ↦ ""
+  ⟧
+⟧}

@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A Stream pipeline whose Function and Predicate are passed in as
+# parameters to the enclosing method. From the lambda's point of
+# view, the predicate is just a captured local — but its origin
+# (caller's method reference, then passed through one stack frame)
+# exercises the bootstrap method's handling of non-literal
+# functional arguments. The rule pipeline must not specialise to a
+# specific implementation method when the lambda body is opaque.
+java: |
+  package methodrefarg;
+  import java.util.function.*;
+  import java.util.stream.Stream;
+  public class X {
+    static int run(Predicate<Integer> p, Function<Integer, Integer> f) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .filter(p)
+        .map(f)
+        .mapToInt(Integer::intValue)
+        .sum();
+    }
+    static boolean keep(Integer n) { return n > 2; }
+    static Integer triple(Integer n) { return n * 3; }
+    public static void main(String[] a) {
+      int r = run(X::keep, X::triple);
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 36"

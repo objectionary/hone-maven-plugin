@@ -9,12 +9,12 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "${here}/../../.." && pwd)"
 
 if ! command -v phino >/dev/null 2>&1; then
-  echo "phino is not installed, see https://github.com/objectionary/phino"
+  echo "❌ phino is not installed, see https://github.com/objectionary/phino"
   exit 1
 fi
 
 if ! command -v yq >/dev/null 2>&1; then
-  echo "yq is not installed, see https://github.com/mikefarah/yq"
+  echo "❌ yq is not installed, see https://github.com/mikefarah/yq"
   exit 1
 fi
 
@@ -23,7 +23,7 @@ cd "${root}"
 tests=("${here}"/*.yml)
 total=${#tests[@]}
 if [ "${total}" -eq 0 ]; then
-  echo "No test files found in ${here}"
+  echo "❌ No test files found in ${here}"
   exit 1
 fi
 
@@ -116,9 +116,9 @@ for yml in "${tests[@]}"; do
 done
 
 echo ""
-echo "Total: ${total}, passed: ${passed}, failed: ${failed}"
+echo "👍🏻 Total: ${total}, passed: ${passed}, failed: ${failed}"
 if [ "${failed}" -gt 0 ]; then
-  echo "Failures:"
+  echo "❌ Failures:"
   for n in "${failed_names[@]}"; do
     echo "  - ${n}"
   done

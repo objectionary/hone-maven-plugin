@@ -44,7 +44,14 @@ expected:
     ⟧
   - |
     ⟦
-      φ ↦ Φ.jeo.opcode.lconst_1
+      𝐵-init-head,
+      𝜏-lconst-1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.lconst_1
+      ⟧,
+      𝜏-lastore ↦ ⟦
+        φ ↦ Φ.jeo.opcode.lastore
+      ⟧,
+      𝐵-init-tail
     ⟧
   - |
     ⟦

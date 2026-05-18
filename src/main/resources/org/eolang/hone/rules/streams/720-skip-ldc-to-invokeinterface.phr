@@ -5,11 +5,11 @@
 # Inverse of 220: lowers Φ.hone.skip whose count was captured as a
 # Φ.number (ldc-based recognition) back into the `ldc Φ.jeo.long(N) +
 # invokeinterface java/util/stream/Stream.skip:(J)Ljava/util/stream/
-# Stream;` byte pair. Only matches when count is a Φ.number, so the
-# string-typed count="0" / count="1" cases (handled by 311 / 710) are
-# left alone. The when-clause excludes count=0 so the rule never
-# round-trips a no-op back to bytecode after 311 elimination would
-# have applied.
+# Stream;` byte pair. The when-clause excludes the string-typed
+# count="0" / count="1" cases produced by 210 / 212 so they stay on
+# their dedicated lowering paths (311 → nop and 710 → lconst_1) and
+# never get round-tripped through a `Φ.jeo.long("0"/"1")` wrapper —
+# which would be invalid bytecode.
 name: skip-ldc-to-invokeinterface
 pattern: |
   ⟦
@@ -41,6 +41,12 @@ result: |
     ⟧,
     𝐵-after
   ⟧
+when:
+  and:
+    - not:
+        eq: [ 𝑒-count, '"0"' ]
+    - not:
+        eq: [ 𝑒-count, '"1"' ]
 where:
   - meta: 𝜏-push
     function: random-tau

@@ -1,0 +1,213 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 351-take-while-to-mapMulti
+#
+# Lowers Φ.hone.take-while (object Stream variant produced by 209) into:
+#   * Raw bytecode that allocates a boolean[1] guard array on the stack
+#     (iconst_1 + newarray boolean)
+#   * A Φ.hone.lambda pragma that creates a BiConsumer capturing that
+#     guard, then calls Stream.mapMulti(BiConsumer)
+#   * A new synthetic private static wrapper method that implements
+#     takeWhile semantics: short-circuits once the original predicate
+#     first returns false (via guard[0] = true), and forwards accepted
+#     elements to the mapMulti Consumer.
+#
+# After this rule:
+#   * 701 picks up the Φ.hone.lambda and lowers it to invokedynamic +
+#     invokeinterface(mapMulti).
+#   * The original predicate lambda$N method is untouched; the wrapper
+#     calls it via invokestatic.
+#
+# This is the takeWhile counterpart of the filter chain 201 → 305 → 501
+# → 511 → 601 → 701, but in a single rule because Stream.takeWhile's
+# once-false-always-false semantics need a captured state cell that the
+# stateless distill pipeline cannot express.
+name: take-while-to-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-take-while ↦ ⟦
+          φ ↦ Φ.hone.take-while,
+          opcode ↦ 𝑒-opcode,
+          class ↦ 𝑒-class,
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-iconst-1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.iconst_1
+        ⟧,
+        𝜏-newarray ↦ ⟦
+          φ ↦ Φ.jeo.opcode.newarray,
+          i1 ↦ 4
+        ⟧,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "accept",
+          interface ↦ "([Z)Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-wrapper-signature,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-wrapper-method,
+            signature ↦ 𝑒-wrapper-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-wrapper-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 4,
+        max-locals ↦ 3
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ "[Z" ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-item-type ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        w0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w2 ↦ ⟦ φ ↦ Φ.jeo.opcode.baload ⟧,
+        w3 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifne,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧
+        ⟧,
+        w4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        w5 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-target-class,
+          i3 ↦ 𝑒-target-method,
+          i4 ↦ 𝑒-target-signature,
+          i5 ↦ 𝑒-target-is-interface
+        ⟧,
+        w6 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifne,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+        ⟧,
+        w7 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w8 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+        w10 ↦ ⟦ φ ↦ Φ.jeo.opcode.bastore ⟧,
+        w11 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        w12 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+        w13 ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 3,
+          nlocal ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+          nstack ↦ 0,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+        ⟧,
+        w14 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
+        w15 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        w16 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/function/Consumer",
+          i3 ↦ "accept",
+          i4 ↦ "(Ljava/lang/Object;)V",
+          i5 ↦ Φ.true
+        ⟧,
+        w17 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧,
+        w18 ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 3,
+          nlocal ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+          nstack ↦ 0,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+        ⟧,
+        w19 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-method
+    ⟧
+  ⟧
+when:
+  matches:
+    - '^\(L.+;\)Z$'
+    - 𝑒-bridge-signature
+where:
+  - meta: 𝜏-iconst-1
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail']
+  - meta: 𝜏-newarray
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1']
+  - meta: 𝜏-lambda
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray']
+  - meta: 𝑒-wrapper-method
+    function: random-string
+    args: ['"hone_takeWhile_%d"']
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail', '𝜏-caller']
+  - meta: 𝑒-item-type
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.+)\\).+/$1/g"'
+  - meta: 𝑒-wrapper-signature
+    function: concat
+    args: ['"([Z"', 𝑒-item-type, '"Ljava/util/function/Consumer;)V"']
+  - meta: 𝑒-label-end
+    function: random-string
+    args: ['"LtakeWhileEnd%d"']
+  - meta: 𝑒-label-accept
+    function: random-string
+    args: ['"LtakeWhileAccept%d"']

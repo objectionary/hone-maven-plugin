@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Exercises an IntStream pipeline whose source is IntStream.range(),
+# i.e. an infinite-style bounded primitive source. Confirms that the
+# 2xx recognition rules pick up primitive map/filter on int and the
+# 5xx emission rules lower the chain back to invokedynamic without
+# changing the observable result.
+java: |
+  package intrange;
+  import java.util.stream.IntStream;
+  public class X {
+    public static void main(String[] a) {
+      int r = IntStream.range(0, 10)
+        .filter(n -> n % 2 == 0)
+        .map(n -> n * n)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 120"

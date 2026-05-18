@@ -11,8 +11,16 @@
 # two originals.
 #
 # The same Φ.number-only gating as 312 applies — string-typed
-# count="0" / count="1" forms produced by 222 / 224 are folded by
-# their own rules (313 nop, 356 mapMulti) on a separate pass.
+# count="0" / count="1" forms produced by 222 / 224 are handled by
+# their own rules: 313 nop's the count="0" case, and 712 mirrors
+# count="1" back to invokeinterface when no later mapMulti fold for
+# primitive streams is in place.
+#
+# Same negative-count caveat as 312 — Java validates each .skip(long)
+# argument independently and throws on negative literals, but the
+# fold (and the rest of the skip pipeline starting at 353 / 355)
+# silently treats negatives as zero. This rule preserves that
+# pre-existing limitation rather than introducing a new check.
 name: collapse-adjacent-primitive-skips
 pattern: |
   ⟦

@@ -27,7 +27,14 @@ input: |
 expected:
   - |
     ⟦
-      φ ↦ Φ.hone.skip,
-      stream-class ↦ "java/util/stream/Stream",
-      count ↦ 7
+      φ ↦ Φ.jeo.method,
+      body ↦ ⟦
+        𝐵-pre,
+        𝜏-merged ↦ ⟦
+          φ ↦ Φ.hone.skip,
+          stream-class ↦ "java/util/stream/Stream",
+          count ↦ 7
+        ⟧,
+        𝐵-post
+      ⟧
     ⟧

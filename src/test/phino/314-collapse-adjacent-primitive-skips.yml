@@ -31,8 +31,15 @@ input: |
 expected:
   - |
     ⟦
-      φ ↦ Φ.hone.primitive-skip,
-      stream-class ↦ "java/util/stream/IntStream",
-      stream-signature ↦ "(J)Ljava/util/stream/IntStream;",
-      count ↦ 7
+      φ ↦ Φ.jeo.method,
+      body ↦ ⟦
+        𝐵-pre,
+        𝜏-merged ↦ ⟦
+          φ ↦ Φ.hone.primitive-skip,
+          stream-class ↦ "java/util/stream/IntStream",
+          stream-signature ↦ "(J)Ljava/util/stream/IntStream;",
+          count ↦ 7
+        ⟧,
+        𝐵-post
+      ⟧
     ⟧

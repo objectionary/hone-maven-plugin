@@ -19,6 +19,17 @@
 # require an extra normalisation step and is not worth the rule
 # complexity given how rarely adjacent `.skip()` calls appear in real
 # code.
+#
+# Java validates each .skip(long) argument independently and throws
+# on a negative literal, while the rest of the skip pipeline (353,
+# the per-count-form folds) silently treats a negative count as
+# zero. This collapse preserves the pre-existing limitation: a pair
+# such as .skip(-4).skip(5) no longer surfaces an exception once
+# 220 has lifted both ldc loads into Φ.hone.skip, so the merged
+# count of 1 silently forwards. Sum overflow above Long.MAX_VALUE
+# is theoretically possible but the rest of the skip pipeline
+# wraps modulo 2^64 the same way, so this rule does not introduce
+# a new failure mode either.
 name: collapse-adjacent-skips
 pattern: |
   ⟦

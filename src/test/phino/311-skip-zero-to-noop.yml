@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 311 folds away Φ.hone.skip with count="0" — the `.skip(0L)` idiom —
+# replacing the whole block with a Φ.jeo.opcode.nop. The matching 210
+# rule only emits count="0", so this is currently the only fold for
+# skip; higher counts will be handled by future state-carrying distill
+# variants.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/311-skip-zero-to-noop.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      i1 ↦ ⟦
+        φ ↦ Φ.hone.skip,
+        stream-class ↦ "java/util/stream/Stream",
+        count ↦ "0"
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      𝐵-before,
+      𝜏-nop ↦ ⟦
+        φ ↦ Φ.jeo.opcode.nop
+      ⟧,
+      𝐵-after
+    ⟧

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognizes a stream `.skip(0L)` call — the `lconst_0` that pushes the
+# count followed by the `invokeinterface java/util/stream/Stream.skip:(J)
+# Ljava/util/stream/Stream;` — and abstracts the pair into a single
+# Φ.hone.skip block. This is the bytecode-level entry point for the skip
+# recognizer; it currently captures only the `lconst_0` push (i.e. the
+# canonical `.skip(0L)` idiom which is a no-op slice). The downstream
+# rule 311 folds Φ.hone.skip with count="0" away. Larger counts and the
+# primitive specializations (IntStream/LongStream/DoubleStream) will be
+# handled by sibling rules in follow-up work.
+name: recognize-skip
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦
+      φ ↦ Φ.jeo.opcode.lconst_0,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏2 ↦ "skip",
+      𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      stream-class ↦ "java/util/stream/Stream",
+      count ↦ "0"
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-skip
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after' ]

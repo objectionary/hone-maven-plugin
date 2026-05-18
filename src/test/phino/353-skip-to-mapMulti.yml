@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 353 lowers Φ.hone.skip with a Φ.number count into a state-carrying
+# mapMulti BiConsumer: a long[1] counter array is allocated and
+# initialised on the stack, captured by a synthetic BiConsumer, and a
+# new wrapper method is added to the enclosing class. The wrapper
+# decrements the counter while it is > 0 (dropping the element) and
+# forwards to the downstream Consumer once it reaches 0. Same shape
+# as 351 / 352 but with a long counter and no captured user predicate.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/353-skip-to-mapMulti.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.skip,
+          stream-class ↦ "java/util/stream/Stream",
+          count ↦ 5
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.jeo.class,
+      𝐵-rest
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ "Foo",
+      method ↦ "accept",
+      interface ↦ "([J)Ljava/util/function/BiConsumer;",
+      lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+      𝐵-lambda-tail
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.newarray,
+      i1 ↦ 11
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.ldc,
+      i1 ↦ ⟦
+        φ ↦ Φ.jeo.long,
+        i1 ↦ 5
+      ⟧
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.lcmp
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.lsub
+    ⟧

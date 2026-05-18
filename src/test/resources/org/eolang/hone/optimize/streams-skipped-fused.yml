@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Asserts that a non-zero `.skip(N)` is folded into a state-carrying
+# mapMulti BiConsumer (via 220 + 353): the resulting program is
+# observably equivalent to the unfolded `Stream.skip(N)`, including
+# the prefix-discard semantics (it drops the *first* N elements, not
+# any N). The assertion is the sum of the surviving elements rather
+# than .count(), so an off-by-one or a non-prefix discard would
+# produce a different number. .map(n -> n + 1) primes a recognisable
+# arithmetic series (2, 3, 4, 5, 6) so the assertion is sensitive to
+# which elements were dropped: 2 + 4 + 5 + 6 + 7 = wrong (8 = 4+5+6
+# would be wrong too); only 4 + 5 + 6 = 15 corresponds to dropping
+# the canonical first 2 elements.
+#
+# Note: this fixture does NOT assert an invokedynamic count because
+# the counter-init bytecode emitted by 353 (iconst_1 / newarray /
+# dup / iconst_0 / ldc / lastore) sits between the upstream stage
+# and the skip's new mapMulti, which breaks 512's adjacent-mapMulti
+# pattern. Real fusion across that boundary needs a separate follow-
+# up rule that moves the counter setup out of the way of 512.
+java: |
+  package skippedfused;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int r = Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + 1)
+        .skip(2L)
+        .mapToInt(Integer::intValue)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 15"

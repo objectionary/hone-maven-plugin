@@ -50,8 +50,11 @@ jeo-test: $(TARGET)/before/Foo.xmir
 test: $(TEST_FILES)
 	mkdir -p "$(TARGET)/tests-output"
 	for t in $(TESTS); do
-		n=$$(echo "$${t}" | sed 's/-.*$$//g')
-		rule=$$(find "$(RULES_DIR)/" -name "$${n}-*.phr")
+		rule=$$(find "$(RULES_DIR)/" -name "$${t}.phr")
+		if [ -z "$${rule}" ]; then
+			n=$$(echo "$${t}" | sed 's/-.*$$//g')
+			rule=$$(find "$(RULES_DIR)/" -name "$${n}-*.phr")
+		fi
 		printf "\nParsing \e[1m%s\e[0m...\n" "$${t}"
 		phino rewrite --sweet "$(TESTS_DIR)/$${t}.phi" > /dev/null
 		printf "Testing \e[1m%s\e[0m against \e[1m%s\e[0m...\n" "$${t}" "$${rule}"

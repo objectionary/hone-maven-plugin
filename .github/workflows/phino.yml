@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: phino
+'on':
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+concurrency:
+  group: phino-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  phino:
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
+          sudo chmod a+x /usr/bin/phino
+      - uses: mikefarah/yq@master
+      - run: src/test/phino/run.sh

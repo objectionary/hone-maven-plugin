@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/121-nonstatic-lambda-to-static.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ "Foo",
+      method ↦ "bar",
+      interface ↦ "()Ljava/util/function/Function;",
+      lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+      bridge-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+      static ↦ "false",
+      opcode ↦ Φ.jeo.opcode.invokestatic,
+      target ↦ "x",
+      stream ↦ "y"
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.lambda, class ↦ 𝑒-class, method ↦ 𝑒-method, interface ↦ 𝑒-interface, lambda-signature ↦ 𝑒-lambda-signature, bridge-signature ↦ 𝑒-bridge-signature, static ↦ "true", opcode ↦ 𝑒-opcode, target ↦ 𝑒-target, stream ↦ 𝑒-stream ⟧

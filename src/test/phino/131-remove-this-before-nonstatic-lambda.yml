@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/131-remove-this-before-nonstatic-lambda.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        v1 ↦ 0,
+        ρ ↦ ∅
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "Foo",
+        method ↦ "bar",
+        interface ↦ "()Ljava/util/function/Function;",
+        lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+        bridge-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+        static ↦ "false",
+        opcode ↦ Φ.jeo.opcode.invokestatic,
+        target ↦ "x",
+        stream ↦ "y"
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ body ↦ ⟦ 𝜏-only ↦ ⟦ φ ↦ Φ.hone.lambda, 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧

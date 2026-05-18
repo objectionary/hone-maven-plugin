@@ -22,5 +22,5 @@ jobs:
       - run: |
           sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod a+x /usr/bin/phino
-      - uses: mikefarah/yq@v4.44.3
+      - uses: mikefarah/yq@v4.53.2
       - run: src/test/phino/run.sh

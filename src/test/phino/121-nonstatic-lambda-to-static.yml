@@ -20,4 +20,4 @@ input: |
     ⟧
   ⟧}
 expected:
-  - ⟦ φ ↦ Φ.hone.lambda, class ↦ 𝑒-class, method ↦ 𝑒-method, interface ↦ 𝑒-interface, lambda-signature ↦ 𝑒-lambda-signature, bridge-signature ↦ 𝑒-bridge-signature, static ↦ "true", opcode ↦ 𝑒-opcode, target ↦ 𝑒-target, stream ↦ 𝑒-stream ⟧
+  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-before, static ↦ "true", 𝐵-after ⟧

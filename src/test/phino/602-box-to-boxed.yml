@@ -12,4 +12,4 @@ input: |
     ⟧
   ⟧}
 expected:
-  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i1 ↦ "MyStream", i2 ↦ "boxed", i3 ↦ "()Ljava/util/stream/Stream;", i4 ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-before, i2 ↦ "boxed", i3 ↦ "()Ljava/util/stream/Stream;", i4 ↦ Φ.true, 𝐵-after ⟧

@@ -27,4 +27,4 @@ input: |
     ⟧
   ⟧}
 expected:
-  - ⟦ body ↦ ⟦ op2 ↦ ⟦ φ ↦ Φ.hone.lambda, 𝐵-lambda ⟧ ⟧ ⟧
+  - ⟦ body ↦ ⟦ 𝜏-only ↦ ⟦ φ ↦ Φ.hone.lambda, 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧

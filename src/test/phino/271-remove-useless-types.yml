@@ -20,4 +20,4 @@ input: |
     ⟧
   ⟧}
 expected:
-  - ⟦ body ↦ ⟦ op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v1 ↦ 0 ⟧ ⟧ ⟧
+  - ⟦ body ↦ ⟦ 𝜏-only ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧

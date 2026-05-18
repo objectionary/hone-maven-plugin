@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 603 unrecognises a rich Φ.hone.box pragma derived from
+# DoubleStream.mapToObj back into a Φ.hone.lambda call. See issue #538.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/603-box-to-lambda.phr
+input: |
+  {⟦
+    φ ↦ Φ.hone.box,
+    opcode ↦ "invokestatic",
+    class ↦ "Foo",
+    stream-class ↦ "java/util/stream/DoubleStream",
+    bridge-signature ↦ "(D)Ljava/lang/Double;",
+    static ↦ "true",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ "Foo",
+      method ↦ "lambda$main$0",
+      signature ↦ "(D)Ljava/lang/Double;",
+      is-interface ↦ Φ.false
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ "Foo",
+      method ↦ "apply",
+      interface ↦ "()Ljava/util/function/DoubleFunction;",
+      lambda-signature ↦ "(D)Ljava/lang/Object;",
+      bridge-signature ↦ "(D)Ljava/lang/Double;",
+      static ↦ "true",
+      opcode ↦ "invokestatic",
+      target ↦ ⟦
+        handle ↦ 6,
+        class ↦ "Foo",
+        method ↦ "lambda$main$0",
+        signature ↦ "(D)Ljava/lang/Double;",
+        is-interface ↦ Φ.false
+      ⟧,
+      stream ↦ ⟦
+        class ↦ "java/util/stream/DoubleStream",
+        method ↦ "mapToObj",
+        signature ↦ "(Ljava/util/function/DoubleFunction;)Ljava/util/stream/Stream;"
+      ⟧
+    ⟧

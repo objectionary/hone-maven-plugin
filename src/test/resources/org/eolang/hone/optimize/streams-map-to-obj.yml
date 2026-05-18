@@ -4,9 +4,8 @@
 # Drives an IntStream pipeline through mapToObj to confirm that the
 # 2xx recognition rule for mapToObj (lambda-to-box) and the 6xx
 # reverse rule (box-to-lambda) round-trip without changing the
-# observable result. The lambda boxes int values into Strings, then
-# joins them; sum-of-lengths is asserted to keep the check stable
-# across JDK implementations of Integer.toString.
+# observable result. The lambda boxes int values into Strings, which
+# are then joined with a dash separator and printed verbatim.
 java: |
   package maptoobj;
   import java.util.stream.IntStream;

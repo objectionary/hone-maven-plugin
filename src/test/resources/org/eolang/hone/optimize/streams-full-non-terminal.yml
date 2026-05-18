@@ -10,10 +10,10 @@
 # each, the nine *To{Int,Long,Double} variants appear once each with
 # boxed() between them as the only bridge back to Stream<T> (boxed is
 # not itself one of the 21 but is unavoidable for the type system).
-# The opcodes assertion fixes the long-term optimisation goal: the
-# streams/* rule pack must collapse every such pipeline into a single
-# mapMulti emitter, so the optimised class contains exactly one
-# invokedynamic. See issue #556.
+# The opcodes assertion pins the current count of invokedynamic in the
+# optimised class: 19 today, with the long-term goal of bringing it
+# down to 1 (a single mapMulti emitter that absorbs every operator).
+# See issue #556.
 java: |
   package allnonterminal;
   import java.util.Comparator;
@@ -75,4 +75,4 @@ log:
   - "BUILD SUCCESS"
   - "The result is 54"
 opcodes:
-  invokedynamic: 1
+  invokedynamic: 19

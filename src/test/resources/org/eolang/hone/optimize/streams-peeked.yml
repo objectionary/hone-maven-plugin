@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Asserts that .peek() in a Stream pipeline is folded into the adjacent
+# operations and ultimately re-emitted as a single .mapMulti() — the
+# whole .map().peek() chain collapses into one invokedynamic. Without
+# the peek rules (209/307), peek would remain an opaque second
+# invokedynamic + invokeinterface Stream.peek, so invokedynamic would
+# be 2. The expectation of 1 proves both that peek was recognised and
+# that it fused with the preceding map.
+java: |
+  package peeked;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long r = Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + 1)
+        .peek(n -> {})
+        .count();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 5"
+opcodes:
+  invokedynamic: 1

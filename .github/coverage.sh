@@ -30,8 +30,7 @@ table=$(
   printf '| Repository | Build Before | Time Before (s) | Classes Modified | Build After | Time After (s) |\n'
   printf '|---|---|---|---|---|---|\n'
   tail -n +2 "${csv}" | awk -F';' '{
-    short = substr($2, 1, 7)
-    printf "| [%s@%s](https://github.com/%s/commit/%s) | %s | %s | %s | %s | %s |\n", $1, short, $1, $2, $3, $4, $5, $6, $7
+    printf "| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %s | %s |\n", $1, $1, $2, $3, $4, $5, $6, $7
   }'
 )
 

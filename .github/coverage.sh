@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 
-set -u -o pipefail
+set -e -u -o pipefail
 
 repos=(
   "apache/commons-cli"
@@ -26,56 +26,44 @@ version=$(mvn -B -q -DforceStdout help:evaluate -Dexpression=project.version --b
 test -n "${version}" || { echo "Failed to read project version from pom.xml" >&2; exit 1; }
 echo "hone-maven-plugin version: ${version}"
 
-if ! mvn -B -q --batch-mode install -DskipTests -Dinvoker.skip; then
-  echo "Failed to install hone-maven-plugin into local Maven repository" >&2
-  exit 1
-fi
+mvn -B -q --batch-mode install -DskipTests -Dinvoker.skip
 echo "hone-maven-plugin installed into local Maven repository"
 
 printf 'repo;build_before;time_before;classes_modified;build_after;time_after\n' > "${csv}"
 
 snapshot_classes() {
   local base=$1 out=$2
-  (cd "${base}" && find . -type f -path '*/target/classes/*.class' -print0 \
-    | xargs -0 md5sum 2>/dev/null \
-    | sort > "${out}") || true
+  (cd "${base}" && find . -type f -path '*/target/classes/*.class' -exec md5sum {} + | sort > "${out}")
 }
 
 apply_hone() {
   local base=$1
-  local rc=0
   local cdir module
   while IFS= read -r -d '' cdir; do
     module=$(dirname "$(dirname "${cdir}")")
     echo "applying hone in ${module}"
-    if ! (cd "${module}" && mvn -B -q --batch-mode \
-        "org.eolang:hone-maven-plugin:${version}:build" \
-        "org.eolang:hone-maven-plugin:${version}:optimize" \
-        -Dhone.rules='streams/*'); then
-      echo "hone failed in ${module}" >&2
-      rc=1
-    fi
+    (cd "${module}" && mvn -B -q --batch-mode \
+      "org.eolang:hone-maven-plugin:${version}:build" \
+      "org.eolang:hone-maven-plugin:${version}:optimize" \
+      -Dhone.rules='streams/*')
   done < <(find "${base}" -type d -path '*/target/classes' -print0)
-  return "${rc}"
 }
 
 count_modified() {
   local before=$1 after=$2
-  awk '/^[<>]/ {print $NF}' < <(diff "${before}" "${after}" 2>/dev/null) \
+  { diff "${before}" "${after}" || true; } \
+    | awk '/^[<>]/ {print $NF}' \
     | sort -u | wc -l | tr -d ' '
 }
 
 run_repo() {
   local repo=$1
-  local name dir row start outcome seconds snap count hone
+  local name dir row start outcome seconds snap count
   name=$(basename "${repo}")
   dir="${work}/${name}"
   printf '\n=== %s ===\n' "${repo}"
   rm -rf "${dir}"
-  if ! git clone --depth 1 "https://github.com/${repo}.git" "${dir}"; then
-    printf '%s;clone_failed;0;0;skipped;0\n' "${repo}" >> "${csv}"
-    return 0
-  fi
+  git clone --depth 1 "https://github.com/${repo}.git" "${dir}"
   row="${repo}"
   start=$(date +%s)
   if (cd "${dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip clean test); then
@@ -87,22 +75,15 @@ run_repo() {
   row="${row};${outcome};${seconds}"
   if [ "${outcome}" != "pass" ]; then
     printf '%s;0;skipped;0\n' "${row}" >> "${csv}"
+    rm -rf "${dir}"
     return 0
   fi
   snap="${dir}/.snap"
   snapshot_classes "${dir}" "${snap}.before"
-  hone="yes"
-  apply_hone "${dir}" || hone="no"
+  apply_hone "${dir}"
   snapshot_classes "${dir}" "${snap}.after"
-  count=0
-  if [ -s "${snap}.before" ] && [ -s "${snap}.after" ]; then
-    count=$(count_modified "${snap}.before" "${snap}.after")
-  fi
+  count=$(count_modified "${snap}.before" "${snap}.after")
   row="${row};${count}"
-  if [ "${hone}" != "yes" ]; then
-    printf '%s;hone_failed;0\n' "${row}" >> "${csv}"
-    return 0
-  fi
   start=$(date +%s)
   if (cd "${dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip surefire:test); then
     outcome="pass"
@@ -115,7 +96,7 @@ run_repo() {
 }
 
 for repo in "${repos[@]}"; do
-  run_repo "${repo}" || true
+  run_repo "${repo}"
 done
 
 echo ""
@@ -128,11 +109,12 @@ table=$(
   tail -n +2 "${csv}" | awk -F';' '{ printf "| [%s](https://github.com/%s) | %s | %s | %s | %s | %s |\n", $1, $1, $2, $3, $4, $5, $6 }'
 )
 
+cpus=$(nproc --all 2>/dev/null || echo "?")
 sum=$(
   printf '%s\n\n' "${table}"
   printf 'The results were calculated in [this GHA job][coverage-gha]\n'
   printf 'on %s at %s,\n' "$(date +'%Y-%m-%d')" "$(date +'%H:%M')"
-  printf 'on %s with %s CPUs.\n' "$(uname)" "$(nproc --all)"
+  printf 'on %s with %s CPUs.\n' "$(uname)" "${cpus}"
 )
 export sum
 perl -i -0777 -pe 's/(?<=<!-- coverage_begin -->).*(?=<!-- coverage_end -->)/\n$ENV{sum}\n/gs;' README.md

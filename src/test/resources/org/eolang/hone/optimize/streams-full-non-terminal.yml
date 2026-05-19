@@ -11,8 +11,14 @@
 # boxed() between them as the only bridge back to Stream<T> (boxed is
 # not itself one of the 21 but is unavoidable for the type system).
 # The opcodes assertion pins the current count of invokedynamic in the
-# optimised class: 19 today, with the long-term goal of bringing it
+# optimised class: 21 today, with the long-term goal of bringing it
 # down to 1 (a single mapMulti emitter that absorbs every operator).
+# The count went up from 19 once 401b/401c was gated to Object-typed
+# distills only — typed auto distills (.map(n -> n + 0) and friends)
+# are no longer fused into the adjacent .distinct() cps distill, so
+# the two .distinct() calls in this pipeline emit their own mapMulti
+# each instead of riding inside an adjacent map's wrapper. Closing
+# that gap is part of issue #570.
 # See issue #556.
 java: |
   package allnonterminal;
@@ -77,4 +83,4 @@ log:
 before:
   invokedynamic: 23
 after:
-  invokedynamic: 19
+  invokedynamic: 21

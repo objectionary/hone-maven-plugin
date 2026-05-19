@@ -27,16 +27,14 @@ echo "Final CSV:"
 cat "${csv}"
 
 table=$(
-  printf '| Repository | Build Before | Time Before (s) | Classes Modified | Build After | Time After (s) |\n'
-  printf '|---|---|---:|---:|---|---:|\n'
+  printf '| Repository | Before | Edits | After |\n'
+  printf '|---|---:|---:|---:|\n'
   tail -n +2 "${csv}" | awk -F';' '
-    function badge(v) {
-      if (v == "pass") return "👍🏻"
-      if (v == "fail") return "⚠️"
-      return v
+    function mark(v) {
+      return v == "pass" ? "" : " ⚠️"
     }
     {
-      printf "| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %s | %s |\n", $1, $1, $2, badge($3), $4, $5, badge($6), $7
+      printf "| [%s](https://github.com/%s/commit/%s) | %ss%s | %s | %ss%s |\n", $1, $1, $2, $4, mark($3), $5, $7, mark($6)
     }'
 )
 

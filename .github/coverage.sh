@@ -28,7 +28,7 @@ cat "${csv}"
 
 table=$(
   printf '| Repository | Build Before | Time Before (s) | Classes Modified | Build After | Time After (s) |\n'
-  printf '|---|---|---|---|---|---|\n'
+  printf '|---|---|---:|---:|---|---:|\n'
   tail -n +2 "${csv}" | awk -F';' '
     function badge(v) {
       if (v == "pass") return "👍🏻"

@@ -108,6 +108,61 @@ If you insert a rule with a prefix that lies between two phases (say,
 a prefix that reflects which invariant your rule preserves on its
 *output* — that determines what later rules see.
 
+### Not every operation lives on the distill path (issue #570)
+
+The 3xx description above is the *intent* — in practice only the
+stateless point-wise operators are folded into `Φ.hone.distill`:
+
+```text
+filter   → 304 / 305 → distill
+map      → 306 → distill
+peek     → 307 → distill
+type     → 303 → distill
+transform→ 302 → distill
+dup      → 301 → distill
+```
+
+Everything else short-circuits straight to `Φ.hone.mapMulti` because
+it either carries state or emits a variable number of downstream
+elements per upstream item:
+
+```text
+flatMap            → 208 (stateless, fan-out via Stream.forEach)
+mapMulti (verbatim)→ 215 (stateless)
+distinct           → 353 (state = HashSet seen-set)
+take-while         → 351 (state = boolean[1] short-circuit cell)
+drop-while         → 352 (state = boolean[1] gate cell)
+skip(N)            → 353-skip / 354 / 355 / 356 (state = long[1] counter)
+```
+
+Each of these synthesises its own private wrapper method that feeds a
+`BiConsumer` to `Stream.mapMulti`. Once a pipeline hands off to a
+mapMulti pragma, `401-fuse` can no longer reach it — only `512` /
+`513` can, and both require *positional* adjacency in the body, which
+the per-operation state-init opcodes (`new HashSet` / `iconst_1 +
+newarray`) silently break. The streams-full-non-terminal test
+documents the consequence: `after: invokedynamic: 19` instead of the
+single dispatch the architecture aspires to.
+
+Closing the gap means routing the seven bypass operators through
+`Φ.hone.distill` as well. That requires the distill pragma to carry
+two new pieces of payload:
+
+- **captures** — a list of state types whose values live in the
+  `BiConsumer` instance synthesised by 501, mirroring what 351 / 352 /
+  353 already build on the stack today.
+- **emit-shape** — a marker distinguishing the current
+  "one-in-one-out, auto-emit at end" body from a CPS body that drives
+  the Consumer itself (needed for flatMap, mapMulti, and any
+  short-circuiting state). `401-fuse` then needs to compose two CPS
+  bodies via continuation passing rather than the current stack
+  concatenation.
+
+Once those land, 351 / 352 / 353 / 354 / 355 / 356 / 208 / 215 fold
+into distill instead of mapMulti, `401-fuse` collapses every
+sort-bounded segment into a single distill, and `501` emits one
+mapMulti per segment — the path from 19 down toward the goal of one.
+
 ## phino: the only rewrite engine
 
 There is no Java implementation of the rewriter. Everything is delegated

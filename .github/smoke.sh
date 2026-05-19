@@ -5,6 +5,7 @@
 set -e -u -o pipefail
 
 repo="apache/commons-cli"
+sha="17de58009bf9dada031a7b3891014c6de5a089bf"
 
 root=$(pwd)
 work="${root}/target/smoke"
@@ -20,7 +21,11 @@ echo "hone-maven-plugin installed into local Maven repository"
 name=$(basename "${repo}")
 dir="${work}/${name}"
 rm -rf "${dir}"
-git clone --depth 1 "https://github.com/${repo}.git" "${dir}"
+git init -q "${dir}"
+git -C "${dir}" remote add origin "https://github.com/${repo}.git"
+git -C "${dir}" fetch --depth 1 origin "${sha}"
+git -C "${dir}" checkout -q FETCH_HEAD
+echo "checked out ${repo} at ${sha}"
 
 printf '\n=== first run: tests of %s without hone ===\n' "${repo}"
 (cd "${dir}" && mvn -B --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip clean test) \

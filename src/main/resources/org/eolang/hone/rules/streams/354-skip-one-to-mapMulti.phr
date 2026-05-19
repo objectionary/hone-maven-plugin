@@ -1,0 +1,193 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 354-skip-one-to-mapMulti
+#
+# Sibling of 353-skip-to-mapMulti.phr for the `.skip(1L)` shape.
+# Recognises Φ.hone.skip with count="1" (the string-typed form
+# produced by 212 when javac emitted `lconst_1` for the count) and
+# lowers it into the same state-carrying mapMulti BiConsumer the
+# generic ldc case uses, with `lconst_1` in the counter-init instead
+# of `ldc Φ.jeo.long(N)`. Wrapper body is identical to 353's.
+#
+# See 353 for the full design notes (counter cell semantics, known
+# adjacency limitation of the counter-init bytecode w.r.t. 512, and
+# the negative-count gap — none of which apply to count="1" since 1
+# is a positive constant).
+name: skip-one-to-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.skip,
+          stream-class ↦ "java/util/stream/Stream",
+          count ↦ "1"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-iconst-1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.iconst_1
+        ⟧,
+        𝜏-newarray ↦ ⟦
+          φ ↦ Φ.jeo.opcode.newarray,
+          i1 ↦ 11
+        ⟧,
+        𝜏-dup ↦ ⟦
+          φ ↦ Φ.jeo.opcode.dup
+        ⟧,
+        𝜏-iconst-0 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.iconst_0
+        ⟧,
+        𝜏-lconst-1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.lconst_1
+        ⟧,
+        𝜏-lastore ↦ ⟦
+          φ ↦ Φ.jeo.opcode.lastore
+        ⟧,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ "([J)Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "(Ljava/lang/Object;Ljava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-wrapper-method,
+            signature ↦ 𝑒-wrapper-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-wrapper-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 6,
+        max-locals ↦ 3
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ "[J" ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "Ljava/lang/Object;" ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        w0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w2 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+        w3 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+        w4 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+        w5 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifle,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+        ⟧,
+        w6 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w8 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        w9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        w10 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+        w11 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+        w12 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+        w13 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+        w14 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        w15 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+        w16 ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 3,
+          nlocal ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+          nstack ↦ 0,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+        ⟧,
+        w17 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
+        w18 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        w19 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/function/Consumer",
+          i3 ↦ "accept",
+          i4 ↦ "(Ljava/lang/Object;)V",
+          i5 ↦ Φ.true
+        ⟧,
+        w20 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-method
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-iconst-1
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail' ]
+  - meta: 𝜏-newarray
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1' ]
+  - meta: 𝜏-dup
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray' ]
+  - meta: 𝜏-iconst-0
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup' ]
+  - meta: 𝜏-lconst-1
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup', '𝜏-iconst-0' ]
+  - meta: 𝜏-lastore
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup', '𝜏-iconst-0', '𝜏-lconst-1' ]
+  - meta: 𝜏-lambda
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail', '𝜏-iconst-1', '𝜏-newarray', '𝜏-dup', '𝜏-iconst-0', '𝜏-lconst-1', '𝜏-lastore' ]
+  - meta: 𝑒-wrapper-method
+    function: random-string
+    args: [ '"hone_skip_%d"' ]
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: [ 'name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail', '𝜏-caller' ]
+  - meta: 𝑒-wrapper-signature
+    function: concat
+    args: [ '"([JLjava/lang/Object;Ljava/util/function/Consumer;)V"' ]
+  - meta: 𝑒-label-accept
+    function: random-string
+    args: [ '"LskipAccept%d"' ]

@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Consolidated closure / method-reference roundtrip suite. Each
+# block below exercises a distinct lambda-metafactory or Predicate /
+# Function instantiation shape the rule pipeline must preserve:
+#
+#   bound  : String::length             (unbound-instance method ref)
+#   capObj : List captured in lambda     (reference capture)
+#   capArr : int[1] captured (effectively-final workaround)
+#   capFld : this.field read from lambda (implicit-this capture)
+#   capLoc : effectively-final local capture
+#   instRef: bound instance method ref   (self::decorate)
+#   refArg : Predicate/Function passed in as method parameters
+#   refs   : every operator is a static method reference
+#   sField : private static final read from lambda body
+#   sHelp  : lambda body delegates to a private static helper
+#   named  : Predicate/Function as user-defined named classes
+java: |
+  package closures;
+  import java.util.*;
+  import java.util.function.*;
+  import java.util.stream.*;
+  public class X {
+    private static final int LIMIT = 4;
+    private static final int BIAS = 1000;
+    private final int factor;
+    private final int floor;
+    X(int f, int fl) { this.factor = f; this.floor = fl; }
+    String decorate(Integer n) { return ">" + n; }
+    static class Good implements Predicate<Integer> {
+      public boolean test(Integer n) { return n > 2; }
+    }
+    static class Doubler implements Function<Integer, Integer> {
+      public Integer apply(Integer n) { return n * 2; }
+    }
+    static boolean isOdd(int n) { return (n & 1) == 1; }
+    static int triple(int n) { return n * 3; }
+    static boolean keep(Integer n) { return n > 2; }
+    static Integer alsoTriple(Integer n) { return n * 3; }
+    private static boolean isPrime(int n) {
+      if (n < 2) return false;
+      for (int i = 2; i * i <= n; ++i) if (n % i == 0) return false;
+      return true;
+    }
+    private static int square(int n) { return n * n; }
+    int instanceRun() {
+      return Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > this.floor)
+        .map(n -> n * this.factor)
+        .mapToInt(Integer::intValue)
+        .sum();
+    }
+    static int viaRefArg(Predicate<Integer> p, Function<Integer, Integer> f) {
+      return Stream.of(1, 2, 3, 4, 5).filter(p).map(f)
+        .mapToInt(Integer::intValue).sum();
+    }
+    public static void main(String[] a) {
+      int bound = Stream.of("a", "bb", "ccc", "dddd", "eeeee")
+        .filter(s -> s.length() > 1).map(String::length)
+        .mapToInt(Integer::intValue).sum();
+      List<Integer> allowed = Arrays.asList(2, 4, 6, 8);
+      int capObj = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9)
+        .filter(n -> allowed.contains(n)).map(n -> n * 10)
+        .mapToInt(Integer::intValue).sum();
+      int[] counter = {0};
+      Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > 1)
+        .map(n -> { counter[0] += n; return n; })
+        .mapToInt(Integer::intValue).sum();
+      int capArr = counter[0];
+      int capFld = new X(7, 2).instanceRun();
+      int threshold = 3, offset = 100;
+      int capLoc = Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(n -> n > threshold).map(n -> n + offset)
+        .mapToInt(Integer::intValue).sum();
+      X self = new X(0, 0);
+      String instRef = Stream.of(1, 2, 3, 4)
+        .filter(n -> n > 1).map(self::decorate)
+        .reduce("", (x, y) -> x + y);
+      int refArg = viaRefArg(X::keep, X::alsoTriple);
+      int refs = Stream.of(1, 2, 3, 4, 5, 6).mapToInt(Integer::intValue)
+        .filter(X::isOdd).map(X::triple).sum();
+      int sField = Stream.of(1, 2, 3, 4, 5, 6, 7)
+        .filter(n -> n < LIMIT).map(n -> n + BIAS)
+        .mapToInt(Integer::intValue).sum();
+      int sHelp = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9)
+        .filter(n -> isPrime(n)).map(n -> square(n))
+        .mapToInt(Integer::intValue).sum();
+      int named = Stream.of(1, 2, 3, 4, 5)
+        .filter(new Good()).map(new Doubler())
+        .mapToInt(Integer::intValue).sum();
+      System.out.printf(
+        "The result is %d %d %d %d %d %s %d %d %d %d %d\n",
+        bound, capObj, capArr, capFld, capLoc,
+        instRef, refArg, refs, sField, sHelp, named
+      );
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24"

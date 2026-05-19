@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Consolidated state-carrying intermediate operator suite. Each
+# pipeline below is rewritten into a Stream.mapMulti with a captured
+# state cell, and the pinned opcode counts assert the cell was
+# actually allocated and consulted. See issues #547 / #570.
+#
+#   distinct (rule 353): captures java/util/HashSet seen-set
+#     input [1, 2, 2, 3, 1, 3, 4] -> [1, 2, 3, 4]; count() = 4
+#     emits 1 `new` (HashSet allocation) and the HashSet.add call.
+#
+#   takeWhile (rule 351): captures boolean[1] short-circuit guard
+#     input [1, 2, 3, 100, 4, 5] under (n < 10) -> [1, 2, 3]; count() = 3
+#     emits 1 `newarray T_BOOLEAN` + 1 `baload` + 1 `bastore`.
+#
+#   dropWhile (rule 352): captures boolean[1] gate cell
+#     input [1, 2, 100, 4, 5, 6, 7] under (n < 10) -> [100, 4, 5, 6, 7];
+#     count() = 5. Emits its own `newarray` + `baload` + `bastore`.
+#
+# The .map(n -> n) on each pipeline is a no-op present only to keep
+# the class inside the default grep-in scope (which targets bodies
+# containing `map` or `filter`).
+#
+# Pinned counts are additive across the three pipelines:
+#   `new`     = 1 (HashSet from distinct only)
+#   `newarray`= 2 (one per guard, takeWhile + dropWhile)
+#   `baload`  = 2
+#   `bastore` = 2
+java: |
+  package stateful;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      long distinct = Stream.of(1, 2, 2, 3, 1, 3, 4)
+        .map(n -> n).distinct().count();
+      long takeWhile = Stream.of(1, 2, 3, 100, 4, 5)
+        .map(n -> n).takeWhile(n -> n < 10).count();
+      long dropWhile = Stream.of(1, 2, 100, 4, 5, 6, 7)
+        .map(n -> n).dropWhile(n -> n < 10).count();
+      System.out.printf(
+        "The result is %d %d %d\n", distinct, takeWhile, dropWhile
+      );
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 4 3 5"
+before:
+  new: 0
+  newarray: 0
+  baload: 0
+  bastore: 0
+after:
+  new: 1
+  newarray: 2
+  baload: 2
+  bastore: 2

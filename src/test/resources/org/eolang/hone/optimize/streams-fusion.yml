@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Consolidated point-wise-fusion roundtrip suite. Each pipeline below
+# stresses a different aspect of the 4xx fuse phase:
+#
+#   peeked : .map(+1).peek({}).count()        -- peek must fold next to
+#            map and the chain emit a single mapMulti.
+#   mapped : a chain of .map().filter().map().map().mapToInt().sum() --
+#            every operator on the stateless point-wise path; the
+#            collapsed body should leave one mapMulti and one
+#            mapToInt+sum dispatch.
+#   sorted : .map().sorted(Comparator) -- sorted is a fundamental
+#            non-fusable barrier; the Comparator handle must survive.
+#            See issue #549.
+#
+# Opcode pins are intentionally omitted because the three pipelines
+# share a class and their invokedynamic / invokestatic counts are no
+# longer attributable per pipeline. The full-non-terminal and all-ops
+# fixtures continue to pin invokedynamic totals for the architecture
+# as a whole.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      long peeked = Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + 1).peek(n -> {}).count();
+      int mapped = Arrays.asList(1, 2, 3, 4).stream()
+        .map(n -> n * 2).filter(n -> n % 2 == 0)
+        .map(n -> n + 1).map(n -> n + 2)
+        .mapToInt(Integer::intValue).sum();
+      long sorted = Stream.of(5, 3, 8, 1, 4)
+        .map(n -> n + 1).sorted((x, y) -> y - x).count();
+      System.out.printf(
+        "The result is %d %d %d\n", peeked, mapped, sorted
+      );
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 5 32 5"

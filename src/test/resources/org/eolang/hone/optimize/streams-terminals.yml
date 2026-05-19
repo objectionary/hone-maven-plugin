@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Consolidated terminal-operator roundtrip suite. Each block exercises
+# a distinct terminal whose handle the rule pipeline must preserve:
+#
+#   anyMatch  : boolean-returning short-circuit terminal
+#   findFirst : Optional-returning short-circuit terminal
+#   forEach   : Consumer side-effect terminal
+#   minMax    : Optional with Comparator.naturalOrder()
+#   reduce    : identity + Integer::sum accumulator
+#   toArray   : IntFunction (Integer[]::new) constructor reference
+#   joining   : Collectors.joining over Stream<String>
+#   toList    : Collectors.toList
+#   toSet     : Collectors.toSet (collector-side deduplication)
+java: |
+  package terminals;
+  import java.util.*;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      boolean anyMatch = Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > 0).map(n -> n + 1).anyMatch(n -> n > 4);
+      Optional<Integer> first = Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > 2).map(n -> n * 10).findFirst();
+      StringBuilder sb = new StringBuilder();
+      Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n % 2 == 1).map(n -> n * n)
+        .forEach(n -> sb.append(n).append(','));
+      Optional<Integer> min = Stream.of(5, 3, 8, 1, 9, 2)
+        .filter(n -> n > 0).map(n -> n + 100)
+        .min(Comparator.naturalOrder());
+      int reduce = Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > 1).map(n -> n + 10).reduce(0, Integer::sum);
+      Integer[] arr = Stream.of(1, 2, 3, 4)
+        .filter(n -> n > 1).map(n -> n * n).toArray(Integer[]::new);
+      String joining = Stream.of("apple", "banana", "cherry", "date")
+        .filter(s -> s.length() > 4).map(String::toUpperCase)
+        .collect(Collectors.joining("-"));
+      List<Integer> toList = Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(n -> n > 2).map(n -> n * 10)
+        .collect(Collectors.toList());
+      Set<Integer> toSet = Stream.of(1, 2, 2, 3, 3, 3, 4, 4, 4, 4)
+        .filter(n -> n > 1).map(n -> n * 2)
+        .collect(Collectors.toSet());
+      System.out.printf(
+        "The result is %b %d %s %d %d %d %s %d %d\n",
+        anyMatch, first.orElse(-1), sb.toString(), min.orElse(-1),
+        reduce, arr.length, joining, toList.size(), toSet.size()
+      );
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is true 30 1,9,25, 101 54 3 APPLE-BANANA-CHERRY 4 3"

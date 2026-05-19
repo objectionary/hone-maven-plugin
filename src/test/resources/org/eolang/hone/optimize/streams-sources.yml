@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Consolidated source-type and topology roundtrip suite. Each block
+# exercises a distinct stream construction or pipeline shape:
+#
+#   arrays   : Arrays.stream(int[])           — primitive int source
+#   doubleS  : DoubleStream.of                 — primitive double
+#   longS    : LongStream.of                   — primitive long
+#   intRange : IntStream.range                 — bounded primitive int
+#   iterate  : Stream.iterate + limit          — lazy infinite source
+#   mapToObj : IntStream.mapToObj              — primitive → reference
+#   multi    : two independent pipelines       — separate lambda$ groups
+#   concat   : Stream.concat of two pipelines  — three lambda groups
+#   nested   : flatMap whose mapper is a Stream pipeline
+#   flatmap  : flatMap + map chain             — fan-out then map
+java: |
+  package sources;
+  import java.util.*;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      int[] input = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+      int arrays = Arrays.stream(input)
+        .filter(n -> n % 3 == 0).map(n -> n * 10).sum();
+      double doubleS = DoubleStream.of(1.5, 2.5, 3.5, 4.5, 5.5)
+        .filter(d -> d > 2.0).map(d -> d + 1.0).sum();
+      long longS = LongStream.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
+        .filter(n -> n % 2 == 0).map(n -> n * 2).sum();
+      int intRange = IntStream.range(0, 10)
+        .filter(n -> n % 2 == 0).map(n -> n * n).sum();
+      int iterate = Stream.iterate(1, n -> n + 2)
+        .limit(5).filter(n -> n > 1).map(n -> n * 10)
+        .mapToInt(Integer::intValue).sum();
+      String mapToObj = IntStream.range(0, 5)
+        .mapToObj(i -> "n" + i).collect(Collectors.joining("-"));
+      int multi1 = Stream.of(1, 2, 3, 4)
+        .filter(n -> n > 1).map(n -> n * 2)
+        .mapToInt(Integer::intValue).sum();
+      int multi2 = Stream.of(10, 20, 30)
+        .filter(n -> n < 25).map(n -> n + 5)
+        .mapToInt(Integer::intValue).sum();
+      int concat = Stream.concat(
+          Stream.of(1, 2, 3).map(n -> n * 10),
+          Stream.of(4, 5, 6).map(n -> n * 100)
+        ).filter(n -> n > 15).mapToInt(Integer::intValue).sum();
+      int nested = Stream.of(1, 2, 3)
+        .flatMap(n -> Stream.of(n, n * 10)
+          .filter(m -> m > 1).map(m -> m + 1))
+        .mapToInt(Integer::intValue).sum();
+      int flatmap = Arrays.asList(1, 2, 3).stream()
+        .map(n -> n * 2)
+        .flatMap(n -> Stream.of(n, n + 1))
+        .map(n -> n + 10).mapToInt(Integer::intValue).sum();
+      System.out.printf(
+        "The result is %d %d %d %d %d %s %d %d %d %d %d\n",
+        arrays, (int) doubleS, longS, intRange, iterate,
+        mapToObj, multi1 + multi2, concat, nested, flatmap, 0
+      );
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 180 20 60 120 240 n0-n1-n2-n3-n4 58 1550 70 87 0"

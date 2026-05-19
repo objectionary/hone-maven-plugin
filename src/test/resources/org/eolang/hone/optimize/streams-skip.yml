@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Consolidated .skip() roundtrip suite covering every shape the rule
+# pipeline handles:
+#
+#   objNop   : Stream.skip(0L)                 -> rule 311 lowers to nop
+#   objNon0  : Stream.skip(2L) with no .map    -> 220 recognises, no fold
+#   objFused : Stream.skip(2L) after .map      -> 353 mapMulti+long[1]
+#   objOne   : Stream.skip(1L) after .map      -> same shape as 353 with
+#                                                 lconst_1 in counter-init
+#   intP     : IntStream.skip(0L)              -> 313 nop
+#   intF     : IntStream.skip(2L) after .map   -> 355 mapMulti+long[1]
+#   longP    : LongStream.skip(2L) bare        -> 226 recognise, 722 mirror
+#   longF    : LongStream.skip(1L) after .map  -> 356 mapMulti+long[1]
+#   doubleP  : DoubleStream.skip(0L)           -> 313 nop
+#   doubleF  : DoubleStream.skip(1L) bare      -> primitive roundtrip
+#
+# Opcode pins are intentionally omitted: the combined class folds
+# skip-as-nop, skip-as-mapMulti, and skip-as-roundtrip into one
+# bytecode body, and the per-rule `invokeinterface` deltas no longer
+# attribute cleanly. The runtime output is the regression guard --
+# each numeric value is sensitive to a one-element off-by-one or a
+# non-prefix discard.
+java: |
+  package skip;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      long objNop = Stream.of(1, 2, 3, 4, 5).skip(0L).count();
+      long objNon0 = Stream.of(1, 2, 3, 4, 5).skip(2L).count();
+      int objFused = Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + 1).skip(2L).mapToInt(Integer::intValue).sum();
+      int objOne = Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + 1).skip(1L).mapToInt(Integer::intValue).sum();
+      int intP = IntStream.of(1, 2, 3, 4, 5).skip(0L).sum();
+      int intF = IntStream.of(1, 2, 3, 4, 5).map(n -> n + 1).skip(2L).sum();
+      long longP = LongStream.of(10L, 20L, 30L, 40L).skip(2L).sum();
+      long longF = LongStream.of(10L, 20L, 30L, 40L).skip(1L).sum();
+      double doubleP = DoubleStream.of(1.5, 2.5, 3.5).skip(0L).sum();
+      double doubleF = DoubleStream.of(1.5, 2.5, 3.5).skip(1L).sum();
+      System.out.printf(
+        "The result is %d %d %d %d %d %d %d %d %.1f %.1f\n",
+        objNop, objNon0, objFused, objOne,
+        intP, intF, longP, longF, doubleP, doubleF
+      );
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 5 3 15 18 15 15 70 90 7.5 6.0"

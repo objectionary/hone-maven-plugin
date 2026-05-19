@@ -13,33 +13,13 @@ repo=$1
 sha=$2
 
 root=$(pwd)
-work="${root}/target/smoke"
-mkdir -p "${work}"
-
-version=$(mvn -ntp -B -q -DforceStdout help:evaluate -Dexpression=project.version --batch-mode 2>/dev/null | tail -n 1)
-echo "hone-maven-plugin version: ${version}"
+csv="${root}/target/smoke.csv"
+mkdir -p "$(dirname "${csv}")"
+printf 'repo;sha;build_before;time_before;classes_modified;build_after;time_after\n' > "${csv}"
 
 mvn -ntp -B -q --batch-mode install -DskipTests -Dinvoker.skip
+echo "hone-maven-plugin installed into local Maven repository"
 
-name=$(basename "${repo}")
-dir="${work}/${name}"
-rm -rf "${dir}"
-git init -q "${dir}"
-git -C "${dir}" remote add origin "https://github.com/${repo}.git"
-git -C "${dir}" fetch --depth 1 origin "${sha}"
-git -C "${dir}" checkout -q FETCH_HEAD
-echo "checked out ${repo} at ${sha}"
+"${root}/.github/hone-it.sh" "${repo}" "${sha}" "${csv}"
 
-mvn_flags=(-ntp -B --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
-
-mvn -f "${dir}" "${mvn_flags[@]}" clean test
-
-while IFS= read -r -d '' cdir; do
-  module=$(dirname "$(dirname "${cdir}")")
-  mvn -f "${module}" -B --batch-mode \
-    "org.eolang:hone-maven-plugin:${version}:build" \
-    "org.eolang:hone-maven-plugin:${version}:optimize" \
-    -Dhone.rules='streams/*'
-done < <(find "${dir}" -type d -path '*/target/classes' -print0)
-
-mvn -f "${dir}" "${mvn_flags[@]}" surefire:test
+cat "${csv}"

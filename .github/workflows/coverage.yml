@@ -34,6 +34,8 @@ jobs:
           sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod a+x /usr/bin/phino
       - run: .github/coverage.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: peter-evans/create-pull-request@v8
         with:
           sign-commits: true

@@ -25,5 +25,7 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "The result is 5"
-opcodes:
+before:
+  invokedynamic: 2
+after:
   invokedynamic: 1

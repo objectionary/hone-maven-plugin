@@ -31,6 +31,9 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "The result is 4"
-opcodes:
+before:
+  new: 0
+  invokevirtual: 1
+after:
   new: 1
   invokevirtual: 2

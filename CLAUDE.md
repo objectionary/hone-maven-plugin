@@ -178,8 +178,11 @@ The output is the rewritten expression on stdout.
 5. **Add or update an end-to-end YAML** in
    `src/test/resources/org/eolang/hone/optimize/`. These specify the
    Java source to compile, the expected `log` lines, and the expected
-   `opcodes` count in the optimized class. Updating the opcodes counts
-   is normal when a rule changes how a stream pipeline is lowered.
+   opcode counts in the class — `before` for the bytecode produced by
+   `javac` and `after` for the bytecode produced by the optimizer.
+   A count of `0` asserts the opcode is absent at that stage. Updating
+   the `after` counts is normal when a rule changes how a stream
+   pipeline is lowered.
 6. **Bump the phino version** in `default-phino-version.txt` only if
    the rule depends on syntax or behavior that ships in a newer phino.
 

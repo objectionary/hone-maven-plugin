@@ -92,7 +92,6 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         final Map<String, Object> pack = new Yaml().load(yaml);
         final String code = (String) pack.get("java");
-        final Map<String, Integer> opcodes = (Map<String, Integer>) pack.get("opcodes");
         final Matcher pkg = Pattern.compile("package\\s+([\\w.]+)\\s*;").matcher(code);
         if (!pkg.find()) {
             throw new IllegalStateException(
@@ -105,16 +104,9 @@ final class OptimizeMojoTest {
                 String.format("YAML pack lacks 'class' declaration in 'java' field: %s", yaml)
             );
         }
-        final String path = String.format(
-            "src/main/java/%s/%s.java",
-            pkg.group(1).replace('.', '/'),
-            cls.group(1)
-        );
-        final String bytecode = String.format(
-            "target/classes/%s/%s.class",
-            pkg.group(1).replace('.', '/'),
-            cls.group(1)
-        );
+        final String slashed = pkg.group(1).replace('.', '/');
+        final String klass = cls.group(1);
+        final String path = String.format("src/main/java/%s/%s.java", slashed, klass);
         new Farea(dir).together(
             f -> {
                 f.clean();
@@ -137,7 +129,7 @@ final class OptimizeMojoTest {
                     .phase("process-classes")
                     .goals("java")
                     .configuration()
-                    .set("mainClass", String.format("%s.%s", pkg.group(1), cls.group(1)));
+                    .set("mainClass", String.format("%s.%s", pkg.group(1), klass));
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     String.format(
@@ -149,26 +141,69 @@ final class OptimizeMojoTest {
                         new Mapped<>(Matchers::containsString, (List<String>) pack.get("log"))
                     )
                 );
-                if (opcodes != null) {
-                    final Map<String, Integer> actual = new ClassOpcodes(
-                        f.files().file(bytecode).path()
-                    ).counts();
-                    final List<org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>> checks =
-                        new ArrayList<>(opcodes.size());
-                    for (final Map.Entry<String, Integer> entry : opcodes.entrySet()) {
-                        checks.add(Matchers.hasEntry(entry.getKey(), entry.getValue()));
-                    }
-                    MatcherAssert.assertThat(
-                        String.format(
-                            "opcode counts in %s do not match YAML expectations, actual: %s",
-                            bytecode, actual
-                        ),
-                        actual,
-                        Matchers.allOf(checks)
-                    );
-                }
+                OptimizeMojoTest.assertOpcodes(
+                    f.files().file(
+                        String.format("target/classes-before-hone/%s/%s.class", slashed, klass)
+                    ).path(),
+                    (Map<String, Integer>) pack.get("before"),
+                    "before"
+                );
+                OptimizeMojoTest.assertOpcodes(
+                    f.files().file(
+                        String.format("target/classes/%s/%s.class", slashed, klass)
+                    ).path(),
+                    (Map<String, Integer>) pack.get("after"),
+                    "after"
+                );
             }
         );
+    }
+
+    /**
+     * Assert that opcode counts in a compiled class match the YAML
+     * expectations. A zero value asserts the opcode is absent.
+     * @param klass Path to the .class file
+     * @param expected Expected opcode → count map, or null to skip
+     * @param stage Either "before" or "after" — used in the failure message
+     * @throws IOException If the class file cannot be read
+     */
+    private static void assertOpcodes(final Path klass,
+        final Map<String, Integer> expected, final String stage) throws IOException {
+        if (expected == null) {
+            return;
+        }
+        final Map<String, Integer> actual = new ClassOpcodes(klass).counts();
+        final List<org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>> checks =
+            new ArrayList<>(expected.size());
+        for (final Map.Entry<String, Integer> entry : expected.entrySet()) {
+            checks.add(OptimizeMojoTest.opcodeMatcher(entry.getKey(), entry.getValue()));
+        }
+        MatcherAssert.assertThat(
+            String.format(
+                "%s-stage opcode counts in %s do not match YAML '%s' expectations, actual: %s",
+                stage, klass, stage, actual
+            ),
+            actual,
+            Matchers.allOf(checks)
+        );
+    }
+
+    /**
+     * Build a single opcode matcher: presence with an exact count when
+     * the expected value is positive, absence when it is zero.
+     * @param opcode Opcode mnemonic
+     * @param count Expected occurrences (zero asserts absence)
+     * @return A Hamcrest matcher over the opcode tally
+     */
+    private static org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>
+        opcodeMatcher(final String opcode, final Integer count) {
+        final org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>> ret;
+        if (count == 0) {
+            ret = Matchers.not(Matchers.hasKey(opcode));
+        } else {
+            ret = Matchers.hasEntry(opcode, count);
+        }
+        return ret;
     }
 
     @Test

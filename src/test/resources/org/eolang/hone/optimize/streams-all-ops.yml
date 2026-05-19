@@ -45,7 +45,13 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "The result is 54"
-opcodes:
+before:
+  invokespecial: 1
+  invokestatic: 17
+  invokevirtual: 11
+  invokedynamic: 17
+  return: 7
+after:
   invokespecial: 2
   invokestatic: 26
   invokevirtual: 13

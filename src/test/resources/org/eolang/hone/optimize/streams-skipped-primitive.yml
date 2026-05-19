@@ -28,5 +28,7 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "Sums are 15 70 7.5"
-opcodes:
+before:
+  invokeinterface: 6
+after:
   invokeinterface: 4

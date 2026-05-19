@@ -356,7 +356,7 @@ files is computed by comparing MD5 checksums before and after.
 
 <!-- coverage_begin -->
 | Repository | Classes | Before | Edits | After |
-|---|---:|---:|---:|---:|
+| --- | ---: | ---: | ---: | ---: |
 | [apache/commons-cli](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | 56 | 28s | 54 | 6s |
 | [jhy/jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 317 | 24s | 317 | 15s |
 | [FasterXML/jackson-core](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | 176 | 40s | 165 | 3s ⚠️ |

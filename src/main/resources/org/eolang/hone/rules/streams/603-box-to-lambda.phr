@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: box-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.box,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    target ↦ 𝑒-target
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "apply",
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
+    target ↦ 𝑒-target,
+    stream ↦ ⟦
+      class ↦ 𝑒-stream-class,
+      method ↦ "mapToObj",
+      signature ↦ 𝑒-stream-signature
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.)\\)L.+;/$1/g"'
+  - meta: 𝑒-input-class-simple-name
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/I/Int/g"'
+      - '"s/J/Long/g"'
+      - '"s/D/Double/g"'
+  - meta: 𝑒-interface
+    function: concat
+    args: ['"()Ljava/util/function/"', 𝑒-input-class-simple-name, '"Function;"']
+  - meta: 𝑒-lambda-signature
+    function: concat
+    args: ['"("', 𝑒-bridge-input, '")Ljava/lang/Object;"']
+  - meta: 𝑒-stream-signature
+    function: concat
+    args:
+      - '"(Ljava/util/function/"'
+      - 𝑒-input-class-simple-name
+      - '"Function;)Ljava/util/stream/Stream;"'

@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: lambda-to-box
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ 𝑒-method,
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      𝐵-target-before,
+      signature ↦ 𝑒-target-signature,
+      𝐵-target-after
+    ⟧,
+    stream ↦ ⟦
+      class ↦ 𝑒-stream-class,
+      method ↦ 𝑒-stream-method,
+      signature ↦ 𝑒-stream-signature
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.box,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      𝐵-target-before,
+      signature ↦ 𝑒-target-signature,
+      𝐵-target-after
+    ⟧
+  ⟧
+when:
+  or:
+    - and:
+        - eq: [𝑒-method, '"apply"']
+        - matches: ['\(\)Ljava/util/function/IntFunction;', 𝑒-interface]
+        - eq: [𝑒-lambda-signature, '"(I)Ljava/lang/Object;"']
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-stream-method, '"mapToObj"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;"']
+        - matches: ['\(I\)L.+;', 𝑒-bridge-signature]
+    - and:
+        - eq: [𝑒-method, '"apply"']
+        - matches: ['\(\)Ljava/util/function/LongFunction;', 𝑒-interface]
+        - eq: [𝑒-lambda-signature, '"(J)Ljava/lang/Object;"']
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-stream-method, '"mapToObj"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongFunction;)Ljava/util/stream/Stream;"']
+        - matches: ['\(J\)L.+;', 𝑒-bridge-signature]
+    - and:
+        - eq: [𝑒-method, '"apply"']
+        - matches: ['\(\)Ljava/util/function/DoubleFunction;', 𝑒-interface]
+        - eq: [𝑒-lambda-signature, '"(D)Ljava/lang/Object;"']
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+        - eq: [𝑒-stream-method, '"mapToObj"']
+        - eq: [𝑒-stream-signature, '"(Ljava/util/function/DoubleFunction;)Ljava/util/stream/Stream;"']
+        - matches: ['\(D\)L.+;', 𝑒-bridge-signature]

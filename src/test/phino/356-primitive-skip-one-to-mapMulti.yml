@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 356 is the .skip(1L) sibling of 355 for primitive streams.
+# Φ.hone.primitive-skip with count="1" (the string-typed form produced
+# by 224 when javac emitted lconst_1 for the count) is lowered into the
+# same state-carrying mapMulti shape 355 emits for the ldc case, with
+# lconst_1 in the counter-init instead of ldc Φ.jeo.long(N). Tested
+# here on IntStream.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/356-primitive-skip-one-to-mapMulti.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.primitive-skip,
+          stream-class ↦ "java/util/stream/IntStream",
+          stream-signature ↦ "(J)Ljava/util/stream/IntStream;",
+          count ↦ "1"
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ "Foo",
+      method ↦ "accept",
+      interface ↦ "([J)Ljava/util/stream/IntStream$IntMapMultiConsumer;",
+      lambda-signature ↦ "(ILjava/util/function/IntConsumer;)V",
+      𝐵-lambda-tail
+    ⟧
+  - |
+    ⟦
+      𝐵-init-head,
+      𝜏-lconst-1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.lconst_1
+      ⟧,
+      𝜏-lastore ↦ ⟦
+        φ ↦ Φ.jeo.opcode.lastore
+      ⟧,
+      𝐵-init-tail
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.iload,
+      i1 ↦ 1
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/function/IntConsumer",
+      i3 ↦ "accept",
+      i4 ↦ "(I)V",
+      i5 ↦ Φ.true
+    ⟧

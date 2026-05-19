@@ -99,7 +99,7 @@ count=$(count_modified "${snap}.before" "${snap}.after")
 row="${row};${total};${count}"
 start=$(date +%s)
 rc=0
-timeout "${budget}" mvn "${flags[@]}" -f "${dir}" surefire:test || rc=$?
+timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || rc=$?
 outcome=$(build_outcome "${rc}")
 seconds=$(( $(date +%s) - start ))
 printf '%s;%s;%s;%s\n' "${row}" "${outcome}" "${seconds}" "${loc}" >> "${csv}"

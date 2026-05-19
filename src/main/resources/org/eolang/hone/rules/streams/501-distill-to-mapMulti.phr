@@ -27,6 +27,8 @@ pattern: |
           accepted ↦ 𝑒-accepted,
           returned ↦ 𝑒-returned,
           static ↦ 𝑒-static,
+          captures ↦ 𝑒-captures,
+          emit-shape ↦ 𝑒-emit-shape,
           body ↦ 𝑒-body
         ⟧,
         𝐵-body-tail

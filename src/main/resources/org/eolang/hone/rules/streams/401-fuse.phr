@@ -15,6 +15,8 @@ pattern: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
       static ↦ 𝑒-first-static,
+      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ 𝑒-first-emit-shape,
       body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
     ⟧,
     𝜏-second ↦ ⟦
@@ -26,6 +28,8 @@ pattern: |
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-second-static,
+      captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ 𝑒-second-emit-shape,
       body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
     ⟧,
     𝐵-body-tail
@@ -42,6 +46,8 @@ result: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
       body ↦ ⟦
         𝐵-body,
         ρ ↦ ∅

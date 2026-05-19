@@ -36,6 +36,8 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
+    captures ↦ ⟦ ρ ↦ ∅ ⟧,
+    emit-shape ↦ "auto",
     body ↦ ⟦
       i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
       i2 ↦ ⟦

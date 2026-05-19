@@ -342,6 +342,24 @@ on 2026-05-19 at 05:44,
 on Linux with 4 CPUs.
 <!-- benchmark_end -->
 
+## Coverage
+
+Here is the result of running the plugin against a number of mid-size,
+mature open-source Java projects from GitHub. For each project, the
+workflow shallow-clones the repository, runs `mvn clean test` to record
+a baseline, applies `hone-maven-plugin` to every `target/classes/`
+directory, and then re-runs the tests to check that the bytecode still
+passes the project's own test suite. The number of modified `.class`
+files is computed by comparing MD5 checksums before and after.
+
+<!-- coverage_begin -->
+The coverage report has not been generated yet. Once the `coverage`
+GitHub Actions workflow runs for the first time, a table with results
+will appear here.
+
+The results are calculated in [this GHA job][coverage-gha].
+<!-- coverage_end -->
+
 ## How to Contribute
 
 Fork repository, make changes, then send us a [pull request][guidelines].
@@ -362,6 +380,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26078355752
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/workflows/coverage.yml
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

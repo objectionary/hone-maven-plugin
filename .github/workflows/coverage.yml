@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   coverage:
-    timeout-minutes: 120
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
     env:
       LC_ALL: en_US.UTF-8
@@ -24,12 +24,12 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
-          java-version: 21
+          java-version: 23
       - uses: actions/cache@v5
         with:
           path: ~/.m2/repository
-          key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ubuntu-jdk-21-maven-
+          key: ubuntu-jdk-23-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ubuntu-jdk-23-maven-
       - run: |
           sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod a+x /usr/bin/phino

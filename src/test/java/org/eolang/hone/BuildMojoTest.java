@@ -67,6 +67,7 @@ final class BuildMojoTest {
                     .phase("generate-resources")
                     .goals("build")
                     .configuration()
+                    .set("alwaysWithDocker", "true")
                     .set("image", image);
                 f.exec("generate-resources");
                 MatcherAssert.assertThat(
@@ -93,6 +94,7 @@ final class BuildMojoTest {
                     .phase("generate-resources")
                     .goals("build")
                     .configuration()
+                    .set("alwaysWithDocker", "true")
                     .set("image", image);
                 f.exec("generate-resources");
                 MatcherAssert.assertThat(

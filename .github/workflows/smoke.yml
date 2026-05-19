@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: smoke
+'on':
+  push:
+    branches:
+      - master
+    paths-ignore: [ 'README.md', '.github' ]
+  pull_request:
+    branches:
+      - master
+    paths-ignore: [ 'README.md', '.github' ]
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    env:
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+      LANGUAGE: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+      - uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: ubuntu-jdk-21-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ubuntu-jdk-21-maven-
+      - run: |
+          sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
+          sudo chmod a+x /usr/bin/phino
+      - run: .github/smoke.sh

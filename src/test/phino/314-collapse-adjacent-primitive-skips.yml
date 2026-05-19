@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 314 collapses two adjacent Φ.hone.primitive-skip ops on the same
+# primitive stream into a single one with the summed count. Tested
+# here on IntStream with counts 5 and 2 so that the sum 7
+# unambiguously identifies a successful collapse, and so that any
+# accidental cross-class fusion would surface as a stream-class
+# mismatch.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/314-collapse-adjacent-primitive-skips.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.method,
+    body ↦ ⟦
+      i1 ↦ ⟦
+        φ ↦ Φ.hone.primitive-skip,
+        stream-class ↦ "java/util/stream/IntStream",
+        stream-signature ↦ "(J)Ljava/util/stream/IntStream;",
+        count ↦ 5
+      ⟧,
+      i2 ↦ ⟦
+        φ ↦ Φ.hone.primitive-skip,
+        stream-class ↦ "java/util/stream/IntStream",
+        stream-signature ↦ "(J)Ljava/util/stream/IntStream;",
+        count ↦ 2
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.jeo.method,
+      body ↦ ⟦
+        𝐵-pre,
+        𝜏-merged ↦ ⟦
+          φ ↦ Φ.hone.primitive-skip,
+          stream-class ↦ "java/util/stream/IntStream",
+          stream-signature ↦ "(J)Ljava/util/stream/IntStream;",
+          count ↦ 7
+        ⟧,
+        𝐵-post
+      ⟧
+    ⟧

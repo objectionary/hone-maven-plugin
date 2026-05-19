@@ -345,8 +345,10 @@ on Linux with 4 CPUs.
 ## Coverage
 
 Here is the result of running the plugin against a number of mid-size,
-mature open-source Java projects from GitHub. For each project, the
-workflow shallow-clones the repository, runs `mvn clean test` to record
+mature open-source Java projects from GitHub. Each project is pinned to
+a specific commit (rather than its moving `master` head) so that the
+table stays reproducible across runs. For each pinned commit, the
+workflow shallow-fetches that revision, runs `mvn clean test` to record
 a baseline, applies `hone-maven-plugin` to every `target/classes/`
 directory, and then re-runs the tests to check that the bytecode still
 passes the project's own test suite. The number of modified `.class`

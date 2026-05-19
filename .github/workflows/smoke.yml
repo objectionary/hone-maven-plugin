@@ -37,4 +37,4 @@ jobs:
       - run: |
           sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
           sudo chmod a+x /usr/bin/phino
-      - run: .github/smoke.sh
+      - run: .github/smoke.sh apache/commons-collections 8631ca30ef6222cbafbbca87ca5a5d6123354263

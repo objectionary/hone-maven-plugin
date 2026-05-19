@@ -4,8 +4,13 @@
 
 set -e -u -o pipefail
 
-repo="apache/commons-cli"
-sha="17de58009bf9dada031a7b3891014c6de5a089bf"
+if [ $# -ne 2 ]; then
+  echo "usage: $0 <owner/repo> <sha>" >&2
+  exit 1
+fi
+
+repo=$1
+sha=$2
 
 root=$(pwd)
 work="${root}/target/smoke"

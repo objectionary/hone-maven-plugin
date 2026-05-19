@@ -30,6 +30,10 @@ git -C "${dir}" fetch --depth 1 -q origin "${sha}"
 git -C "${dir}" checkout -q FETCH_HEAD
 echo "checked out ${repo} at ${sha}"
 
+loc=$(cloc --quiet --csv --include-lang=Java "${dir}" 2>/dev/null | awk -F',' '$2=="Java"{print $5; exit}')
+loc=${loc:-0}
+echo "Java LoC in ${repo}: ${loc}"
+
 snapshot_classes() {
   local base=$1 out=$2
   (cd "${base}" && find . -type f -path '*/target/classes/*.class' -exec md5sum {} + | sort > "${out}")
@@ -79,7 +83,7 @@ seconds=$(( $(date +%s) - start ))
 row="${row};${outcome};${seconds}"
 
 if [ "${outcome}" != "pass" ]; then
-  printf '%s;0;0;skipped;0\n' "${row}" >> "${csv}"
+  printf '%s;0;0;skipped;0;%s\n' "${row}" "${loc}" >> "${csv}"
   rm -rf "${dir}"
   exit 1
 fi
@@ -96,6 +100,6 @@ rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" surefire:test || rc=$?
 outcome=$(build_outcome "${rc}")
 seconds=$(( $(date +%s) - start ))
-printf '%s;%s;%s\n' "${row}" "${outcome}" "${seconds}" >> "${csv}"
+printf '%s;%s;%s;%s\n' "${row}" "${outcome}" "${seconds}" "${loc}" >> "${csv}"
 rm -rf "${dir}"
 test "${outcome}" = "pass"

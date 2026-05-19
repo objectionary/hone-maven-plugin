@@ -27,14 +27,14 @@ echo "checked out ${repo} at ${sha}"
 
 mvn_flags=(-B --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
 
-(cd "${dir}" && mvn "${mvn_flags[@]}" clean test)
+mvn -f "${dir}" "${mvn_flags[@]}" clean test
 
 while IFS= read -r -d '' cdir; do
   module=$(dirname "$(dirname "${cdir}")")
-  (cd "${module}" && mvn -B --batch-mode \
+  mvn -f "${module}" -B --batch-mode \
     "org.eolang:hone-maven-plugin:${version}:build" \
     "org.eolang:hone-maven-plugin:${version}:optimize" \
-    -Dhone.rules='streams/*')
+    -Dhone.rules='streams/*'
 done < <(find "${dir}" -type d -path '*/target/classes' -print0)
 
-(cd "${dir}" && mvn "${mvn_flags[@]}" surefire:test)
+mvn -f "${dir}" "${mvn_flags[@]}" surefire:test

@@ -7,7 +7,7 @@ name: coverage
   push:
     branches:
       - master
-    paths-ignore: ['README.md', '.github']
+    paths-ignore: [ 'README.md', '.github' ]
 concurrency:
   group: coverage-${{ github.ref }}
   cancel-in-progress: true

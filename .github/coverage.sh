@@ -14,7 +14,7 @@ mkdir -p "${work}"
 mvn -ntp -B -q --batch-mode install -DskipTests -Dinvoker.skip
 echo "hone-maven-plugin installed into local Maven repository"
 
-printf 'repo;sha;build_before;time_before;classes_total;classes_modified;build_after;time_after\n' > "${csv}"
+printf 'repo;sha;build_before;time_before;classes_total;classes_modified;build_after;time_after;loc\n' > "${csv}"
 
 while IFS=';' read -r repo sha; do
   test -n "${repo}" || continue
@@ -27,14 +27,14 @@ echo "Final CSV:"
 cat "${csv}"
 
 table=$(
-  printf '| Repository | Classes | Before | Edits | After |\n'
-  printf '|---|---:|---:|---:|---:|\n'
+  printf '| Repository | LoC | Classes | Before | Edits | After |\n'
+  printf '|---|---:|---:|---:|---:|---:|\n'
   tail -n +2 "${csv}" | awk -F';' '
     function mark(v) {
       return v == "pass" ? "" : " ⚠️"
     }
     {
-      printf "| [%s](https://github.com/%s/commit/%s) | %s | %ss%s | %s | %ss%s |\n", $1, $1, $2, $5, $4, mark($3), $6, $8, mark($7)
+      printf "| [%s](https://github.com/%s/commit/%s) | %s | %s | %ss%s | %s | %ss%s |\n", $1, $1, $2, $9, $5, $4, mark($3), $6, $8, mark($7)
     }'
 )
 

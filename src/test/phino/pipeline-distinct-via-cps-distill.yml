@@ -4,7 +4,7 @@
 # yamllint disable rule:line-length
 # Runs the full distinct migration path end-to-end: 353-distinct-to-distill
 # folds Φ.hone.distinct into a cps Φ.hone.distill with one HashSet capture,
-# 491 lowers the Φ.hone.emit marker to the accept-call triple, and 502
+# 491 lowers the Φ.hone.emit marker to the accept-call triple, and 502b
 # emits the Φ.hone.lambda + capture init opcodes in the caller body plus
 # the synthetic wrapper method on the class. The final output must contain
 # (a) the three HashSet init opcodes, (b) a Φ.hone.lambda binding HashSet
@@ -15,7 +15,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/353-distinct-to-distill.phr
   - src/main/resources/org/eolang/hone/rules/streams/491-emit-to-accept-call.phr
-  - src/main/resources/org/eolang/hone/rules/streams/502-cps-one-cap-to-lambda.phr
+  - src/main/resources/org/eolang/hone/rules/streams/502b-cps-one-cap-to-lambda.phr
 input: |
   {⟦
     φ ↦ Φ.jeo.class,

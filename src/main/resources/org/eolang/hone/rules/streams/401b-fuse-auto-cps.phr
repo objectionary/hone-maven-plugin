@@ -9,15 +9,15 @@
 # on top of stack, where the cps body picks it up. The auto side has no
 # captures by convention, so merged captures are exactly the cps side's.
 #
-# Gated to Object-typed distills on both sides. 502-cps-one-cap-to-lambda
-# hardcodes the bridge as (Object, Consumer)V and the wrapper item slot as
-# Object, so a fused distill with a non-Object bridge-input would survive
-# past 502 and leak into jeo:assemble as an unknown Φ.hone.distill opcode.
-# A typed auto distill (e.g. Integer→Integer from .map(n -> n)) is left
-# unfused, so 501 lowers it to its own mapMulti and 502 lowers the cps
-# side to its own mapMulti. Lifting this constraint requires teaching 502
-# to emit a CHECKCAST before the auto body and to pick the matching
-# wrapper-item type.
+# Gated to Object-typed distills on both sides. 502a / 502b derive the
+# bridge signature from `𝑒-accepted`, but still hardcode the bridge-input
+# as `Ljava/lang/Object;`, so a fused distill with a non-Object bridge-input
+# would survive past 502 and leak into jeo:assemble as an unknown
+# Φ.hone.distill opcode. A typed auto distill (e.g. Integer→Integer from
+# .map(n -> n)) is left unfused, so 501 lowers it to its own mapMulti and
+# 502 lowers the cps side to its own mapMulti. Lifting this constraint
+# requires teaching 502 to emit a CHECKCAST before the auto body and to
+# pick the matching wrapper-item type.
 name: fuse-auto-cps
 pattern: |
   ⟦

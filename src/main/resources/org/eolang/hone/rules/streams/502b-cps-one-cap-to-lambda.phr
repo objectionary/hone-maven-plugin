@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Lowers a cps Φ.hone.distill with exactly one capture and Object item into
-# the bytecode shape that today's 353-distinct-to-mapMulti produced directly:
+# Lowers a cps Φ.hone.distill with exactly one capture into the bytecode
+# shape that today's 353-distinct-to-mapMulti produced directly:
 #   * The capture's init formation is spliced into the caller body verbatim,
 #     leaving the capture value on stack just before the lambda.
 #   * A Φ.hone.lambda pragma replaces the cps distill in the caller body.
@@ -15,12 +15,18 @@
 #
 # This rule assumes 491 has already lowered every Φ.hone.emit marker in the
 # body to raw aload+dup_x+pop+invokeinterface triples; phino's fixed-point
-# loop ensures 491 (lower number) fires before 502 in each cycle.
+# loop ensures 491 (lower number) fires before 502b in each cycle.
 #
-# Step C scope: one HashSet-style capture, Object stream, static=true. The
-# stream-class and consumer types are hard-coded for Object streams; future
-# variants (long/int/double captures, primitive streams) will be sibling
-# rules with different prefix/where-clauses.
+# The item type comes from the distill's `accepted` (so upstream-merged
+# narrow types like `Ljava/lang/Integer;` from a `.map(...)` flow through
+# the bridge and wrapper signatures correctly). The lambda-signature stays
+# `(Ljava/lang/Object;Ljava/lang/Object;)V` — that is the type-erased SAM
+# signature and is independent of the narrow item type.
+#
+# Step 1 scope of issue #570: one capture, Object stream. The zero-capture
+# case lives in 502a; primitive-stream and N-capture cases are deferred to
+# later steps. Alphabetically 502a < 502b, so the no-capture variant fires
+# on its own input first and never sees a one-capture distill.
 name: cps-one-cap-to-lambda
 pattern: |
   ⟦
@@ -39,7 +45,7 @@ pattern: |
           bridge-input ↦ "Ljava/lang/Object;",
           bridge-output ↦ "Ljava/lang/Object;",
           start ↦ 𝑒-start,
-          accepted ↦ "Ljava/lang/Object;",
+          accepted ↦ 𝑒-accepted,
           returned ↦ "Ljava/lang/Object;",
           static ↦ "true",
           captures ↦ ⟦
@@ -85,7 +91,7 @@ result: |
           method ↦ "accept",
           interface ↦ 𝑒-interface-signature,
           lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-          bridge-signature ↦ "(Ljava/lang/Object;Ljava/util/function/Consumer;)V",
+          bridge-signature ↦ 𝑒-bridge-signature,
           static ↦ "true",
           opcode ↦ "invokestatic",
           target ↦ ⟦
@@ -119,7 +125,7 @@ result: |
       params ↦ ⟦
         φ ↦ Φ.jeo.params,
         i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-c0-type ⟧,
-        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "Ljava/lang/Object;" ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-accepted ⟧,
         i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
       ⟧,
       body ↦ ⟦
@@ -161,6 +167,9 @@ where:
   - meta: 𝑒-interface-signature
     function: concat
     args: ['"("', 𝑒-c0-type, '")Ljava/util/function/BiConsumer;"']
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-accepted, '"Ljava/util/function/Consumer;)V"']
   - meta: 𝑒-wrapper-signature
     function: concat
-    args: ['"("', 𝑒-c0-type, '"Ljava/lang/Object;Ljava/util/function/Consumer;)V"']
+    args: ['"("', 𝑒-c0-type, 𝑒-accepted, '"Ljava/util/function/Consumer;)V"']

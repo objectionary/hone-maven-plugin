@@ -355,11 +355,23 @@ passes the project's own test suite. The number of modified `.class`
 files is computed by comparing MD5 checksums before and after.
 
 <!-- coverage_begin -->
-The coverage report has not been generated yet. Once the `coverage`
-GitHub Actions workflow runs for the first time, a table with results
-will appear here.
+| Repository | Build Before | Time Before (s) | Classes Modified | Build After | Time After (s) |
+|---|---|---|---|---|---|
+| [apache/commons-io@5ea874e](https://github.com/apache/commons-io/commit/5ea874ee07d081a69e4ff2971d3d8fc8cace9179) | timeout | 300 | 0 | skipped | 0 |
+| [apache/commons-cli@17de580](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | pass | 12 | 54 | pass | 6 |
+| [apache/commons-csv@6f93c7e](https://github.com/apache/commons-csv/commit/6f93c7edfa0f758f757227b1d30588411fdbf669) | pass | 16 | 19 | pass | 8 |
+| [jhy/jsoup@a7ec143](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | pass | 24 | 317 | pass | 13 |
+| [google/gson@abfef5e](https://github.com/google/gson/commit/abfef5e8455483b878a8dea14dd42fa55832a56c) | fail | 33 | 0 | skipped | 0 |
+| [FasterXML/jackson-core@3c0bcb7](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | pass | 47 | 165 | fail | 3 |
+| [FasterXML/jackson-databind@3f9fc8b](https://github.com/FasterXML/jackson-databind/commit/3f9fc8b5a1cbcb34b1cf8f0dad84cc5f347f32ff) | pass | 58 | 883 | pass | 26 |
+| [junit-team/junit4@300468b](https://github.com/junit-team/junit4/commit/300468b1efd48d76fac2f7bd6d576846dcbbf5ed) | pass | 21 | 349 | pass | 8 |
+| [assertj/assertj@381a720](https://github.com/assertj/assertj/commit/381a720ee550a35ab1887c7905b25832d7ddd471) | fail | 138 | 0 | skipped | 0 |
+| [dropwizard/metrics@83eba35](https://github.com/dropwizard/metrics/commit/83eba35a4ddfa8ff0537740b1649f67fb6f1656f) | timeout | 300 | 0 | skipped | 0 |
+| [eclipse-vertx/vert.x@c867de7](https://github.com/eclipse-vertx/vert.x/commit/c867de792791b4db34b131e12593dbb1a12f5a36) | timeout | 301 | 0 | skipped | 0 |
 
-The results are calculated in [this GHA job][coverage-gha].
+The results were calculated in [this GHA job][coverage-gha]
+on 2026-05-19 at 10:03,
+on Linux with 4 CPUs.
 <!-- coverage_end -->
 
 ## How to Contribute
@@ -382,7 +394,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26078355752
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/workflows/coverage.yml
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26088455987
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

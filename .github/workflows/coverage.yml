@@ -35,6 +35,8 @@ jobs:
           sudo chmod a+x /usr/bin/phino
       - run: sudo apt-get install -y cloc
       - run: .github/coverage.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: peter-evans/create-pull-request@v8
         with:
           sign-commits: true

@@ -22,11 +22,11 @@ work="${root}/target/coverage"
 csv="${work}/coverage.csv"
 mkdir -p "${work}"
 
-version=$(mvn -B -q -DforceStdout help:evaluate -Dexpression=project.version --batch-mode 2>/dev/null | tail -n 1)
+version=$(mvn -ntp -B -q -DforceStdout help:evaluate -Dexpression=project.version --batch-mode 2>/dev/null | tail -n 1)
 test -n "${version}" || { echo "Failed to read project version from pom.xml" >&2; exit 1; }
 echo "hone-maven-plugin version: ${version}"
 
-mvn -B -q --batch-mode install -DskipTests -Dinvoker.skip
+mvn -ntp -B -q --batch-mode install -DskipTests -Dinvoker.skip
 echo "hone-maven-plugin installed into local Maven repository"
 
 printf 'repo;sha;build_before;time_before;classes_modified;build_after;time_after\n' > "${csv}"
@@ -51,7 +51,7 @@ apply_hone() {
   while IFS= read -r -d '' cdir; do
     module=$(dirname "$(dirname "${cdir}")")
     echo "applying hone in ${module}"
-    (cd "${module}" && mvn -B -q --batch-mode \
+    (cd "${module}" && mvn -ntp -B -q --batch-mode \
       "org.eolang:hone-maven-plugin:${version}:build" \
       "org.eolang:hone-maven-plugin:${version}:optimize" \
       -Dhone.rules='streams/*')
@@ -75,7 +75,7 @@ run_repo() {
   shallow_checkout "${repo}" "${sha}" "${dir}"
   row="${repo};${sha}"
   start=$(date +%s)
-  if (cd "${dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip clean test); then
+  if (cd "${dir}" && mvn -ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip clean test); then
     outcome="pass"
   else
     outcome="fail"
@@ -94,7 +94,7 @@ run_repo() {
   count=$(count_modified "${snap}.before" "${snap}.after")
   row="${row};${count}"
   start=$(date +%s)
-  if (cd "${dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip surefire:test); then
+  if (cd "${dir}" && mvn -ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip surefire:test); then
     outcome="pass"
   else
     outcome="fail"

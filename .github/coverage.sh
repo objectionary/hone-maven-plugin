@@ -26,7 +26,10 @@ version=$(mvn -B -q -DforceStdout help:evaluate -Dexpression=project.version --b
 test -n "${version}" || { echo "Failed to read project version from pom.xml" >&2; exit 1; }
 echo "hone-maven-plugin version: ${version}"
 
-mvn -B -q --batch-mode install -DskipTests -Dinvoker.skip
+if ! mvn -B -q --batch-mode install -DskipTests -Dinvoker.skip; then
+  echo "Failed to install hone-maven-plugin into local Maven repository" >&2
+  exit 1
+fi
 echo "hone-maven-plugin installed into local Maven repository"
 
 printf 'repo;build_before;time_before;classes_modified;build_after;time_after\n' > "${csv}"
@@ -41,8 +44,8 @@ snapshot_classes() {
 apply_hone() {
   local base=$1
   local rc=0
-  (cd "${base}" && find . -type d -path '*/target/classes' -print0 \
-    | while IFS= read -r -d '' cdir; do
+  local cdir module
+  while IFS= read -r -d '' cdir; do
     module=$(dirname "$(dirname "${cdir}")")
     echo "applying hone in ${module}"
     if ! (cd "${module}" && mvn -B -q --batch-mode \
@@ -52,7 +55,7 @@ apply_hone() {
       echo "hone failed in ${module}" >&2
       rc=1
     fi
-  done) || rc=1
+  done < <(find "${base}" -type d -path '*/target/classes' -print0)
   return "${rc}"
 }
 
@@ -64,53 +67,51 @@ count_modified() {
 
 run_repo() {
   local repo=$1
-  local name
+  local name dir row start outcome seconds snap count hone
   name=$(basename "${repo}")
-  local repo_dir="${work}/${name}"
+  dir="${work}/${name}"
   printf '\n=== %s ===\n' "${repo}"
-  rm -rf "${repo_dir}"
-  if ! git clone --depth 1 "https://github.com/${repo}.git" "${repo_dir}"; then
+  rm -rf "${dir}"
+  if ! git clone --depth 1 "https://github.com/${repo}.git" "${dir}"; then
     printf '%s;clone_failed;0;0;skipped;0\n' "${repo}" >> "${csv}"
     return 0
   fi
-  local before_start before_end time_before build_before
-  before_start=$(date +%s)
-  if (cd "${repo_dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip clean test); then
-    build_before="pass"
+  row="${repo}"
+  start=$(date +%s)
+  if (cd "${dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip clean test); then
+    outcome="pass"
   else
-    build_before="fail"
+    outcome="fail"
   fi
-  before_end=$(date +%s)
-  time_before=$((before_end - before_start))
-  if [ "${build_before}" != "pass" ]; then
-    printf '%s;fail;%s;0;skipped;0\n' "${repo}" "${time_before}" >> "${csv}"
+  seconds=$(( $(date +%s) - start ))
+  row="${row};${outcome};${seconds}"
+  if [ "${outcome}" != "pass" ]; then
+    printf '%s;0;skipped;0\n' "${row}" >> "${csv}"
     return 0
   fi
-  local snap_before="${repo_dir}/.cov-before" snap_after="${repo_dir}/.cov-after"
-  snapshot_classes "${repo_dir}" "${snap_before}"
-  local hone_ok="yes"
-  apply_hone "${repo_dir}" || hone_ok="no"
-  snapshot_classes "${repo_dir}" "${snap_after}"
-  local modified=0
-  if [ -s "${snap_before}" ] && [ -s "${snap_after}" ]; then
-    modified=$(count_modified "${snap_before}" "${snap_after}")
+  snap="${dir}/.snap"
+  snapshot_classes "${dir}" "${snap}.before"
+  hone="yes"
+  apply_hone "${dir}" || hone="no"
+  snapshot_classes "${dir}" "${snap}.after"
+  count=0
+  if [ -s "${snap}.before" ] && [ -s "${snap}.after" ]; then
+    count=$(count_modified "${snap}.before" "${snap}.after")
   fi
-  local after_start after_end time_after build_after
-  after_start=$(date +%s)
-  if [ "${hone_ok}" != "yes" ]; then
-    build_after="hone_failed"
-    time_after=0
+  row="${row};${count}"
+  if [ "${hone}" != "yes" ]; then
+    printf '%s;hone_failed;0\n' "${row}" >> "${csv}"
+    return 0
+  fi
+  start=$(date +%s)
+  if (cd "${dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip surefire:test); then
+    outcome="pass"
   else
-    if (cd "${repo_dir}" && mvn -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip surefire:test); then
-      build_after="pass"
-    else
-      build_after="fail"
-    fi
-    after_end=$(date +%s)
-    time_after=$((after_end - after_start))
+    outcome="fail"
   fi
-  printf '%s;%s;%s;%s;%s;%s\n' "${repo}" "${build_before}" "${time_before}" "${modified}" "${build_after}" "${time_after}" >> "${csv}"
-  rm -rf "${repo_dir}"
+  seconds=$(( $(date +%s) - start ))
+  printf '%s;%s;%s\n' "${row}" "${outcome}" "${seconds}" >> "${csv}"
+  rm -rf "${dir}"
 }
 
 for repo in "${repos[@]}"; do
@@ -124,10 +125,7 @@ cat "${csv}"
 table=$(
   printf '| Repository | Build Before | Time Before (s) | Classes Modified | Build After | Time After (s) |\n'
   printf '|---|---|---|---|---|---|\n'
-  tail -n +2 "${csv}" | while IFS=';' read -r row_repo before_status before_time changed after_status after_time; do
-    printf '| [%s](https://github.com/%s) | %s | %s | %s | %s | %s |\n' \
-      "${row_repo}" "${row_repo}" "${before_status}" "${before_time}" "${changed}" "${after_status}" "${after_time}"
-  done
+  tail -n +2 "${csv}" | awk -F';' '{ printf "| [%s](https://github.com/%s) | %s | %s | %s | %s | %s |\n", $1, $1, $2, $3, $4, $5, $6 }'
 )
 
 sum=$(

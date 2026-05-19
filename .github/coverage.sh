@@ -29,9 +29,15 @@ cat "${csv}"
 table=$(
   printf '| Repository | Build Before | Time Before (s) | Classes Modified | Build After | Time After (s) |\n'
   printf '|---|---|---|---|---|---|\n'
-  tail -n +2 "${csv}" | awk -F';' '{
-    printf "| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %s | %s |\n", $1, $1, $2, $3, $4, $5, $6, $7
-  }'
+  tail -n +2 "${csv}" | awk -F';' '
+    function badge(v) {
+      if (v == "pass") return "👍🏻"
+      if (v == "fail") return "⚠️"
+      return v
+    }
+    {
+      printf "| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %s | %s |\n", $1, $1, $2, badge($3), $4, $5, badge($6), $7
+    }'
 )
 
 cpus=$(nproc --all 2>/dev/null || echo "?")

@@ -355,21 +355,21 @@ passes the project's own test suite. The number of modified `.class`
 files is computed by comparing MD5 checksums before and after.
 
 <!-- coverage_begin -->
-| Repository | Forks | Classes | Before | Edits | After |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| [apache/commons-cli](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | 248 | 56 | 11s | 54 | 5s |
-| [jhy/jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2285 | 317 | 20s | 317 | 12s |
-| [FasterXML/jackson-core](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | 884 | 176 | 37s | 165 | 3s ⚠️ |
-| [apache/commons-codec](https://github.com/apache/commons-codec/commit/77fcf89711a0e20393105a1247c41968f6eb58d4) | 265 | 150 | 29s | 143 | 20s |
-| [apache/commons-csv](https://github.com/apache/commons-csv/commit/6f93c7edfa0f758f757227b1d30588411fdbf669) | 297 | 20 | 15s | 19 | 8s |
-| [apache/commons-text](https://github.com/apache/commons-text/commit/283eaf49586331a7adc0b28fdfa5e8f09df87123) | 283 | 168 | 50s | 160 | 37s |
-| [stleary/JSON-java](https://github.com/stleary/JSON-java/commit/d749ee16abd084ae94785c7afe954de25d921a5d) | 2593 | 31 | 7s | 31 | 4s |
-| [jline/jline3](https://github.com/jline/jline3/commit/923486a961db66e70a7c5e8ff366f248512cef02) | 244 | 0 | 99s ⚠️ | 0 | 0s ⚠️ |
-| [jOOQ/jOOL](https://github.com/jOOQ/jOOL/commit/31ed3a398fd099206f62438b80a2a93dd7e2105d) | 172 | 0 | 1s ⚠️ | 0 | 0s ⚠️ |
-| [HdrHistogram/HdrHistogram](https://github.com/HdrHistogram/HdrHistogram/commit/de84b0a7de2378abfc405da503bf4898e84ea98e) | 269 | 97 | 57s | 96 | 55s |
+| Repository | Forks | LoC | Classes | Before | Edits | After |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| [apache/commons-cli](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | 248 | 11243 | 56 | 11s | 54 | 5s |
+| [jhy/jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2285 | 39031 | 317 | 22s | 317 | 14s |
+| [FasterXML/jackson-core](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | 884 | 86966 | 176 | 38s | 165 | 3s ⚠️ |
+| [apache/commons-codec](https://github.com/apache/commons-codec/commit/77fcf89711a0e20393105a1247c41968f6eb58d4) | 265 | 27186 | 150 | 31s | 143 | 20s |
+| [apache/commons-csv](https://github.com/apache/commons-csv/commit/6f93c7edfa0f758f757227b1d30588411fdbf669) | 297 | 10092 | 20 | 16s | 19 | 8s |
+| [apache/commons-text](https://github.com/apache/commons-text/commit/283eaf49586331a7adc0b28fdfa5e8f09df87123) | 283 | 28298 | 168 | 51s | 160 | 37s |
+| [stleary/JSON-java](https://github.com/stleary/JSON-java/commit/d749ee16abd084ae94785c7afe954de25d921a5d) | 2593 | 16352 | 31 | 7s | 31 | 4s |
+| [jline/jline3](https://github.com/jline/jline3/commit/923486a961db66e70a7c5e8ff366f248512cef02) | 244 | 102927 | 0 | 105s ⚠️ | 0 | 0s ⚠️ |
+| [jOOQ/jOOL](https://github.com/jOOQ/jOOL/commit/31ed3a398fd099206f62438b80a2a93dd7e2105d) | 172 | 36646 | 0 | 1s ⚠️ | 0 | 0s ⚠️ |
+| [HdrHistogram/HdrHistogram](https://github.com/HdrHistogram/HdrHistogram/commit/de84b0a7de2378abfc405da503bf4898e84ea98e) | 269 | 13086 | 97 | 52s | 96 | 51s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-05-19 at 14:46,
+on 2026-05-19 at 16:08,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -393,7 +393,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26078355752
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26103627254
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26108593177
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

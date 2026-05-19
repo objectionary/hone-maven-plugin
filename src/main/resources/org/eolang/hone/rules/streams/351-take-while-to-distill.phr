@@ -1,0 +1,155 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 351-take-while-to-distill
+#
+# Folds Φ.hone.take-while into a cps Φ.hone.distill with one boolean[1]
+# capture that holds the short-circuit gate. The capture's init opcodes
+# (iconst_1 + newarray boolean) live inside the capture's `init`; 502
+# splices them into the caller body just before the synthesised lambda.
+#
+# The cps body assumes the item is on top of stack at entry (501-/502-
+# convention). It astores the item to slot 1 (so subsequent path logic
+# can read it twice without stack juggling), then mirrors today's
+# 351-take-while-to-mapMulti wrapper: check gate → test predicate →
+# accept-emit or set gate and return. The accept branch reaches Φ.hone.emit
+# with the item back on top of stack; 491 lowers that marker to the
+# aload+dup_x1+pop+invokeinterface triple.
+#
+# Once this cps distill lands in the body, 401b-fuse-auto-cps and
+# 401c-fuse-cps-auto can fuse it with adjacent pointwise auto distills
+# (filter/map/peek). Single-emit body, so 401c's single-splice firing
+# is correct.
+#
+# Replaces 351-take-while-to-mapMulti.phr.
+name: take-while-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-take-while ↦ ⟦
+          φ ↦ Φ.hone.take-while,
+          opcode ↦ 𝑒-opcode,
+          class ↦ 𝑒-class,
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-take-while ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "take-while",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "[Z",
+              init ↦ ⟦
+                k0-iconst-1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+                k1-newarray ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 4 ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            t0-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+            t1-aload-guard ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            t2-iconst-0 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            t3-baload ↦ ⟦ φ ↦ Φ.jeo.opcode.baload ⟧,
+            t4-ifne-end ↦ ⟦
+              φ ↦ Φ.jeo.opcode.ifne,
+              i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧
+            ⟧,
+            t5-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+            t6-invoke-pred ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ 𝑒-target-class,
+              i3 ↦ 𝑒-target-method,
+              i4 ↦ 𝑒-target-signature,
+              i5 ↦ 𝑒-target-is-interface
+            ⟧,
+            t7-ifne-accept ↦ ⟦
+              φ ↦ Φ.jeo.opcode.ifne,
+              i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+            ⟧,
+            t8-aload-guard ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            t9-iconst-0 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            t10-iconst-1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+            t11-bastore ↦ ⟦ φ ↦ Φ.jeo.opcode.bastore ⟧,
+            t12-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+            t13-accept-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+            t14-accept-frame ↦ ⟦
+              φ ↦ Φ.jeo.frame,
+              type ↦ 3,
+              nlocal ↦ 0,
+              locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+              nstack ↦ 0,
+              stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+            ⟧,
+            t15-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+            t16-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+            t17-end-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧,
+            t18-end-frame ↦ ⟦
+              φ ↦ Φ.jeo.frame,
+              type ↦ 3,
+              nlocal ↦ 0,
+              locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+              nstack ↦ 0,
+              stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+            ⟧
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+when:
+  matches:
+    - '^\(L.+;\)Z$'
+    - 𝑒-bridge-signature
+where:
+  - meta: 𝑒-label-end
+    function: random-string
+    args: ['"LtakeWhileEnd%d"']
+  - meta: 𝑒-label-accept
+    function: random-string
+    args: ['"LtakeWhileAccept%d"']

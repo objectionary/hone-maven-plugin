@@ -79,17 +79,18 @@ seconds=$(( $(date +%s) - start ))
 row="${row};${outcome};${seconds}"
 
 if [ "${outcome}" != "pass" ]; then
-  printf '%s;0;skipped;0\n' "${row}" >> "${csv}"
+  printf '%s;0;0;skipped;0\n' "${row}" >> "${csv}"
   rm -rf "${dir}"
   exit 1
 fi
 
 snap="${dir}/.snap"
 snapshot_classes "${dir}" "${snap}.before"
+total=$(wc -l < "${snap}.before" | tr -d ' ')
 apply_hone "${dir}"
 snapshot_classes "${dir}" "${snap}.after"
 count=$(count_modified "${snap}.before" "${snap}.after")
-row="${row};${count}"
+row="${row};${total};${count}"
 start=$(date +%s)
 rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" surefire:test || rc=$?

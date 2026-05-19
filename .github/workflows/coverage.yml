@@ -4,9 +4,10 @@
 # yamllint disable rule:line-length
 name: coverage
 'on':
-  schedule:
-    - cron: '0 5 * * 1'
-  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore: ['README.md', '.github']
 concurrency:
   group: coverage-${{ github.ref }}
   cancel-in-progress: true

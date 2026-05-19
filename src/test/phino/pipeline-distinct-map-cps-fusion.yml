@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Proves the cps+auto fusion path: a `.distinct().map()` stream pipeline
+# is recognized as a Φ.hone.distinct followed by a Φ.hone.map. After
+# 353-distinct-to-distill (cps distill, one HashSet capture) and 306-map-to-
+# distill (auto distill, empty captures), 401c-fuse-cps-auto splices the
+# map body immediately before the Φ.hone.emit marker in the cps body. The
+# wrapper method ends up containing the HashSet.add check followed by the
+# map's invokestatic (the user lambda) followed by the Consumer.accept
+# triple — i.e. the map transforms the item right before it's emitted, and
+# only non-duplicates pass through. Two operations, one mapMulti dispatch.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/306-map-to-distill.phr
+  - src/main/resources/org/eolang/hone/rules/streams/353-distinct-to-distill.phr
+  - src/main/resources/org/eolang/hone/rules/streams/401c-fuse-cps-auto.phr
+  - src/main/resources/org/eolang/hone/rules/streams/491-emit-to-accept-call.phr
+  - src/main/resources/org/eolang/hone/rules/streams/502-cps-one-cap-to-lambda.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.distinct,
+          stream-class ↦ "java/util/stream/Stream"
+        ⟧,
+        i2 ↦ ⟦
+          φ ↦ Φ.hone.map,
+          opcode ↦ "invokestatic",
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$0",
+            signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+            is-interface ↦ Φ.false
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.new,
+      i1 ↦ "java/util/HashSet"
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ "Foo",
+      method ↦ "accept",
+      interface ↦ "(Ljava/util/HashSet;)Ljava/util/function/BiConsumer;",
+      𝐵-lambda-tail
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokevirtual,
+      i2 ↦ "java/util/HashSet",
+      i3 ↦ "add",
+      i4 ↦ "(Ljava/lang/Object;)Z",
+      i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ "Foo",
+      i3 ↦ "lambda$0",
+      i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+      i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/function/Consumer",
+      i3 ↦ "accept",
+      i4 ↦ "(Ljava/lang/Object;)V",
+      i5 ↦ Φ.true
+    ⟧

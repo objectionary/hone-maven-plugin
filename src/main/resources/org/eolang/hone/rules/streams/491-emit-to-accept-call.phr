@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Lowers a single Φ.hone.emit sentinel inside a cps distill body into the
+# four-opcode triple that calls Consumer.accept(item). At the marker, the
+# item is on top of stack; the lowering loads the consumer from its slot,
+# rearranges the stack, and invokes accept.
+#
+# Step C scope: matches only one-capture cps distills with Object item and
+# static=true (distinct's shape). Slot layout under these constraints is
+# fixed: capture-0 at slot 0, item at slot 1, consumer at slot 2.
+# Generalisation to other captures-counts, primitive items, and non-static
+# distills lives in future variants of this rule.
+#
+# The rule fires once per Φ.hone.emit marker; phino's fixed-point loop
+# re-fires until no markers remain.
+name: emit-to-accept-call
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ 𝑒-returned,
+    static ↦ "true",
+    captures ↦ ⟦
+      𝜏-c0 ↦ ⟦
+        φ ↦ Φ.hone.capture,
+        type ↦ 𝑒-c0-type,
+        init ↦ 𝑒-c0-init
+      ⟧,
+      ρ ↦ ∅
+    ⟧,
+    emit-shape ↦ "cps",
+    body ↦ ⟦
+      𝐵-pre-emit,
+      𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+      𝐵-post-emit,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ 𝑒-returned,
+    static ↦ "true",
+    captures ↦ ⟦
+      𝜏-c0 ↦ ⟦
+        φ ↦ Φ.hone.capture,
+        type ↦ 𝑒-c0-type,
+        init ↦ 𝑒-c0-init
+      ⟧,
+      ρ ↦ ∅
+    ⟧,
+    emit-shape ↦ "cps",
+    body ↦ ⟦
+      𝐵-pre-emit,
+      𝜏-aload-consumer ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        i1 ↦ 2
+      ⟧,
+      𝜏-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/function/Consumer",
+        i3 ↦ "accept",
+        i4 ↦ "(Ljava/lang/Object;)V",
+        i5 ↦ Φ.true
+      ⟧,
+      𝐵-post-emit,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-aload-consumer
+    function: random-tau
+    args: [𝐵-pre-emit, 𝐵-post-emit]
+  - meta: 𝜏-dup-x
+    function: random-tau
+    args: [𝐵-pre-emit, 𝐵-post-emit, 𝜏-aload-consumer]
+  - meta: 𝜏-pop
+    function: random-tau
+    args: [𝐵-pre-emit, 𝐵-post-emit, 𝜏-aload-consumer, 𝜏-dup-x]
+  - meta: 𝜏-invoke
+    function: random-tau
+    args: [𝐵-pre-emit, 𝐵-post-emit, 𝜏-aload-consumer, 𝜏-dup-x, 𝜏-pop]

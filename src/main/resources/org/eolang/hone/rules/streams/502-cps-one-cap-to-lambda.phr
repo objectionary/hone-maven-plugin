@@ -1,0 +1,150 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Lowers a cps Φ.hone.distill with exactly one capture and Object item into
+# the bytecode shape that today's 353-distinct-to-mapMulti produced directly:
+#   * The capture's init formation is spliced into the caller body verbatim,
+#     leaving the capture value on stack just before the lambda.
+#   * A Φ.hone.lambda pragma replaces the cps distill in the caller body.
+#     LambdaMetafactory binds the on-stack capture value into the resulting
+#     BiConsumer; the bridge call invokes mapMulti on the stream.
+#   * A synthetic private static wrapper method is appended to the enclosing
+#     class. Its signature is (CaptureType, item, Consumer)V and its body is
+#     the cps distill body verbatim, with a trailing `return`.
+#
+# This rule assumes 491 has already lowered every Φ.hone.emit marker in the
+# body to raw aload+dup_x+pop+invokeinterface triples; phino's fixed-point
+# loop ensures 491 (lower number) fires before 502 in each cycle.
+#
+# Step C scope: one HashSet-style capture, Object stream, static=true. The
+# stream-class and consumer types are hard-coded for Object streams; future
+# variants (long/int/double captures, primitive streams) will be sibling
+# rules with different prefix/where-clauses.
+name: cps-one-cap-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-distill ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ 𝑒-start,
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            𝜏-c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ 𝑒-c0-type,
+              init ↦ ⟦ 𝐵-c0-init, ρ ↦ ∅ ⟧
+            ⟧,
+            ρ ↦ ∅
+          ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝐵-c0-init,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ 𝑒-interface-signature,
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "(Ljava/lang/Object;Ljava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-wrapper-method,
+            signature ↦ 𝑒-wrapper-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-wrapper-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 6,
+        max-locals ↦ 3
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-c0-type ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "Ljava/lang/Object;" ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        𝜏-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        𝐵-body,
+        𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-method
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-wrapper-method
+    function: random-string
+    args: ['"hone_cps_%d"']
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail', '𝜏-caller']
+  - meta: 𝜏-lambda
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail']
+  - meta: 𝜏-load-item
+    function: random-tau
+    args: ['𝐵-body']
+  - meta: 𝜏-return
+    function: random-tau
+    args: ['𝐵-body', '𝜏-load-item']
+  - meta: 𝑒-interface-signature
+    function: concat
+    args: ['"("', 𝑒-c0-type, '")Ljava/util/function/BiConsumer;"']
+  - meta: 𝑒-wrapper-signature
+    function: concat
+    args: ['"("', 𝑒-c0-type, '"Ljava/lang/Object;Ljava/util/function/Consumer;)V"']

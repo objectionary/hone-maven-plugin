@@ -2,7 +2,20 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: fuse
+# Fuses two adjacent Φ.hone.distill pragmas when the first is cps-shape
+# (drives emission via Φ.hone.emit markers) and the second is auto-shape
+# (one-in-one-out body that transforms the top-of-stack item). The auto
+# body is spliced into the first body immediately before the Φ.hone.emit
+# marker — so the auto body transforms the about-to-be-emitted item, then
+# the original marker fires on the transformed value. The auto side has no
+# captures by convention; merged captures are exactly the first's.
+#
+# Step C limitation: the pattern matches a single Φ.hone.emit position per
+# firing, and the second distill is consumed on first match. If the cps body
+# carries multiple emit markers (flatMap, mapMulti-verbatim), only one gets
+# the auto body spliced in. Multi-emit cps bodies arrive in later steps;
+# the auto body splice will need a different shape then.
+name: fuse-cps-auto
 pattern: |
   ⟦
     𝐵-body-head,
@@ -15,9 +28,14 @@ pattern: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
       static ↦ 𝑒-first-static,
-      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
-      emit-shape ↦ "auto",
-      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
+      captures ↦ 𝑒-first-captures,
+      emit-shape ↦ "cps",
+      body ↦ ⟦
+        𝐵-pre-emit,
+        𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+        𝐵-post-emit,
+        ρ ↦ ∅
+      ⟧
     ⟧,
     𝜏-second ↦ ⟦
       φ ↦ Φ.hone.distill,
@@ -28,7 +46,7 @@ pattern: |
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-second-static,
-      captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
       emit-shape ↦ "auto",
       body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
     ⟧,
@@ -46,10 +64,13 @@ result: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
-      captures ↦ ⟦ ρ ↦ ∅ ⟧,
-      emit-shape ↦ "auto",
+      captures ↦ 𝑒-first-captures,
+      emit-shape ↦ "cps",
       body ↦ ⟦
-        𝐵-body,
+        𝐵-pre-emit,
+        𝐵-second-body,
+        𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+        𝐵-post-emit,
         ρ ↦ ∅
       ⟧
     ⟧,
@@ -65,6 +86,3 @@ where:
       - 𝑒-both-statics
       - '"s/truetrue/true/g"'
       - '"s/.*false.*/false/g"'
-  - meta: 𝐵-body
-    function: join
-    args: [𝐵-first-body, 𝐵-second-body]

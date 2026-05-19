@@ -46,7 +46,12 @@ pattern: |
             𝜏-c0 ↦ ⟦
               φ ↦ Φ.hone.capture,
               type ↦ 𝑒-c0-type,
-              init ↦ ⟦ 𝐵-c0-init, ρ ↦ ∅ ⟧
+              init ↦ ⟦
+                𝜏-c0-init-1 ↦ 𝑒-c0-init-1,
+                𝜏-c0-init-2 ↦ 𝑒-c0-init-2,
+                𝜏-c0-init-3 ↦ 𝑒-c0-init-3,
+                ρ ↦ ∅
+              ⟧
             ⟧,
             ρ ↦ ∅
           ⟧,
@@ -71,7 +76,9 @@ result: |
       𝐵-caller-head,
       body ↦ ⟦
         𝐵-body-head,
-        𝐵-c0-init,
+        𝜏-init-1 ↦ 𝑒-c0-init-1,
+        𝜏-init-2 ↦ 𝑒-c0-init-2,
+        𝜏-init-3 ↦ 𝑒-c0-init-3,
         𝜏-lambda ↦ ⟦
           φ ↦ Φ.hone.lambda,
           class ↦ 𝑒-class-name,
@@ -136,6 +143,15 @@ where:
   - meta: 𝜏-lambda
     function: random-tau
     args: ['𝐵-body-head', '𝐵-body-tail']
+  - meta: 𝜏-init-1
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-lambda']
+  - meta: 𝜏-init-2
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-lambda', '𝜏-init-1']
+  - meta: 𝜏-init-3
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-lambda', '𝜏-init-1', '𝜏-init-2']
   - meta: 𝜏-load-item
     function: random-tau
     args: ['𝐵-body']

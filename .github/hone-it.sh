@@ -71,6 +71,8 @@ budget=300
 flags=(-ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
 
 row="${repo};${sha}"
+echo "warming up Maven dependency cache for ${repo}"
+timeout "${budget}" mvn "${flags[@]}" -f "${dir}" test || true
 start=$(date +%s)
 rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" clean test || rc=$?

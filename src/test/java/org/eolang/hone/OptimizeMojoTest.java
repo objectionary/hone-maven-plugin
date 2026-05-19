@@ -92,7 +92,8 @@ final class OptimizeMojoTest {
         @RandomImage final String image) throws Exception {
         final Map<String, Object> pack = new Yaml().load(yaml);
         final String code = (String) pack.get("java");
-        final Map<String, Integer> opcodes = (Map<String, Integer>) pack.get("opcodes");
+        final Map<String, Integer> before = (Map<String, Integer>) pack.get("before");
+        final Map<String, Integer> after = (Map<String, Integer>) pack.get("after");
         final Matcher pkg = Pattern.compile("package\\s+([\\w.]+)\\s*;").matcher(code);
         if (!pkg.find()) {
             throw new IllegalStateException(
@@ -112,6 +113,11 @@ final class OptimizeMojoTest {
         );
         final String bytecode = String.format(
             "target/classes/%s/%s.class",
+            pkg.group(1).replace('.', '/'),
+            cls.group(1)
+        );
+        final String original = String.format(
+            "target/classes-before-hone/%s/%s.class",
             pkg.group(1).replace('.', '/'),
             cls.group(1)
         );
@@ -149,18 +155,44 @@ final class OptimizeMojoTest {
                         new Mapped<>(Matchers::containsString, (List<String>) pack.get("log"))
                     )
                 );
-                if (opcodes != null) {
+                if (before != null) {
+                    final Map<String, Integer> actual = new ClassOpcodes(
+                        f.files().file(original).path()
+                    ).counts();
+                    final List<org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>> checks =
+                        new ArrayList<>(before.size());
+                    for (final Map.Entry<String, Integer> entry : before.entrySet()) {
+                        if (entry.getValue() == 0) {
+                            checks.add(Matchers.not(Matchers.hasKey(entry.getKey())));
+                        } else {
+                            checks.add(Matchers.hasEntry(entry.getKey(), entry.getValue()));
+                        }
+                    }
+                    MatcherAssert.assertThat(
+                        String.format(
+                            "pre-optimization opcode counts in %s do not match YAML 'before' expectations, actual: %s",
+                            original, actual
+                        ),
+                        actual,
+                        Matchers.allOf(checks)
+                    );
+                }
+                if (after != null) {
                     final Map<String, Integer> actual = new ClassOpcodes(
                         f.files().file(bytecode).path()
                     ).counts();
                     final List<org.hamcrest.Matcher<? super Map<? extends String, ? extends Integer>>> checks =
-                        new ArrayList<>(opcodes.size());
-                    for (final Map.Entry<String, Integer> entry : opcodes.entrySet()) {
-                        checks.add(Matchers.hasEntry(entry.getKey(), entry.getValue()));
+                        new ArrayList<>(after.size());
+                    for (final Map.Entry<String, Integer> entry : after.entrySet()) {
+                        if (entry.getValue() == 0) {
+                            checks.add(Matchers.not(Matchers.hasKey(entry.getKey())));
+                        } else {
+                            checks.add(Matchers.hasEntry(entry.getKey(), entry.getValue()));
+                        }
                     }
                     MatcherAssert.assertThat(
                         String.format(
-                            "opcode counts in %s do not match YAML expectations, actual: %s",
+                            "post-optimization opcode counts in %s do not match YAML 'after' expectations, actual: %s",
                             bytecode, actual
                         ),
                         actual,

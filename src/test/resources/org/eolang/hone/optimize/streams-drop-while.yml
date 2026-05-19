@@ -32,7 +32,11 @@ log:
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
   - "The result is 5"
-opcodes:
+before:
+  newarray: 0
+  baload: 0
+  bastore: 0
+after:
   newarray: 1
   baload: 1
   bastore: 1

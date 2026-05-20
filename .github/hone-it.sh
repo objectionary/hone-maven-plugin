@@ -70,7 +70,7 @@ build_outcome() {
   fi
 }
 
-budget=300
+budget=1200
 
 flags=(-ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
 

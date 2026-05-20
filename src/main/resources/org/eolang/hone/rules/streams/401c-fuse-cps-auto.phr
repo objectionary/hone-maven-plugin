@@ -17,11 +17,12 @@
 # distill in `result` so phino's fixed-point loop re-fires once per emit
 # marker) does not terminate — the same emit marker is still in the body
 # and the same auto distill is still adjacent, so phino re-splices forever.
-# Fixing this requires a `splice` where-function in phino that rewrites
-# every sentinel position in a binding group within one firing; tracked at
-# objectionary/phino#708. Until that primitive lands, downstream fusion of
-# multi-emit cps bodies stays blocked and the architecture accepts one
-# mapMulti per multi-emit operator (see issue #570 Step 7).
+# Fixing this requires the `splice` where-function in phino, which rewrites
+# every sentinel position in a binding group within one firing; landed in
+# phino 0.0.0.69 (objectionary/phino#708). The blocker is lifted but this
+# rule has not yet been migrated to use it — downstream fusion of multi-emit
+# cps bodies still produces one mapMulti per operator until 401c is rewritten
+# on top of `splice` (see issue #570 Step 7).
 #
 # Gated to Object-typed distills on both sides. 502a / 502b derive the
 # bridge signature from `𝑒-accepted`, but still hardcode the bridge-input

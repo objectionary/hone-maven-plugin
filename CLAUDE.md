@@ -223,7 +223,11 @@ The mechanics:
 The practical consequence: every `sorted` and `limit` call survives as
 its own `invokeinterface` dispatch, and the `streams-full-non-terminal`
 fixture pins the resulting `after.invokedynamic` count (currently 21,
-dominated by the 10 multi-emit operators above plus 4 sorted + 2 limit).
+dominated by the 4 sorted + 2 limit barriers, the 5 mapMulti /
+mapMultiTo* dispatches whose user-lambda emission shape leaves no
+fusion seam, and the primitive flatMapTo* / mapMultiTo* dispatches
+whose bridge-output is `I`/`J`/`D` and so fall outside the Object-only
+fusion gate on 401b/401c).
 That is by design — the architecture's value is fusing the *streamable*
 part of the pipeline, not eliminating intrinsically-non-streamable
 operators. A future "buffered-distill mode" (option B in the plan)

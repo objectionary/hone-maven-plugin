@@ -13,22 +13,24 @@
 # The opcodes assertion pins the current count of invokedynamic in the
 # optimised class: 21 after the issue #570 cps-distill migration
 # landed. The architecture's long-term floor is one mapMulti emitter
-# per *fusable* segment, but two structural limitations keep the count
-# of this particular fixture well above that floor:
-#  (1) Sorted and limit are non-fusable barriers (Step 10 option A) —
-#      each of the four sorted variants and two limit calls in the
-#      pipeline survives as its own invokeinterface dispatch and forces
-#      the surrounding stateless segments apart.
-#  (2) Multi-emit cps fusion is blocked on a phino feature request
-#      (see the comment at the top of 401c-fuse-cps-auto.phr) — every
-#      flatMap, mapMulti, flatMapTo*, and mapMultiTo* call emits its
-#      own mapMulti wrapper because 401c can only splice the auto body
-#      in front of *one* emit position per firing.
-# Both flatMap calls, both mapMulti calls, three flatMapTo*, three
-# mapMultiTo*, four sorted, and two limit calls in this pipeline are
-# therefore unable to fuse with their neighbours — that accounts for
-# the bulk of the 21 invokedynamic dispatches that remain.
-# See issues #556 and #570.
+# per *fusable* segment; the structural reasons this particular
+# fixture sits well above that floor are:
+#  - Sorted and limit are non-fusable barriers (Step 10 option A) —
+#    each of the four sorted variants and two limit calls in the
+#    pipeline survives as its own invokeinterface dispatch and forces
+#    the surrounding stateless segments apart.
+#  - mapMulti / mapMultiTo* cps distill bodies carry no Φ.hone.emit
+#    marker (the user lambda owns emission via consumer.accept), so
+#    401c-fuse-cps-auto cannot splice a downstream auto body anywhere
+#    and each call surfaces its own mapMulti wrapper.
+#  - flatMap calls in this fixture are followed by another cps
+#    operator (mapMulti), not by an auto distill, so 401c finds no
+#    fusion partner for them.
+#  - flatMapTo* / mapMultiTo* and mapTo* primitive variants carry a
+#    primitive bridge-output (I / J / D), which the Object-only gates
+#    on 401b / 401c exclude from fusion.
+# Together those four reasons account for the bulk of the 21
+# invokedynamic dispatches that remain. See issues #556 and #570.
 java: |
   package allnonterminal;
   import java.util.Comparator;

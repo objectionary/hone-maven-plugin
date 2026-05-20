@@ -71,10 +71,10 @@ result: |
           φ ↦ Φ.hone.distill,
           class ↦ 𝑒-class-name,
           bridge-input ↦ "Ljava/lang/Object;",
-          bridge-output ↦ "Ljava/lang/Object;",
+          bridge-output ↦ 𝑒-distill-bridge-output,
           start ↦ "flatMap",
           accepted ↦ 𝑒-accepted,
-          returned ↦ "Ljava/lang/Object;",
+          returned ↦ 𝑒-distill-bridge-output,
           static ↦ "true",
           captures ↦ ⟦ ρ ↦ ∅ ⟧,
           emit-shape ↦ "cps",
@@ -100,3 +100,11 @@ where:
   - meta: 𝜏-target-opcode
     function: tau
     args: [𝑒-opcode]
+  - meta: 𝑒-distill-bridge-output
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^Ljava\\/util\\/stream\\/Stream;$/Ljava\\/lang\\/Object;/g"'
+      - '"s/^Ljava\\/util\\/stream\\/IntStream;$/I/g"'
+      - '"s/^Ljava\\/util\\/stream\\/LongStream;$/J/g"'
+      - '"s/^Ljava\\/util\\/stream\\/DoubleStream;$/D/g"'

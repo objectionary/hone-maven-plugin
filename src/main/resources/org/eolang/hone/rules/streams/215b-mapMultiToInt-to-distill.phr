@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Primitive sibling of 215. Folds a recognised
+# Stream.mapMultiToInt(BiConsumer) call site (Φ.hone.lambda with
+# `stream.method = "mapMultiToInt"`) into a zero-capture cps
+# Φ.hone.distill with `start ↦ "mapMultiToInt"`, `bridge-input ↦
+# Ljava/lang/Object;` (upstream Stream<T>) and `bridge-output ↦ "I"`
+# (downstream IntStream). The user lambda already drives emission via
+# `IntConsumer.accept(int)`, so the cps body just hands the item and the
+# downstream IntConsumer to the lambda and returns — no Φ.hone.emit
+# marker. 502a widens `mapMulti` to `mapMultiToInt` from the
+# bridge-output. Issue #570 Step 9.
+name: mapMultiToInt-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "accept",
+    interface ↦ "()Ljava/util/function/BiConsumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "mapMultiToInt",
+      signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;"
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "I",
+    start ↦ "mapMultiToInt",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ "I",
+    static ↦ "true",
+    captures ↦ ⟦ ρ ↦ ∅ ⟧,
+    emit-shape ↦ "cps",
+    body ↦ ⟦
+      t0-aload-consumer ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        i1 ↦ 1
+      ⟧,
+      t1-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-target-opcode,
+        i2 ↦ 𝑒-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.+)Ljava\\/util\\/function\\/IntConsumer;\\)V/$1/g"'
+  - meta: 𝜏-target-opcode
+    function: tau
+    args: [𝑒-opcode]

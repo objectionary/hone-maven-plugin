@@ -17,10 +17,13 @@
 # stealing this rule's input. Alphabetically 491 < 493, so 491 runs first
 # and harmlessly skips; 493 then fires on the same distill.
 #
-# Slot arithmetic: captures-slot-width + item-width. Today flatMap is
-# Object-only (Step 5 of issue #570), so bridge-input is hardcoded to
-# `Ljava/lang/Object;` upstream and item-width is always 1; the formula
-# stays general so Step 9's primitive flatMap variants can reuse it.
+# Slot arithmetic: captures-slot-width + item-width. The Stream class
+# and forEach signature are derived from `bridge-output` so that plain
+# flatMap routes through `java/util/stream/Stream.forEach(Consumer)V`
+# and the Step 9 primitive variants (flatMapToInt / flatMapToLong /
+# flatMapToDouble) route through the matching `IntStream.forEach(
+# IntConsumer)V` / `LongStream.forEach(LongConsumer)V` /
+# `DoubleStream.forEach(DoubleConsumer)V` shapes. Issue #570.
 name: emit-to-foreach
 pattern: |
   ⟦
@@ -61,9 +64,9 @@ result: |
       ⟧,
       𝜏-invoke-forEach ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokeinterface,
-        i2 ↦ "java/util/stream/Stream",
+        i2 ↦ 𝑒-stream-class,
         i3 ↦ "forEach",
-        i4 ↦ "(Ljava/util/function/Consumer;)V",
+        i4 ↦ 𝑒-forEach-sig,
         i5 ↦ Φ.true
       ⟧,
       𝐵-post-emit,
@@ -71,6 +74,22 @@ result: |
     ⟧
   ⟧
 where:
+  - meta: 𝑒-stream-class
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/java\\/util\\/stream\\/Stream/g"'
+      - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
+      - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
+      - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
+  - meta: 𝑒-forEach-sig
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/(Ljava\\/util\\/function\\/Consumer;)V/g"'
+      - '"s/^I$/(Ljava\\/util\\/function\\/IntConsumer;)V/g"'
+      - '"s/^J$/(Ljava\\/util\\/function\\/LongConsumer;)V/g"'
+      - '"s/^D$/(Ljava\\/util\\/function\\/DoubleConsumer;)V/g"'
   - meta: 𝑒-item-width-str
     function: sed
     args:

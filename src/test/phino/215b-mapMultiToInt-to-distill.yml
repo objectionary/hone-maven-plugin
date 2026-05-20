@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 215b rewrites a recognised Stream.mapMultiToInt(BiConsumer) call site
+# into a zero-capture cps Φ.hone.distill with `start ↦ "mapMultiToInt"`
+# and `bridge-output ↦ "I"`. The body loads the downstream IntConsumer
+# and invokes the user's static lambda — no Φ.hone.emit marker.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/215b-mapMultiToInt-to-distill.phr
+input: |
+  {⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ "Foo",
+    method ↦ "accept",
+    interface ↦ "()Ljava/util/function/BiConsumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+    bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+    static ↦ "true",
+    opcode ↦ "invokestatic",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ "Foo",
+      method ↦ "lambda$main$0",
+      signature ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+      is-interface ↦ Φ.false
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "mapMultiToInt",
+      signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;"
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "I",
+      start ↦ "mapMultiToInt",
+      accepted ↦ "Ljava/lang/Integer;",
+      returned ↦ "I",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ 𝑒-body
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.aload,
+      i1 ↦ 1
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ "Foo",
+      i3 ↦ "lambda$main$0",
+      i4 ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+      i5 ↦ Φ.false
+    ⟧

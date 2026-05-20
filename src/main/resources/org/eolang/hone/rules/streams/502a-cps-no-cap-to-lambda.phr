@@ -26,8 +26,13 @@
 # match 502b.
 #
 # Step 1 scope of issue #570: Object stream, zero captures, item type
-# parameterised by `𝑒-accepted`. Primitive-stream variants are deferred to
-# later steps.
+# parameterised by `𝑒-accepted`. Step 9 widens the rule to handle
+# primitive downstream types: when `bridge-output` is `I` / `J` / `D`,
+# the lowering selects `mapMultiToInt` / `mapMultiToLong` /
+# `mapMultiToDouble` with the matching `IntConsumer` / `LongConsumer` /
+# `DoubleConsumer` parameter type, so primitive flatMapTo* and
+# mapMultiTo* distills lower correctly. `bridge-input` stays Object —
+# every Step 9 cps distill arrives from an upstream `Stream<T>`.
 name: cps-no-cap-to-lambda
 pattern: |
   ⟦
@@ -44,10 +49,10 @@ pattern: |
           φ ↦ Φ.hone.distill,
           class ↦ 𝑒-class-name,
           bridge-input ↦ "Ljava/lang/Object;",
-          bridge-output ↦ "Ljava/lang/Object;",
+          bridge-output ↦ 𝑒-bridge-output,
           start ↦ 𝑒-start,
           accepted ↦ 𝑒-accepted,
-          returned ↦ "Ljava/lang/Object;",
+          returned ↦ 𝑒-returned,
           static ↦ "true",
           captures ↦ ⟦ ρ ↦ ∅ ⟧,
           emit-shape ↦ "cps",
@@ -89,8 +94,8 @@ result: |
           ⟧,
           stream ↦ ⟦
             class ↦ "java/util/stream/Stream",
-            method ↦ "mapMulti",
-            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+            method ↦ 𝑒-mapMulti-method,
+            signature ↦ 𝑒-mapMulti-signature
           ⟧
         ⟧,
         𝐵-body-tail
@@ -111,7 +116,7 @@ result: |
       params ↦ ⟦
         φ ↦ Φ.jeo.params,
         i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-accepted ⟧,
-        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-consumer-type ⟧
       ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of,
@@ -140,9 +145,36 @@ where:
   - meta: 𝜏-return
     function: random-tau
     args: ['𝐵-body', '𝜏-load-item']
+  - meta: 𝑒-consumer-type
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/Ljava\\/util\\/function\\/Consumer;/g"'
+      - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/function\\/LongConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
+  - meta: 𝑒-output-stream-type
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/Ljava\\/util\\/stream\\/Stream;/g"'
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream;/g"'
+  - meta: 𝑒-mapMulti-method
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/mapMulti/g"'
+      - '"s/^I$/mapMultiToInt/g"'
+      - '"s/^J$/mapMultiToLong/g"'
+      - '"s/^D$/mapMultiToDouble/g"'
+  - meta: 𝑒-mapMulti-signature
+    function: concat
+    args: ['"(Ljava/util/function/BiConsumer;)"', 𝑒-output-stream-type]
   - meta: 𝑒-bridge-signature
     function: concat
-    args: ['"("', 𝑒-accepted, '"Ljava/util/function/Consumer;)V"']
+    args: ['"("', 𝑒-accepted, 𝑒-consumer-type, '")V"']
   - meta: 𝑒-wrapper-signature
     function: concat
-    args: ['"("', 𝑒-accepted, '"Ljava/util/function/Consumer;)V"']
+    args: ['"("', 𝑒-accepted, 𝑒-consumer-type, '")V"']

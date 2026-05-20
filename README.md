@@ -366,12 +366,12 @@ files is computed by comparing MD5 checksums before and after.
 | [stleary/JSON-java](https://github.com/stleary/JSON-java/commit/d749ee16abd084ae94785c7afe954de25d921a5d) | 2593 | 16352 | 31 | 7s | 31 | 18s | 4s |
 | [HdrHistogram/HdrHistogram](https://github.com/HdrHistogram/HdrHistogram/commit/de84b0a7de2378abfc405da503bf4898e84ea98e) | 269 | 13086 | 97 | 52s | 96 | 20s | 53s |
 | [vavr-io/vavr](https://github.com/vavr-io/vavr/commit/1c9b7af87949df5232c81253a7fc59fde3598aec) | 663 | 74130 | 435 | 82s | 431 | 110s | 46s |
-| [ronmamo/reflections](https://github.com/ronmamo/reflections/commit/f5514b125c4f4b58e92beb0979a40ddce48d5be1) | 705 | 4596 | 74 | 8s | 73 | 21s | 3s ⚠️ |
 | [junit-team/junit4](https://github.com/junit-team/junit4/commit/300468b1efd48d76fac2f7bd6d576846dcbbf5ed) | 3271 | 31232 | 349 | 17s | 349 | 31s | 9s |
-| [redis/jedis](https://github.com/redis/jedis/commit/f4ee6d16f9527dc2aa3b0f71766a8b074fafecfe) | 3902 | 149066 | 0 | 1186s ⚠️ | 0 | 0s | 0s ⚠️ |
-| [raphw/byte-buddy](https://github.com/raphw/byte-buddy/commit/93c2b67ee5f8f9d8d1686b3c51ce38ecd65a09a8) | 847 | 197889 | 3150 | 58s | 3148 | 209s | 6s ⚠️ |
-| [mockito/mockito](https://github.com/mockito/mockito/commit/414a99970fe2448f203075e35d1eb40d6d0492b2) | 2656 | 64776 | 0 | 1s ⚠️ | 0 | 0s | 0s ⚠️ |
-| [ReactiveX/RxJava](https://github.com/ReactiveX/RxJava/commit/e51c7b4e56ce96574f52844302592d983959cf75) | 7588 | 315346 | 0 | 1s ⚠️ | 0 | 0s | 0s ⚠️ |
+| [apache/commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 1959 | 104408 | 433 | 619s | 415 | 34s | 438s |
+| [apache/commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 516 | 73500 | 614 | 48s | 594 | 53s | 28s |
+| [apache/commons-pool](https://github.com/apache/commons-pool/commit/772089fa7b441b61fbbb1663cdbcab2158dbc9a5) | 301 | 16596 | 87 | 382s | 84 | 13s | 383s |
+| [apache/commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 145 | 52534 | 400 | 33s | 382 | 20s | 22s |
+| [apache/commons-validator](https://github.com/apache/commons-validator/commit/2747da8d0ff7d3aa971369543239160f7d723da9) | 173 | 17086 | 88 | 9s | 84 | 36s | 4s |
 
 The results were calculated in [this GHA job][coverage-gha]
 on 2026-05-20 at 11:41,

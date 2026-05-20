@@ -163,6 +163,45 @@ into distill instead of mapMulti, `401-fuse` collapses every
 sort-bounded segment into a single distill, and `501` emits one
 mapMulti per segment — the path from 19 down toward the goal of one.
 
+### Sorted and limit stay non-fusable (issue #570, Step 10)
+
+Two stream operators are deliberately excluded from the distill
+migration above: `sorted` and `limit`. They are *fundamentally* incompatible
+with a single-pass `mapMulti` pipeline:
+
+- `sorted` is a fully-buffering barrier — every upstream element must be
+  consumed and held in memory before any downstream element can be
+  emitted. There is no continuation-passing body shape that preserves
+  this semantics while still flowing through a per-element `BiConsumer`.
+- `limit(N)` short-circuits after N downstream emits. A merged distill
+  would have to abort the surrounding `forEach` driver mid-stream, which
+  the `BiConsumer.accept` contract has no clean way to express.
+
+The chosen approach is **option (A)** from the plan: recognise both
+operators as named pragmas so neighbouring stateless segments can still
+fuse around them, but never fold them into distill and never merge them
+into the surrounding `mapMulti`. Each `sorted` or `limit` therefore
+survives as its own `invokeinterface` dispatch in the final bytecode.
+
+The mechanics:
+
+- `212-lambda-to-sorted` recognises `Stream.sorted(Comparator)` as
+  `Φ.hone.sorted`. If no later rule consumes it,
+  `607-sorted-to-lambda` lowers it back to the original lambda +
+  `invokeinterface` pair, which 7xx then turns into bytecode.
+- `216-recognize-limit-ldc` recognises `ldc + Stream.limit(J)` as
+  `Φ.hone.limit`. The mirror rule `722-limit-ldc-to-invokeinterface`
+  lowers it back when nothing fuses it.
+
+The practical consequence: the `streams-full-non-terminal` fixture's
+`after.invokedynamic` count is *expected* to land around 3–4 (one per
+sorted/limit/limit pair) rather than 1. That is by design — the
+architecture's value is fusing the *streamable* part of the pipeline,
+not eliminating intrinsically-non-streamable operators. A future
+"buffered-distill mode" (option B in the plan) could in principle fold
+sorted into a Collector-style two-stage pipeline, but it is explicitly
+out of scope for #570.
+
 ## phino: the only rewrite engine
 
 There is no Java implementation of the rewriter. Everything is delegated

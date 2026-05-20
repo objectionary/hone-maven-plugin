@@ -16,11 +16,11 @@ echo "hone-maven-plugin installed into local Maven repository"
 
 printf 'repo,sha,build_before,time_before,classes_total,classes_modified,build_after,time_after,loc\n' > "${csv}"
 
-while IFS=',' read -r repo sha; do
+while IFS=',' read -r -u 3 repo sha; do
   test -n "${repo}" || continue
   printf '\n=== %s @ %s ===\n' "${repo}" "${sha}"
-  "${root}/.github/hone-it.sh" "${repo}" "${sha}" "${csv}" || true
-done < <(tail -n +2 "${repos}")
+  "${root}/.github/hone-it.sh" "${repo}" "${sha}" "${csv}" </dev/null || true
+done 3< <(tail -n +2 "${repos}")
 
 echo ""
 echo "Final CSV:"

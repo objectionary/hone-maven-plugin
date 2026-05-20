@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds Φ.hone.flatMap (Object stream variant produced by 207) into a cps
+# Φ.hone.distill with zero captures and `start ↦ "flatMap"`. The cps body
+# carries two opcodes: the invoke of the user's lambda (which consumes the
+# item on top of stack and leaves the user's Stream on top of stack), and
+# a single Φ.hone.emit marker. 493 (lower number than 502) then rewrites
+# the marker into `aload <consumer-slot>; invokeinterface Stream.forEach`
+# so that the user's Stream pushes its elements through the downstream
+# Consumer. 491 explicitly skips this distill via its `start ↦ "flatMap"`
+# guard, leaving the marker for 493.
+#
+# Multi-emit semantics are implicit in the marker: a single Φ.hone.emit
+# stands for "emit zero or more times via Stream.forEach". 401b / 401c
+# single-splice fusion cannot fold a downstream auto distill across this
+# kind of emit; Step 7 of issue #570 tracks the limitation.
+#
+# Replaces 208-flatMap-to-mapMulti.phr. The wrapper method is no longer
+# synthesised here — 502a takes care of that uniformly for all zero-capture
+# cps distills.
+name: flatMap-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-flatMap ↦ ⟦
+          φ ↦ Φ.hone.flatMap,
+          opcode ↦ 𝑒-opcode,
+          class ↦ 𝑒-class,
+          bridge-input ↦ 𝑒-bridge-input,
+          bridge-output ↦ 𝑒-bridge-output,
+          accepted ↦ 𝑒-accepted,
+          returned ↦ 𝑒-returned,
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-flatMap ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "flatMap",
+          accepted ↦ 𝑒-accepted,
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            t0-invoke ↦ ⟦
+              φ ↦ Φ.jeo.opcode.𝜏-target-opcode,
+              i2 ↦ 𝑒-target-class,
+              i3 ↦ 𝑒-target-method,
+              i4 ↦ 𝑒-target-signature,
+              i5 ↦ 𝑒-target-is-interface
+            ⟧,
+            t1-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-target-opcode
+    function: tau
+    args: [𝑒-opcode]

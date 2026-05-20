@@ -80,6 +80,9 @@ result: |
       ρ ↦ ∅
     ⟧
   ⟧
+when:
+  not:
+    eq: [𝑒-start, '"flatMap"']
 where:
   - meta: 𝑒-consumer-class
     function: sed

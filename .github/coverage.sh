@@ -14,9 +14,9 @@ mkdir -p "${work}"
 mvn -ntp -B -q --batch-mode install -DskipTests -Dinvoker.skip
 echo "hone-maven-plugin installed into local Maven repository"
 
-printf 'repo;sha;build_before;time_before;classes_total;classes_modified;build_after;time_after;loc\n' > "${csv}"
+printf 'repo,sha,build_before,time_before,classes_total,classes_modified,build_after,time_after,loc\n' > "${csv}"
 
-while IFS=';' read -r repo sha; do
+while IFS=',' read -r repo sha; do
   test -n "${repo}" || continue
   printf '\n=== %s @ %s ===\n' "${repo}" "${sha}"
   "${root}/.github/hone-it.sh" "${repo}" "${sha}" "${csv}" || true
@@ -29,7 +29,7 @@ cat "${csv}"
 table=$(
   printf '| Repository | Forks | LoC | Classes | Before | Edits | After |\n'
   printf '| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n'
-  while IFS=';' read -r repo sha bbuild btime total modified abuild atime loc; do
+  while IFS=',' read -r repo sha bbuild btime total modified abuild atime loc; do
     forks=$(gh api "repos/${repo}" --jq '.forks_count' 2>/dev/null || echo '?')
     bmark=""
     amark=""

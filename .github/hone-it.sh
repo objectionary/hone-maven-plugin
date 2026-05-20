@@ -74,7 +74,7 @@ budget=300
 
 flags=(-ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
 
-row="${repo};${sha}"
+row="${repo},${sha}"
 echo "warming up Maven dependency cache for ${repo}"
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" test || true
 start=$(date +%s)
@@ -82,10 +82,10 @@ rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" clean test || rc=$?
 outcome=$(build_outcome "${rc}")
 seconds=$(( $(date +%s) - start ))
-row="${row};${outcome};${seconds}"
+row="${row},${outcome},${seconds}"
 
 if [ "${outcome}" != "pass" ]; then
-  printf '%s;0;0;skipped;0;%s\n' "${row}" "${loc}" >> "${csv}"
+  printf '%s,0,0,skipped,0,%s\n' "${row}" "${loc}" >> "${csv}"
   rm -rf "${dir}"
   exit 1
 fi
@@ -96,12 +96,12 @@ total=$(wc -l < "${snap}.before" | tr -d ' ')
 apply_hone "${dir}"
 snapshot_classes "${dir}" "${snap}.after"
 count=$(count_modified "${snap}.before" "${snap}.after")
-row="${row};${total};${count}"
+row="${row},${total},${count}"
 start=$(date +%s)
 rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || rc=$?
 outcome=$(build_outcome "${rc}")
 seconds=$(( $(date +%s) - start ))
-printf '%s;%s;%s;%s\n' "${row}" "${outcome}" "${seconds}" "${loc}" >> "${csv}"
+printf '%s,%s,%s,%s\n' "${row}" "${outcome}" "${seconds}" "${loc}" >> "${csv}"
 rm -rf "${dir}"
 test "${outcome}" = "pass"

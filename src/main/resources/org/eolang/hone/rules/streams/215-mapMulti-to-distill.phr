@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a recognised Stream.mapMulti(BiConsumer) call site (Φ.hone.lambda
+# matching the BiConsumer SAM and `stream.method ↦ "mapMulti"`) into a
+# zero-capture cps Φ.hone.distill with `start ↦ "mapMulti"`. The user's
+# lambda already drives emission itself — it has shape
+# (item, Consumer) -> void and calls consumer.accept(...) zero or more
+# times — so the cps body just hands the item and the downstream Consumer
+# to the user's static lambda method and returns. No Φ.hone.emit marker is
+# emitted: the user lambda's `accept` calls ARE the emit points.
+#
+# Body shape after 502a wraps it in (aload 0; body; return):
+#   aload 0       ; item on stack
+#   aload 1       ; consumer on stack
+#   invokestatic <class>.<user-lambda>:(<item>,Consumer)V
+#   return
+#
+# Replaces 215-lambda-to-mapMulti.phr, which produced Φ.hone.mapMulti
+# directly. Routing raw mapMulti through the cps distill path lets
+# 401b-fuse-auto-cps splice upstream pointwise auto distills (filter / map /
+# peek) into the same wrapper, eliminating one invokedynamic per fused
+# operator. Downstream fusion via 401c-fuse-cps-auto is not possible: the
+# user lambda may call consumer.accept multiple times, so there is no
+# single splice point for an auto body. Step 7 of issue #570 tracks the
+# multi-emit fusion limitation.
+#
+# Static lambdas only (`static ↦ "true"`). Instance method references are
+# left for a later step. Issue #570.
+name: mapMulti-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "accept",
+    interface ↦ "()Ljava/util/function/BiConsumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "mapMulti",
+      signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    start ↦ "mapMulti",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ "Ljava/lang/Object;",
+    static ↦ "true",
+    captures ↦ ⟦ ρ ↦ ∅ ⟧,
+    emit-shape ↦ "cps",
+    body ↦ ⟦
+      t0-aload-consumer ↦ ⟦
+        φ ↦ Φ.jeo.opcode.aload,
+        i1 ↦ 1
+      ⟧,
+      t1-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-target-opcode,
+        i2 ↦ 𝑒-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.+)Ljava\\/util\\/function\\/Consumer;\\)V/$1/g"'
+  - meta: 𝜏-target-opcode
+    function: tau
+    args: [𝑒-opcode]

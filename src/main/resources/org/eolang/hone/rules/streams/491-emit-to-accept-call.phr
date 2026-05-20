@@ -13,16 +13,19 @@
 # future no-capture cps distill. The consumer slot is computed from the
 # capture count plus the item-width offset.
 #
-# Slot arithmetic today: every existing capture is a single-slot reference
-# type (`Ljava/util/HashSet;`, `[Z`, `[J`), and the item is `Ljava/lang/Object;`
-# (single slot), so `consumer-slot = size(𝐵-captures) + 1`. When primitive
-# items or wide captures arrive, the formula is expressed via `𝑒-item-width`
-# and `𝑒-captures-slot-width` so each can be widened independently without
-# rewriting the structure.
+# Item type is open via `𝑒-bridge-input`. The Object stream variant
+# (`bridge-input ↦ "Ljava/lang/Object;"`) lowers to
+# `Consumer.accept(Object)V` with `dup_x1` and a single-slot item; the
+# primitive variants (`I`, `J`, `D`) lower to `IntConsumer.accept(I)V`,
+# `LongConsumer.accept(J)V`, `DoubleConsumer.accept(D)V` respectively —
+# the wide types use `dup_x2` to rearrange the cat2 item under the cat1
+# consumer reference, and contribute 2 to the slot arithmetic.
 #
-# Object items only: the invokeinterface still targets `Consumer.accept(Object)V`
-# because the bridge stays type-erased for Object streams. Primitive variants
-# (`IntConsumer.accept(I)V`, etc.) will be added by Step 4 of issue #570.
+# Slot arithmetic: every existing capture is a single-slot reference
+# type (`Ljava/util/HashSet;`, `[Z`, `[J`), so today
+# `captures-slot-width = size(𝐵-captures)`. When wide captures arrive
+# (e.g., a `J` counter held directly), this formula must be widened.
+# `consumer-slot = captures-slot-width + item-width`.
 #
 # The rule fires once per Φ.hone.emit marker; phino's fixed-point loop
 # re-fires until no markers remain.
@@ -31,7 +34,7 @@ pattern: |
   ⟦
     φ ↦ Φ.hone.distill,
     class ↦ 𝑒-class,
-    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     start ↦ 𝑒-start,
     accepted ↦ 𝑒-accepted,
@@ -50,7 +53,7 @@ result: |
   ⟦
     φ ↦ Φ.hone.distill,
     class ↦ 𝑒-class,
-    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     start ↦ 𝑒-start,
     accepted ↦ 𝑒-accepted,
@@ -64,13 +67,13 @@ result: |
         φ ↦ Φ.jeo.opcode.aload,
         i1 ↦ 𝑒-consumer-slot
       ⟧,
-      𝜏-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x-op ⟧,
       𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       𝜏-invoke ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokeinterface,
-        i2 ↦ "java/util/function/Consumer",
+        i2 ↦ 𝑒-consumer-class,
         i3 ↦ "accept",
-        i4 ↦ "(Ljava/lang/Object;)V",
+        i4 ↦ 𝑒-accept-sig,
         i5 ↦ Φ.true
       ⟧,
       𝐵-post-emit,
@@ -78,12 +81,47 @@ result: |
     ⟧
   ⟧
 where:
+  - meta: 𝑒-consumer-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/java\\/util\\/function\\/Consumer/g"'
+      - '"s/^I$/java\\/util\\/function\\/IntConsumer/g"'
+      - '"s/^J$/java\\/util\\/function\\/LongConsumer/g"'
+      - '"s/^D$/java\\/util\\/function\\/DoubleConsumer/g"'
+  - meta: 𝑒-accept-sig
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/(Ljava\\/lang\\/Object;)V/g"'
+      - '"s/^I$/(I)V/g"'
+      - '"s/^J$/(J)V/g"'
+      - '"s/^D$/(D)V/g"'
+  - meta: 𝑒-dup-x-op-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/dup_x1/g"'
+      - '"s/^I$/dup_x1/g"'
+      - '"s/^J$/dup_x2/g"'
+      - '"s/^D$/dup_x2/g"'
+  - meta: 𝜏-dup-x-op
+    function: tau
+    args: [𝑒-dup-x-op-str]
+  - meta: 𝑒-item-width-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/1/g"'
+      - '"s/^I$/1/g"'
+      - '"s/^J$/2/g"'
+      - '"s/^D$/2/g"'
+  - meta: 𝑒-item-width
+    function: number
+    args: [𝑒-item-width-str]
   - meta: 𝑒-captures-slot-width
     function: size
     args: [𝐵-captures]
-  - meta: 𝑒-item-width
-    function: number
-    args: ['"1"']
   - meta: 𝑒-consumer-slot
     function: sum
     args: [𝑒-captures-slot-width, 𝑒-item-width]

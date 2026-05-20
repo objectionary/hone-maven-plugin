@@ -13,8 +13,15 @@
 # Step C limitation: the pattern matches a single Φ.hone.emit position per
 # firing, and the second distill is consumed on first match. If the cps body
 # carries multiple emit markers (flatMap, mapMulti-verbatim), only one gets
-# the auto body spliced in. Multi-emit cps bodies arrive in later steps;
-# the auto body splice will need a different shape then.
+# the auto body spliced in. A naive non-consuming redesign (keep the auto
+# distill in `result` so phino's fixed-point loop re-fires once per emit
+# marker) does not terminate — the same emit marker is still in the body
+# and the same auto distill is still adjacent, so phino re-splices forever.
+# Fixing this requires a `splice-all` where-function in phino that rewrites
+# every sentinel position in a binding group within one firing; tracked at
+# objectionary/phino#708. Until that primitive lands, downstream fusion of
+# multi-emit cps bodies stays blocked and the architecture accepts one
+# mapMulti per multi-emit operator (see issue #570 Step 7).
 #
 # Gated to Object-typed distills on both sides. 502a / 502b derive the
 # bridge signature from `𝑒-accepted`, but still hardcode the bridge-input

@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 354-skip-one-to-distill is the .skip(1L) sibling of 353: Φ.hone.skip
+# with count="1" (the string-typed form produced by 212 when javac
+# emitted lconst_1) is lowered into the same cps Φ.hone.distill shape,
+# but the threshold N=1 is pushed via lconst_1 instead of ldc Φ.jeo.long(1).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/354-skip-one-to-distill.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.skip,
+          stream-class ↦ "java/util/stream/Stream",
+          count ↦ "1"
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "skip-one",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦
+        c0 ↦ ⟦
+          φ ↦ Φ.hone.capture,
+          type ↦ "[J",
+          init ↦ 𝑒-init
+        ⟧,
+        ρ ↦ ∅
+      ⟧,
+      emit-shape ↦ "cps",
+      body ↦ 𝑒-body
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.newarray,
+      i1 ↦ 11
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.lconst_1
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.lcmp
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.ladd
+    ⟧
+  - |
+    ⟦ φ ↦ Φ.hone.emit ⟧

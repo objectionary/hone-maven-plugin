@@ -153,22 +153,20 @@ synthesises a single private `BiConsumer` wrapper for each remaining
 distill, and `502a`/`502b` lower the distill to the `mapMulti`
 dispatch pair.
 
-#### Multi-emit fusion limitation (Step 7, blocked on phino)
+#### Multi-emit fusion is supported (Step 7, landed)
 
-`401c-fuse-cps-auto` only splices the auto body in front of *one*
-`Φ.hone.emit` marker per firing. For CPS bodies with N > 1 emit
-markers — every `flatMap`, raw `mapMulti`, and their primitive
-variants — that means downstream auto distills cannot fuse into the
-multi-emit cps wrapper. Each such operator therefore survives as its
-own `Φ.hone.mapMulti` and lowers to its own `invokedynamic` dispatch.
-
-The fix needs a phino `splice` where-function that replaces every
-sentinel pragma in one rule firing. It landed in phino 0.0.0.69
-(objectionary/phino#708) but `401c-fuse-cps-auto` has not yet been
-rewritten on top of it — see the file header for the migration plan.
-Until 401c is migrated, multi-emit downstream fusion stays disabled
-and pipelines that use flatMap / mapMulti / their primitive variants
-will emit one `invokedynamic` per multi-emit operator.
+`401c-fuse-cps-auto` now uses phino's `splice` where-function
+(objectionary/phino#708, shipped in phino 0.0.0.69) to insert the
+auto body in front of *every* `Φ.hone.emit` marker in the cps body
+on a single firing. A `part-of` guard on the cps body's binding
+group keeps the rule from firing when no emit marker exists —
+without it, the auto distill would be consumed yet its body would
+land nowhere, silently dropping the operation. The mapMulti /
+mapMultiTo* producers (215, 215b-d) emit cps distills with zero
+`Φ.hone.emit` markers (the user lambda owns emission via the
+captured `Consumer`), so the guard correctly leaves their adjacent
+auto neighbours unfused; that limitation is a property of 215's
+body shape, not of 401c.
 
 #### Why `513-merge-mapMulti-unbox` survives but `512` does not
 

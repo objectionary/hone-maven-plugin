@@ -5,24 +5,20 @@
 # Fuses two adjacent Φ.hone.distill pragmas when the first is cps-shape
 # (drives emission via Φ.hone.emit markers) and the second is auto-shape
 # (one-in-one-out body that transforms the top-of-stack item). The auto
-# body is spliced into the first body immediately before the Φ.hone.emit
-# marker — so the auto body transforms the about-to-be-emitted item, then
-# the original marker fires on the transformed value. The auto side has no
-# captures by convention; merged captures are exactly the first's.
+# body is spliced into the first body immediately before EVERY Φ.hone.emit
+# marker — so on every emission point the auto body transforms the
+# about-to-be-emitted item, then the original marker fires on the
+# transformed value. The auto side has no captures by convention; merged
+# captures are exactly the first's.
 #
-# Step C limitation: the pattern matches a single Φ.hone.emit position per
-# firing, and the second distill is consumed on first match. If the cps body
-# carries multiple emit markers (flatMap, mapMulti-verbatim), only one gets
-# the auto body spliced in. A naive non-consuming redesign (keep the auto
-# distill in `result` so phino's fixed-point loop re-fires once per emit
-# marker) does not terminate — the same emit marker is still in the body
-# and the same auto distill is still adjacent, so phino re-splices forever.
-# Fixing this requires the `splice` where-function in phino, which rewrites
-# every sentinel position in a binding group within one firing; landed in
-# phino 0.0.0.69 (objectionary/phino#708). The blocker is lifted but this
-# rule has not yet been migrated to use it — downstream fusion of multi-emit
-# cps bodies still produces one mapMulti per operator until 401c is rewritten
-# on top of `splice` (see issue #570 Step 7).
+# The splicing is delegated to phino's `splice` where-function (landed in
+# phino 0.0.0.69, objectionary/phino#708). On a single firing it walks the
+# cps body's binding group, and in front of every τ-binding whose `φ` value
+# equals `Φ.hone.emit` it inserts a fresh-renamed copy of the auto body.
+# When the cps body has no emit marker at all (e.g. raw mapMulti, whose
+# user lambda owns emission), the `part-of` guard prevents the rule from
+# firing — otherwise the auto distill would be consumed without its body
+# being spliced anywhere, silently dropping the operation.
 #
 # Gated to Object-typed distills on both sides. 502a / 502b derive the
 # bridge signature from `𝑒-accepted`, but still hardcode the bridge-input
@@ -49,12 +45,7 @@ pattern: |
       static ↦ 𝑒-first-static,
       captures ↦ 𝑒-first-captures,
       emit-shape ↦ "cps",
-      body ↦ ⟦
-        𝐵-pre-emit,
-        𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
-        𝐵-post-emit,
-        ρ ↦ ∅
-      ⟧
+      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
     ⟧,
     𝜏-second ↦ ⟦
       φ ↦ Φ.hone.distill,
@@ -71,6 +62,10 @@ pattern: |
     ⟧,
     𝐵-body-tail
   ⟧
+when:
+  part-of:
+    - Φ.hone.emit
+    - 𝐵-first-body
 result: |
   ⟦
     𝐵-body-head,
@@ -86,10 +81,7 @@ result: |
       captures ↦ 𝑒-first-captures,
       emit-shape ↦ "cps",
       body ↦ ⟦
-        𝐵-pre-emit,
-        𝐵-second-body,
-        𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
-        𝐵-post-emit,
+        𝐵-spliced-body,
         ρ ↦ ∅
       ⟧
     ⟧,
@@ -105,3 +97,6 @@ where:
       - 𝑒-both-statics
       - '"s/truetrue/true/g"'
       - '"s/.*false.*/false/g"'
+  - meta: 𝐵-spliced-body
+    function: splice
+    args: [𝐵-first-body, Φ.hone.emit, 𝐵-second-body]

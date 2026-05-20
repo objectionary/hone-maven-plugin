@@ -162,13 +162,13 @@ variants — that means downstream auto distills cannot fuse into the
 multi-emit cps wrapper. Each such operator therefore survives as its
 own `Φ.hone.mapMulti` and lowers to its own `invokedynamic` dispatch.
 
-The fix needs a phino `splice-all` (or equivalent) where-function
-that replaces every sentinel pragma in one rule firing. The feature
-request is filed upstream and tracked at the top of
-`401c-fuse-cps-auto.phr`. Until it lands, multi-emit downstream
-fusion stays disabled and pipelines that use flatMap / mapMulti /
-their primitive variants will emit one `invokedynamic` per
-multi-emit operator.
+The fix needs a phino `splice` where-function that replaces every
+sentinel pragma in one rule firing. It landed in phino 0.0.0.69
+(objectionary/phino#708) but `401c-fuse-cps-auto` has not yet been
+rewritten on top of it — see the file header for the migration plan.
+Until 401c is migrated, multi-emit downstream fusion stays disabled
+and pipelines that use flatMap / mapMulti / their primitive variants
+will emit one `invokedynamic` per multi-emit operator.
 
 #### Why `513-merge-mapMulti-unbox` survives but `512` does not
 

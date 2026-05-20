@@ -17,7 +17,7 @@
 # distill in `result` so phino's fixed-point loop re-fires once per emit
 # marker) does not terminate — the same emit marker is still in the body
 # and the same auto distill is still adjacent, so phino re-splices forever.
-# Fixing this requires a `splice-all` where-function in phino that rewrites
+# Fixing this requires a `splice` where-function in phino that rewrites
 # every sentinel position in a binding group within one firing; tracked at
 # objectionary/phino#708. Until that primitive lands, downstream fusion of
 # multi-emit cps bodies stays blocked and the architecture accepts one

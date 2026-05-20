@@ -11,15 +11,24 @@
 # boxed() between them as the only bridge back to Stream<T> (boxed is
 # not itself one of the 21 but is unavoidable for the type system).
 # The opcodes assertion pins the current count of invokedynamic in the
-# optimised class: 21 today, with the long-term goal of bringing it
-# down to 1 (a single mapMulti emitter that absorbs every operator).
-# The count went up from 19 once 401b/401c was gated to Object-typed
-# distills only — typed auto distills (.map(n -> n + 0) and friends)
-# are no longer fused into the adjacent .distinct() cps distill, so
-# the two .distinct() calls in this pipeline emit their own mapMulti
-# each instead of riding inside an adjacent map's wrapper. Closing
-# that gap is part of issue #570.
-# See issue #556.
+# optimised class: 21 after the issue #570 cps-distill migration
+# landed. The architecture's long-term floor is one mapMulti emitter
+# per *fusable* segment, but two structural limitations keep the count
+# of this particular fixture well above that floor:
+#  (1) Sorted and limit are non-fusable barriers (Step 10 option A) —
+#      each of the four sorted variants and two limit calls in the
+#      pipeline survives as its own invokeinterface dispatch and forces
+#      the surrounding stateless segments apart.
+#  (2) Multi-emit cps fusion is blocked on a phino feature request
+#      (see the comment at the top of 401c-fuse-cps-auto.phr) — every
+#      flatMap, mapMulti, flatMapTo*, and mapMultiTo* call emits its
+#      own mapMulti wrapper because 401c can only splice the auto body
+#      in front of *one* emit position per firing.
+# Both flatMap calls, both mapMulti calls, three flatMapTo*, three
+# mapMultiTo*, four sorted, and two limit calls in this pipeline are
+# therefore unable to fuse with their neighbours — that accounts for
+# the bulk of the 21 invokedynamic dispatches that remain.
+# See issues #556 and #570.
 java: |
   package allnonterminal;
   import java.util.Comparator;

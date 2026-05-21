@@ -76,4 +76,4 @@ expected:
       φ ↦ Φ.jeo.opcode.ladd
     ⟧
   - |
-    ⟦ φ ↦ Φ.hone.emit ⟧
+    ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧

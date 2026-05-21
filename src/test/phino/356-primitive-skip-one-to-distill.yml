@@ -60,4 +60,4 @@ expected:
       i1 ↦ 1
     ⟧
   - |
-    ⟦ φ ↦ Φ.hone.emit ⟧
+    ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧

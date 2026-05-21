@@ -86,7 +86,7 @@ result: |
               i4 ↦ 𝑒-target-signature,
               i5 ↦ 𝑒-target-is-interface
             ⟧,
-            t1-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧
+            t1-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
           ⟧
         ⟧,
         𝐵-body-tail

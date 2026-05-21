@@ -142,7 +142,7 @@ result: |
               stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
             ⟧,
             t15-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
-            t16-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+            t16-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
             t17-end-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧,
             t18-end-frame ↦ ⟦
               φ ↦ Φ.jeo.frame,

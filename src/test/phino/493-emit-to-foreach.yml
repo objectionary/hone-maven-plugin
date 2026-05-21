@@ -28,7 +28,7 @@ input: |
         i4 ↦ "(Ljava/lang/Integer;)Ljava/util/stream/Stream;",
         i5 ↦ Φ.false
       ⟧,
-      t1-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧
+      t1-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
     ⟧
   ⟧}
 expected:

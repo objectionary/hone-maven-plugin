@@ -126,7 +126,7 @@ result: |
               stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
             ⟧,
             t14-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
-            t15-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+            t15-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
             t16-end-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧,
             t17-end-frame ↦ ⟦
               φ ↦ Φ.jeo.frame,

@@ -125,7 +125,7 @@ result: |
               stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
             ⟧,
             t18-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
-            t19-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧
+            t19-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
           ⟧
         ⟧,
         𝐵-body-tail

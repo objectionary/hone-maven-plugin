@@ -31,7 +31,7 @@ input: |
     emit-shape ↦ "cps",
     body ↦ ⟦
       d0 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      d1 ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+      d1 ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
       d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧
     ⟧
   ⟧}

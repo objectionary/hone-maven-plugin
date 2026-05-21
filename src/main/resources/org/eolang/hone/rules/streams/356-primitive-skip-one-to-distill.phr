@@ -102,7 +102,7 @@ result: |
               stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
             ⟧,
             t18-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load-op, i1 ↦ 1 ⟧,
-            t19-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧
+            t19-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
           ⟧
         ⟧,
         𝐵-body-tail

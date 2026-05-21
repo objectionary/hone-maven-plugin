@@ -44,7 +44,7 @@ pattern: |
     emit-shape ↦ "cps",
     body ↦ ⟦
       𝐵-pre-emit,
-      𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+      𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
       𝐵-post-emit,
       ρ ↦ ∅
     ⟧

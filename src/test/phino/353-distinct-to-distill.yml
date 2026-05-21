@@ -54,7 +54,8 @@ expected:
     ⟧
   - |
     ⟦
-      φ ↦ Φ.hone.emit
+      φ ↦ Φ.hone.emit,
+      emit-context ↦ "top-level"
     ⟧
   - |
     ⟦

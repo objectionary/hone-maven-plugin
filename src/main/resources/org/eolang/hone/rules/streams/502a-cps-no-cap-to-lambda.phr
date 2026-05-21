@@ -4,20 +4,24 @@
 # yamllint disable rule:line-length
 # Lowers a cps Φ.hone.distill with zero captures into the bytecode shape:
 #   * A Φ.hone.lambda pragma replaces the cps distill in the caller body.
-#     LambdaMetafactory takes no captures and produces a BiConsumer; the
-#     bridge call invokes mapMulti on the stream.
+#     LambdaMetafactory takes no captures and produces the appropriate
+#     mapMulti SAM (BiConsumer for Object/narrow-Object streams,
+#     IntMapMultiConsumer / LongMapMultiConsumer / DoubleMapMultiConsumer
+#     for primitive streams); the bridge call invokes mapMulti (or the
+#     primitive-output variant mapMultiToInt / mapMultiToLong /
+#     mapMultiToDouble) on the upstream stream.
 #   * A synthetic private static wrapper method is appended to the enclosing
-#     class. Its signature is (item, Consumer)V and its body is the cps
-#     distill body verbatim, with a trailing `return`.
+#     class. Its signature is (item, Consumer)V where item matches
+#     `𝑒-accepted` and Consumer matches the downstream stream type
+#     (Object → Consumer; I → IntConsumer; J → LongConsumer;
+#     D → DoubleConsumer). The body loads the item via the matching
+#     load opcode (aload for references, iload / lload / dload for
+#     primitives) and then runs the cps body verbatim, trailed with
+#     `return`.
 #
 # This is the no-capture sibling of 502b: same lambda dispatch shape, but
 # no init formation to splice into the caller body and the wrapper's
-# signature drops the leading capture parameter. The lambda factory's SAM
-# interface signature is therefore `()Ljava/util/function/BiConsumer;`.
-#
-# Slot layout in the wrapper: item at slot 0 (no leading capture), consumer
-# at slot 1. The body loads the item with `aload 0` so the cps body sees
-# the same top-of-stack invariant the 491-emit lowering expects.
+# signature drops the leading capture parameter.
 #
 # This rule assumes 491 has already lowered every Φ.hone.emit marker.
 # Alphabetically 491 < 502a < 502b, so phino's fixed-point loop fires the
@@ -26,13 +30,15 @@
 # match 502b.
 #
 # Step 1 scope of issue #570: Object stream, zero captures, item type
-# parameterised by `𝑒-accepted`. Step 9 widens the rule to handle
-# primitive downstream types: when `bridge-output` is `I` / `J` / `D`,
-# the lowering selects `mapMultiToInt` / `mapMultiToLong` /
-# `mapMultiToDouble` with the matching `IntConsumer` / `LongConsumer` /
-# `DoubleConsumer` parameter type, so primitive flatMapTo* and
-# mapMultiTo* distills lower correctly. `bridge-input` stays Object —
-# every Step 9 cps distill arrives from an upstream `Stream<T>`.
+# parameterised by `𝑒-accepted`. Step 9 widened the rule to handle
+# primitive downstream types (bridge-output ∈ I / J / D). Step 8c
+# (this revision) widens it further so `bridge-input` is a metavar too,
+# letting fused distills coming out of 401b / 401c with a narrow Object
+# (e.g. `Ljava/lang/Integer;`) or primitive upstream type lower cleanly.
+# For narrow Object bridge-input the SAM stays type-erased to BiConsumer
+# (the LambdaMetafactory inserts a checkcast in the synthetic bridge);
+# for primitive bridge-input the matching MapMultiConsumer SAM is
+# selected and slot widths / load opcodes are recomputed accordingly.
 name: cps-no-cap-to-lambda
 pattern: |
   ⟦
@@ -48,7 +54,7 @@ pattern: |
         𝜏-distill ↦ ⟦
           φ ↦ Φ.hone.distill,
           class ↦ 𝑒-class-name,
-          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-input ↦ 𝑒-bridge-input,
           bridge-output ↦ 𝑒-bridge-output,
           start ↦ 𝑒-start,
           accepted ↦ 𝑒-accepted,
@@ -80,8 +86,8 @@ result: |
           φ ↦ Φ.hone.lambda,
           class ↦ 𝑒-class-name,
           method ↦ "accept",
-          interface ↦ "()Ljava/util/function/BiConsumer;",
-          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          interface ↦ 𝑒-interface-signature,
+          lambda-signature ↦ 𝑒-lambda-signature,
           bridge-signature ↦ 𝑒-bridge-signature,
           static ↦ "true",
           opcode ↦ "invokestatic",
@@ -93,7 +99,7 @@ result: |
             is-interface ↦ Φ.false
           ⟧,
           stream ↦ ⟦
-            class ↦ "java/util/stream/Stream",
+            class ↦ 𝑒-stream-class,
             method ↦ 𝑒-mapMulti-method,
             signature ↦ 𝑒-mapMulti-signature
           ⟧
@@ -111,16 +117,16 @@ result: |
       maxs ↦ ⟦
         φ ↦ Φ.jeo.maxs,
         max-stack ↦ 6,
-        max-locals ↦ 2
+        max-locals ↦ 𝑒-max-locals
       ⟧,
       params ↦ ⟦
         φ ↦ Φ.jeo.params,
         i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-accepted ⟧,
-        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-consumer-type ⟧
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 𝑒-consumer-index, access ↦ 0, type ↦ 𝑒-consumer-type ⟧
       ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of,
-        𝜏-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        𝜏-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load-item-op, i1 ↦ 0 ⟧,
         𝐵-body,
         𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
         ρ ↦ ∅
@@ -145,6 +151,25 @@ where:
   - meta: 𝜏-return
     function: random-tau
     args: ['𝐵-body', '𝜏-load-item']
+  - meta: 𝑒-sam-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/Ljava\\/util\\/function\\/BiConsumer;/g"'
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream$IntMapMultiConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream$LongMapMultiConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream$DoubleMapMultiConsumer;/g"'
+  - meta: 𝑒-interface-signature
+    function: concat
+    args: ['"()"', 𝑒-sam-class]
+  - meta: 𝑒-lambda-signature
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/(Ljava\\/lang\\/Object;Ljava\\/lang\\/Object;)V/g"'
+      - '"s/^I$/(ILjava\\/util\\/function\\/IntConsumer;)V/g"'
+      - '"s/^J$/(JLjava\\/util\\/function\\/LongConsumer;)V/g"'
+      - '"s/^D$/(DLjava\\/util\\/function\\/DoubleConsumer;)V/g"'
   - meta: 𝑒-consumer-type
     function: sed
     args:
@@ -153,6 +178,14 @@ where:
       - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
       - '"s/^J$/Ljava\\/util\\/function\\/LongConsumer;/g"'
       - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
+  - meta: 𝑒-stream-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/java\\/util\\/stream\\/Stream/g"'
+      - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
+      - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
+      - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
   - meta: 𝑒-output-stream-type
     function: sed
     args:
@@ -171,10 +204,43 @@ where:
       - '"s/^D$/mapMultiToDouble/g"'
   - meta: 𝑒-mapMulti-signature
     function: concat
-    args: ['"(Ljava/util/function/BiConsumer;)"', 𝑒-output-stream-type]
+    args: ['"("', 𝑒-sam-class, '")"', 𝑒-output-stream-type]
   - meta: 𝑒-bridge-signature
     function: concat
     args: ['"("', 𝑒-accepted, 𝑒-consumer-type, '")V"']
   - meta: 𝑒-wrapper-signature
     function: concat
     args: ['"("', 𝑒-accepted, 𝑒-consumer-type, '")V"']
+  - meta: 𝑒-max-locals-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/2/g"'
+      - '"s/^I$/2/g"'
+      - '"s/^J$/3/g"'
+      - '"s/^D$/3/g"'
+  - meta: 𝑒-max-locals
+    function: number
+    args: [𝑒-max-locals-str]
+  - meta: 𝑒-consumer-index-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/1/g"'
+      - '"s/^I$/1/g"'
+      - '"s/^J$/2/g"'
+      - '"s/^D$/2/g"'
+  - meta: 𝑒-consumer-index
+    function: number
+    args: [𝑒-consumer-index-str]
+  - meta: 𝑒-load-item-op-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/aload/g"'
+      - '"s/^I$/iload/g"'
+      - '"s/^J$/lload/g"'
+      - '"s/^D$/dload/g"'
+  - meta: 𝜏-load-item-op
+    function: tau
+    args: [𝑒-load-item-op-str]

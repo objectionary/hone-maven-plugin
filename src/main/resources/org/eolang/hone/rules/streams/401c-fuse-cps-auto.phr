@@ -20,16 +20,32 @@
 # firing — otherwise the auto distill would be consumed without its body
 # being spliced anywhere, silently dropping the operation.
 #
-# Gated to Object-typed distills on both sides. 502a / 502b derive the
-# bridge signature from `𝑒-accepted`, but still hardcode the bridge-input
-# / bridge-output as `Ljava/lang/Object;`, so a fused distill with a
-# non-Object bridge-output (the value an auto body assumes on entry /
-# leaves on exit) would survive past 502 and leak into jeo:assemble as an
-# unknown Φ.hone.distill opcode. A typed auto distill (e.g. Integer→Integer
-# from .map(n -> n)) is left unfused, so 501 lowers it to its own mapMulti
-# and 502 lowers the cps side to its own. Lifting this constraint requires
-# teaching 502 to emit a CHECKCAST around the auto body and to pick the
-# matching wrapper-item type.
+# flatMap cps distills are explicitly excluded via the
+# `not eq: 𝑒-first-start "flatMap"` arm of the `when`. flatMap's emit
+# marker is fired by 493 as `Stream.forEach(Consumer)`, so at the marker
+# the value on stack is a Stream produced by the user's flatMap lambda,
+# not an element of bridge-output type. Splicing an auto body before
+# that emit would force it to operate on a Stream value as if it were
+# the downstream item — a bytecode-level type mismatch that
+# jeo:assemble flags via VerifyError. Pipelines of the shape
+# `.flatMap(...).map(...)` therefore lower flatMap and the downstream
+# auto independently; the flatMap stays its own mapMulti dispatch.
+#
+# Type narrowing follows the same pattern as 401-fuse: the fused distill
+# inherits the cps side's bridge-input / accepted (the lambda is invoked
+# with the cps side's input type) and the auto side's bridge-output /
+# returned (each spliced auto body transforms an about-to-be-emitted
+# value into the auto's output type, which becomes the fused distill's
+# emission type). The auto side's bridge-input is trusted to align with
+# the cps side's bridge-output because they sit adjacent on the same
+# Stream<T> in the original pipeline; consecutive operators on the same
+# stream share that element type by construction.
+#
+# Downstream lowering by 502a / 502b carries the typed bridge-output
+# through to the matching mapMulti dispatch and consumer interface. For
+# narrow Object types the SAM stays type-erased; for primitive types
+# (I/J/D) the matching IntConsumer / LongConsumer / DoubleConsumer SAM
+# is selected.
 name: fuse-cps-auto
 pattern: |
   ⟦
@@ -37,11 +53,11 @@ pattern: |
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.distill,
       class ↦ 𝑒-class,
-      bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "Ljava/lang/Object;",
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
       start ↦ 𝑒-first-start,
-      accepted ↦ "Ljava/lang/Object;",
-      returned ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
       static ↦ 𝑒-first-static,
       captures ↦ 𝑒-first-captures,
       emit-shape ↦ "cps",
@@ -50,11 +66,11 @@ pattern: |
     𝜏-second ↦ ⟦
       φ ↦ Φ.hone.distill,
       class ↦ 𝑒-class,
-      bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "Ljava/lang/Object;",
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
       start ↦ 𝑒-second-start,
-      accepted ↦ "Ljava/lang/Object;",
-      returned ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-second-static,
       captures ↦ ⟦ ρ ↦ ∅ ⟧,
       emit-shape ↦ "auto",
@@ -63,20 +79,23 @@ pattern: |
     𝐵-body-tail
   ⟧
 when:
-  part-of:
-    - Φ.hone.emit
-    - 𝐵-first-body
+  and:
+    - part-of:
+        - Φ.hone.emit
+        - 𝐵-first-body
+    - not:
+        eq: [𝑒-first-start, '"flatMap"']
 result: |
   ⟦
     𝐵-body-head,
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.distill,
       class ↦ 𝑒-class,
-      bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "Ljava/lang/Object;",
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
       start ↦ 𝑒-first-start,
-      accepted ↦ "Ljava/lang/Object;",
-      returned ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
       captures ↦ 𝑒-first-captures,
       emit-shape ↦ "cps",

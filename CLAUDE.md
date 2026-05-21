@@ -168,6 +168,38 @@ captured `Consumer`), so the guard correctly leaves their adjacent
 auto neighbours unfused; that limitation is a property of 215's
 body shape, not of 401c.
 
+#### Typed-bridge fusion is supported (Step 8c, landed)
+
+`401b-fuse-auto-cps` and `401c-fuse-cps-auto` previously locked
+both sides to `bridge-input ↦ "Ljava/lang/Object;"` (and likewise
+`bridge-output` / `accepted` / `returned`), which excluded typed
+auto distills produced by 411–413 (e.g. `Integer → Integer` from
+`.map(n -> n + 1)` on a `Stream<Integer>`, or primitive `I` / `J` /
+`D` from box-distill-unbox collapse) from joining adjacent cps
+operators. The metavar-only revision drops the gate: 401b takes the
+auto side's bridge-input / accepted and the cps side's bridge-output
+/ returned (mirroring `401-fuse`'s narrowing convention); 401c does
+the dual swap on cps's bridge-input / auto's bridge-output.
+`502a-cps-no-cap-to-lambda` was widened to derive the SAM class,
+lambda-signature, stream class, item load opcode, max-locals, and
+consumer index from `bridge-input` via the same sed dispatch table
+that `502b` already used.
+
+401c's `when` arm gains a second guard:
+`not eq: 𝑒-first-start "flatMap"`. The flatMap-family cps distills
+(`208-flatMap-to-distill`, `207b/c/d` primitive variants) emit a
+user-produced `Stream` and rely on 493 lowering the marker into
+`Stream.forEach(Consumer)` — the item-shape splice that 401c does
+for `distinct` / `takeWhile` / `dropWhile` / `skip` would force the
+spliced auto body to operate on a `Stream` value as if it were the
+downstream element, which jeo:assemble flags as a VerifyError.
+401b complements this: its result inherits the cps side's `start`
+(rather than the auto side's), so a `.filter().flatMap()` chain
+that 401b fuses into a single distill still carries
+`start ↦ "flatMap"` downstream, keeping 491 from incorrectly lowering
+the emit as `Consumer.accept(Stream)` and routing the lowering
+through 493 instead.
+
 #### Why `513-merge-mapMulti-unbox` survives but `512` does not
 
 The 5xx phase historically carried two adjacent-mapMulti mergers as
@@ -225,9 +257,11 @@ its own `invokeinterface` dispatch, and the `streams-full-non-terminal`
 fixture pins the resulting `after.invokedynamic` count (currently 21,
 dominated by the 4 sorted + 2 limit barriers, the 5 mapMulti /
 mapMultiTo* dispatches whose user-lambda emission shape leaves no
-fusion seam, and the primitive flatMapTo* / mapMultiTo* dispatches
-whose bridge-output is `I`/`J`/`D` and so fall outside the Object-only
-fusion gate on 401b/401c).
+fusion seam, and the flatMap / flatMapTo* dispatches whose emit
+shape is Stream-driven via `forEach` rather than item-driven via
+`Consumer.accept` — 401c excludes flatMap-shaped cps from fusion
+because the spliced auto body would otherwise operate on a `Stream`
+value as if it were the downstream item).
 That is by design — the architecture's value is fusing the *streamable*
 part of the pipeline, not eliminating intrinsically-non-streamable
 operators. A future "buffered-distill mode" (option B in the plan)

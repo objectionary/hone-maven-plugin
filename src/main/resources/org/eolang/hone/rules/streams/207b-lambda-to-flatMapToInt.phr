@@ -6,9 +6,9 @@
 # sites and rewrites the surrounding Φ.hone.lambda into a Φ.hone.flatMap
 # pragma. The bridge-output captured from the lambda's bridge-signature
 # is Ljava/util/stream/IntStream;, which signals to 208 (one rule, common
-# for every flatMap variant) that the downstream item type is the
-# primitive `I` and to 493 that the forEach call must dispatch on
-# IntStream rather than Stream. Issue #570 Step 9.
+# for every flatMap variant) that the downstream stream is an IntStream
+# whose iterator is a PrimitiveIterator.OfInt and whose per-element type
+# is the primitive `I`. Issue #570 Step 9.
 name: lambda-to-flatMapToInt
 pattern: |
   ⟦

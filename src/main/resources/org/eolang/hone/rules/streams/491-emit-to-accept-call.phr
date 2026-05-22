@@ -13,19 +13,32 @@
 # future no-capture cps distill. The consumer slot is computed from the
 # capture count plus the item-width offset.
 #
-# Item type is open via `𝑒-bridge-input`. The Object stream variant
-# (`bridge-input ↦ "Ljava/lang/Object;"`) lowers to
-# `Consumer.accept(Object)V` with `dup_x1` and a single-slot item; the
-# primitive variants (`I`, `J`, `D`) lower to `IntConsumer.accept(I)V`,
-# `LongConsumer.accept(J)V`, `DoubleConsumer.accept(D)V` respectively —
-# the wide types use `dup_x2` to rearrange the cat2 item under the cat1
-# consumer reference, and contribute 2 to the slot arithmetic.
+# Two type axes drive the lowering:
+#
+#   * `bridge-output` determines what's on the operand stack at the emit
+#     marker — the downstream element type. The Object variant
+#     (`bridge-output ↦ "Ljava/lang/Object;"`) lowers to
+#     `Consumer.accept(Object)V` with `dup_x1`; the primitive variants
+#     (`I`, `J`, `D`) lower to `IntConsumer.accept(I)V`,
+#     `LongConsumer.accept(J)V`, `DoubleConsumer.accept(D)V` respectively.
+#     The wide types use `dup_x2` to rearrange the cat2 element under the
+#     cat1 consumer reference.
+#
+#   * `bridge-input` determines the wrapper's item-parameter width and
+#     therefore the consumer slot index. For most cps distills these two
+#     axes coincide (filter / map / distinct / take-while / drop-while /
+#     skip — the per-element type at the emit equals the type accepted at
+#     entry). For the flatMap family bridge-input is always `Object`
+#     (the user lambda accepts the upstream element by reference) while
+#     bridge-output is the per-element type of the user's Stream
+#     (Object / I / J / D) — the iterator-pump body emits each user-stream
+#     element at the marker.
 #
 # Slot arithmetic: every existing capture is a single-slot reference
 # type (`Ljava/util/HashSet;`, `[Z`, `[J`), so today
 # `captures-slot-width = size(𝐵-captures)`. When wide captures arrive
 # (e.g., a `J` counter held directly), this formula must be widened.
-# `consumer-slot = captures-slot-width + item-width`.
+# `consumer-slot = captures-slot-width + item-width(bridge-input)`.
 #
 # The rule fires once per Φ.hone.emit marker; phino's fixed-point loop
 # re-fires until no markers remain.
@@ -80,14 +93,11 @@ result: |
       ρ ↦ ∅
     ⟧
   ⟧
-when:
-  not:
-    eq: [𝑒-start, '"flatMap"']
 where:
   - meta: 𝑒-consumer-class
     function: sed
     args:
-      - 𝑒-bridge-input
+      - 𝑒-bridge-output
       - '"s/^L.+;$/java\\/util\\/function\\/Consumer/g"'
       - '"s/^I$/java\\/util\\/function\\/IntConsumer/g"'
       - '"s/^J$/java\\/util\\/function\\/LongConsumer/g"'
@@ -95,7 +105,7 @@ where:
   - meta: 𝑒-accept-sig
     function: sed
     args:
-      - 𝑒-bridge-input
+      - 𝑒-bridge-output
       - '"s/^L.+;$/(Ljava\\/lang\\/Object;)V/g"'
       - '"s/^I$/(I)V/g"'
       - '"s/^J$/(J)V/g"'
@@ -103,7 +113,7 @@ where:
   - meta: 𝑒-dup-x-op-str
     function: sed
     args:
-      - 𝑒-bridge-input
+      - 𝑒-bridge-output
       - '"s/^L.+;$/dup_x1/g"'
       - '"s/^I$/dup_x1/g"'
       - '"s/^J$/dup_x2/g"'

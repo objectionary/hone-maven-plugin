@@ -20,16 +20,15 @@
 # firing — otherwise the auto distill would be consumed without its body
 # being spliced anywhere, silently dropping the operation.
 #
-# flatMap cps distills are explicitly excluded via the
-# `not eq: 𝑒-first-start "flatMap"` arm of the `when`. flatMap's emit
-# marker is fired by 493 as `Stream.forEach(Consumer)`, so at the marker
-# the value on stack is a Stream produced by the user's flatMap lambda,
-# not an element of bridge-output type. Splicing an auto body before
-# that emit would force it to operate on a Stream value as if it were
-# the downstream item — a bytecode-level type mismatch that
-# jeo:assemble flags via VerifyError. Pipelines of the shape
-# `.flatMap(...).map(...)` therefore lower flatMap and the downstream
-# auto independently; the flatMap stays its own mapMulti dispatch.
+# Since #570 Step 2 (corrected plan), flatMap cps distills participate
+# in this fusion. 208 now inlines the user's Stream via an explicit
+# Iterator pump (Stream.iterator, hasNext / next, top-level Φ.hone.emit,
+# goto loop), so at the emit marker the value on stack is a per-element
+# value of `bridge-output` type — exactly what an auto body's input slot
+# expects. Splicing an auto body in front of every emit therefore
+# transforms each Stream element produced by the user's lambda before
+# it is handed off downstream, which is the correct semantics for
+# `.flatMap(...).map(...)` and similar shapes.
 #
 # Type narrowing follows the same pattern as 401-fuse: the fused distill
 # inherits the cps side's bridge-input / accepted (the lambda is invoked
@@ -79,12 +78,9 @@ pattern: |
     𝐵-body-tail
   ⟧
 when:
-  and:
-    - part-of:
-        - Φ.hone.emit
-        - 𝐵-first-body
-    - not:
-        eq: [𝑒-first-start, '"flatMap"']
+  part-of:
+    - Φ.hone.emit
+    - 𝐵-first-body
 result: |
   ⟦
     𝐵-body-head,

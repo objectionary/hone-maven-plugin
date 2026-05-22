@@ -4,10 +4,11 @@
 # yamllint disable rule:line-length
 # 208 rewrites a Φ.hone.flatMap pragma in a caller method's body into a
 # zero-capture cps Φ.hone.distill tagged with `start ↦ "flatMap"`. The
-# distill's body invokes the user's lambda (consumes the item, leaves the
-# user's Stream on top of stack) and ends with a single Φ.hone.emit marker
-# that 493 later lowers to `aload consumer; invokeinterface
-# Stream.forEach`.
+# distill's body inlines an explicit Iterator pump: invoke the user's
+# lambda (consumes the item, leaves the user's Stream on top of stack),
+# call Stream.iterator() to get an Iterator, then loop with hasNext /
+# next driving a single top-level Φ.hone.emit marker that 491 later
+# lowers to Consumer.accept(item).
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/208-flatMap-to-distill.phr
 input: |
@@ -60,6 +61,30 @@ expected:
       i3 ↦ "lambda$main$0",
       i4 ↦ "(Ljava/lang/Integer;)Ljava/util/stream/Stream;",
       i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/Stream",
+      i3 ↦ "iterator",
+      i4 ↦ "()Ljava/util/Iterator;",
+      i5 ↦ Φ.true
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/Iterator",
+      i3 ↦ "hasNext",
+      i4 ↦ "()Z",
+      i5 ↦ Φ.true
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/Iterator",
+      i3 ↦ "next",
+      i4 ↦ "()Ljava/lang/Object;",
+      i5 ↦ Φ.true
     ⟧
   - |
     ⟦

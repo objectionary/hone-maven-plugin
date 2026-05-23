@@ -11,8 +11,10 @@
 # boxed() between them as the only bridge back to Stream<T> (boxed is
 # not itself one of the 21 but is unavoidable for the type system).
 # The opcodes assertion pins the current count of invokedynamic in the
-# optimised class: 21 after the issue #570 cps-distill migration
-# landed. The architecture's long-term floor is one mapMulti emitter
+# optimised class: 20 after #570 Step 2 made filter's distill body
+# self-contained (internal dup + branch) and dropped the 401c
+# `start "filter"` guard, allowing the mapMulti+filter cps+auto pair
+# to fuse. The architecture's long-term floor is one mapMulti emitter
 # per *fusable* segment; the structural reasons this particular
 # fixture sits well above that floor are:
 #  - Sorted and limit are non-fusable barriers (Step 10 option A) —
@@ -32,7 +34,7 @@
 #    flatMap cps body (the auto leaves an item on stack, which the
 #    flatMap lambda happily consumes), but in this fixture no flatMap
 #    sits directly downstream of an auto distill.
-# Together those reasons account for the bulk of the 21 invokedynamic
+# Together those reasons account for the bulk of the 20 invokedynamic
 # dispatches that remain. See issues #556 and #570.
 java: |
   package allnonterminal;
@@ -97,4 +99,4 @@ log:
 before:
   invokedynamic: 23
 after:
-  invokedynamic: 21
+  invokedynamic: 20

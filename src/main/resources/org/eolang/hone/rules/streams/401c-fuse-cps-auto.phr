@@ -78,12 +78,9 @@ pattern: |
     𝐵-body-tail
   ⟧
 when:
-  and:
-    - part-of:
-        - Φ.hone.emit
-        - 𝐵-first-body
-    - not:
-        eq: [𝑒-second-start, '"filter"']
+  part-of:
+    - Φ.hone.emit
+    - 𝐵-first-body
 result: |
   ⟦
     𝐵-body-head,

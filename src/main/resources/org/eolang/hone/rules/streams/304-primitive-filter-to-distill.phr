@@ -34,6 +34,9 @@ result: |
     captures ↦ ⟦ ρ ↦ ∅ ⟧,
     emit-shape ↦ "auto",
     body ↦ ⟦
+      i1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-dup
+      ⟧,
       i2 ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-opcode,
         i2 ↦ 𝑒-target-class,
@@ -49,13 +52,16 @@ result: |
         ⟧
       ⟧,
       i4 ↦ ⟦
-        φ ↦ Φ.jeo.opcode.return
+        φ ↦ Φ.jeo.opcode.𝜏-pop
       ⟧,
       i5 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.return
+      ⟧,
+      i6 ↦ ⟦
         φ ↦ Φ.jeo.label,
         i1 ↦ 𝑒-label
       ⟧,
-      i6 ↦ ⟦
+      i7 ↦ ⟦
         φ ↦ Φ.jeo.frame,
         type ↦ 4,
         nlocal ↦ 0,
@@ -75,6 +81,24 @@ where:
   - meta: 𝜏-opcode
     function: tau
     args: [𝑒-opcode]
+  - meta: 𝑒-dup
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+  - meta: 𝜏-dup
+    function: tau
+    args: [𝑒-dup]
+  - meta: 𝑒-pop
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/^[DJ]$/pop2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/pop/g"'
+  - meta: 𝜏-pop
+    function: tau
+    args: [𝑒-pop]
   - meta: 𝑒-stack-item
     function: sed
     args:

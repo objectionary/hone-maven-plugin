@@ -264,9 +264,514 @@ because the spliced auto body would otherwise operate on a `Stream`
 value as if it were the downstream item).
 That is by design — the architecture's value is fusing the *streamable*
 part of the pipeline, not eliminating intrinsically-non-streamable
-operators. A future "buffered-distill mode" (option B in the plan)
-could in principle fold sorted into a Collector-style two-stage
-pipeline, but it is explicitly out of scope for #570.
+operators. The buffered-distill option, originally out of scope for
+#570, is now picked up under the "driver" emit-shape work described
+in the Active plan section below.
+
+## Active plan: fuse every non-terminal pipeline into one structure
+
+The flagship fixture
+  `src/test/resources/org/eolang/hone/optimize/streams-full-non-terminal.yml`
+  sits at `after.invokedynamic: 21`.
+The plan below covers the work still required
+  to bring every non-terminal pipeline to a single fused structure —
+  one `mapMulti` invokedynamic
+  for pipelines with no sorted / limit,
+  one `invokestatic` to a synthesized driver method
+  (zero invokedynamic) for pipelines with sorted or limit.
+
+Sub-agents should treat this section as their working brief
+  and pick up the next unfinished step in order.
+
+### Current state
+
+The previous round of work landed three relevant pieces:
+
+- The `emit-context ↦ "top-level"` annotation
+  on every existing `Φ.hone.emit` producer
+  (commit `5099e3f0`).
+- flatMap recognition restructured to emit an explicit
+  `Iterator.hasNext/next` loop in the cps distill body
+  with a top-level `Φ.hone.emit` marker
+  (commit `20daf333`,
+  new file `208b-primitive-flatMap-to-distill.phr` for the primitive variants).
+  `493-emit-to-foreach.phr` is gone;
+  401c's flatMap guard is gone.
+- mapMulti recognition restructured to inline the user lambda's opcodes
+  into the cps distill body
+  (commit `88259f67`).
+  New companion rules
+  `217-mapMulti-accept-to-emit.phr` and `217b/c/d`
+  rewrite each inlined accept call to a top-level `Φ.hone.emit`.
+  Phino is pinned to `0.0.0.70`
+  (required for the rule-chaining fix in phino#714).
+
+`streams-full-non-terminal.yml`'s `after.invokedynamic` remains 21
+  because the flagship's flatMap calls are adjacent to mapMulti (cps+cps),
+  one mapMulti is adjacent to filter (blocked by a workaround guard in 401c —
+  see Step 2 below),
+  and sorted / limit have not yet been migrated to driver-shape.
+
+### The splice-doesn't-recurse constraint
+
+Phino's `splice` where-function walks ONLY the top level
+  of the binding group it is given.
+It does NOT recurse into nested formations.
+It does NOT cross method boundaries.
+
+Every step in this plan obeys one rule:
+  every `Φ.hone.emit` marker that must fuse with neighbouring operators
+  lives at the TOP LEVEL of the distill `body ↦ ⟦ ... ⟧` binding group.
+Nested formations (loops with `Φ.jeo.label` / `Φ.jeo.opcode.goto`)
+  are allowed — those are opcodes in a sequence,
+  and splice walks past opcodes correctly.
+What is not allowed is a sub-formation
+  (a separate `⟦ ... ⟧` block bound to its own metavariable)
+  containing emit markers that need to be reached from outside.
+
+### Step 1 — Delete the unused `491b-emit-nested-to-accept.phr`
+
+The corrected plan never produces an `emit-context ↦ "nested-consumer"` marker.
+A sanity check confirms it
+  (`ggrep -rn 'nested-consumer' src/`
+  returns only matches inside `491b-emit-nested-to-accept.phr` itself).
+The rule is dead code.
+
+**Mechanism.**
+
+Delete `src/main/resources/org/eolang/hone/rules/streams/491b-emit-nested-to-accept.phr`.
+If a sibling test exists under
+  `src/test/phino/491b-emit-nested-to-accept.yml`,
+  delete it too.
+Keep the `emit-context ↦ "top-level"` annotations on every other producer;
+  they document the invariant and are not dead.
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green.
+- `streams-full-non-terminal.yml`'s `after.invokedynamic` is still 21.
+
+**Result.**
+Commit as a single chore commit.
+
+### Step 2 — Make filter's distill body self-contained, drop the 401c filter guard
+
+Commit `88259f67` added a `not eq: 𝑒-second-start "filter"` guard to
+  `401c-fuse-cps-auto.phr` as a workaround.
+Filter's distill body (produced by `305-object-filter-to-distill.phr`
+  or `304-primitive-filter-to-distill.phr`)
+  consumes the item via its predicate
+  without a self-contained `dup`
+  and relies on the externally-inserted dup from
+  `281-insert-dup-before-filter.phr`
+  (or `282-insert-dup-before-transformed-filter.phr`).
+When mapMulti precedes the filter,
+  281 does not fire
+  (it matches an auto+filter neighbour pair,
+  not a cps+filter pair),
+  so 401c's splice of the filter body produces invalid bytecode.
+
+**Mechanism.**
+
+Rewrite `305-object-filter-to-distill.phr` and `304-primitive-filter-to-distill.phr`
+  so the filter distill body is self-contained:
+  the body starts with a `dup` opcode,
+  runs the predicate against the duplicated item,
+  branches on the result,
+  and either falls through (item still on stack, emit happens via the surrounding auto contract)
+  or `pop` + skip to the end of the body
+  (item discarded, no emit).
+The body must respect the existing auto distill contract
+  (item on stack in, item on stack out at the single emit point).
+
+Once 304/305 are self-contained,
+  delete `281-insert-dup-before-filter.phr`
+  and `282-insert-dup-before-transformed-filter.phr` —
+  the external-dup hack is no longer required.
+Drop the `not eq: 𝑒-second-start "filter"` guard from `401c-fuse-cps-auto.phr`.
+
+**Files to modify.**
+
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| `src/main/resources/.../streams/305-object-filter-to-distill.phr`     | self-contained body with internal dup + branch         |
+| `src/main/resources/.../streams/304-primitive-filter-to-distill.phr`  | same shape, primitive comparison opcodes               |
+| `src/main/resources/.../streams/281-insert-dup-before-filter.phr`     | delete                                                 |
+| `src/main/resources/.../streams/282-insert-dup-before-transformed-filter.phr` | delete                                         |
+| `src/main/resources/.../streams/401c-fuse-cps-auto.phr`               | drop the `not eq: start "filter"` guard               |
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green.
+- Every fixture that exercises filter
+  (`streams-all-ops.yml`, `streams-fusion.yml`, the flagship)
+  passes;
+  re-pin `after.*` counts as needed.
+- The flagship's `after.invokedynamic` drops from 21
+  as the mapMulti+filter cps+auto pair finally fuses.
+
+**Result.**
+Filter is a first-class auto distill;
+  401c no longer carries operator-specific guards.
+
+### Step 3 — Add `401d-fuse-cps-cps.phr`
+
+The flagship's flatMaps are followed by mapMulti (cps+cps),
+  and no fusion rule today handles that case.
+`401c` only fires for cps+auto.
+
+**Mechanism.**
+
+Add a new rule `401d-fuse-cps-cps.phr`
+  that matches two adjacent cps distills
+  and merges them using `splice`:
+  the second body is spliced in front of every top-level
+  `Φ.hone.emit` marker in the first body,
+  exactly as `401c` does for cps+auto.
+The resulting distill is cps,
+  carries the union of both captures via `join`,
+  takes its `start` from the first
+  (so 491's lowering picks the right slot layout),
+  takes its `bridge-output` and `returned` from the second.
+
+The splice operation produces, at each former emit position,
+  the second body's opcodes (which themselves contain top-level emit markers).
+Those emits remain in the merged body at top level,
+  ready to be spliced further by subsequent fusion rules
+  or lowered by 491 at the end.
+
+**Files to modify.**
+
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| **new** `src/main/resources/.../streams/401d-fuse-cps-cps.phr`        | splice-based cps+cps fuser                             |
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green.
+- `streams-full-non-terminal.yml`'s `after.invokedynamic`
+  drops as flatMap+mapMulti pairs merge.
+- Add an expression test for flatMap-followed-by-mapMulti fusion
+  under `src/test/resources/org/eolang/hone/rules/streams/expressions/`.
+- Re-pin the flagship fixture's `after.*` counts
+  and the explanatory header comment
+  to drop the "flatMap / flatMapTo* / mapMulti / mapMultiTo*"
+  lines from the structural-limit list.
+
+**Result.**
+Every multi-emit operator participates in fusion.
+The only surviving dispatches in the flagship are sorted (4) + limit (2)
+  plus a small residue of fused-segment dispatches —
+  Steps 4 / 5 / 6 address sorted and limit.
+
+### Step 4 — Add the `"driver"` emit-shape and the 501-driver lowering
+
+Phase C foundation step.
+Introduces a second lowering pathway parallel to `501-distill-to-mapMulti`.
+No behavior change yet —
+  no existing rule produces `emit-shape ↦ "driver"` in this step.
+
+**Mechanism.**
+
+Extend the `Φ.hone.distill` schema with a third `emit-shape` value:
+  `"auto"`, `"cps"`, or `"driver"`.
+A driver-shape distill carries
+  an iterator-style body that does NOT match the per-element BiConsumer contract:
+  the body is given the upstream `Iterator` (or array) as a parameter
+  and loops manually,
+  emitting via top-level `Φ.hone.emit` markers
+  whenever it wants to.
+
+Create a new rule `501-distill-to-driver-method.phr`
+  whose `pattern` matches `Φ.hone.distill` with `emit-shape ↦ "driver"`
+  and whose `result` synthesizes a static method
+  taking `(Iterator<T> source, Consumer<U> downstream)V`
+  (and captures, threaded the same way 501/502 do today)
+  and replaces the distill in the caller body
+  with the corresponding `invokestatic` call,
+  passing the upstream Stream's iterator
+  (obtained via `invokeinterface Stream.iterator() → Iterator`).
+
+The existing `501-distill-to-mapMulti.phr` remains the lowering
+  for `emit-shape ↦ "auto"` and `emit-shape ↦ "cps"`.
+
+**Files to modify.**
+
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| **new** `src/main/resources/.../streams/501-distill-to-driver-method.phr` | new lowering pathway for `emit-shape ↦ "driver"`  |
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green
+  (no behavior change —
+  no producer of `"driver"` emit-shape exists yet).
+
+**Result.**
+The driver lowering pathway is in place,
+  ready for Steps 5 and 6 to produce driver-shape distills.
+
+### Step 5 — Migrate `sorted` to driver emit-shape
+
+Expected outcome: sorted is recognised as driver-shape;
+  the actual `after.invokedynamic` drop happens after Step 7
+  closes the fusion-rule matrix.
+
+**Mechanism.**
+
+Add new 2xx-recognition rules
+  for `Stream.sorted()` and `Stream.sorted(Comparator)`
+  that produce a `Φ.hone.distill` with `emit-shape ↦ "driver"`,
+  one `List` capture
+  (`captures ↦ ⟦ c0 ↦ ⟦ φ ↦ Φ.hone.capture, type ↦ "Ljava/util/ArrayList;", init ↦ ⟦new ArrayList⟧ ⟧, ρ ↦ ∅ ⟧`),
+  and an iterator-style body whose top-level emit marker
+  fires inside the second loop:
+
+```text
+while (source.hasNext()) list.add(source.next());
+Collections.sort(list);             -- or list.sort(comparator)
+for (T x : list) emit(x);           -- emit is a top-level Φ.hone.emit
+```
+
+The existing `212-lambda-to-sorted.phr` recognises sorted today
+  as a named pragma `Φ.hone.sorted`,
+  and `607-sorted-to-lambda.phr`
+  converts it BACK to an invokeinterface dispatch
+  when nothing consumes it.
+Replace both rules with the new driver-style migration.
+
+**Files to modify.**
+
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| **new** `src/main/resources/.../streams/213-sorted-to-driver.phr`     | recognise `Stream.sorted()` as driver-shape distill    |
+| **new** `src/main/resources/.../streams/214-sorted-comparator-to-driver.phr` | recognise `Stream.sorted(Comparator)` as driver-shape distill |
+| `src/main/resources/.../streams/212-lambda-to-sorted.phr`             | delete                                                 |
+| `src/main/resources/.../streams/607-sorted-to-lambda.phr`             | delete                                                 |
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green.
+- Add an expression test for sorted-recognized-as-driver-shape distill.
+
+**Result.**
+Sorted and sorted(Comparator) produce driver-shape distills.
+Step 7's fusion-rule extensions
+  are what actually let them collapse with neighbours.
+
+### Step 6 — Migrate `limit` to driver emit-shape
+
+Expected outcome: limit is recognised as driver-shape;
+  the actual `after.invokedynamic` drop happens after Step 7
+  closes the fusion-rule matrix.
+
+**Mechanism.**
+
+Add a 2xx-recognition rule
+  for `Stream.limit(N)`
+  that produces a `Φ.hone.distill` with `emit-shape ↦ "driver"`,
+  one `long[1]` capture for the counter,
+  and an iterator-style body of shape:
+
+```text
+while (source.hasNext() && counter[0]-- > 0) {
+  emit(source.next());      -- top-level Φ.hone.emit
+}
+```
+
+`216-recognize-limit-ldc.phr` recognises limit today as a named pragma
+  `Φ.hone.limit`,
+  and `722-limit-ldc-to-invokeinterface.phr` lowers it back.
+Replace both with the new driver-style migration.
+
+**Critical: limit's counter must combine correctly with upstream fusion.**
+
+When 401b fuses an auto upstream into a driver-limit,
+  the auto body's emits must each decrement the counter,
+  not just the limit body's own emits.
+This works automatically if the auto body is spliced AT the limit's
+  per-iteration `emit(...)` point —
+  the auto body's transform runs once per iteration,
+  the emit fires once,
+  the counter decrements once.
+Verify this invariant by inspecting a small-steps `.phi.NN` trace
+  of `.map(...).limit(5)` after the migration.
+
+**Files to modify.**
+
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| **new** `src/main/resources/.../streams/215-limit-to-driver.phr`      | recognise `Stream.limit` as driver-shape distill       |
+| `src/main/resources/.../streams/216-recognize-limit-ldc.phr`          | delete or refactor                                     |
+| `src/main/resources/.../streams/722-limit-ldc-to-invokeinterface.phr` | delete                                                 |
+
+If the existing rule number 215 collides with the mapMulti recognition,
+  pick a different prefix that respects phase ordering
+  (must run after 2xx phase-boundary, before any 3xx fold).
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green.
+- Add an expression test for limit-recognized-as-driver-shape distill.
+
+**Result.**
+Limit produces a driver-shape distill.
+
+### Step 7 — Close the fusion-rule matrix and extend transition fusion
+
+Steps 3, 5, and 6 introduced the third emit-shape `"driver"`
+  and the second multi-emit shape pair (cps+cps via 401d).
+The codebase now has three emit-shapes (`auto`, `cps`, `driver`)
+  and three named transitions (`Φ.hone.box`, `Φ.hone.unbox`, `Φ.hone.transform`)
+  but only a partial set of fusion rules.
+This step makes the matrix complete
+  so the flagship pipeline collapses end-to-end.
+
+**Fusion-rule matrix (9 cells).**
+
+| First / Second  | auto       | cps         | driver        |
+|-----------------|------------|-------------|---------------|
+| auto            | 401 (kept) | 401b (kept) | **new 401e**  |
+| cps             | 401c (kept)| 401d (kept) | **new 401f**  |
+| driver          | **new 401g** | **new 401h** | **new 401i** |
+
+The five new cells share the same splice-based mechanism that 401c and 401d
+  use today:
+  splice the second body in front of every top-level `Φ.hone.emit` marker
+  in the first body,
+  union the captures via `join`,
+  pick `start` / `accepted` from the first,
+  pick `bridge-output` / `returned` from the second.
+The result emit-shape is:
+
+- `"driver"` if either side is driver
+  (driver's iterator-style body is the outer shell);
+- `"cps"` if no driver but at least one cps;
+- `"auto"` only when both sides are auto
+  (the existing 401 case).
+
+Decide between extending existing files
+  vs adding 401e-i as siblings
+  based on pattern divergence.
+The cleaner expected outcome
+  is one file per cell;
+  it makes the matrix legible.
+
+**Transition fusion (411 / 412 / 413).**
+
+The existing transition fusers hardcode `emit-shape ↦ "auto"` on both sides
+  (verify by reading `412-distill-unbox-distill-to-distill.phr:41`).
+The flagship has cps+transition+cps and cps+transition+auto
+  (e.g. `.<Integer>mapMulti(...).mapToInt(Integer::intValue)`),
+  which the auto-only rules cannot fuse.
+Each unfused transition becomes a barrier that splits the pipeline.
+
+Extend each of 411 / 412 / 413
+  to accept any combination of emit-shapes on each side,
+  using the same result-shape rule as the matrix above.
+Either widen the existing patterns
+  (replace the literal `"auto"` with a metavariable on each side
+  and compute the result shape with a small `sed` decision table)
+  or split each into a 3×3 = 9-cell family per transition.
+Choose based on what the where-functions allow
+  without losing pattern clarity.
+
+**Files to modify.**
+
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| **new** `src/main/resources/.../streams/401e-fuse-auto-driver.phr`    | auto+driver fusion                                     |
+| **new** `src/main/resources/.../streams/401f-fuse-cps-driver.phr`     | cps+driver fusion                                      |
+| **new** `src/main/resources/.../streams/401g-fuse-driver-auto.phr`    | driver+auto fusion                                     |
+| **new** `src/main/resources/.../streams/401h-fuse-driver-cps.phr`     | driver+cps fusion                                      |
+| **new** `src/main/resources/.../streams/401i-fuse-driver-driver.phr`  | driver+driver fusion                                   |
+| `src/main/resources/.../streams/411-box-distill-unbox-to-primitive-distill.phr` | accept any emit-shape on either side          |
+| `src/main/resources/.../streams/412-distill-unbox-distill-to-distill.phr`       | same                                          |
+| `src/main/resources/.../streams/413-distill-box-distill-to-distill.phr`         | same                                          |
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green.
+- `mvn -Pdeep test` green.
+- `streams-full-non-terminal.yml`'s `after.invokedynamic` drops to
+  **0** (or very close).
+  The flagship has at least one sorted (driver),
+  so the entire fused pipeline lowers to a single `invokestatic`
+  to the synthesized driver method —
+  no invokedynamic at all.
+- Pipelines with no sorted / limit
+  (e.g. `streams-sources.yml`'s flatmap block)
+  should land at exactly **1** invokedynamic
+  (the single mapMulti).
+- Re-pin every `after.*` count that shifts.
+- Add expression tests for each of the five new fusion cells.
+
+**Result.**
+Every adjacent operator pair fuses.
+Every transition crosses any emit-shape boundary.
+The pipeline collapses into one structure per source-to-terminal chain.
+
+### Step 8 — Final verification
+
+Re-verify everything end-to-end
+  and audit the final state of the flagship fixture.
+
+**Baseline capture.**
+
+Find the merge-base of the current branch and `origin/master`:
+  `git merge-base HEAD origin/master`.
+Check out that SHA in a worktree.
+Run `mvn -Pdeep test` and capture per-fixture timings.
+This is the baseline,
+  before any of Steps 1-7 changed the codebase.
+
+**HEAD verification.**
+
+Back on the working branch,
+  run `mvn -Pdeep test` and confirm zero regressions
+  vs the baseline failure list,
+  and total runtime no worse than baseline.
+
+**Fixture audit.**
+
+`streams-full-non-terminal.yml`'s `after.invokedynamic` should be **0**.
+The flagship contains 4 sorted and 2 limit calls,
+  each producing a driver-shape distill after Step 5/6.
+Driver-shape distills lower via 501-driver to `invokestatic`,
+  not `invokedynamic`,
+  so a fully-fused flagship has zero invokedynamic dispatches.
+
+Other fixtures' expected counts:
+  pipelines with at least one sorted or limit → 0 invokedynamic;
+  pipelines with no sorted / limit → exactly 1 invokedynamic
+  (the single fused mapMulti emitted by 501).
+If a fixture's count is higher than its target,
+  the residue points to a fusion gap
+  that Step 7's matrix missed —
+  identify which adjacency does not fuse
+  and either add the missing rule
+  or document the residue
+  in the fixture's explanatory header.
+
+**Result.**
+
+Every non-terminal pipeline is fused into one structure:
+  either a single mapMulti (no sorted / limit)
+  or a single driver-method invokestatic (with sorted / limit).
+Rewrite the "Every operation lives on the distill path" and
+  "Sorted and limit stay non-fusable" subsections of this file
+  to reflect the new pipeline architecture
+  (three emit-shapes `auto` / `cps` / `driver`,
+  complete fusion-rule matrix,
+  transitions fuse across any shape boundary),
+  and delete the Active plan section above —
+  the work is done.
 
 ## phino: the only rewrite engine
 

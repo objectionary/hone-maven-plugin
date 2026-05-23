@@ -161,8 +161,8 @@ auto body in front of *every* `Φ.hone.emit` marker in the cps body
 on a single firing. A `part-of` guard on the cps body's binding
 group keeps the rule from firing when no emit marker exists —
 without it, the auto distill would be consumed yet its body would
-land nowhere, silently dropping the operation. The mapMulti /
-mapMultiTo* producers (215, 215b-d) emit cps distills with zero
+land nowhere, silently dropping the operation. The `mapMulti` /
+`mapMultiTo*` producers (215, 215b-d) emit cps distills with zero
 `Φ.hone.emit` markers (the user lambda owns emission via the
 captured `Consumer`), so the guard correctly leaves their adjacent
 auto neighbours unfused; that limitation is a property of 215's
@@ -255,9 +255,9 @@ The mechanics:
 The practical consequence: every `sorted` and `limit` call survives as
 its own `invokeinterface` dispatch, and the `streams-full-non-terminal`
 fixture pins the resulting `after.invokedynamic` count (currently 21,
-dominated by the 4 sorted + 2 limit barriers, the 5 mapMulti /
-mapMultiTo* dispatches whose user-lambda emission shape leaves no
-fusion seam, and the flatMap / flatMapTo* dispatches whose emit
+dominated by the 4 sorted + 2 limit barriers, the 5 `mapMulti` /
+`mapMultiTo*` dispatches whose user-lambda emission shape leaves no
+fusion seam, and the `flatMap` / `flatMapTo*` dispatches whose emit
 shape is Stream-driven via `forEach` rather than item-driven via
 `Consumer.accept` — 401c excludes flatMap-shaped cps from fusion
 because the spliced auto body would otherwise operate on a `Stream`

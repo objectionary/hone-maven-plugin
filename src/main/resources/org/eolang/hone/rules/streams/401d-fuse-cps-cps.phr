@@ -1,0 +1,146 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses two adjacent Φ.hone.distill pragmas when both are cps-shape and
+# the first body carries exactly one top-level Φ.hone.emit marker. The
+# emit is replaced by the second body's opcodes, so at the former emit
+# point the second cps body now runs with the about-to-be-emitted item
+# on top of stack — exactly the input it expects per the cps body
+# convention — and drives downstream emission through its own
+# Φ.hone.emit markers. The merged distill stays cps-shape; first's
+# bridge-input / accepted / start carry through (these define how
+# upstream feeds into the wrapper), and second's bridge-output /
+# returned carry through (these define what downstream sees emitted).
+#
+# Issue #570 Step 3.
+#
+# This rule sidesteps phino's `splice` where-function. Splice would
+# insert the second body in front of every emit marker but leaves the
+# marker in place — correct for 401c (cps + auto), where the auto body
+# transforms the item one-in-one-out and leaves it on stack for the
+# original emit to fire with the transformed value. Cps bodies, by
+# contrast, consume the item via their leading store and emit zero or
+# many times via their own markers, so an insert-before splice would
+# leave the first emit firing with no item on the operand stack and
+# produce wrong bytecode. Direct pattern-matching with a single-emit
+# split (𝐵-pre-emit + emit + 𝐵-post-emit) and `not part-of` guards on
+# both halves makes that replacement explicit and correct.
+#
+# Both captures must be empty. Every flagship cps + cps adjacency
+# (flatMap → mapMulti, flatMapToInt → mapMultiToInt, etc.) satisfies
+# that — 208 / 208b / 215 / 215b / 215c / 215d all emit zero-capture
+# cps distills, and 217 / 217b / 217c / 217d's accept-to-emit rewrite
+# preserves that property. A fused distill with two or more captures
+# would also need slot-shifting in the second body's aload references
+# AND a 502c multi-capture lowering, neither of which lands in this
+# step.
+#
+# The single-emit guard is the price of replacement semantics — user
+# mapMulti lambdas that call `c.accept(x)` more than once leave more
+# than one top-level emit marker in the first body, so 401d does not
+# fire on them. Every cps producer in the tree today (flatMap /
+# flatMapTo*, the standard one-accept mapMulti shape, takeWhile,
+# dropWhile, distinct, skip / skip-one) emits exactly one marker, so
+# the rule reaches every cps + cps adjacency the in-tree fixtures
+# exercise. Lifting that constraint is future-work pending an
+# emit-replacing splice variant in phino.
+#
+# The `not eq: 𝑒-first-start "flatMap"` guard excludes flatMap / flatMapTo*
+# from the first position. 208 / 208b keep the user Stream's iterator on
+# the operand stack across the loop (the body's t9-emit fires with stack
+# = [Iterator, item]), so a merged cps inherits that iter-on-stack
+# invariant. The downstream cps + auto fusion in 401c then splices auto
+# bodies (filter / map / peek) into the merged loop — and filter's body
+# (305 / 304) uses Φ.jeo.opcode.return for the reject branch. In a loop,
+# that return exits the wrapper entirely instead of skipping just the
+# rejected element, breaking flatMap semantics. The accept-branch
+# Φ.jeo.frame in filter's body (with nstack ↦ 1) also disagrees with
+# the actual two-item stack inside the merged loop, so the JVM verifier
+# rejects the class. Lifting this guard requires either rewriting 208 /
+# 208b to keep the iterator in a local slot (so the spliced bodies see
+# the bare bare-item-on-stack convention they were written against) or
+# rewriting 304 / 305 to use a forward jump instead of return for the
+# reject path; either path is broader than #570 Step 3 alone.
+name: fuse-cps-cps
+pattern: |
+  ⟦
+    𝐵-body-head,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦
+        𝐵-pre-emit,
+        𝜏-first-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
+        𝐵-post-emit,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-second-start,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+when:
+  and:
+    - not:
+        part-of:
+          - Φ.hone.emit
+          - 𝐵-pre-emit
+    - not:
+        part-of:
+          - Φ.hone.emit
+          - 𝐵-post-emit
+    - not:
+        eq: [𝑒-first-start, '"flatMap"']
+result: |
+  ⟦
+    𝐵-body-head,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-result-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦
+        𝐵-pre-emit,
+        𝐵-second-body,
+        𝐵-post-emit,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+where:
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-first-static, 𝑒-second-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'

@@ -1,0 +1,41 @@
+{⟦
+  body ↦ ⟦
+    first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "mapMulti",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦
+        first-store ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 0 ⟧,
+        first-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        first-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "mapMulti",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦
+        second-store ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 0 ⟧,
+        second-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        second-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+⟧}

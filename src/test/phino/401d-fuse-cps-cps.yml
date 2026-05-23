@@ -1,0 +1,105 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Pins the cps + cps fusion path introduced in #570 Step 3. The input
+# holds two adjacent zero-capture cps Φ.hone.distill pragmas, both
+# shaped like 215 + 217's body for `mapMulti((n, c) -> c.accept(n))`
+# (an astore-aload-emit triple). 401d replaces the first body's
+# single top-level Φ.hone.emit marker with the second body's opcodes,
+# so the merged distill drives downstream emission through the
+# spliced inner astore-aload-emit triple. Subsequent 491 + 502a then
+# lower the merged distill into one Φ.hone.lambda over mapMulti plus
+# one synthesized wrapper.
+#
+# A flatMap + mapMulti input would be the canonical adjacency this
+# rule exists to fuse, but 401d's `not eq "flatMap"` guard rejects
+# the iter-on-stack first body — see 401d's header for the rationale
+# (filter's reject-via-return and the in-body frames would otherwise
+# break the merged loop).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/401d-fuse-cps-cps.phr
+  - src/main/resources/org/eolang/hone/rules/streams/491-emit-to-accept-call.phr
+  - src/main/resources/org/eolang/hone/rules/streams/502a-cps-no-cap-to-lambda.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i0 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "mapMulti",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            t0-store ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 0 ⟧,
+            t1-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            t2-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧,
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "mapMulti",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            u0-store ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 0 ⟧,
+            u1-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            u2-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      𝐵-class-pre,
+      𝜏-main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        𝐵-method-pre,
+        body ↦ ⟦
+          𝜏-only ↦ ⟦
+            φ ↦ Φ.hone.lambda,
+            𝐵-lambda-pre,
+            stream ↦ ⟦
+              𝐵-stream-pre,
+              method ↦ "mapMulti",
+              𝐵-stream-post
+            ⟧,
+            𝐵-lambda-post
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-method-post
+      ⟧,
+      𝐵-class-post
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/function/Consumer",
+      i3 ↦ "accept",
+      i4 ↦ "(Ljava/lang/Object;)V",
+      i5 ↦ Φ.true
+    ⟧

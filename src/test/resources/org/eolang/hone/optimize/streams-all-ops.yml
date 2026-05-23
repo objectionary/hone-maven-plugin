@@ -54,6 +54,6 @@ before:
 after:
   invokespecial: 2
   invokestatic: 26
-  invokevirtual: 13
+  invokevirtual: 12
   invokedynamic: 16
-  return: 18
+  return: 17

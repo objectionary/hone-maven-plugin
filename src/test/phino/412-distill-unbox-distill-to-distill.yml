@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 412 fuses two auto distills sandwiching a Φ.hone.unbox into a single
+# auto distill. The fused distill keeps the first distill's
+# bridge-input/accepted (Object) and the second distill's
+# bridge-output/returned (I); the unbox's target invocation is spliced
+# between the two original bodies. After fusion, only one distill
+# survives in the method body, and its body contains the upstream
+# transform, the intValue unbox, and the downstream transform in order.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/412-distill-unbox-distill-to-distill.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Integer;",
+          start ↦ "map",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "auto",
+          body ↦ ⟦
+            b1 ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ "Foo",
+              i3 ↦ "lambda$0",
+              i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+              i5 ↦ Φ.false
+            ⟧
+          ⟧
+        ⟧,
+        i2 ↦ ⟦
+          φ ↦ Φ.hone.unbox,
+          opcode ↦ "invokevirtual",
+          class ↦ "Foo",
+          bridge-signature ↦ "(Ljava/lang/Integer;)I",
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 5,
+            class ↦ "java/lang/Integer",
+            method ↦ "intValue",
+            signature ↦ "()I",
+            is-interface ↦ Φ.false
+          ⟧
+        ⟧,
+        i3 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "I",
+          bridge-output ↦ "I",
+          start ↦ "filter",
+          accepted ↦ "I",
+          returned ↦ "I",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "auto",
+          body ↦ ⟦
+            b2 ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ "Foo",
+              i3 ↦ "lambda$1",
+              i4 ↦ "(I)Z",
+              i5 ↦ Φ.false
+            ⟧
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "I",
+      start ↦ "map",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "I",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ 𝑒-fused-body
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ "Foo",
+      i3 ↦ "lambda$0",
+      i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+      i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokevirtual,
+      i2 ↦ "java/lang/Integer",
+      i3 ↦ "intValue",
+      i4 ↦ "()I",
+      i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ "Foo",
+      i3 ↦ "lambda$1",
+      i4 ↦ "(I)Z",
+      i5 ↦ Φ.false
+    ⟧

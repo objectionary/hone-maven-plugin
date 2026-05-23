@@ -31,7 +31,7 @@ result: |
     emit-shape ↦ 𝑒-emit-shape,
     body ↦ ⟦
       𝐵-body,
-      i-transform ↦ ⟦
+      i-transform-tail ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokestatic,
         i2 ↦ 𝑒-transform-class,
         i3 ↦ "valueOf",

@@ -100,7 +100,7 @@ result: |
               φ ↦ Φ.jeo.opcode.ifeq,
               i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-skip ⟧
             ⟧,
-            d5-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+            d5-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
             d6-goto ↦ ⟦
               φ ↦ Φ.jeo.opcode.goto,
               i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-end ⟧

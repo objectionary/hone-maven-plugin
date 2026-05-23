@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 354-skip-one-to-distill
+#
+# Sibling of 353-skip-to-distill for the `.skip(1L)` shape: matches
+# Φ.hone.skip with count="1" (the string-typed form produced when javac
+# emitted `lconst_1` for the count). Emits the same cps Φ.hone.distill
+# shape, but pushes the threshold via `lconst_1` instead of
+# `ldc Φ.jeo.long(1)`.
+#
+# Body counts up from 0 — the first call sees counter[0] = 0 < 1, drops
+# the element and increments; the second and every subsequent call sees
+# counter[0] >= 1 and emits.
+#
+# Replaces 354-skip-one-to-mapMulti.phr. Issue #570.
+name: skip-one-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.skip,
+          stream-class ↦ "java/util/stream/Stream",
+          count ↦ "1"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "skip-one",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "[J",
+              init ↦ ⟦
+                k0-nop ↦ ⟦ φ ↦ Φ.jeo.opcode.nop ⟧,
+                k1-iconst-1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+                k2-newarray ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            t0-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+            t1-aload-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            t2-iconst-0 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            t3-laload ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+            t4-lconst-1 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+            t5-lcmp ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+            t6-ifge-accept ↦ ⟦
+              φ ↦ Φ.jeo.opcode.ifge,
+              i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+            ⟧,
+            t7-aload-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            t8-iconst-0 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            t9-aload-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+            t10-iconst-0 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            t11-laload ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+            t12-lconst-1 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+            t13-ladd ↦ ⟦ φ ↦ Φ.jeo.opcode.ladd ⟧,
+            t14-lastore ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+            t15-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+            t16-accept-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+            t17-accept-frame ↦ ⟦
+              φ ↦ Φ.jeo.frame,
+              type ↦ 3,
+              nlocal ↦ 0,
+              locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+              nstack ↦ 0,
+              stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+            ⟧,
+            t18-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+            t19-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-label-accept
+    function: random-string
+    args: [ '"LskipOneAccept%d"' ]

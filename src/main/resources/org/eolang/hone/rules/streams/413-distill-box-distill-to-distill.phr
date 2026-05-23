@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses an `auto` distill, a `Φ.hone.box` transition with a user
+# target (the `.mapToObj(λ)` shape produced by `205-lambda-to-box`),
+# and a second `auto` distill into a single distill. The box opcode
+# is spliced between the two original bodies. The first distill's
+# `bridge-input` / `accepted` / `start` carry through; the second
+# distill's `bridge-output` / `returned` carry through. Both distills
+# must be in the same class and have no captures.
+#
+# Type safety is enforced via the `or` arms in `when`:
+#   - the first distill's `bridge-output` is the primitive consumed by
+#     the box,
+#   - the second distill's `bridge-input` is the wrapper class produced
+#     by the box,
+#   - the box's `bridge-signature` agrees with both.
+#
+# Only the user-target box shape is fused here (the simpler boxed()
+# form from `206-boxed-to-box` has no opcode payload to splice and is
+# handled separately by `411`).
+#
+# Step #570 Step 8b sibling of 412: prepares fusion across an
+# `primitive → Object` boundary introduced by `.mapToObj(λ)`.
+name: distill-box-distill-to-distill
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      opcode ↦ 𝑒-box-opcode,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-box-stream-class,
+      bridge-signature ↦ 𝑒-box-bridge-signature,
+      static ↦ "true",
+      target ↦ ⟦
+        handle ↦ 𝑒-box-target-handle,
+        class ↦ 𝑒-box-target-class,
+        method ↦ 𝑒-box-target-method,
+        signature ↦ 𝑒-box-target-signature,
+        is-interface ↦ 𝑒-box-target-is-interface
+      ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-second-start,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-result-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦
+        𝐵-first-body,
+        𝜏-transition ↦ ⟦
+          φ ↦ Φ.jeo.opcode.𝜏-box-target-opcode,
+          i2 ↦ 𝑒-box-target-class,
+          i3 ↦ 𝑒-box-target-method,
+          i4 ↦ 𝑒-box-target-signature,
+          i5 ↦ 𝑒-box-target-is-interface
+        ⟧,
+        𝐵-second-body,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - and:
+        - eq: [𝑒-first-bridge-output, '"I"']
+        - eq: [𝑒-box-stream-class, '"java/util/stream/IntStream"']
+    - and:
+        - eq: [𝑒-first-bridge-output, '"J"']
+        - eq: [𝑒-box-stream-class, '"java/util/stream/LongStream"']
+    - and:
+        - eq: [𝑒-first-bridge-output, '"D"']
+        - eq: [𝑒-box-stream-class, '"java/util/stream/DoubleStream"']
+where:
+  - meta: 𝜏-box-target-opcode
+    function: tau
+    args: [𝑒-box-opcode]
+  - meta: 𝜏-transition
+    function: random-tau
+    args: [𝐵-first-body, 𝐵-second-body]
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-first-static, 𝑒-second-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'

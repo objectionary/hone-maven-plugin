@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Primitive sibling of 215. Stream.mapMultiToDouble(BiConsumer) → cps
+# Φ.hone.distill with `bridge-output ↦ "D"`. See 215b for the inlining
+# mechanism; only the stream signature, accept signature, and bridge
+# types differ. Issue #570 Step 4.
+name: mapMultiToDouble-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-site ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          opcode ↦ 𝑒-opcode,
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMultiToDouble",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/DoubleStream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-between,
+    𝜏-lambda-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-lambda-head,
+      name ↦ 𝑒-target-method,
+      𝐵-lambda-mid,
+      body ↦ ⟦
+        φ ↦ 𝑒-seq-header,
+        𝐵-lambda-body,
+        𝜏-trailing-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        𝐵-after-return
+      ⟧,
+      𝐵-lambda-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-site ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "D",
+          start ↦ "mapMultiToDouble",
+          accepted ↦ 𝑒-accepted,
+          returned ↦ "D",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            𝜏-astore-prefix ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v0 ↦ 0 ⟧,
+            𝐵-lambda-body
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-between,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.+)Ljava\\/util\\/function\\/DoubleConsumer;\\)V/$1/g"'
+  - meta: 𝜏-astore-prefix
+    function: random-tau
+    args: [𝐵-lambda-body]

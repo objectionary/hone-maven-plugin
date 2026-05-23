@@ -1,0 +1,96 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Runs the full flatMap migration path end-to-end: 208-flatMap-to-distill
+# folds Φ.hone.flatMap into a zero-capture cps Φ.hone.distill tagged with
+# `start ↦ "flatMap"`, whose body inlines an explicit Iterator pump
+# (Stream.iterator, hasNext / next, Φ.hone.emit, goto loop). 491 then
+# lowers the top-level Φ.hone.emit marker into a Consumer.accept(...)
+# triple, and 502a emits the Φ.hone.lambda over mapMulti plus a
+# synthetic wrapper that wraps the loop between `aload 0` and `return`.
+# The final output must contain (a) a Φ.hone.lambda dispatching to
+# mapMulti via BiConsumer, (b) the invokestatic of the user's lambda,
+# (c) the invokeinterface Stream.iterator() that pulls an Iterator from
+# the user's Stream, (d) the invokeinterface Iterator.next() that pulls
+# one element per loop iteration, and (e) the invokeinterface
+# Consumer.accept(Object) that hands each element off to the downstream
+# consumer.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/208-flatMap-to-distill.phr
+  - src/main/resources/org/eolang/hone/rules/streams/491-emit-to-accept-call.phr
+  - src/main/resources/org/eolang/hone/rules/streams/502a-cps-no-cap-to-lambda.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i0 ↦ ⟦
+          φ ↦ Φ.hone.flatMap,
+          opcode ↦ "invokestatic",
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Integer;",
+          bridge-output ↦ "Ljava/util/stream/Stream;",
+          accepted ↦ "Ljava/lang/Integer;",
+          returned ↦ "Ljava/util/stream/Stream;",
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ "Foo",
+            method ↦ "lambda$main$0",
+            signature ↦ "(Ljava/lang/Integer;)Ljava/util/stream/Stream;",
+            is-interface ↦ Φ.false
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ "Foo",
+      method ↦ "accept",
+      interface ↦ "()Ljava/util/function/BiConsumer;",
+      𝐵-lambda-tail
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ "Foo",
+      i3 ↦ "lambda$main$0",
+      i4 ↦ "(Ljava/lang/Integer;)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/Stream",
+      i3 ↦ "iterator",
+      i4 ↦ "()Ljava/util/Iterator;",
+      i5 ↦ Φ.true
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/Iterator",
+      i3 ↦ "next",
+      i4 ↦ "()Ljava/lang/Object;",
+      i5 ↦ Φ.true
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/function/Consumer",
+      i3 ↦ "accept",
+      i4 ↦ "(Ljava/lang/Object;)V",
+      i5 ↦ Φ.true
+    ⟧

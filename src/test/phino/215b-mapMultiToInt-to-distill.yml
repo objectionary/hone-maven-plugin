@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 215b rewrites a recognised Stream.mapMultiToInt(BiConsumer) call site
+# at class scope: inlines the user lambda's body into the distill body
+# with an `astore 0` prefix, drops the trailing return, and deletes the
+# original lambda method from the class.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/215b-mapMultiToInt-to-distill.phr
+input: |
+  {⟦
+    j$Foo ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      version ↦ 65,
+      access ↦ 33,
+      name ↦ "Foo",
+      jm$caller ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          φ ↦ Φ.jeo.seq.of1,
+          t0-site ↦ ⟦
+            φ ↦ Φ.hone.lambda,
+            class ↦ "Foo",
+            method ↦ "accept",
+            interface ↦ "()Ljava/util/function/BiConsumer;",
+            lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+            bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+            static ↦ "true",
+            opcode ↦ "invokestatic",
+            target ↦ ⟦
+              handle ↦ 6,
+              class ↦ "Foo",
+              method ↦ "lambda$main$0",
+              signature ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+              is-interface ↦ Φ.false
+            ⟧,
+            stream ↦ ⟦
+              class ↦ "java/util/stream/Stream",
+              method ↦ "mapMultiToInt",
+              signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;"
+            ⟧
+          ⟧
+        ⟧
+      ⟧,
+      jm$lambda ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        access ↦ 4106,
+        name ↦ "lambda$main$0",
+        descriptor ↦ "(Ljava/lang/Integer;Ljava/util/function/IntConsumer;)V",
+        body ↦ ⟦
+          φ ↦ Φ.jeo.seq.of5,
+          i0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
+          i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+          i2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokevirtual,
+            v0 ↦ "java/lang/Integer",
+            v1 ↦ "intValue",
+            v2 ↦ "()I",
+            v3 ↦ Φ.false
+          ⟧,
+          i3 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            v0 ↦ "java/util/function/IntConsumer",
+            v1 ↦ "accept",
+            v2 ↦ "(I)V",
+            v3 ↦ Φ.true
+          ⟧,
+          i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "I",
+      start ↦ "mapMultiToInt",
+      accepted ↦ "Ljava/lang/Integer;",
+      returned ↦ "I",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ 𝑒-body
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.astore,
+      v0 ↦ 0
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokevirtual,
+      v0 ↦ "java/lang/Integer",
+      v1 ↦ "intValue",
+      v2 ↦ "()I",
+      v3 ↦ Φ.false
+    ⟧

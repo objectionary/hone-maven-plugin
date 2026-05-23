@@ -1,0 +1,131 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a recognised Stream.mapMulti(BiConsumer) call site into a
+# zero-capture cps Φ.hone.distill with `start ↦ "mapMulti"`, inlining the
+# user's static lambda body verbatim into the distill body, and deleting
+# the original lambda method from the class. Companion rule
+# 217-mapMulti-accept-to-emit then rewrites every
+# `aload <consumer>, aload <item>, invokeinterface Consumer.accept(...)V`
+# triple in the inlined body to `aload <item>, Φ.hone.emit` so that the
+# distill exposes top-level emit markers; 401b / 401c / a future 401d
+# fuse around those markers via phino's `splice`, and 491 lowers each
+# remaining emit back to a `Consumer.accept` triple at the end of the
+# pipeline.
+#
+# The inlined body is wrapped by 502a with `aload 0; <body>; return`. To
+# make `aload 0` from the user lambda read the same item the upstream
+# fused auto bodies leave on top of stack (rather than the original
+# argument in slot 0), the distill body starts with an `astore 0` opcode
+# that pops the stack-top item back into slot 0. In the unfused case the
+# resulting `aload 0; astore 0` pair is a redundant round-trip through
+# slot 0; in the fused case (e.g. `filter(p).map(f).mapMulti(g)`) the
+# auto body's transformed item ends up in slot 0, and the inlined
+# lambda's `aload 0` references load the transformed value as required.
+#
+# The trailing `return` opcode of the user lambda is dropped — 502a's
+# wrapper adds its own `return` after the body. Any post-return bindings
+# (typically a single closing label) are dropped too: they are debug
+# metadata that 502a's seq head would otherwise duplicate.
+#
+# Static lambdas only (`static ↦ "true"`). Issue #570 Step 4.
+name: mapMulti-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-site ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          opcode ↦ 𝑒-opcode,
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-between,
+    𝜏-lambda-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-lambda-head,
+      name ↦ 𝑒-target-method,
+      𝐵-lambda-mid,
+      body ↦ ⟦
+        φ ↦ 𝑒-seq-header,
+        𝐵-lambda-body,
+        𝜏-trailing-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        𝐵-after-return
+      ⟧,
+      𝐵-lambda-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-site ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "mapMulti",
+          accepted ↦ 𝑒-accepted,
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            𝜏-astore-prefix ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v0 ↦ 0 ⟧,
+            𝐵-lambda-body
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-between,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.+)Ljava\\/util\\/function\\/Consumer;\\)V/$1/g"'
+  - meta: 𝜏-astore-prefix
+    function: random-tau
+    args: [𝐵-lambda-body]

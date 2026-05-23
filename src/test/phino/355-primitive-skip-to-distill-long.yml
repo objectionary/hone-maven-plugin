@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# LongStream variant of 355: same fold but capturing primitive long
-# values through a LongMapMultiConsumer and forwarding to a
-# LongConsumer. The wrapper local layout shifts to max-locals=4
-# because the long value occupies slots 1+2, putting the consumer at
-# index 3.
+# LongStream variant of 355-primitive-skip-to-distill: bridge-input /
+# bridge-output / accepted / returned all carry "J", the body uses
+# lstore to park the wide item in slot 1 and lload to push it back
+# before Φ.hone.emit. 502b will later widen max-locals to 4 because
+# the long takes slots 1+2 and the consumer lands in slot 3.
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/355-primitive-skip-to-mapMulti.phr
+  - src/main/resources/org/eolang/hone/rules/streams/355-primitive-skip-to-distill.phr
 input: |
   {⟦
     φ ↦ Φ.jeo.class,
@@ -34,12 +34,22 @@ input: |
 expected:
   - |
     ⟦
-      φ ↦ Φ.hone.lambda,
+      φ ↦ Φ.hone.distill,
       class ↦ "Foo",
-      method ↦ "accept",
-      interface ↦ "([J)Ljava/util/stream/LongStream$LongMapMultiConsumer;",
-      lambda-signature ↦ "(JLjava/util/function/LongConsumer;)V",
-      𝐵-lambda-tail
+      bridge-input ↦ "J",
+      bridge-output ↦ "J",
+      start ↦ "primitive-skip",
+      accepted ↦ "J",
+      returned ↦ "J",
+      static ↦ "true",
+      captures ↦ 𝑒-cap,
+      emit-shape ↦ "cps",
+      body ↦ 𝑒-body
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.lstore,
+      i1 ↦ 1
     ⟧
   - |
     ⟦
@@ -55,10 +65,4 @@ expected:
       i1 ↦ 1
     ⟧
   - |
-    ⟦
-      φ ↦ Φ.jeo.opcode.invokeinterface,
-      i2 ↦ "java/util/function/LongConsumer",
-      i3 ↦ "accept",
-      i4 ↦ "(J)V",
-      i5 ↦ Φ.true
-    ⟧
+    ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧

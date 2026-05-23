@@ -1,0 +1,131 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses an `auto` distill, a `Φ.hone.unbox` transition, and a second
+# `auto` distill into a single distill. The unbox opcode is spliced
+# between the two original bodies. The first distill's `bridge-input` /
+# `accepted` / `start` carry through; the second distill's
+# `bridge-output` / `returned` carry through. Both distills must be in
+# the same class and have no captures.
+#
+# Type safety is enforced via the `or` arms in `when`:
+#   - the first distill's `bridge-output` is the wrapper class consumed
+#     by the unbox,
+#   - the second distill's `bridge-input` is the primitive produced by
+#     the unbox,
+#   - the unbox's `bridge-signature` agrees with both.
+#
+# The transition opcode is the user's lambda body, called as the unbox
+# target. Its `opcode` field (`invokevirtual` for `Integer::intValue`
+# style, `invokestatic` for synthetic lambdas) selects the Φ.jeo opcode
+# via the `tau` where-function.
+#
+# This rule is the dual-distill generalisation of `411`. Step #570
+# Step 8b: prepares fusion of pipelines that have additional auto
+# operators on the primitive side of an `Object → primitive` boundary.
+name: distill-unbox-distill-to-distill
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-unbox-opcode,
+      class ↦ 𝑒-class,
+      bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      static ↦ "true",
+      target ↦ ⟦
+        handle ↦ 𝑒-unbox-target-handle,
+        class ↦ 𝑒-unbox-target-class,
+        method ↦ 𝑒-unbox-target-method,
+        signature ↦ 𝑒-unbox-target-signature,
+        is-interface ↦ 𝑒-unbox-target-is-interface
+      ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-second-start,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-result-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦
+        𝐵-first-body,
+        𝜏-transition ↦ ⟦
+          φ ↦ Φ.jeo.opcode.𝜏-unbox-target-opcode,
+          i2 ↦ 𝑒-unbox-target-class,
+          i3 ↦ 𝑒-unbox-target-method,
+          i4 ↦ 𝑒-unbox-target-signature,
+          i5 ↦ 𝑒-unbox-target-is-interface
+        ⟧,
+        𝐵-second-body,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - and:
+        - eq: [𝑒-first-bridge-output, '"Ljava/lang/Integer;"']
+        - eq: [𝑒-unbox-bridge-signature, '"(Ljava/lang/Integer;)I"']
+        - eq: [𝑒-second-bridge-input, '"I"']
+    - and:
+        - eq: [𝑒-first-bridge-output, '"Ljava/lang/Long;"']
+        - eq: [𝑒-unbox-bridge-signature, '"(Ljava/lang/Long;)J"']
+        - eq: [𝑒-second-bridge-input, '"J"']
+    - and:
+        - eq: [𝑒-first-bridge-output, '"Ljava/lang/Double;"']
+        - eq: [𝑒-unbox-bridge-signature, '"(Ljava/lang/Double;)D"']
+        - eq: [𝑒-second-bridge-input, '"D"']
+where:
+  - meta: 𝜏-unbox-target-opcode
+    function: tau
+    args: [𝑒-unbox-opcode]
+  - meta: 𝜏-transition
+    function: random-tau
+    args: [𝐵-first-body, 𝐵-second-body]
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-first-static, 𝑒-second-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'

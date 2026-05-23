@@ -1,0 +1,256 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Lowers a cps Φ.hone.distill with exactly one capture into the bytecode
+# shape that today's 353-distinct-to-mapMulti produced directly:
+#   * The capture's init formation is spliced into the caller body verbatim,
+#     leaving the capture value on stack just before the lambda.
+#   * A Φ.hone.lambda pragma replaces the cps distill in the caller body.
+#     LambdaMetafactory binds the on-stack capture value into the resulting
+#     BiConsumer (Object stream) or primitive MapMultiConsumer SAM (I/J/D
+#     stream); the bridge call invokes mapMulti on the matching stream.
+#   * A synthetic private static wrapper method is appended to the enclosing
+#     class. Its signature is (CaptureType, item, Consumer)V where item and
+#     Consumer match `𝑒-bridge-input` (Object/I/J/D → Object Consumer /
+#     IntConsumer / LongConsumer / DoubleConsumer). Its body is the cps
+#     distill body verbatim, prepended with a type-aware load of the item
+#     from slot 1 so the body's leading store-item opcode has something on
+#     stack, and trailed with `return`.
+#
+# This rule assumes 491 has already lowered every Φ.hone.emit marker in the
+# body to raw aload+dup_x+pop+invokeinterface triples; phino's fixed-point
+# loop ensures 491 (lower number) fires before 502b in each cycle.
+#
+# The item type comes from the distill's `accepted`. For Object streams the
+# bridge stays type-erased (`(Object,Object)V`); for primitive streams the
+# lambda-signature and bridge-signature carry the primitive directly.
+# Upstream-merged narrow Object types (e.g. `Ljava/lang/Integer;` from a
+# `.map(...)`) flow through the bridge and wrapper signatures correctly.
+#
+# Issue #570 Step 4 generalises the rule for primitive items. The
+# zero-capture case lives in 502a; the N-capture case is deferred.
+# Alphabetically 502a < 502b, so the no-capture variant fires on its own
+# input first and never sees a one-capture distill.
+name: cps-one-cap-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-distill ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ 𝑒-bridge-input,
+          bridge-output ↦ 𝑒-bridge-output,
+          start ↦ 𝑒-start,
+          accepted ↦ 𝑒-accepted,
+          returned ↦ 𝑒-returned,
+          static ↦ "true",
+          captures ↦ ⟦
+            𝜏-c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ 𝑒-c0-type,
+              init ↦ ⟦
+                𝜏-c0-init-1 ↦ 𝑒-c0-init-1,
+                𝜏-c0-init-2 ↦ 𝑒-c0-init-2,
+                𝜏-c0-init-3 ↦ 𝑒-c0-init-3,
+                ρ ↦ ∅
+              ⟧
+            ⟧,
+            ρ ↦ ∅
+          ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-init-1 ↦ 𝑒-c0-init-1,
+        𝜏-init-2 ↦ 𝑒-c0-init-2,
+        𝜏-init-3 ↦ 𝑒-c0-init-3,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ 𝑒-interface-signature,
+          lambda-signature ↦ 𝑒-lambda-signature,
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-wrapper-method,
+            signature ↦ 𝑒-wrapper-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ 𝑒-stream-class,
+            method ↦ "mapMulti",
+            signature ↦ 𝑒-mapMulti-signature
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-wrapper-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 6,
+        max-locals ↦ 𝑒-max-locals
+      ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-c0-type ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-accepted ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 𝑒-consumer-index, access ↦ 0, type ↦ 𝑒-consumer-type ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        𝜏-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load-item-op, i1 ↦ 1 ⟧,
+        𝐵-body,
+        𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-method
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-wrapper-method
+    function: random-string
+    args: ['"hone_cps_%d"']
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail', '𝜏-caller']
+  - meta: 𝜏-lambda
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail']
+  - meta: 𝜏-init-1
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-lambda']
+  - meta: 𝜏-init-2
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-lambda', '𝜏-init-1']
+  - meta: 𝜏-init-3
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-lambda', '𝜏-init-1', '𝜏-init-2']
+  - meta: 𝜏-load-item
+    function: random-tau
+    args: ['𝐵-body']
+  - meta: 𝜏-return
+    function: random-tau
+    args: ['𝐵-body', '𝜏-load-item']
+  - meta: 𝑒-sam-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/Ljava\\/util\\/function\\/BiConsumer;/g"'
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream$IntMapMultiConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream$LongMapMultiConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream$DoubleMapMultiConsumer;/g"'
+  - meta: 𝑒-consumer-type
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/Ljava\\/util\\/function\\/Consumer;/g"'
+      - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
+      - '"s/^J$/Ljava\\/util\\/function\\/LongConsumer;/g"'
+      - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
+  - meta: 𝑒-stream-class
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/java\\/util\\/stream\\/Stream/g"'
+      - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
+      - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
+      - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
+  - meta: 𝑒-output-stream-type
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/Ljava\\/util\\/stream\\/Stream;/g"'
+      - '"s/^I$/Ljava\\/util\\/stream\\/IntStream;/g"'
+      - '"s/^J$/Ljava\\/util\\/stream\\/LongStream;/g"'
+      - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream;/g"'
+  - meta: 𝑒-lambda-signature
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/(Ljava\\/lang\\/Object;Ljava\\/lang\\/Object;)V/g"'
+      - '"s/^I$/(ILjava\\/util\\/function\\/IntConsumer;)V/g"'
+      - '"s/^J$/(JLjava\\/util\\/function\\/LongConsumer;)V/g"'
+      - '"s/^D$/(DLjava\\/util\\/function\\/DoubleConsumer;)V/g"'
+  - meta: 𝑒-max-locals-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/3/g"'
+      - '"s/^I$/3/g"'
+      - '"s/^J$/4/g"'
+      - '"s/^D$/4/g"'
+  - meta: 𝑒-max-locals
+    function: number
+    args: [𝑒-max-locals-str]
+  - meta: 𝑒-consumer-index-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/2/g"'
+      - '"s/^I$/2/g"'
+      - '"s/^J$/3/g"'
+      - '"s/^D$/3/g"'
+  - meta: 𝑒-consumer-index
+    function: number
+    args: [𝑒-consumer-index-str]
+  - meta: 𝑒-load-item-op-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/aload/g"'
+      - '"s/^I$/iload/g"'
+      - '"s/^J$/lload/g"'
+      - '"s/^D$/dload/g"'
+  - meta: 𝜏-load-item-op
+    function: tau
+    args: [𝑒-load-item-op-str]
+  - meta: 𝑒-interface-signature
+    function: concat
+    args: ['"("', 𝑒-c0-type, '")"', 𝑒-sam-class]
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-accepted, 𝑒-consumer-type, '")V"']
+  - meta: 𝑒-wrapper-signature
+    function: concat
+    args: ['"("', 𝑒-c0-type, 𝑒-accepted, 𝑒-consumer-type, '")V"']
+  - meta: 𝑒-mapMulti-signature
+    function: concat
+    args: ['"("', 𝑒-sam-class, '")"', 𝑒-output-stream-type]

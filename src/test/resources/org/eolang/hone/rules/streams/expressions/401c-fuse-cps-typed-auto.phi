@@ -1,0 +1,37 @@
+{⟦
+  body ↦ ⟦
+    first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "distinct",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦
+        emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Integer;",
+      bridge-output ↦ "Ljava/lang/Integer;",
+      start ↦ "map",
+      accepted ↦ "Ljava/lang/Integer;",
+      returned ↦ "Ljava/lang/Integer;",
+      static ↦ "true",
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦
+        op ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+⟧}

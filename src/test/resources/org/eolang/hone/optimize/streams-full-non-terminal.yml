@@ -11,15 +11,29 @@
 # boxed() between them as the only bridge back to Stream<T> (boxed is
 # not itself one of the 21 but is unavoidable for the type system).
 # The opcodes assertion pins the current count of invokedynamic in the
-# optimised class: 21 today, with the long-term goal of bringing it
-# down to 1 (a single mapMulti emitter that absorbs every operator).
-# The count went up from 19 once 401b/401c was gated to Object-typed
-# distills only — typed auto distills (.map(n -> n + 0) and friends)
-# are no longer fused into the adjacent .distinct() cps distill, so
-# the two .distinct() calls in this pipeline emit their own mapMulti
-# each instead of riding inside an adjacent map's wrapper. Closing
-# that gap is part of issue #570.
-# See issue #556.
+# optimised class: 21 after the issue #570 cps-distill migration
+# landed. The architecture's long-term floor is one mapMulti emitter
+# per *fusable* segment; the structural reasons this particular
+# fixture sits well above that floor are:
+#  - Sorted and limit are non-fusable barriers (Step 10 option A) —
+#    each of the four sorted variants and two limit calls in the
+#    pipeline survives as its own invokeinterface dispatch and forces
+#    the surrounding stateless segments apart.
+#  - mapMulti / mapMultiTo* cps distill bodies carry no Φ.hone.emit
+#    marker (the user lambda owns emission via consumer.accept), so
+#    401c-fuse-cps-auto cannot splice a downstream auto body anywhere
+#    and each call surfaces its own mapMulti wrapper.
+#  - flatMap-shape cps distills (plain flatMap and flatMapTo*) emit a
+#    user-produced Stream rather than a single item, so 401c excludes
+#    them from fusion via the `not eq: start "flatMap"` arm of its
+#    `when` guard — splicing a downstream auto body before the emit
+#    would try to operate on a Stream value as an item and crash
+#    VerifyError. 401b can still pre-pend an upstream auto to a
+#    flatMap cps body (the auto leaves an item on stack, which the
+#    flatMap lambda happily consumes), but in this fixture no flatMap
+#    sits directly downstream of an auto distill.
+# Together those reasons account for the bulk of the 21 invokedynamic
+# dispatches that remain. See issues #556 and #570.
 java: |
   package allnonterminal;
   import java.util.Comparator;

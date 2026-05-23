@@ -5,26 +5,46 @@
 # Fuses two adjacent Φ.hone.distill pragmas when the first is cps-shape
 # (drives emission via Φ.hone.emit markers) and the second is auto-shape
 # (one-in-one-out body that transforms the top-of-stack item). The auto
-# body is spliced into the first body immediately before the Φ.hone.emit
-# marker — so the auto body transforms the about-to-be-emitted item, then
-# the original marker fires on the transformed value. The auto side has no
-# captures by convention; merged captures are exactly the first's.
+# body is spliced into the first body immediately before EVERY Φ.hone.emit
+# marker — so on every emission point the auto body transforms the
+# about-to-be-emitted item, then the original marker fires on the
+# transformed value. The auto side has no captures by convention; merged
+# captures are exactly the first's.
 #
-# Step C limitation: the pattern matches a single Φ.hone.emit position per
-# firing, and the second distill is consumed on first match. If the cps body
-# carries multiple emit markers (flatMap, mapMulti-verbatim), only one gets
-# the auto body spliced in. Multi-emit cps bodies arrive in later steps;
-# the auto body splice will need a different shape then.
+# The splicing is delegated to phino's `splice` where-function (landed in
+# phino 0.0.0.69, objectionary/phino#708). On a single firing it walks the
+# cps body's binding group, and in front of every τ-binding whose `φ` value
+# equals `Φ.hone.emit` it inserts a fresh-renamed copy of the auto body.
+# When the cps body has no emit marker at all (e.g. raw mapMulti, whose
+# user lambda owns emission), the `part-of` guard prevents the rule from
+# firing — otherwise the auto distill would be consumed without its body
+# being spliced anywhere, silently dropping the operation.
 #
-# Gated to Object-typed distills on both sides. 502-cps-one-cap-to-lambda
-# hardcodes the bridge as (Object, Consumer)V and the wrapper item slot as
-# Object, so a fused distill with a non-Object bridge-output (the value an
-# auto body assumes on entry / leaves on exit) would survive past 502 and
-# leak into jeo:assemble as an unknown Φ.hone.distill opcode. A typed auto
-# distill (e.g. Integer→Integer from .map(n -> n)) is left unfused, so 501
-# lowers it to its own mapMulti and 502 lowers the cps side to its own.
-# Lifting this constraint requires teaching 502 to emit a CHECKCAST around
-# the auto body and to pick the matching wrapper-item type.
+# Since #570 Step 2 (corrected plan), flatMap cps distills participate
+# in this fusion. 208 now inlines the user's Stream via an explicit
+# Iterator pump (Stream.iterator, hasNext / next, top-level Φ.hone.emit,
+# goto loop), so at the emit marker the value on stack is a per-element
+# value of `bridge-output` type — exactly what an auto body's input slot
+# expects. Splicing an auto body in front of every emit therefore
+# transforms each Stream element produced by the user's lambda before
+# it is handed off downstream, which is the correct semantics for
+# `.flatMap(...).map(...)` and similar shapes.
+#
+# Type narrowing follows the same pattern as 401-fuse: the fused distill
+# inherits the cps side's bridge-input / accepted (the lambda is invoked
+# with the cps side's input type) and the auto side's bridge-output /
+# returned (each spliced auto body transforms an about-to-be-emitted
+# value into the auto's output type, which becomes the fused distill's
+# emission type). The auto side's bridge-input is trusted to align with
+# the cps side's bridge-output because they sit adjacent on the same
+# Stream<T> in the original pipeline; consecutive operators on the same
+# stream share that element type by construction.
+#
+# Downstream lowering by 502a / 502b carries the typed bridge-output
+# through to the matching mapMulti dispatch and consumer interface. For
+# narrow Object types the SAM stays type-erased; for primitive types
+# (I/J/D) the matching IntConsumer / LongConsumer / DoubleConsumer SAM
+# is selected.
 name: fuse-cps-auto
 pattern: |
   ⟦
@@ -32,29 +52,24 @@ pattern: |
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.distill,
       class ↦ 𝑒-class,
-      bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "Ljava/lang/Object;",
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
       start ↦ 𝑒-first-start,
-      accepted ↦ "Ljava/lang/Object;",
-      returned ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
       static ↦ 𝑒-first-static,
       captures ↦ 𝑒-first-captures,
       emit-shape ↦ "cps",
-      body ↦ ⟦
-        𝐵-pre-emit,
-        𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
-        𝐵-post-emit,
-        ρ ↦ ∅
-      ⟧
+      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
     ⟧,
     𝜏-second ↦ ⟦
       φ ↦ Φ.hone.distill,
       class ↦ 𝑒-class,
-      bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "Ljava/lang/Object;",
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
       start ↦ 𝑒-second-start,
-      accepted ↦ "Ljava/lang/Object;",
-      returned ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-second-static,
       captures ↦ ⟦ ρ ↦ ∅ ⟧,
       emit-shape ↦ "auto",
@@ -62,25 +77,29 @@ pattern: |
     ⟧,
     𝐵-body-tail
   ⟧
+when:
+  and:
+    - part-of:
+        - Φ.hone.emit
+        - 𝐵-first-body
+    - not:
+        eq: [𝑒-second-start, '"filter"']
 result: |
   ⟦
     𝐵-body-head,
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.distill,
       class ↦ 𝑒-class,
-      bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "Ljava/lang/Object;",
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
       start ↦ 𝑒-first-start,
-      accepted ↦ "Ljava/lang/Object;",
-      returned ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
       captures ↦ 𝑒-first-captures,
       emit-shape ↦ "cps",
       body ↦ ⟦
-        𝐵-pre-emit,
-        𝐵-second-body,
-        𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit ⟧,
-        𝐵-post-emit,
+        𝐵-spliced-body,
         ρ ↦ ∅
       ⟧
     ⟧,
@@ -96,3 +115,6 @@ where:
       - 𝑒-both-statics
       - '"s/truetrue/true/g"'
       - '"s/.*false.*/false/g"'
+  - meta: 𝐵-spliced-body
+    function: splice
+    args: [𝐵-first-body, Φ.hone.emit, 𝐵-second-body]

@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Inside a `start ↦ "mapMulti"` cps Φ.hone.distill body produced by 215,
+# rewrites every adjacent
+# `aload <consumer>, aload <item>, invokeinterface Consumer.accept(Object)V`
+# triple to `aload <item>, Φ.hone.emit, emit-context ↦ "top-level"`. The
+# rule fires once per accept site in the body; phino's fixed-point loop
+# re-fires until none remain. Stripping the consumer load drops the
+# stale stack element that 491 would otherwise rebuild — 491 reloads
+# the consumer from its current slot when it lowers the emit, picking
+# the correct index after fusion shifts the layout.
+#
+# Sibling rules 217b / 217c / 217d cover the primitive accept signatures
+# (`IntConsumer.accept(I)V`, `LongConsumer.accept(J)V`,
+# `DoubleConsumer.accept(D)V`) for the mapMultiToInt / Long / Double
+# inliners 215b / 215c / 215d, each carrying the matching `start` tag
+# and the unbox opcode that javac emits between `aload <item>` and the
+# primitive accept.
+name: mapMulti-accept-to-emit
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "mapMulti",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ "true",
+    captures ↦ ⟦ ρ ↦ ∅ ⟧,
+    emit-shape ↦ "cps",
+    body ↦ ⟦
+      𝐵-pre,
+      𝜏-aload-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
+      𝜏-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+      𝜏-accept ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/function/Consumer",
+        v1 ↦ "accept",
+        v2 ↦ "(Ljava/lang/Object;)V",
+        v3 ↦ Φ.true
+      ⟧,
+      𝐵-post
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "mapMulti",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ "true",
+    captures ↦ ⟦ ρ ↦ ∅ ⟧,
+    emit-shape ↦ "cps",
+    body ↦ ⟦
+      𝐵-pre,
+      𝜏-aload-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+      𝜏-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
+      𝐵-post
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-emit
+    function: random-tau
+    args: [𝐵-pre, 𝐵-post, 𝜏-aload-item]

@@ -2,10 +2,15 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 215c rewrites a recognised Stream.mapMultiToLong(BiConsumer) call
-# site at class scope. See 215b for the inlining mechanism.
+# After 215 inlines the mapMulti user lambda, 217 rewrites every
+# (aload <consumer>, aload <item>, invokeinterface Consumer.accept(Object)V)
+# triple in the resulting distill body to (aload <item>, Φ.hone.emit).
+# This fixture chains 215 and 217 on a class with two accept calls in
+# the user lambda body — both must be rewritten on phino's fixed-point
+# loop.
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/215c-mapMultiToLong-to-distill.phr
+  - src/main/resources/org/eolang/hone/rules/streams/215-mapMulti-to-distill.phr
+  - src/main/resources/org/eolang/hone/rules/streams/217-mapMulti-accept-to-emit.phr
 input: |
   {⟦
     j$Foo ↦ ⟦
@@ -24,20 +29,20 @@ input: |
             method ↦ "accept",
             interface ↦ "()Ljava/util/function/BiConsumer;",
             lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-            bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/LongConsumer;)V",
+            bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
             static ↦ "true",
             opcode ↦ "invokestatic",
             target ↦ ⟦
               handle ↦ 6,
               class ↦ "Foo",
               method ↦ "lambda$main$0",
-              signature ↦ "(Ljava/lang/Integer;Ljava/util/function/LongConsumer;)V",
+              signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
               is-interface ↦ Φ.false
             ⟧,
             stream ↦ ⟦
               class ↦ "java/util/stream/Stream",
-              method ↦ "mapMultiToLong",
-              signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/LongStream;"
+              method ↦ "mapMulti",
+              signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
             ⟧
           ⟧
         ⟧
@@ -46,26 +51,28 @@ input: |
         φ ↦ Φ.jeo.method,
         access ↦ 4106,
         name ↦ "lambda$main$0",
-        descriptor ↦ "(Ljava/lang/Integer;Ljava/util/function/LongConsumer;)V",
+        descriptor ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
         body ↦ ⟦
-          φ ↦ Φ.jeo.seq.of5,
+          φ ↦ Φ.jeo.seq.of7,
           i0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
           i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
           i2 ↦ ⟦
-            φ ↦ Φ.jeo.opcode.invokevirtual,
-            v0 ↦ "java/lang/Integer",
-            v1 ↦ "longValue",
-            v2 ↦ "()J",
-            v3 ↦ Φ.false
-          ⟧,
-          i3 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokeinterface,
-            v0 ↦ "java/util/function/LongConsumer",
+            v0 ↦ "java/util/function/Consumer",
             v1 ↦ "accept",
-            v2 ↦ "(J)V",
+            v2 ↦ "(Ljava/lang/Object;)V",
             v3 ↦ Φ.true
           ⟧,
-          i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
+          i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
+          i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+          i5 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            v0 ↦ "java/util/function/Consumer",
+            v1 ↦ "accept",
+            v2 ↦ "(Ljava/lang/Object;)V",
+            v3 ↦ Φ.true
+          ⟧,
+          i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
         ⟧
       ⟧
     ⟧
@@ -76,10 +83,10 @@ expected:
       φ ↦ Φ.hone.distill,
       class ↦ "Foo",
       bridge-input ↦ "Ljava/lang/Object;",
-      bridge-output ↦ "J",
-      start ↦ "mapMultiToLong",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "mapMulti",
       accepted ↦ "Ljava/lang/Integer;",
-      returned ↦ "J",
+      returned ↦ "Ljava/lang/Object;",
       static ↦ "true",
       captures ↦ ⟦ ρ ↦ ∅ ⟧,
       emit-shape ↦ "cps",
@@ -87,14 +94,6 @@ expected:
     ⟧
   - |
     ⟦
-      φ ↦ Φ.jeo.opcode.astore,
-      v0 ↦ 0
-    ⟧
-  - |
-    ⟦
-      φ ↦ Φ.jeo.opcode.invokevirtual,
-      v0 ↦ "java/lang/Integer",
-      v1 ↦ "longValue",
-      v2 ↦ "()J",
-      v3 ↦ Φ.false
+      φ ↦ Φ.hone.emit,
+      emit-context ↦ "top-level"
     ⟧

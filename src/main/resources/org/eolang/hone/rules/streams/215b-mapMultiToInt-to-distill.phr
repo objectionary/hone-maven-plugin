@@ -2,65 +2,105 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Primitive sibling of 215. Folds a recognised
-# Stream.mapMultiToInt(BiConsumer) call site (Φ.hone.lambda with
-# `stream.method = "mapMultiToInt"`) into a zero-capture cps
-# Φ.hone.distill with `start ↦ "mapMultiToInt"`, `bridge-input ↦
-# Ljava/lang/Object;` (upstream Stream<T>) and `bridge-output ↦ "I"`
-# (downstream IntStream). The user lambda already drives emission via
-# `IntConsumer.accept(int)`, so the cps body just hands the item and the
-# downstream IntConsumer to the lambda and returns — no Φ.hone.emit
-# marker. 502a widens `mapMulti` to `mapMultiToInt` from the
-# bridge-output. Issue #570 Step 9.
+# Primitive sibling of 215. Stream.mapMultiToInt(BiConsumer) → cps
+# Φ.hone.distill with `bridge-output ↦ "I"`. Inlines the user lambda
+# body verbatim, prepends `astore 0` to keep slot 0 synced with the
+# fused upstream's stack-top item, drops the trailing return, and
+# deletes the original lambda method from the class. Companion rule
+# 217b-mapMultiToInt-accept-to-emit rewrites every
+# `aload <consumer>, aload <item>, invokevirtual Integer.intValue()I,
+#  invokeinterface IntConsumer.accept(I)V` triple in the inlined body
+# to `aload <item>, invokevirtual Integer.intValue, Φ.hone.emit`.
+# Issue #570 Step 4.
 name: mapMultiToInt-to-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.lambda,
-    class ↦ 𝑒-class,
-    method ↦ "accept",
-    interface ↦ "()Ljava/util/function/BiConsumer;",
-    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-    bridge-signature ↦ 𝑒-bridge-signature,
-    static ↦ "true",
-    opcode ↦ 𝑒-opcode,
-    target ↦ ⟦
-      handle ↦ 𝑒-target-handle,
-      class ↦ 𝑒-class,
-      method ↦ 𝑒-target-method,
-      signature ↦ 𝑒-target-signature,
-      is-interface ↦ 𝑒-target-is-interface
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-site ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          opcode ↦ 𝑒-opcode,
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-class-name,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMultiToInt",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
     ⟧,
-    stream ↦ ⟦
-      class ↦ "java/util/stream/Stream",
-      method ↦ "mapMultiToInt",
-      signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;"
-    ⟧
+    𝐵-class-between,
+    𝜏-lambda-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-lambda-head,
+      name ↦ 𝑒-target-method,
+      𝐵-lambda-mid,
+      body ↦ ⟦
+        φ ↦ 𝑒-seq-header,
+        𝐵-lambda-body,
+        𝜏-trailing-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        𝐵-after-return
+      ⟧,
+      𝐵-lambda-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
   ⟧
 result: |
   ⟦
-    φ ↦ Φ.hone.distill,
-    class ↦ 𝑒-class,
-    bridge-input ↦ "Ljava/lang/Object;",
-    bridge-output ↦ "I",
-    start ↦ "mapMultiToInt",
-    accepted ↦ 𝑒-accepted,
-    returned ↦ "I",
-    static ↦ "true",
-    captures ↦ ⟦ ρ ↦ ∅ ⟧,
-    emit-shape ↦ "cps",
-    body ↦ ⟦
-      t0-aload-consumer ↦ ⟦
-        φ ↦ Φ.jeo.opcode.aload,
-        i1 ↦ 1
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-site ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "I",
+          start ↦ "mapMultiToInt",
+          accepted ↦ 𝑒-accepted,
+          returned ↦ "I",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "cps",
+          body ↦ ⟦
+            𝜏-astore-prefix ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v0 ↦ 0 ⟧,
+            𝐵-lambda-body
+          ⟧
+        ⟧,
+        𝐵-body-tail
       ⟧,
-      t1-invoke ↦ ⟦
-        φ ↦ Φ.jeo.opcode.𝜏-target-opcode,
-        i2 ↦ 𝑒-class,
-        i3 ↦ 𝑒-target-method,
-        i4 ↦ 𝑒-target-signature,
-        i5 ↦ 𝑒-target-is-interface
-      ⟧
-    ⟧
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-between,
+    𝐵-class-tail,
+    ρ ↦ ∅
   ⟧
 where:
   - meta: 𝑒-accepted
@@ -68,6 +108,6 @@ where:
     args:
       - 𝑒-bridge-signature
       - '"s/\\((.+)Ljava\\/util\\/function\\/IntConsumer;\\)V/$1/g"'
-  - meta: 𝜏-target-opcode
-    function: tau
-    args: [𝑒-opcode]
+  - meta: 𝜏-astore-prefix
+    function: random-tau
+    args: [𝐵-lambda-body]

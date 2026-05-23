@@ -2,34 +2,77 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 215 rewrites a recognised Stream.mapMulti(BiConsumer) call site into a
-# zero-capture cps Φ.hone.distill with `start ↦ "mapMulti"`. The cps body
-# loads the downstream Consumer and invokes the user's static lambda — no
-# Φ.hone.emit marker, since the lambda already drives emission via its own
-# consumer.accept calls.
+# 215 rewrites a recognised Stream.mapMulti(BiConsumer) call site at
+# class scope: the user lambda's body is inlined into the resulting
+# cps Φ.hone.distill body (with an `astore 0` prefix that re-syncs
+# the slot-0 item against the upstream-fused stack-top), and the
+# original lambda method is deleted from the class.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/215-mapMulti-to-distill.phr
 input: |
   {⟦
-    φ ↦ Φ.hone.lambda,
-    class ↦ "Foo",
-    method ↦ "accept",
-    interface ↦ "()Ljava/util/function/BiConsumer;",
-    lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
-    bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
-    static ↦ "true",
-    opcode ↦ "invokestatic",
-    target ↦ ⟦
-      handle ↦ 6,
-      class ↦ "Foo",
-      method ↦ "lambda$main$0",
-      signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
-      is-interface ↦ Φ.false
-    ⟧,
-    stream ↦ ⟦
-      class ↦ "java/util/stream/Stream",
-      method ↦ "mapMulti",
-      signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+    j$Foo ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      version ↦ 65,
+      access ↦ 33,
+      name ↦ "Foo",
+      jm$caller ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          φ ↦ Φ.jeo.seq.of1,
+          t0-site ↦ ⟦
+            φ ↦ Φ.hone.lambda,
+            class ↦ "Foo",
+            method ↦ "accept",
+            interface ↦ "()Ljava/util/function/BiConsumer;",
+            lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+            bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+            static ↦ "true",
+            opcode ↦ "invokestatic",
+            target ↦ ⟦
+              handle ↦ 6,
+              class ↦ "Foo",
+              method ↦ "lambda$main$0",
+              signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+              is-interface ↦ Φ.false
+            ⟧,
+            stream ↦ ⟦
+              class ↦ "java/util/stream/Stream",
+              method ↦ "mapMulti",
+              signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+            ⟧
+          ⟧
+        ⟧
+      ⟧,
+      jm$lambda ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        access ↦ 4106,
+        name ↦ "lambda$main$0",
+        descriptor ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+        body ↦ ⟦
+          φ ↦ Φ.jeo.seq.of7,
+          i0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
+          i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+          i2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            v0 ↦ "java/util/function/Consumer",
+            v1 ↦ "accept",
+            v2 ↦ "(Ljava/lang/Object;)V",
+            v3 ↦ Φ.true
+          ⟧,
+          i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
+          i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+          i5 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            v0 ↦ "java/util/function/Consumer",
+            v1 ↦ "accept",
+            v2 ↦ "(Ljava/lang/Object;)V",
+            v3 ↦ Φ.true
+          ⟧,
+          i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
+        ⟧
+      ⟧
     ⟧
   ⟧}
 expected:
@@ -49,14 +92,14 @@ expected:
     ⟧
   - |
     ⟦
-      φ ↦ Φ.jeo.opcode.aload,
-      i1 ↦ 1
+      φ ↦ Φ.jeo.opcode.astore,
+      v0 ↦ 0
     ⟧
   - |
     ⟦
-      φ ↦ Φ.jeo.opcode.invokestatic,
-      i2 ↦ "Foo",
-      i3 ↦ "lambda$main$0",
-      i4 ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
-      i5 ↦ Φ.false
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      v0 ↦ "java/util/function/Consumer",
+      v1 ↦ "accept",
+      v2 ↦ "(Ljava/lang/Object;)V",
+      v3 ↦ Φ.true
     ⟧

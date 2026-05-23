@@ -265,7 +265,7 @@ value as if it were the downstream item).
 That is by design — the architecture's value is fusing the *streamable*
 part of the pipeline, not eliminating intrinsically-non-streamable
 operators. The buffered-distill option, originally out of scope for
-#570, is now picked up under the "driver" emit-shape work described
+`#570`, is now picked up under the "driver" emit-shape work described
 in the Active plan section below.
 
 ## Active plan: fuse every non-terminal pipeline into one structure
@@ -379,7 +379,7 @@ Rewrite `305-object-filter-to-distill.phr` and `304-primitive-filter-to-distill.
   the body starts with a `dup` opcode,
   runs the predicate against the duplicated item,
   branches on the result,
-  and either falls through (item still on stack, emit happens via the surrounding auto contract)
+  and either falls through (item still on stack, emit goes via the auto contract)
   or `pop` + skip to the end of the body
   (item discarded, no emit).
 The body must respect the existing auto distill contract
@@ -393,6 +393,7 @@ Drop the `not eq: 𝑒-second-start "filter"` guard from `401c-fuse-cps-auto.phr
 
 **Files to modify.**
 
+<!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
 | `src/main/resources/.../streams/305-object-filter-to-distill.phr`     | self-contained body with internal dup + branch         |
@@ -400,6 +401,7 @@ Drop the `not eq: 𝑒-second-start "filter"` guard from `401c-fuse-cps-auto.phr
 | `src/main/resources/.../streams/281-insert-dup-before-filter.phr`     | delete                                                 |
 | `src/main/resources/.../streams/282-insert-dup-before-transformed-filter.phr` | delete                                         |
 | `src/main/resources/.../streams/401c-fuse-cps-auto.phr`               | drop the `not eq: start "filter"` guard               |
+<!-- markdownlint-enable MD013 MD060 -->
 
 **Verification.**
 
@@ -444,9 +446,11 @@ Those emits remain in the merged body at top level,
 
 **Files to modify.**
 
+<!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
 | **new** `src/main/resources/.../streams/401d-fuse-cps-cps.phr`        | splice-based cps+cps fuser                             |
+<!-- markdownlint-enable MD013 MD060 -->
 
 **Verification.**
 
@@ -458,7 +462,7 @@ Those emits remain in the merged body at top level,
   under `src/test/resources/org/eolang/hone/rules/streams/expressions/`.
 - Re-pin the flagship fixture's `after.*` counts
   and the explanatory header comment
-  to drop the "flatMap / flatMapTo* / mapMulti / mapMultiTo*"
+  to drop the `flatMap` / `flatMapTo*` / `mapMulti` / `mapMultiTo*`
   lines from the structural-limit list.
 
 **Result.**
@@ -500,9 +504,11 @@ The existing `501-distill-to-mapMulti.phr` remains the lowering
 
 **Files to modify.**
 
+<!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
 | **new** `src/main/resources/.../streams/501-distill-to-driver-method.phr` | new lowering pathway for `emit-shape ↦ "driver"`  |
+<!-- markdownlint-enable MD013 MD060 -->
 
 **Verification.**
 
@@ -527,7 +533,8 @@ Add new 2xx-recognition rules
   for `Stream.sorted()` and `Stream.sorted(Comparator)`
   that produce a `Φ.hone.distill` with `emit-shape ↦ "driver"`,
   one `List` capture
-  (`captures ↦ ⟦ c0 ↦ ⟦ φ ↦ Φ.hone.capture, type ↦ "Ljava/util/ArrayList;", init ↦ ⟦new ArrayList⟧ ⟧, ρ ↦ ∅ ⟧`),
+  (`captures ↦ ⟦ c0 ↦ ⟦ φ ↦ Φ.hone.capture,
+  type ↦ "Ljava/util/ArrayList;", init ↦ ⟦new ArrayList⟧ ⟧, ρ ↦ ∅ ⟧`),
   and an iterator-style body whose top-level emit marker
   fires inside the second loop:
 
@@ -546,12 +553,14 @@ Replace both rules with the new driver-style migration.
 
 **Files to modify.**
 
+<!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
 | **new** `src/main/resources/.../streams/213-sorted-to-driver.phr`     | recognise `Stream.sorted()` as driver-shape distill    |
 | **new** `src/main/resources/.../streams/214-sorted-comparator-to-driver.phr` | recognise `Stream.sorted(Comparator)` as driver-shape distill |
 | `src/main/resources/.../streams/212-lambda-to-sorted.phr`             | delete                                                 |
 | `src/main/resources/.../streams/607-sorted-to-lambda.phr`             | delete                                                 |
+<!-- markdownlint-enable MD013 MD060 -->
 
 **Verification.**
 
@@ -604,11 +613,13 @@ Verify this invariant by inspecting a small-steps `.phi.NN` trace
 
 **Files to modify.**
 
+<!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
 | **new** `src/main/resources/.../streams/215-limit-to-driver.phr`      | recognise `Stream.limit` as driver-shape distill       |
 | `src/main/resources/.../streams/216-recognize-limit-ldc.phr`          | delete or refactor                                     |
 | `src/main/resources/.../streams/722-limit-ldc-to-invokeinterface.phr` | delete                                                 |
+<!-- markdownlint-enable MD013 MD060 -->
 
 If the existing rule number 215 collides with the mapMulti recognition,
   pick a different prefix that respects phase ordering
@@ -635,11 +646,13 @@ This step makes the matrix complete
 
 **Fusion-rule matrix (9 cells).**
 
+<!-- markdownlint-disable MD060 -->
 | First / Second  | auto       | cps         | driver        |
 |-----------------|------------|-------------|---------------|
 | auto            | 401 (kept) | 401b (kept) | **new 401e**  |
 | cps             | 401c (kept)| 401d (kept) | **new 401f**  |
 | driver          | **new 401g** | **new 401h** | **new 401i** |
+<!-- markdownlint-enable MD060 -->
 
 The five new cells share the same splice-based mechanism that 401c and 401d
   use today:
@@ -684,6 +697,7 @@ Choose based on what the where-functions allow
 
 **Files to modify.**
 
+<!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
 | **new** `src/main/resources/.../streams/401e-fuse-auto-driver.phr`    | auto+driver fusion                                     |
@@ -694,6 +708,7 @@ Choose based on what the where-functions allow
 | `src/main/resources/.../streams/411-box-distill-unbox-to-primitive-distill.phr` | accept any emit-shape on either side          |
 | `src/main/resources/.../streams/412-distill-unbox-distill-to-distill.phr`       | same                                          |
 | `src/main/resources/.../streams/413-distill-box-distill-to-distill.phr`         | same                                          |
+<!-- markdownlint-enable MD013 MD060 -->
 
 **Verification.**
 

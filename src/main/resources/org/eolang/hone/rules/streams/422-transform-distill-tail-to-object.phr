@@ -2,6 +2,22 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# 422-transform-distill-tail-to-object
+#
+# Appends a boxing valueOf invokestatic at the END of an auto distill's
+# body, converting a primitive `returned` (I / J / D) into the boxed
+# `bridge-output` (Ljava/lang/Integer; / Long; / Double;) the surrounding
+# SAM Consumer expects. The append-at-tail position is correct for auto
+# bodies because the auto wrapper emits AFTER the body — the boxing
+# therefore lands right before the synthesized emit point.
+#
+# Locked to `emit-shape ↦ "auto"`: cps bodies carry a Φ.hone.emit marker
+# in the middle of the body, so appending to the tail would put the
+# valueOf AFTER the marker — too late, the marker (lowered by 491 into
+# Consumer.accept) would fire on a primitive value while the SAM expects
+# Object. The cps counterpart `422b-transform-distill-cps-tail-to-object`
+# uses phino's `splice` to insert the valueOf in front of every emit
+# marker instead.
 name: transform-distill-tail-to-object
 pattern: |
   ⟦
@@ -14,7 +30,7 @@ pattern: |
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     captures ↦ 𝑒-captures,
-    emit-shape ↦ 𝑒-emit-shape,
+    emit-shape ↦ "auto",
     body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
   ⟧
 result: |
@@ -28,7 +44,7 @@ result: |
     returned ↦ 𝑒-bridge-output,
     static ↦ 𝑒-static,
     captures ↦ 𝑒-captures,
-    emit-shape ↦ 𝑒-emit-shape,
+    emit-shape ↦ "auto",
     body ↦ ⟦
       𝐵-body,
       i-transform-tail ↦ ⟦

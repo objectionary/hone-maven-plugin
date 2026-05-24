@@ -194,7 +194,7 @@ where:
       - '"s/^I$/Ljava\\/util\\/stream\\/IntStream;/g"'
       - '"s/^J$/Ljava\\/util\\/stream\\/LongStream;/g"'
       - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream;/g"'
-  - meta: 𝑒-mapMulti-method
+  - meta: 𝑒-mapMulti-method-from-output
     function: sed
     args:
       - 𝑒-bridge-output
@@ -202,6 +202,17 @@ where:
       - '"s/^I$/mapMultiToInt/g"'
       - '"s/^J$/mapMultiToLong/g"'
       - '"s/^D$/mapMultiToDouble/g"'
+  - meta: 𝑒-mapMulti-from-output-sub
+    function: concat
+    args: ['"s/^L.+;$/"', 𝑒-mapMulti-method-from-output, '"/g"']
+  - meta: 𝑒-mapMulti-method
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - 𝑒-mapMulti-from-output-sub
+      - '"s/^I$/mapMulti/g"'
+      - '"s/^J$/mapMulti/g"'
+      - '"s/^D$/mapMulti/g"'
   - meta: 𝑒-mapMulti-signature
     function: concat
     args: ['"("', 𝑒-sam-class, '")"', 𝑒-output-stream-type]

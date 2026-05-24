@@ -306,10 +306,11 @@ The previous round of work landed three relevant pieces:
   Phino is pinned to `0.0.0.70`
   (required for the rule-chaining fix in phino#714).
 
-`streams-full-non-terminal.yml`'s `after.invokedynamic` remains 21
-  because the flagship's flatMap calls are adjacent to mapMulti (cps+cps),
-  one mapMulti is adjacent to filter (blocked by a workaround guard in 401c —
+`streams-full-non-terminal.yml`'s `after.invokedynamic` sits at 21
+  because the flagship's flatMap calls are adjacent to mapMulti (cps+cps,
+  no fusion rule because Step 3's 401d was reverted —
   see Step 2 below),
+  filter is now cps (Step 2 landed),
   and sorted / limit have not yet been migrated to driver-shape.
 
 ### The splice-doesn't-recurse constraint
@@ -355,70 +356,132 @@ Keep the `emit-context ↦ "top-level"` annotations on every other producer;
 **Result.**
 Commit as a single chore commit.
 
-### Step 2 — Make filter's distill body self-contained, drop the 401c filter guard
+### Step 2 — Make filter's distill body self-contained (landed, cps revision)
 
-Commit `88259f67` added a `not eq: 𝑒-second-start "filter"` guard to
-  `401c-fuse-cps-auto.phr` as a workaround.
-Filter's distill body (produced by `305-object-filter-to-distill.phr`
-  or `304-primitive-filter-to-distill.phr`)
-  consumes the item via its predicate
-  without a self-contained `dup`
-  and relies on the externally-inserted dup from
-  `281-insert-dup-before-filter.phr`
-  (or `282-insert-dup-before-transformed-filter.phr`).
-When mapMulti precedes the filter,
-  281 does not fire
-  (it matches an auto+filter neighbour pair,
-  not a cps+filter pair),
-  so 401c's splice of the filter body produces invalid bytecode.
+Filter was originally an auto-shape distill that relied on an
+  externally inserted dup
+  (`281-insert-dup-before-filter.phr` / `282`)
+  to keep the item alive past the predicate call.
+When `mapMulti` preceded a filter,
+  281 did not fire
+  (it matched only auto+filter neighbour pairs),
+  so 401c's splice of the filter body produced invalid bytecode.
+A workaround guard
+  `not eq: 𝑒-second-start "filter"` in `401c-fuse-cps-auto.phr`
+  blocked the fusion at the cost of one extra invokedynamic
+  per `mapMulti.filter` adjacency.
 
-**Mechanism.**
+**Final shape.**
 
-Rewrite `305-object-filter-to-distill.phr` and `304-primitive-filter-to-distill.phr`
-  so the filter distill body is self-contained:
-  the body starts with a `dup` opcode,
-  runs the predicate against the duplicated item,
-  branches on the result,
-  and either falls through (item still on stack, emit goes via the auto contract)
-  or `pop` + skip to the end of the body
-  (item discarded, no emit).
-The body must respect the existing auto distill contract
-  (item on stack in, item on stack out at the single emit point).
+Both `305-object-filter-to-distill.phr` and
+  `304-primitive-filter-to-distill.phr`
+  now produce a **cps-shape** distill
+  (emit-shape `"cps"`,
+  zero captures,
+  body with internal `dup`,
+  predicate call,
+  `ifne` branch on the boolean result,
+  `pop` + `goto end` on reject,
+  `Φ.hone.frame` + `Φ.hone.emit` on accept,
+  end label,
+  end frame).
+The reject path uses a forward `goto` to the body's own end label
+  instead of a `Φ.jeo.opcode.return`,
+  so the body falls through to the surrounding cps wrapper's outer loop
+  (matching the contract that takeWhile / dropWhile / distinct already follow).
+The accept-branch frame declares `nstack=1 stack=item`,
+  matching the single-item-on-stack invariant of every cps emit point;
+  the end label intentionally has no explicit frame
+  so jeo computes one from context.
 
-Once 304/305 are self-contained,
-  delete `281-insert-dup-before-filter.phr`
-  and `282-insert-dup-before-transformed-filter.phr` —
-  the external-dup hack is no longer required.
-Drop the `not eq: 𝑒-second-start "filter"` guard from `401c-fuse-cps-auto.phr`.
+The 401c filter guard is gone.
+The external-dup rules
+  (`281-insert-dup-before-filter.phr`,
+  `282-insert-dup-before-transformed-filter.phr`)
+  were already deleted on `master` before this round of work.
+The transition tail-boxing rule was split in two:
 
-**Files to modify.**
+- `422-transform-distill-tail-to-object.phr` now matches only
+  `emit-shape ↦ "auto"`,
+  appending `valueOf` at the end of the body
+  (correct because the auto wrapper emits AFTER the body).
+- **new** `422b-transform-distill-cps-tail-to-object.phr`
+  matches `emit-shape ↦ "cps"` distills
+  whose body emits a primitive (`returned ∈ {B,C,D,F,I,J,S,Z}`)
+  but whose surrounding SAM expects the boxed wrapper
+  (`bridge-output` starts with `L`).
+  It rewrites the matched `Φ.hone.emit` directly into the four-opcode
+  `valueOf, aload-consumer, dup_x1, pop, invokeinterface accept`
+  triple,
+  taking the boxed-emit case out of 491's hands.
+
+`502a-cps-no-cap-to-lambda.phr` was widened to derive `mapMulti-method`
+  from both `bridge-input` (the cps body's actual input type)
+  and `bridge-output`
+  via a two-step sed dispatch
+  (`𝑒-mapMulti-method-from-output` chained into `𝑒-mapMulti-method`),
+  so a typed-bridge cps distill
+  (e.g. `Integer → Integer` from a fused filter+map block)
+  lowers to the correct `mapMulti` variant.
+
+**The Step-3 follow-up (`401d-fuse-cps-cps.phr`) was reverted.**
+The rule's naive concatenation of pre-emit / second-body / post-emit
+  binding groups causes duplicate-key errors
+  (e.g. `Duplicated attribute 'i3'`)
+  whenever both bodies use the synthetic `i1, i2, i3, …` keys
+  the 3xx-fold rules emit.
+The phino test for 401d sidestepped that by hand-writing prefixes
+  like `t0-store` / `u0-store` in the input,
+  but in production the recognition rules always use `i*`.
+The clean fix is a phino `splice` variant that performs
+  marker *replacement* with safe key renaming;
+  until that lands,
+  cps+cps fusion stays out of the pipeline
+  and the corresponding adjacencies survive as separate dispatches.
+
+**Files modified (working tree).**
 
 <!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
-| `src/main/resources/.../streams/305-object-filter-to-distill.phr`     | self-contained body with internal dup + branch         |
-| `src/main/resources/.../streams/304-primitive-filter-to-distill.phr`  | same shape, primitive comparison opcodes               |
-| `src/main/resources/.../streams/281-insert-dup-before-filter.phr`     | delete                                                 |
-| `src/main/resources/.../streams/282-insert-dup-before-transformed-filter.phr` | delete                                         |
-| `src/main/resources/.../streams/401c-fuse-cps-auto.phr`               | drop the `not eq: start "filter"` guard               |
+| `src/main/resources/.../streams/305-object-filter-to-distill.phr`     | cps emit-shape, internal dup + branch + forward goto   |
+| `src/main/resources/.../streams/304-primitive-filter-to-distill.phr`  | same, primitive comparison + dup width                 |
+| `src/main/resources/.../streams/401c-fuse-cps-auto.phr`               | filter guard removed; doc updated                      |
+| `src/main/resources/.../streams/401d-fuse-cps-cps.phr`                | deleted (binding-key collision, see above)             |
+| `src/test/phino/401d-fuse-cps-cps.yml`                                | deleted                                                |
+| `src/main/resources/.../streams/422-transform-distill-tail-to-object.phr` | locked to `emit-shape ↦ "auto"`                    |
+| `src/main/resources/.../streams/422b-transform-distill-cps-tail-to-object.phr` | new; primitive→boxed emit lowering for cps    |
+| `src/main/resources/.../streams/502a-cps-no-cap-to-lambda.phr`        | derives `mapMulti-method` from both bridge sides       |
 <!-- markdownlint-enable MD013 MD060 -->
 
-**Verification.**
+**Verification (landed).**
 
-- `bash src/test/phino/run.sh` green.
+- `bash src/test/phino/run.sh` green (69 / 69
+  after the 401d test was removed alongside the rule).
 - `mvn -Pdeep test` green.
-- Every fixture that exercises filter
-  (`streams-all-ops.yml`, `streams-fusion.yml`, the flagship)
-  passes;
-  re-pin `after.*` counts as needed.
-- The flagship's `after.invokedynamic` drops from 21
-  as the mapMulti+filter cps+auto pair finally fuses.
+- `streams-all-ops.yml` re-pinned:
+  `after.return` dropped from 17 to 16
+  (the cps filter body's reject branch
+  replaces a `return` with a `goto + emit + return`
+  per filter, balancing out across the pipeline;
+  net change is -1).
+- `streams-full-non-terminal.yml` re-pinned:
+  `after.invokedynamic` is 21
+  (was 20 on the pre-Step-2 master tip).
+  The +1 reflects the cps+cps adjacencies introduced by filter's switch
+  that 401d would have fused
+  but cannot today,
+  partially offset by mapMulti+filter cases that 401c now fuses
+  through the dropped guard.
 
 **Result.**
-Filter is a first-class auto distill;
+Filter is a first-class cps distill;
   401c no longer carries operator-specific guards.
+Adjacent cps+cps pairs stay unfused until phino offers a
+  marker-replacement splice with safe key renaming
+  (see Step 3 below — deferred).
 
-### Step 3 — Add `401d-fuse-cps-cps.phr`
+### Step 3 — Add `401d-fuse-cps-cps.phr` (deferred)
 
 The flagship's flatMaps are followed by mapMulti (cps+cps),
   and no fusion rule today handles that case.

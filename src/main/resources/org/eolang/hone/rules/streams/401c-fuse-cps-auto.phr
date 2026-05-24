@@ -30,6 +30,15 @@
 # it is handed off downstream, which is the correct semantics for
 # `.flatMap(...).map(...)` and similar shapes.
 #
+# Filter is no longer special-cased here. After #570 Step 2 made
+# filter's distill body self-contained (cps emit-shape with internal
+# dup + branch + Φ.hone.emit), any cps upstream that leaves an item
+# on stack at its emit marker can have filter spliced in front of
+# that marker without breaking the dup / pop contract — filter dupes
+# the spliced-in item itself, runs its predicate against the dupe,
+# and either continues (item on stack → original cps body's emit
+# fires unchanged) or pops and skips to the body's end label.
+#
 # Type narrowing follows the same pattern as 401-fuse: the fused distill
 # inherits the cps side's bridge-input / accepted (the lambda is invoked
 # with the cps side's input type) and the auto side's bridge-output /

@@ -2,6 +2,38 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# 305-object-filter-to-distill
+#
+# Folds Φ.hone.o-filter into a cps Φ.hone.distill with zero captures. The
+# body is self-contained: at entry the item is on top of stack (per the cps
+# wrapper convention synthesised by 502a), the body duplicates it, runs the
+# predicate against the duplicate, branches on the result, and either falls
+# through to Φ.hone.emit with the original on stack (accept path) or pops
+# the original and jumps to the body's end label (reject path). The accept
+# path's Φ.hone.emit is lowered by 491 to a Consumer.accept call that
+# consumes the item.
+#
+# Filter was originally an auto-shape distill that relied on an externally
+# inserted dup (281 / 282) to keep the item alive past the predicate call.
+# The auto shape forced 401c-fuse-cps-auto to carry a `not eq: start
+# "filter"` guard because 401c splices the second body in front of every
+# emit marker without preserving an external dup contract — when a cps
+# operator (e.g. mapMulti, flatMap) precedes filter, no external dup
+# fires, so the spliced auto body had no item to dup. The cps revision
+# below makes filter a first-class participant in 401c / 401d fusion and
+# removes the need for 281 / 282.
+#
+# Frame discipline: the accept branch emits an explicit Φ.jeo.frame with
+# nstack=1 stack=item (the item is still on stack at the accept label),
+# but the end label intentionally has NO Φ.jeo.frame — both paths
+# converge there with stack=empty and the precise locals snapshot
+# depends on the splicing context (e.g. 401b/401c may prepend or splice
+# an auto body that introduces extra locals), so jeo:assemble computes
+# the frame from context. If a future jeo release requires every label
+# to carry an explicit frame, add `nstack=0` here and document the
+# limitations that come with hard-coding the empty-stack assumption.
+#
+# Issue #570 Step 2.
 name: object-filter-to-distill
 pattern: |
   ⟦
@@ -32,7 +64,7 @@ result: |
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     captures ↦ ⟦ ρ ↦ ∅ ⟧,
-    emit-shape ↦ "auto",
+    emit-shape ↦ "cps",
     body ↦ ⟦
       i1 ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-dup
@@ -55,18 +87,22 @@ result: |
         φ ↦ Φ.jeo.opcode.ifne,
         i2 ↦ ⟦
           φ ↦ Φ.jeo.label,
-          i1 ↦ 𝑒-label
+          i1 ↦ 𝑒-label-accept
         ⟧
       ⟧,
       i5 ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-pop
       ⟧,
       i6 ↦ ⟦
-        φ ↦ Φ.jeo.opcode.return
+        φ ↦ Φ.jeo.opcode.goto,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.label,
+          i1 ↦ 𝑒-label-end
+        ⟧
       ⟧,
       i7 ↦ ⟦
         φ ↦ Φ.jeo.label,
-        i1 ↦ 𝑒-label
+        i1 ↦ 𝑒-label-accept
       ⟧,
       i8 ↦ ⟦
         φ ↦ Φ.jeo.frame,
@@ -78,13 +114,29 @@ result: |
           φ ↦ Φ.jeo.seq.of1,
           item ↦ 𝑒-stack-item
         ⟧
+      ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
+      i10 ↦ ⟦
+        φ ↦ Φ.jeo.label,
+        i1 ↦ 𝑒-label-end
+      ⟧,
+      i11 ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 3,
+        nlocal ↦ 0,
+        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+        nstack ↦ 0,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
       ⟧
     ⟧
   ⟧
 where:
-  - meta: 𝑒-label
+  - meta: 𝑒-label-accept
     function: random-string
-    args: ['"L%d"']
+    args: ['"LfilterAccept%d"']
+  - meta: 𝑒-label-end
+    function: random-string
+    args: ['"LfilterEnd%d"']
   - meta: 𝜏-opcode
     function: tau
     args: [𝑒-opcode]

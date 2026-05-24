@@ -11,12 +11,16 @@
 # boxed() between them as the only bridge back to Stream<T> (boxed is
 # not itself one of the 21 but is unavoidable for the type system).
 # The opcodes assertion pins the current count of invokedynamic in the
-# optimised class: 20 after #570 Step 2 made filter's distill body
-# self-contained (internal dup + branch) and dropped the 401c
-# `start "filter"` guard, allowing the mapMulti+filter cps+auto pair
-# to fuse. The architecture's long-term floor is one mapMulti emitter
-# per *fusable* segment; the structural reasons this particular
-# fixture sits well above that floor are:
+# optimised class: 21 after #570 Step 2 made filter's distill body
+# self-contained (cps emit-shape with internal dup + branch + forward
+# goto and a top-level Φ.hone.emit marker on the accept path). The
+# count is one higher than the pre-Step-2 baseline (20) because
+# filter's switch from auto to cps changes which adjacencies fuse via
+# 401b/401c versus which cps+cps pairs are left unfused; cps+cps
+# fusion (Step 3's 401d) is deferred until phino offers a
+# binding-collision-safe splice. The architecture's long-term floor
+# is one mapMulti emitter per *fusable* segment; the structural
+# reasons this particular fixture sits well above that floor are:
 #  - Sorted and limit are non-fusable barriers (Step 10 option A) —
 #    each of the four sorted variants and two limit calls in the
 #    pipeline survives as its own invokeinterface dispatch and forces
@@ -34,7 +38,14 @@
 #    flatMap cps body (the auto leaves an item on stack, which the
 #    flatMap lambda happily consumes), but in this fixture no flatMap
 #    sits directly downstream of an auto distill.
-# Together those reasons account for the bulk of the 20 invokedynamic
+#  - Adjacent cps+cps pairs (filter→distinct, filter→takeWhile,
+#    distinct→takeWhile, etc.) cannot fuse today: the would-be 401d
+#    rule that replaces the first body's emit marker with the second
+#    body's opcodes hits binding-key collisions when both bodies
+#    carry `i1, i2, i3, ...` synthetic keys, so the rule was removed
+#    pending a future phino splice variant that performs marker
+#    replacement (rather than insert-before) with safe key renaming.
+# Together those reasons account for the bulk of the 21 invokedynamic
 # dispatches that remain. See issues #556 and #570.
 java: |
   package allnonterminal;
@@ -99,4 +110,4 @@ log:
 before:
   invokedynamic: 23
 after:
-  invokedynamic: 20
+  invokedynamic: 21

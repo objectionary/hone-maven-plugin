@@ -56,4 +56,4 @@ after:
   invokestatic: 26
   invokevirtual: 12
   invokedynamic: 16
-  return: 17
+  return: 16

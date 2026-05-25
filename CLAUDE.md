@@ -153,7 +153,7 @@ adjacent in the same method body. `501` then synthesises a single
 private `BiConsumer` wrapper for each remaining distill, and
 `502a`/`502b` lower the distill to the `mapMulti` dispatch pair.
 
-#### Multi-emit fusion is supported (Step 7, landed)
+#### Multi-emit fusion is supported
 
 `401c-fuse-cps-auto` now uses phino's `splice` where-function
 (objectionary/phino#708, shipped in phino 0.0.0.69) to insert the
@@ -168,7 +168,7 @@ captured `Consumer`), so the guard correctly leaves their adjacent
 auto neighbours unfused; that limitation is a property of 215's
 body shape, not of 401c.
 
-#### CPS+CPS fusion is supported (Step 3, landed — capture union ≤ 1)
+#### CPS+CPS fusion is supported (capture union ≤ 1)
 
 `401d-fuse-cps-cps` fuses two adjacent cps distills using phino's
 `graft` where-function (objectionary/phino#721, shipped in phino
@@ -214,7 +214,7 @@ the surviving emit markers; lowering by 491 + 502a sees the merged
 distill exactly as it would see any single-operator zero- or
 one-capture cps distill.
 
-#### Typed-bridge fusion is supported (Step 8c, landed)
+#### Typed-bridge fusion is supported
 
 `401b-fuse-auto-cps` and `401c-fuse-cps-auto` previously locked
 both sides to `bridge-input ↦ "Ljava/lang/Object;"` (and likewise
@@ -268,7 +268,7 @@ verified by running every `streams-*.yml` fixture under
 `-Dhone.small-steps=true` and observing 513 firing in
 `streams-closures`, `streams-fusion`, and `streams-sources`.
 
-### Sorted and limit stay non-fusable (issue #570, Step 10)
+### Sorted and limit stay non-fusable
 
 Two stream operators are deliberately excluded from the distill
 migration above: `sorted` and `limit`. They are *fundamentally* incompatible

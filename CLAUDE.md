@@ -611,42 +611,64 @@ Status: **partial — auto-first cells landed, cps-first / driver
   still blocked above). Re-pinning is therefore a no-op
   pending the cps-first follow-up.
 
-### Step 7c — Upstream into driver (2 fusion cells, needs design first)
+### Step 7c — Upstream into driver: decided as option (b), skip
 
-The remaining matrix cells are 401e (auto + driver) and 401f
-  (cps + driver). The upstream body must apply ITS transform to each
-  item BEFORE the driver collects / counts / sorts it. The natural
-  splice target is the driver's intake position (e.g. just before
-  sorted's `list.add(...)`, just before limit's per-iteration emit),
-  which currently carries no marker.
+The remaining matrix cells 401e (auto + driver) and 401f
+  (cps + driver) require the upstream body to apply ITS transform
+  to each item BEFORE the driver collects / counts / sorts it. The
+  natural splice target is the driver's intake position (e.g. just
+  before sorted's `list.add(...)`, just before limit's per-iteration
+  emit), which currently carries no marker.
 
-**Open design question.** Pick one before dispatching to a sub-
-agent:
+**Decision: option (b).** Skip 401e and 401f. Each driver retains
+  an upstream auto / cps chain as its own dispatch — the chain
+  lowers to one `mapMulti` invokedynamic and the driver to one
+  `invokestatic`. The matrix is therefore complete EXCEPT for the
+  upstream-into-driver column, and that gap is accepted. No
+  `Φ.hone.intake` marker is added; the driver-body discipline
+  stays emit-only.
 
-- (a) Add a `Φ.hone.intake` top-level marker to 213 / 214 / 216
-  bodies and a corresponding lowering. 401e / 401f then splice the
-  upstream body at every intake marker. Architecturally parallel to
-  the existing emit-marker discipline; preserves the splice / graft
-  top-level constraint.
-- (b) Skip 401e / 401f. Accept that each driver retains an upstream
-  auto / cps chain as its own dispatch — the chain lowers to one
-  `mapMulti` invokedynamic and the driver to one `invokestatic`.
-  Step 7a + 7b alone will already drop the flagship's
-  `after.invokedynamic` considerably (sorted → sorted, driver →
-  cps fusions collapse), just not all the way to zero.
-- (c) Hybrid: only auto + driver via the intake-marker mechanism
-  (smaller scope, since auto bodies are one-shot). Defer cps +
-  driver — cps emits zero-or-more items per upstream item, which
-  needs a more complex "each emit becomes an intake" splice.
+The substep produces no new rule files. The flagship's
+  `after.invokedynamic` floor under (b) is bounded by the number
+  of driver barriers with non-empty upstream chains; Step 8's
+  audit pins the exact value. The drop is unlocked once Step 7e
+  ships a multi-capture `501-distill-to-driver-method` (today's
+  zero-capture lowering leaves every 213 / 214 / 216 distill
+  falling through to 607b / c / d, so the recognise / unrecognise
+  pair cancels and bytecode is unchanged).
 
-If option (a) or (c) is chosen, this substep also defines and
-  documents the `Φ.hone.intake` marker. If option (b) is chosen,
-  this substep is empty and Step 8 absorbs the consequent floor on
-  the flagship count.
+### Step 7e — Extend 501-driver to multi-capture
+
+`501-distill-to-driver-method.phr` today hardcodes zero captures
+  in its pattern — it lowers a driver distill with `captures ↦ ⟦
+  ρ ↦ ∅ ⟧` only. Every existing driver producer (213, 214, 216)
+  emits 1-or-more captures, so the lowering never fires on real
+  pipelines and the paired 607b / 607c / 607d unrecognise rules
+  always take the distill back to its original `invokeinterface`
+  opcode form. Net bytecode is unchanged today.
+
+Extend 501-driver to thread N captures through the synthesised
+  private static method's signature. The method already takes
+  `(Iterator, Consumer)V`; the multi-capture variant becomes
+  `(cap0, …, capN, Iterator, Consumer)V`. Capture types come from
+  each `Φ.hone.capture` formation's `type ↦ "..."` binding;
+  capture init opcodes splice into the caller body just before
+  the synthesised `invokestatic` call (same shape that
+  `502b-cps-one-cap-to-lambda` uses for its single-capture
+  variant). The 213-driver init is a `new ArrayList + dup +
+  invokespecial` triple; the 214-driver init is a Comparator
+  `invokedynamic` plus the same ArrayList triple; the 216-driver
+  init is the placeholder `iconst_1 + newarray long` (the count
+  is carried inline as `count ↦ 𝑒-count` on the capture
+  formation and reconstructed by 607d if unrecognise fires).
+
+Once 7e lands, Step 7d's re-pin pass sees actual drift on every
+  fixture that has a sorted or limit barrier; Step 8 audits the
+  final flagship floor.
 
 ### Step 7d — Re-pin all affected fixtures
 
-After Steps 7a / 7b / 7c, run `mvn -Pdeep test` and walk through
+After Steps 7a / 7b / 7e, run `mvn -Pdeep test` and walk through
   every fixture whose `after.invokedynamic` (or other `after.*`
   count) drifts. Re-pin in place. Document the new floor in the
   fixture header — including which adjacencies in each pipeline
@@ -655,10 +677,13 @@ After Steps 7a / 7b / 7c, run `mvn -Pdeep test` and walk through
   etc.).
 
 **Result.**
-Every adjacent operator pair that admits a splice-based fusion is
-  fused. Every transition crosses any emit-shape boundary. The
-  flagship pipeline collapses to its structural floor — exact value
-  depends on 7c's design choice.
+Every adjacent operator pair on the auto / cps / driver-as-first
+  side of the matrix is fused. Transitions cross the auto + cps
+  boundary on the second side; cps-first and driver cells across
+  transitions remain residual. The flagship pipeline collapses to
+  its 7c (b) floor: one invokedynamic per upstream chain plus one
+  invokestatic per driver barrier, bridged where 401i fuses
+  adjacent drivers.
 
 ### Step 8 — Final verification
 
@@ -672,7 +697,7 @@ Find the merge-base of the current branch and `origin/master`:
 Check out that SHA in a worktree.
 Run `mvn -Pdeep test` and capture per-fixture timings.
 This is the baseline,
-  before any of Steps 4 / 7a / 7b / 7c / 7d changed the codebase.
+  before any of Steps 4 / 7a / 7b / 7e / 7d changed the codebase.
 
 **HEAD verification.**
 
@@ -683,28 +708,26 @@ Back on the working branch,
 
 **Fixture audit.**
 
-The flagship `streams-full-non-terminal.yml`'s `after.invokedynamic`
-  target depends on the Step 7c design choice:
+7c was decided as option (b): skip 401e / 401f. The flagship's
+  `after.invokedynamic` floor is set by the number of driver
+  barriers with non-empty upstream chains. Each such barrier
+  costs one `mapMulti` invokedynamic for the unfused upstream
+  chain plus one driver `invokestatic` for the barrier itself.
+  With 4 sorted + 2 limit barriers, that's up to 6 invokedynamic,
+  less for chains that bridge other barriers via 401i
+  (driver+driver) fusion.
 
-- If 7c (a) or 7c (c) lands (intake marker enables upstream-into-
-  driver fusion), the flagship reaches **0** — driver distills
-  lower via 501-driver to `invokestatic`, not `invokedynamic`.
-- If 7c (b) is chosen (skip 401e / 401f), the flagship's floor is
-  set by the number of driver barriers with non-empty upstream
-  chains. Each such barrier costs one `mapMulti` invokedynamic for
-  the unfused upstream chain plus one driver `invokestatic` for
-  the barrier itself. With 4 sorted + 2 limit barriers, that's up
-  to 6 invokedynamic, less for chains that bridge other barriers
-  via 401i (driver+driver) fusion.
-
-Other fixtures' expected counts under 7c (a/c):
-  pipelines with at least one sorted or limit → 0 invokedynamic;
+Other fixtures' expected counts under 7c (b):
   pipelines with no sorted / limit → exactly 1 invokedynamic
-  (the single fused mapMulti emitted by 501).
+  (the single fused mapMulti emitted by 501);
+  pipelines with at least one sorted / limit → one
+  `invokestatic` per driver barrier plus one `invokedynamic`
+  per non-empty upstream chain, minus driver+driver fusions
+  collapsed by 401i.
 
-Under 7c (b), each fixture's count is bounded below by the number
-  of barrier-separated chains. If a fixture's count is higher
-  than the design's target, the residue points to a fusion gap
+Each fixture's count is bounded below by the number of
+  barrier-separated chains. If a fixture's count is higher
+  than the target, the residue points to a fusion gap
   the matrix missed — identify which adjacency does not fuse and
   either add the missing rule or document the residue in the
   fixture's explanatory header.

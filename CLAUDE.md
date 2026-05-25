@@ -311,10 +311,14 @@ The mechanics:
   through a `Φ.hone.lambda` intermediate (the intermediate would let
   214 re-fire and loop). 212 and 607 were deleted alongside 214/607c
   for the same fixed-point-loop reason.
-- `216-recognize-limit-ldc` recognises `ldc + Stream.limit(J)` as
-  `Φ.hone.limit`. The mirror rule `722-limit-ldc-to-invokeinterface`
-  lowers it back when nothing fuses it. Step 6 will replace this pair
-  with a driver-shape recognition carrying one `long[1]` capture.
+- `216-limit-to-driver` recognises `ldc N + invokeinterface
+  Stream.limit(J)` as a driver-shape `Φ.hone.distill` with one
+  `long[1]` counter capture; the count is preserved as a capture-
+  local `count ↦ 𝑒-count` field inside c0 so the inverse rule
+  `607d-limit-driver-to-ldc-invokeinterface` can rebuild the original
+  `ldc N` opcode without parsing init opcodes. Init is a placeholder
+  long[1] allocation; the real per-element `counter[0]-- > 0` loop is
+  for Step 7/8 once the multi-capture driver lowering exists.
 
 The practical consequence: every `sorted` and `limit` call survives as
 its own `invokeinterface` dispatch, and the `streams-full-non-terminal`
@@ -392,9 +396,9 @@ pattern: |
   ⟧
 ```
 
-Flat raw-opcode recognition (like `216-recognize-limit-ldc.phr`) is
-fine when the produced pragma never needs an enclosing-class field
-downstream — `Φ.hone.limit`'s lowering by 722 doesn't read it. Driver-
+Flat raw-opcode recognition (matching `Φ.jeo.opcode.*` anywhere
+without descending into the outer `Φ.jeo.class`) is fine for named
+pragmas that never need an enclosing-class field downstream. Driver-
 shape recognition does need it, so the deep pattern shape above is
 mandatory.
 
@@ -455,76 +459,15 @@ The existing `501-distill-to-mapMulti.phr` remains the lowering
 
 **Result.**
 The driver lowering pathway is in place,
-  ready for Step 6 to produce a driver-shape distill for `limit`.
-
-### Step 6 — Migrate `limit` to driver emit-shape
-
-Expected outcome: limit is recognised as driver-shape;
-  the actual `after.invokedynamic` drop happens after Step 7
-  closes the fusion-rule matrix.
-
-**Mechanism.**
-
-Add a 2xx-recognition rule
-  for `Stream.limit(N)`
-  that produces a `Φ.hone.distill` with `emit-shape ↦ "driver"`,
-  one `long[1]` capture for the counter,
-  and an iterator-style body of shape:
-
-```text
-while (source.hasNext() && counter[0]-- > 0) {
-  emit(source.next());      -- top-level Φ.hone.emit
-}
-```
-
-`216-recognize-limit-ldc.phr` recognises limit today as a named pragma
-  `Φ.hone.limit`,
-  and `722-limit-ldc-to-invokeinterface.phr` lowers it back.
-Replace both with the new driver-style migration.
-
-**Critical: limit's counter must combine correctly with upstream fusion.**
-
-When 401b fuses an auto upstream into a driver-limit,
-  the auto body's emits must each decrement the counter,
-  not just the limit body's own emits.
-This works automatically if the auto body is spliced AT the limit's
-  per-iteration `emit(...)` point —
-  the auto body's transform runs once per iteration,
-  the emit fires once,
-  the counter decrements once.
-Verify this invariant by inspecting a small-steps `.phi.NN` trace
-  of `.map(...).limit(5)` after the migration.
-
-**Files to modify.**
-
-<!-- markdownlint-disable MD013 MD060 -->
-| File                                                                  | Change                                                 |
-|-----------------------------------------------------------------------|--------------------------------------------------------|
-| **new** `src/main/resources/.../streams/215-limit-to-driver.phr`      | recognise `Stream.limit` as driver-shape distill       |
-| `src/main/resources/.../streams/216-recognize-limit-ldc.phr`          | delete or refactor                                     |
-| `src/main/resources/.../streams/722-limit-ldc-to-invokeinterface.phr` | delete                                                 |
-<!-- markdownlint-enable MD013 MD060 -->
-
-If the existing rule number 215 collides with the mapMulti recognition,
-  pick a different prefix that respects phase ordering
-  (must run after 2xx phase-boundary, before any 3xx fold).
-
-**Verification.**
-
-- `bash src/test/phino/run.sh` green.
-- `mvn -Pdeep test` green.
-- Add an expression test for limit-recognized-as-driver-shape distill.
-
-**Result.**
-Limit produces a driver-shape distill.
+  ready for Step 7 to fuse driver-shape distills with neighbours.
 
 ### Step 7 — Close the fusion-rule matrix and extend transition fusion
 
-Step 4 introduced the third emit-shape `"driver"`. Both sorted variants
-  already produce driver-shape distills (see "Sorted and limit stay
-  non-fusable" above); Step 6 will add the `limit` recogniser. The
-  second multi-emit shape pair (cps+cps via 401d) landed earlier (see
-  "CPS+CPS fusion is supported" above).
+Step 4 introduced the third emit-shape `"driver"`. The three non-
+  fusable operators (sorted, sorted(Comparator), limit) already
+  produce driver-shape distills (see "Sorted and limit stay non-
+  fusable" above). The second multi-emit shape pair (cps+cps via 401d)
+  landed earlier (see "CPS+CPS fusion is supported" above).
 The codebase now has three emit-shapes (`auto`, `cps`, `driver`)
   and three named transitions (`Φ.hone.box`, `Φ.hone.unbox`, `Φ.hone.transform`)
   but only a partial set of fusion rules.
@@ -645,7 +588,7 @@ Back on the working branch,
 `streams-full-non-terminal.yml`'s `after.invokedynamic` should be **0**.
 The flagship contains 4 sorted and 2 limit calls,
   each producing a driver-shape distill (4 sorted via 213/214, 2 limit
-  via Step 6's new rule).
+  via 216).
 Driver-shape distills lower via 501-driver to `invokestatic`,
   not `invokedynamic`,
   so a fully-fused flagship has zero invokedynamic dispatches.

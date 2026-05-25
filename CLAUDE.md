@@ -549,40 +549,67 @@ Captures merge via `join` on every cell. Bridge narrowing inherits
 
 ### Step 7b — Transition widening (411 / 412 / 413)
 
-The existing box / unbox / transform fusers hardcode
-  `emit-shape ↦ "auto"` on both sides (verify by reading
-  `412-distill-unbox-distill-to-distill.phr`). The flagship has
-  cps + transition + cps and cps + transition + auto adjacencies
-  (e.g. `.<Integer>mapMulti(...).mapToInt(Integer::intValue)`), which
-  the auto-only rules cannot fuse — each unfused transition becomes
-  a barrier that splits the pipeline.
+Status: **partial — auto-first cells landed, cps-first / driver
+  cells deferred.**
 
-Extend each of 411 / 412 / 413 to accept any combination of emit-
-  shapes on each side, using the same result-shape rule as the
-  matrix above (driver if either side is driver, cps otherwise if
-  either side is cps, auto if both sides are auto). Either widen
-  the existing patterns (replace the literal `"auto"` with a metavar
-  on each side and compute the result shape with a small `sed`
-  decision table) or split each into a 3×3 family per transition.
-  Choose based on what the where-functions allow without losing
-  pattern clarity.
+411 was already emit-shape-agnostic on its single distill: the
+  middle pragma in the `box → distill → unbox` chain carried
+  `emit-shape ↦ 𝑒-distill-emit-shape` metavar and passed through
+  to the result. No change needed there.
 
-**Files to modify.**
+412 and 413 were widened in place (option I in the original plan
+  notes) to accept `auto` OR `cps` on the SECOND side, keeping
+  the FIRST side locked to `auto`. The literal `"auto"` on the
+  second distill became `𝑒-second-emit-shape` and the result
+  distill inherits both `𝑒-second-emit-shape` and the second
+  side's captures (cps may carry one). An `or` arm in `when`
+  pins the metavar to the supported set. Body merging stays as
+  plain concatenation: the auto first leaves the converted item
+  on TOS, the transition opcode runs on TOS, and the second
+  body's leading intake (TOS for auto, leading store for cps)
+  consumes it.
+
+**Cps-first cells are intentionally NOT widened.** A cps body
+  emits via top-level `Φ.hone.emit` markers in the middle of its
+  body rather than leaving an item on TOS at the body's end, so
+  plain concatenation would land the transition opcode (and any
+  downstream body) past the emit point with no item on stack.
+  The right mechanism is splicing the transition in front of
+  every emit marker, but phino's `splice` where-function only
+  accepts metavariable binding-group needles, not synthesised
+  literal opcodes — see 422b's header for the same limitation.
+  TODO once the splice contract widens (objectionary/phino#???
+  to be filed), extend 412 / 413 to cps-first inputs.
+
+**Driver cells are deferred to Step 7c / Step 7a follow-ups.**
+  Driver-as-second-side has the same TOS-intake problem as the
+  401e / 401f cells (an upstream auto / cps must feed items
+  INTO the driver's intake, which today carries no marker).
+  Driver-as-first-side could splice the second body in front
+  of every driver emit marker via the same mechanism 401g /
+  401h use, but the surrounding transition opcode hits the
+  same literal-needle limitation as cps-first. Both cells
+  wait on the design discussion in Step 7c.
+
+**Files modified.**
 
 <!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
-| `src/main/resources/.../streams/411-box-distill-unbox-to-primitive-distill.phr` | accept any emit-shape on either side          |
-| `src/main/resources/.../streams/412-distill-unbox-distill-to-distill.phr`       | same                                          |
-| `src/main/resources/.../streams/413-distill-box-distill-to-distill.phr`         | same                                          |
+| `src/main/resources/.../streams/412-distill-unbox-distill-to-distill.phr` | widen second side to `auto` ∪ `cps`             |
+| `src/main/resources/.../streams/413-distill-box-distill-to-distill.phr`   | widen second side to `auto` ∪ `cps`             |
+| `src/test/phino/412-distill-unbox-distill-to-distill-cps.yml`             | new — pins the auto + unbox + cps cell          |
+| `src/test/phino/413-distill-box-distill-to-distill-cps.yml`               | new — pins the auto + box + cps cell            |
 <!-- markdownlint-enable MD013 MD060 -->
 
-**Verification.**
+**Verification status.**
 
-- `bash src/test/phino/run.sh` green.
-- `mvn -Pdeep test` green; re-pin any fixture whose
-  `after.invokedynamic` drops because transitions now bridge cps /
-  driver neighbours.
+- `bash src/test/phino/run.sh`: 80/80 green (78 prior + 2 new).
+- `mvn -Pdeep test`: green; no fixture counts dropped because
+  the auto-first widening is sound but the flagship's
+  cps + transition adjacencies remain unfused (cps-first cell
+  still blocked above). Re-pinning is therefore a no-op
+  pending the cps-first follow-up.
 
 ### Step 7c — Upstream into driver (2 fusion cells, needs design first)
 

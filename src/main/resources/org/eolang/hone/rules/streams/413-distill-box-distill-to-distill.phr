@@ -4,11 +4,18 @@
 # yamllint disable rule:line-length
 # Fuses an `auto` distill, a `Φ.hone.box` transition with a user
 # target (the `.mapToObj(λ)` shape produced by `205-lambda-to-box`),
-# and a second `auto` distill into a single distill. The box opcode
-# is spliced between the two original bodies. The first distill's
-# `bridge-input` / `accepted` / `start` carry through; the second
-# distill's `bridge-output` / `returned` carry through. Both distills
-# must be in the same class and have no captures.
+# and a second distill of ANY emit-shape (`auto` or `cps`) into a
+# single distill of the second side's emit-shape. The box opcode is
+# spliced between the two original bodies via plain concatenation:
+# the auto first leaves the primitive item on TOS, the box opcode
+# widens it to the wrapper class, and the second body's leading
+# intake (TOS for auto, leading store for cps) consumes it. The
+# first distill's `bridge-input` / `accepted` / `start` carry
+# through; the second distill's `bridge-output` / `returned` /
+# `emit-shape` carry through. Both distills must be in the same
+# class. The first must have no captures (auto convention); the
+# second may carry captures (cps state) which propagate to the
+# merged distill verbatim.
 #
 # Type safety is enforced via the `or` arms in `when`:
 #   - the first distill's `bridge-output` is the primitive consumed by
@@ -21,8 +28,22 @@
 # form from `206-boxed-to-box` has no opcode payload to splice and is
 # handled separately by `411`).
 #
-# Step #570 Step 8b sibling of 412: prepares fusion across an
-# `primitive → Object` boundary introduced by `.mapToObj(λ)`.
+# Cps-first widening is intentionally NOT covered here: a cps body
+# emits via top-level `Φ.hone.emit` markers in the middle of its body
+# rather than leaving an item on TOS at the body's end, so plain
+# concatenation would land the transition opcode (and any downstream
+# body) past the emit point with no item on stack. Splicing the
+# transition in front of each emit marker would be the right
+# mechanism, but phino's `splice` where-function only accepts
+# metavariable binding-group needles, not synthesised literal
+# opcodes — see 422b's header for the same limitation. TODO once the
+# splice contract widens, extend this rule to cps-first inputs.
+# Driver combinations are deferred until Step 7c.
+#
+# Step #570 Step 7b sibling of 412: widens 413 from
+# `auto + transition + auto` to `auto + transition + {auto, cps}` so
+# cps operators downstream of an `primitive → Object` boundary
+# introduced by `.mapToObj(λ)` fuse through the transition.
 name: distill-box-distill-to-distill
 pattern: |
   ⟦
@@ -36,7 +57,7 @@ pattern: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
       static ↦ 𝑒-first-static,
-      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
       emit-shape ↦ "auto",
       body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
     ⟧,
@@ -65,7 +86,7 @@ pattern: |
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-second-static,
       captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
-      emit-shape ↦ "auto",
+      emit-shape ↦ 𝑒-second-emit-shape,
       body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
     ⟧,
     𝐵-after
@@ -82,8 +103,8 @@ result: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
-      captures ↦ ⟦ ρ ↦ ∅ ⟧,
-      emit-shape ↦ "auto",
+      captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ 𝑒-second-emit-shape,
       body ↦ ⟦
         𝐵-first-body,
         𝜏-transition ↦ ⟦
@@ -100,16 +121,20 @@ result: |
     𝐵-after
   ⟧
 when:
-  or:
-    - and:
-        - eq: [𝑒-first-bridge-output, '"I"']
-        - eq: [𝑒-box-stream-class, '"java/util/stream/IntStream"']
-    - and:
-        - eq: [𝑒-first-bridge-output, '"J"']
-        - eq: [𝑒-box-stream-class, '"java/util/stream/LongStream"']
-    - and:
-        - eq: [𝑒-first-bridge-output, '"D"']
-        - eq: [𝑒-box-stream-class, '"java/util/stream/DoubleStream"']
+  and:
+    - or:
+        - eq: [𝑒-second-emit-shape, '"auto"']
+        - eq: [𝑒-second-emit-shape, '"cps"']
+    - or:
+        - and:
+            - eq: [𝑒-first-bridge-output, '"I"']
+            - eq: [𝑒-box-stream-class, '"java/util/stream/IntStream"']
+        - and:
+            - eq: [𝑒-first-bridge-output, '"J"']
+            - eq: [𝑒-box-stream-class, '"java/util/stream/LongStream"']
+        - and:
+            - eq: [𝑒-first-bridge-output, '"D"']
+            - eq: [𝑒-box-stream-class, '"java/util/stream/DoubleStream"']
 where:
   - meta: 𝜏-box-target-opcode
     function: tau

@@ -469,8 +469,8 @@ Step 4 introduced the third emit-shape `"driver"`. The three non-
   fusable" above). The second multi-emit shape pair (cps+cps via 401d)
   landed earlier (see "CPS+CPS fusion is supported" above).
 The codebase now has three emit-shapes (`auto`, `cps`, `driver`)
-  and three named transitions (`Φ.hone.box`, `Φ.hone.unbox`, `Φ.hone.transform`)
-  but only a partial set of fusion rules.
+  and three named transitions (`Φ.hone.box`, `Φ.hone.unbox`,
+  `Φ.hone.transform`) but only a partial set of fusion rules.
 This step makes the matrix complete
   so the flagship pipeline collapses end-to-end.
 
@@ -479,62 +479,99 @@ This step makes the matrix complete
 <!-- markdownlint-disable MD060 -->
 | First / Second  | auto       | cps         | driver        |
 |-----------------|------------|-------------|---------------|
-| auto            | 401 (kept) | 401b (kept) | **new 401e**  |
-| cps             | 401c (kept)| 401d (kept) | **new 401f**  |
-| driver          | **new 401g** | **new 401h** | **new 401i** |
+| auto            | 401 (kept) | 401b (kept) | **7c 401e**   |
+| cps             | 401c (kept)| 401d (kept) | **7c 401f**   |
+| driver          | **7a 401g** | **7a 401h** | **7a 401i**  |
 <!-- markdownlint-enable MD060 -->
 
-The five new cells share the same splice-based mechanism that 401c and 401d
-  use today:
-  splice the second body in front of every top-level `Φ.hone.emit` marker
-  in the first body,
-  union the captures via `join`,
-  pick `start` / `accepted` from the first,
-  pick `bridge-output` / `returned` from the second.
-The result emit-shape is:
+The split into substeps below reflects an asymmetry in the mechanism:
 
-- `"driver"` if either side is driver
-  (driver's iterator-style body is the outer shell);
-- `"cps"` if no driver but at least one cps;
-- `"auto"` only when both sides are auto
-  (the existing 401 case).
+- **Driver as FIRST side** (rows 401g/h/i — Step 7a). Driver's body has
+  top-level `Φ.hone.emit` markers at its emit phase. Splicing the
+  second body at those markers is the same well-trodden mechanism
+  401c / 401d use today. Driver is the outer shell; the second body
+  runs once per emit.
+- **Driver as SECOND side** (column 401e/f — Step 7c). The upstream
+  auto / cps must feed items INTO the driver's intake (e.g. sorted's
+  `list.add(...)` or limit's per-iteration emit). The natural splice
+  position is the driver's intake opcodes, which today carry no
+  marker. Either add a `Φ.hone.intake` marker to 213 / 214 / 216
+  bodies (architecture extension), or accept that these adjacencies
+  do not fuse and leave the upstream chain as its own dispatch.
+  The choice needs a design discussion before 7c can be dispatched
+  to a sub-agent.
 
-Decide between extending existing files
-  vs adding 401e-i as siblings
-  based on pattern divergence.
-The cleaner expected outcome
-  is one file per cell;
-  it makes the matrix legible.
+Transition widening (411 / 412 / 413) is independent of the matrix
+  cells; it lifts the `emit-shape ↦ "auto"` literal on both sides of
+  each transition rule. Lives in its own substep so it can be
+  dispatched in parallel with 7a.
 
-**Transition fusion (411 / 412 / 413).**
+### Step 7a — Driver as outer shell (3 fusion cells)
 
-The existing transition fusers hardcode `emit-shape ↦ "auto"` on both sides
-  (verify by reading `412-distill-unbox-distill-to-distill.phr:41`).
-The flagship has cps+transition+cps and cps+transition+auto
-  (e.g. `.<Integer>mapMulti(...).mapToInt(Integer::intValue)`),
-  which the auto-only rules cannot fuse.
-Each unfused transition becomes a barrier that splits the pipeline.
+Add three sibling rules that splice the second body at every top-
+  level `Φ.hone.emit` marker in the driver body:
 
-Extend each of 411 / 412 / 413
-  to accept any combination of emit-shapes on each side,
-  using the same result-shape rule as the matrix above.
-Either widen the existing patterns
-  (replace the literal `"auto"` with a metavariable on each side
-  and compute the result shape with a small `sed` decision table)
-  or split each into a 3×3 = 9-cell family per transition.
-Choose based on what the where-functions allow
-  without losing pattern clarity.
+- **401g** driver + auto — `splice` (auto body inserts before each
+  emit marker; the marker survives so emit still fires with the
+  transformed item).
+- **401h** driver + cps — `splice` (cps body inserts before each
+  emit marker; the cps body brings its own emit markers which
+  become the merged distill's new emit markers; the original
+  driver emit marker still survives but is now followed by the
+  cps body's intake — confirm by tracing a small fixture).
+- **401i** driver + driver — `graft` (second driver body REPLACES
+  each first-driver emit marker, with auto-rename of internal τ
+  bindings, exactly like 401d for cps + cps).
+
+Captures merge via `join` on every cell. Bridge narrowing inherits
+  the first side's `bridge-input` / `accepted` / `start` and the
+  second side's `bridge-output` / `returned` — same convention as
+  401-fuse / 401b / 401c / 401d. Result emit-shape stays `"driver"`.
+
+**Files to add.**
+
+<!-- markdownlint-disable MD013 MD060 -->
+| File                                                                  | Change                                                 |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| **new** `src/main/resources/.../streams/401g-fuse-driver-auto.phr`    | driver+auto via splice                                 |
+| **new** `src/main/resources/.../streams/401h-fuse-driver-cps.phr`     | driver+cps via splice                                  |
+| **new** `src/main/resources/.../streams/401i-fuse-driver-driver.phr`  | driver+driver via graft                                |
+<!-- markdownlint-enable MD013 MD060 -->
+
+**Verification.**
+
+- `bash src/test/phino/run.sh` green; add YAML pins for each new rule.
+- `mvn -Pdeep test` green.
+- `streams-full-non-terminal.yml`'s `after.invokedynamic` drops as
+  driver-driver adjacencies (sorted → sorted(Comparator), etc.) fuse.
+  Driver + downstream-cps / auto chains also collapse. Re-pin the
+  fixture and any other drifters.
+
+### Step 7b — Transition widening (411 / 412 / 413)
+
+The existing box / unbox / transform fusers hardcode
+  `emit-shape ↦ "auto"` on both sides (verify by reading
+  `412-distill-unbox-distill-to-distill.phr`). The flagship has
+  cps + transition + cps and cps + transition + auto adjacencies
+  (e.g. `.<Integer>mapMulti(...).mapToInt(Integer::intValue)`), which
+  the auto-only rules cannot fuse — each unfused transition becomes
+  a barrier that splits the pipeline.
+
+Extend each of 411 / 412 / 413 to accept any combination of emit-
+  shapes on each side, using the same result-shape rule as the
+  matrix above (driver if either side is driver, cps otherwise if
+  either side is cps, auto if both sides are auto). Either widen
+  the existing patterns (replace the literal `"auto"` with a metavar
+  on each side and compute the result shape with a small `sed`
+  decision table) or split each into a 3×3 family per transition.
+  Choose based on what the where-functions allow without losing
+  pattern clarity.
 
 **Files to modify.**
 
 <!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
-| **new** `src/main/resources/.../streams/401e-fuse-auto-driver.phr`    | auto+driver fusion                                     |
-| **new** `src/main/resources/.../streams/401f-fuse-cps-driver.phr`     | cps+driver fusion                                      |
-| **new** `src/main/resources/.../streams/401g-fuse-driver-auto.phr`    | driver+auto fusion                                     |
-| **new** `src/main/resources/.../streams/401h-fuse-driver-cps.phr`     | driver+cps fusion                                      |
-| **new** `src/main/resources/.../streams/401i-fuse-driver-driver.phr`  | driver+driver fusion                                   |
 | `src/main/resources/.../streams/411-box-distill-unbox-to-primitive-distill.phr` | accept any emit-shape on either side          |
 | `src/main/resources/.../streams/412-distill-unbox-distill-to-distill.phr`       | same                                          |
 | `src/main/resources/.../streams/413-distill-box-distill-to-distill.phr`         | same                                          |
@@ -543,24 +580,58 @@ Choose based on what the where-functions allow
 **Verification.**
 
 - `bash src/test/phino/run.sh` green.
-- `mvn -Pdeep test` green.
-- `streams-full-non-terminal.yml`'s `after.invokedynamic` drops to
-  **0** (or very close).
-  The flagship has at least one sorted (driver),
-  so the entire fused pipeline lowers to a single `invokestatic`
-  to the synthesized driver method —
-  no invokedynamic at all.
-- Pipelines with no sorted / limit
-  (e.g. `streams-sources.yml`'s flatmap block)
-  should land at exactly **1** invokedynamic
-  (the single mapMulti).
-- Re-pin every `after.*` count that shifts.
-- Add expression tests for each of the five new fusion cells.
+- `mvn -Pdeep test` green; re-pin any fixture whose
+  `after.invokedynamic` drops because transitions now bridge cps /
+  driver neighbours.
+
+### Step 7c — Upstream into driver (2 fusion cells, needs design first)
+
+The remaining matrix cells are 401e (auto + driver) and 401f
+  (cps + driver). The upstream body must apply ITS transform to each
+  item BEFORE the driver collects / counts / sorts it. The natural
+  splice target is the driver's intake position (e.g. just before
+  sorted's `list.add(...)`, just before limit's per-iteration emit),
+  which currently carries no marker.
+
+**Open design question.** Pick one before dispatching to a sub-
+agent:
+
+- (a) Add a `Φ.hone.intake` top-level marker to 213 / 214 / 216
+  bodies and a corresponding lowering. 401e / 401f then splice the
+  upstream body at every intake marker. Architecturally parallel to
+  the existing emit-marker discipline; preserves the splice / graft
+  top-level constraint.
+- (b) Skip 401e / 401f. Accept that each driver retains an upstream
+  auto / cps chain as its own dispatch — the chain lowers to one
+  `mapMulti` invokedynamic and the driver to one `invokestatic`.
+  Step 7a + 7b alone will already drop the flagship's
+  `after.invokedynamic` considerably (sorted → sorted, driver →
+  cps fusions collapse), just not all the way to zero.
+- (c) Hybrid: only auto + driver via the intake-marker mechanism
+  (smaller scope, since auto bodies are one-shot). Defer cps +
+  driver — cps emits zero-or-more items per upstream item, which
+  needs a more complex "each emit becomes an intake" splice.
+
+If option (a) or (c) is chosen, this substep also defines and
+  documents the `Φ.hone.intake` marker. If option (b) is chosen,
+  this substep is empty and Step 8 absorbs the consequent floor on
+  the flagship count.
+
+### Step 7d — Re-pin all affected fixtures
+
+After Steps 7a / 7b / 7c, run `mvn -Pdeep test` and walk through
+  every fixture whose `after.invokedynamic` (or other `after.*`
+  count) drifts. Re-pin in place. Document the new floor in the
+  fixture header — including which adjacencies in each pipeline
+  fused and which residual dispatches remain (mapMulti producers
+  with no emit markers, flatMap bodies whose emit is Stream-driven,
+  etc.).
 
 **Result.**
-Every adjacent operator pair fuses.
-Every transition crosses any emit-shape boundary.
-The pipeline collapses into one structure per source-to-terminal chain.
+Every adjacent operator pair that admits a splice-based fusion is
+  fused. Every transition crosses any emit-shape boundary. The
+  flagship pipeline collapses to its structural floor — exact value
+  depends on 7c's design choice.
 
 ### Step 8 — Final verification
 
@@ -574,7 +645,7 @@ Find the merge-base of the current branch and `origin/master`:
 Check out that SHA in a worktree.
 Run `mvn -Pdeep test` and capture per-fixture timings.
 This is the baseline,
-  before any of Steps 4-7 changed the codebase.
+  before any of Steps 4 / 7a / 7b / 7c / 7d changed the codebase.
 
 **HEAD verification.**
 
@@ -585,25 +656,31 @@ Back on the working branch,
 
 **Fixture audit.**
 
-`streams-full-non-terminal.yml`'s `after.invokedynamic` should be **0**.
-The flagship contains 4 sorted and 2 limit calls,
-  each producing a driver-shape distill (4 sorted via 213/214, 2 limit
-  via 216).
-Driver-shape distills lower via 501-driver to `invokestatic`,
-  not `invokedynamic`,
-  so a fully-fused flagship has zero invokedynamic dispatches.
+The flagship `streams-full-non-terminal.yml`'s `after.invokedynamic`
+  target depends on the Step 7c design choice:
 
-Other fixtures' expected counts:
+- If 7c (a) or 7c (c) lands (intake marker enables upstream-into-
+  driver fusion), the flagship reaches **0** — driver distills
+  lower via 501-driver to `invokestatic`, not `invokedynamic`.
+- If 7c (b) is chosen (skip 401e / 401f), the flagship's floor is
+  set by the number of driver barriers with non-empty upstream
+  chains. Each such barrier costs one `mapMulti` invokedynamic for
+  the unfused upstream chain plus one driver `invokestatic` for
+  the barrier itself. With 4 sorted + 2 limit barriers, that's up
+  to 6 invokedynamic, less for chains that bridge other barriers
+  via 401i (driver+driver) fusion.
+
+Other fixtures' expected counts under 7c (a/c):
   pipelines with at least one sorted or limit → 0 invokedynamic;
   pipelines with no sorted / limit → exactly 1 invokedynamic
   (the single fused mapMulti emitted by 501).
-If a fixture's count is higher than its target,
-  the residue points to a fusion gap
-  that Step 7's matrix missed —
-  identify which adjacency does not fuse
-  and either add the missing rule
-  or document the residue
-  in the fixture's explanatory header.
+
+Under 7c (b), each fixture's count is bounded below by the number
+  of barrier-separated chains. If a fixture's count is higher
+  than the design's target, the residue points to a fusion gap
+  the matrix missed — identify which adjacency does not fuse and
+  either add the missing rule or document the residue in the
+  fixture's explanatory header.
 
 **Result.**
 

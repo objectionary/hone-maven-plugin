@@ -290,17 +290,29 @@ survives as its own `invokeinterface` dispatch in the final bytecode.
 
 The mechanics:
 
+- `213-sorted-to-driver` recognises no-arg `Stream.sorted()` as a
+  driver-shape `Φ.hone.distill` with one ArrayList capture and a
+  placeholder top-level emit body (Step 5a). The paired
+  `607b-sorted-no-arg-driver-to-invokeinterface` reconstructs the raw
+  invokeinterface when nothing downstream consumes the distill —
+  today nothing does (501-driver hardcodes zero captures, no 4xx rule
+  fuses driver-shape yet), so the recognise/unrecognise cycle cancels
+  and bytecode is unchanged. The driver-shape pragma exists only in
+  the intermediate phino state where Step 7 fusion will hook in.
 - `212-lambda-to-sorted` recognises `Stream.sorted(Comparator)` as
   `Φ.hone.sorted`. If no later rule consumes it,
   `607-sorted-to-lambda` lowers it back to the original lambda +
-  `invokeinterface` pair, which 7xx then turns into bytecode.
+  `invokeinterface` pair, which 7xx then turns into bytecode. Step 5b
+  will replace this pair with a driver-shape recognition carrying two
+  captures (Comparator + ArrayList).
 - `216-recognize-limit-ldc` recognises `ldc + Stream.limit(J)` as
   `Φ.hone.limit`. The mirror rule `722-limit-ldc-to-invokeinterface`
-  lowers it back when nothing fuses it.
+  lowers it back when nothing fuses it. Step 6 will replace this pair
+  with a driver-shape recognition carrying one `long[1]` capture.
 
 The practical consequence: every `sorted` and `limit` call survives as
 its own `invokeinterface` dispatch, and the `streams-full-non-terminal`
-fixture pins the resulting `after.invokedynamic` count (currently 21,
+fixture pins the resulting `after.invokedynamic` count (currently 20,
 dominated by the 4 sorted + 2 limit barriers, the 5 `mapMulti` /
 `mapMultiTo*` dispatches whose user-lambda emission shape leaves no
 fusion seam, and the `flatMap` / `flatMapTo*` dispatches whose emit
@@ -342,6 +354,53 @@ walk past opcodes correctly. What is not allowed is a sub-
 formation (a separate `⟦ ... ⟧` block bound to its own
 metavariable) containing emit markers that need to be reached
 from outside.
+
+### Driver-shape recognise pattern convention
+
+Driver-shape recognise rules must descend into the enclosing
+`Φ.jeo.class` formation and capture the real class name, then set
+`class ↦ 𝑒-class-name` on the produced distill. The 5xx driver
+lowering and the Step 7 fusion-rule matrix pivot on the distill's
+`class` field — a placeholder (empty string, unbound metavar) silently
+disables both. Step 5a's `213-sorted-to-driver.phr` is the canonical
+shape:
+
+```text
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-target ↦ ⟦ ... opcodes to recognise ... ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+```
+
+Flat raw-opcode recognition (like `216-recognize-limit-ldc.phr`) is
+fine when the produced pragma never needs an enclosing-class field
+downstream — `Φ.hone.limit`'s lowering by 722 doesn't read it. Driver-
+shape recognition does need it, so the deep pattern shape above is
+mandatory.
+
+The paired 6xx unrecognise rule, on the other hand, can stay flat —
+its pattern matches the distill anywhere in any binding group and
+reconstructs the original opcode at the same depth. 5a's
+`607b-sorted-no-arg-driver-to-invokeinterface.phr` is the canonical
+shape: `𝐵-before, 𝜏-distill ↦ ⟦ ... 𝑒-c0-init, 𝐵-body ... ⟧, 𝐵-after`
+with metavar coverage on every capture init and body content so it
+matches any 213-produced distill regardless of how the body has
+evolved through later fusion attempts.
 
 ### Step 4 — Add the `"driver"` emit-shape and the 501-driver lowering
 
@@ -391,45 +450,71 @@ The existing `501-distill-to-mapMulti.phr` remains the lowering
 
 **Result.**
 The driver lowering pathway is in place,
-  ready for Steps 5 and 6 to produce driver-shape distills.
+  ready for Steps 5a / 5b and 6 to produce driver-shape distills.
 
-### Step 5 — Migrate `sorted` to driver emit-shape
+### Step 5b — Migrate `sorted(Comparator)` to driver emit-shape
 
-Expected outcome: sorted is recognised as driver-shape;
+Step 5a landed the no-arg `Stream.sorted()` pathway via
+  `213-sorted-to-driver.phr` and `607b-sorted-no-arg-driver-to-
+  invokeinterface.phr`,
+  following the driver-shape recognise convention above
+  (one ArrayList capture, placeholder top-level emit body,
+  recognise/unrecognise cancellation).
+This step adds the Comparator variant.
+
+Expected outcome: `Stream.sorted(Comparator)` is recognised as
+  driver-shape;
   the actual `after.invokedynamic` drop happens after Step 7
-  closes the fusion-rule matrix.
+  closes the fusion-rule matrix
+  and a multi-capture driver lowering exists.
 
 **Mechanism.**
 
-Add new 2xx-recognition rules
-  for `Stream.sorted()` and `Stream.sorted(Comparator)`
-  that produce a `Φ.hone.distill` with `emit-shape ↦ "driver"`,
-  one `List` capture
-  (`captures ↦ ⟦ c0 ↦ ⟦ φ ↦ Φ.hone.capture,
-  type ↦ "Ljava/util/ArrayList;", init ↦ ⟦new ArrayList⟧ ⟧, ρ ↦ ∅ ⟧`),
-  and an iterator-style body whose top-level emit marker
-  fires inside the second loop:
+Add a 2xx-recognition rule for `Stream.sorted(Comparator)`
+  that produces a `Φ.hone.distill` with `emit-shape ↦ "driver"`
+  and TWO captures:
 
-```text
-while (source.hasNext()) list.add(source.next());
-Collections.sort(list);             -- or list.sort(comparator)
-for (T x : list) emit(x);           -- emit is a top-level Φ.hone.emit
-```
+  - `c0` — `Ljava/util/Comparator;`,
+    init carrying the Comparator value
+    that was on stack when the original
+    `Stream.sorted(Comparator)` invokeinterface fired.
+  - `c1` — `Ljava/util/ArrayList;`,
+    init = `new + dup + invokespecial`
+    (same as 5a's c0).
 
-The existing `212-lambda-to-sorted.phr` recognises sorted today
-  as a named pragma `Φ.hone.sorted`,
-  and `607-sorted-to-lambda.phr`
-  converts it BACK to an invokeinterface dispatch
-  when nothing consumes it.
-Replace both rules with the new driver-style migration.
+Body shape: same iterator-style sort loop as 5a's body
+  (placeholder top-level `Φ.hone.emit` for Step 7 splice / graft
+  to hook in;
+  real `while hasNext / list.sort(comparator) / for-each` loop
+  arrives once the multi-capture driver lowering lands).
+
+**Schema decision before starting.**
+
+The Comparator capture's init shape is open;
+  decide before writing the rule
+  because it affects 502b / 501-driver's
+  multi-capture handling and Step 7's fusion-rule patterns:
+
+- (a) Single `Φ.jeo.opcode.invokedynamic` carrying the lambda's
+  target handle and signatures inline. Self-contained but bigger
+  init block.
+- (b) Indirect via a separate `Φ.hone.lambda` formation kept
+  alongside the distill. Smaller init but requires care when 7xx
+  lowers lambdas.
+
+The existing `212-lambda-to-sorted.phr` recognises
+  `Stream.sorted(Comparator)` today
+  via a `Φ.hone.lambda` intermediary —
+  option (b) reuses that pathway,
+  option (a) bypasses it.
 
 **Files to modify.**
 
 <!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
-| **new** `src/main/resources/.../streams/213-sorted-to-driver.phr`     | recognise `Stream.sorted()` as driver-shape distill    |
-| **new** `src/main/resources/.../streams/214-sorted-comparator-to-driver.phr` | recognise `Stream.sorted(Comparator)` as driver-shape distill |
+| **new** `src/main/resources/.../streams/214-sorted-comparator-to-driver.phr` | recognise `Stream.sorted(Comparator)` as two-capture driver distill |
+| **new** `src/main/resources/.../streams/607c-sorted-comparator-driver-to-invokeinterface.phr` | inverse |
 | `src/main/resources/.../streams/212-lambda-to-sorted.phr`             | delete                                                 |
 | `src/main/resources/.../streams/607-sorted-to-lambda.phr`             | delete                                                 |
 <!-- markdownlint-enable MD013 MD060 -->
@@ -437,13 +522,15 @@ Replace both rules with the new driver-style migration.
 **Verification.**
 
 - `bash src/test/phino/run.sh` green.
-- `mvn -Pdeep test` green.
-- Add an expression test for sorted-recognized-as-driver-shape distill.
+- `mvn -Pdeep test` green;
+  no fixture's `after.invokedynamic` drifts
+  (recognise / unrecognise cancellation).
 
 **Result.**
-Sorted and sorted(Comparator) produce driver-shape distills.
-Step 7's fusion-rule extensions
-  are what actually let them collapse with neighbours.
+Both sorted variants now produce driver-shape distills.
+The Comparator variant carries TWO captures,
+  which makes Step 7's fusion-rule matrix
+  and the eventual multi-capture driver lowering load-bearing.
 
 ### Step 6 — Migrate `limit` to driver emit-shape
 
@@ -508,8 +595,10 @@ Limit produces a driver-shape distill.
 
 ### Step 7 — Close the fusion-rule matrix and extend transition fusion
 
-Steps 3, 5, and 6 introduced the third emit-shape `"driver"`
-  and the second multi-emit shape pair (cps+cps via 401d).
+Step 4 introduced the third emit-shape `"driver"` and Steps 5a / 5b
+  and 6 added the recognise rules that produce it. The second multi-
+  emit shape pair (cps+cps via 401d) landed earlier (see "CPS+CPS
+  fusion is supported" above).
 The codebase now has three emit-shapes (`auto`, `cps`, `driver`)
   and three named transitions (`Φ.hone.box`, `Φ.hone.unbox`, `Φ.hone.transform`)
   but only a partial set of fusion rules.
@@ -629,7 +718,7 @@ Back on the working branch,
 
 `streams-full-non-terminal.yml`'s `after.invokedynamic` should be **0**.
 The flagship contains 4 sorted and 2 limit calls,
-  each producing a driver-shape distill after Step 5/6.
+  each producing a driver-shape distill after Steps 5a / 5b / 6.
 Driver-shape distills lower via 501-driver to `invokestatic`,
   not `invokedynamic`,
   so a fully-fused flagship has zero invokedynamic dispatches.

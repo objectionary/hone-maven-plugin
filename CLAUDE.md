@@ -317,259 +317,31 @@ in the Active plan section below.
 ## Active plan: fuse every non-terminal pipeline into one structure
 
 The flagship fixture
-  `src/test/resources/org/eolang/hone/optimize/streams-full-non-terminal.yml`
-  sits at `after.invokedynamic: 21`.
-The plan below covers the work still required
-  to bring every non-terminal pipeline to a single fused structure —
-  one `mapMulti` invokedynamic
-  for pipelines with no sorted / limit,
-  one `invokestatic` to a synthesized driver method
-  (zero invokedynamic) for pipelines with sorted or limit.
+`src/test/resources/org/eolang/hone/optimize/streams-full-non-terminal.yml`
+sits at `after.invokedynamic: 20`. The steps below cover the work
+still required to bring every non-terminal pipeline to a single
+fused structure — one `mapMulti` invokedynamic for pipelines with
+no `sorted` / `limit`, and one `invokestatic` to a synthesised
+driver method (zero invokedynamic) for pipelines that have either.
 
-Sub-agents should treat this section as their working brief
-  and pick up the next unfinished step in order.
+Sub-agents should treat this section as their working brief and
+pick up the next unfinished step in order.
 
-### Current state
+### The splice / graft top-level constraint
 
-The previous round of work landed three relevant pieces:
+Phino's `splice` and `graft` where-functions walk ONLY the top
+level of the binding group they are given. They do NOT recurse
+into nested formations. They do NOT cross method boundaries.
 
-- The `emit-context ↦ "top-level"` annotation
-  on every existing `Φ.hone.emit` producer
-  (commit `5099e3f0`).
-- flatMap recognition restructured to emit an explicit
-  `Iterator.hasNext/next` loop in the cps distill body
-  with a top-level `Φ.hone.emit` marker
-  (commit `20daf333`,
-  new file `208b-primitive-flatMap-to-distill.phr` for the primitive variants).
-  `493-emit-to-foreach.phr` is gone;
-  401c's flatMap guard is gone.
-- mapMulti recognition restructured to inline the user lambda's opcodes
-  into the cps distill body
-  (commit `88259f67`).
-  New companion rules
-  `217-mapMulti-accept-to-emit.phr` and `217b/c/d`
-  rewrite each inlined accept call to a top-level `Φ.hone.emit`.
-  Phino is pinned to `0.0.0.70`
-  (required for the rule-chaining fix in phino#714).
-
-`streams-full-non-terminal.yml`'s `after.invokedynamic` continues
-  to track the residue from sorted / limit (not yet migrated to
-  driver-shape) plus the two-stateful-cps adjacencies that 401d
-  cannot fuse today (distinct → takeWhile etc., pending 502c).
-  Filter is cps (Step 2 landed) and cps+cps pairs whose merged
-  captures union is ≤ 1 fuse via 401d (Step 3 landed, scoped to
-  capture-union ≤ 1).
-
-### The splice-doesn't-recurse constraint
-
-Phino's `splice` where-function walks ONLY the top level
-  of the binding group it is given.
-It does NOT recurse into nested formations.
-It does NOT cross method boundaries.
-
-Every step in this plan obeys one rule:
-  every `Φ.hone.emit` marker that must fuse with neighbouring operators
-  lives at the TOP LEVEL of the distill `body ↦ ⟦ ... ⟧` binding group.
-Nested formations (loops with `Φ.jeo.label` / `Φ.jeo.opcode.goto`)
-  are allowed — those are opcodes in a sequence,
-  and splice walks past opcodes correctly.
-What is not allowed is a sub-formation
-  (a separate `⟦ ... ⟧` block bound to its own metavariable)
-  containing emit markers that need to be reached from outside.
-
-### Step 1 — Delete the unused `491b-emit-nested-to-accept.phr`
-
-The corrected plan never produces an `emit-context ↦ "nested-consumer"` marker.
-A sanity check confirms it
-  (`ggrep -rn 'nested-consumer' src/`
-  returns only matches inside `491b-emit-nested-to-accept.phr` itself).
-The rule is dead code.
-
-**Mechanism.**
-
-Delete `src/main/resources/org/eolang/hone/rules/streams/491b-emit-nested-to-accept.phr`.
-If a sibling test exists under
-  `src/test/phino/491b-emit-nested-to-accept.yml`,
-  delete it too.
-Keep the `emit-context ↦ "top-level"` annotations on every other producer;
-  they document the invariant and are not dead.
-
-**Verification.**
-
-- `bash src/test/phino/run.sh` green.
-- `mvn -Pdeep test` green.
-- `streams-full-non-terminal.yml`'s `after.invokedynamic` is still 21.
-
-**Result.**
-Commit as a single chore commit.
-
-### Step 2 — Make filter's distill body self-contained (landed, cps revision)
-
-Filter was originally an auto-shape distill that relied on an
-  externally inserted dup
-  (`281-insert-dup-before-filter.phr` / `282`)
-  to keep the item alive past the predicate call.
-When `mapMulti` preceded a filter,
-  281 did not fire
-  (it matched only auto+filter neighbour pairs),
-  so 401c's splice of the filter body produced invalid bytecode.
-A workaround guard
-  `not eq: 𝑒-second-start "filter"` in `401c-fuse-cps-auto.phr`
-  blocked the fusion at the cost of one extra invokedynamic
-  per `mapMulti.filter` adjacency.
-
-**Final shape.**
-
-Both `305-object-filter-to-distill.phr` and
-  `304-primitive-filter-to-distill.phr`
-  now produce a **cps-shape** distill
-  (emit-shape `"cps"`,
-  zero captures,
-  body with internal `dup`,
-  predicate call,
-  `ifne` branch on the boolean result,
-  `pop` + `goto end` on reject,
-  `Φ.hone.frame` + `Φ.hone.emit` on accept,
-  end label,
-  end frame).
-The reject path uses a forward `goto` to the body's own end label
-  instead of a `Φ.jeo.opcode.return`,
-  so the body falls through to the surrounding cps wrapper's outer loop
-  (matching the contract that takeWhile / dropWhile / distinct already follow).
-The accept-branch frame declares `nstack=1 stack=item`,
-  matching the single-item-on-stack invariant of every cps emit point;
-  the end label intentionally has no explicit frame
-  so jeo computes one from context.
-
-The 401c filter guard is gone.
-The external-dup rules
-  (`281-insert-dup-before-filter.phr`,
-  `282-insert-dup-before-transformed-filter.phr`)
-  were already deleted on `master` before this round of work.
-The transition tail-boxing rule was split in two:
-
-- `422-transform-distill-tail-to-object.phr` now matches only
-  `emit-shape ↦ "auto"`,
-  appending `valueOf` at the end of the body
-  (correct because the auto wrapper emits AFTER the body).
-- **new** `422b-transform-distill-cps-tail-to-object.phr`
-  matches `emit-shape ↦ "cps"` distills
-  whose body emits a primitive (`returned ∈ {B,C,D,F,I,J,S,Z}`)
-  but whose surrounding SAM expects the boxed wrapper
-  (`bridge-output` starts with `L`).
-  It rewrites the matched `Φ.hone.emit` directly into the four-opcode
-  `valueOf, aload-consumer, dup_x1, pop, invokeinterface accept`
-  triple,
-  taking the boxed-emit case out of 491's hands.
-
-`502a-cps-no-cap-to-lambda.phr` was widened to derive `mapMulti-method`
-  from both `bridge-input` (the cps body's actual input type)
-  and `bridge-output`
-  via a two-step sed dispatch
-  (`𝑒-mapMulti-method-from-output` chained into `𝑒-mapMulti-method`),
-  so a typed-bridge cps distill
-  (e.g. `Integer → Integer` from a fused filter+map block)
-  lowers to the correct `mapMulti` variant.
-
-**The Step-3 follow-up (`401d-fuse-cps-cps.phr`) landed in scoped form.**
-The rule's first concatenation-based attempt was reverted because
-  pre-emit / second-body / post-emit fusion caused duplicate-key
-  errors (e.g. `Duplicated attribute 'i3'`) whenever both bodies
-  used the synthetic `i1, i2, i3, …` keys that the 3xx-fold rules
-  emit. Phino 0.0.0.71 introduced `graft` (phino#721) — a `splice`
-  variant that performs marker replacement with safe key renaming —
-  and 401d was re-added on top of `graft`. The rule fires whenever
-  the merged captures union is 0 or 1 (every (filter / flatMap /
-  mapMulti) pair, plus every adjacency between such a zero-capture
-  cps producer and a one-capture cps producer like distinct /
-  takeWhile / dropWhile / skip-N), gated by phino's built-in
-  `length:` predicate. Two stateful cps producers in adjacent
-  positions still survive as separate dispatches because no `502*`
-  rule lowers multi-capture cps; see "CPS+CPS fusion is supported
-  (Step 3, landed — capture union ≤ 1)" above for the constraint
-  rationale and the future-work pointer.
-
-**Files modified (working tree).**
-
-<!-- markdownlint-disable MD013 MD060 -->
-| File                                                                  | Change                                                 |
-|-----------------------------------------------------------------------|--------------------------------------------------------|
-| `src/main/resources/.../streams/305-object-filter-to-distill.phr`     | cps emit-shape, internal dup + branch + forward goto   |
-| `src/main/resources/.../streams/304-primitive-filter-to-distill.phr`  | same, primitive comparison + dup width                 |
-| `src/main/resources/.../streams/401c-fuse-cps-auto.phr`               | filter guard removed; doc updated                      |
-| `src/main/resources/.../streams/401d-fuse-cps-cps.phr`                | re-added on top of phino's `graft`, capture union ≤ 1  |
-| `src/test/phino/401d-fuse-cps-cps.yml`                                | re-added (filter → filter, zero-capture corner of range)|
-| `src/main/resources/.../streams/422-transform-distill-tail-to-object.phr` | locked to `emit-shape ↦ "auto"`                    |
-| `src/main/resources/.../streams/422b-transform-distill-cps-tail-to-object.phr` | new; primitive→boxed emit lowering for cps    |
-| `src/main/resources/.../streams/502a-cps-no-cap-to-lambda.phr`        | derives `mapMulti-method` from both bridge sides       |
-<!-- markdownlint-enable MD013 MD060 -->
-
-**Verification (landed).**
-
-- `bash src/test/phino/run.sh` green (70 / 70 with the re-added
-  401d test).
-- `mvn -Pdeep test` green.
-- `streams-all-ops.yml` re-pinned: `after.return` dropped from 17 to 16
-  on the Step-2 switch (the cps filter body's reject branch
-  replaces a `return` with a `goto + emit + return` per filter).
-- `streams-full-non-terminal.yml` re-pinned after Steps 2 and 3.
-  The current value reflects sorted / limit (not yet migrated to
-  driver-shape) plus the two-stateful-cps adjacencies that 401d
-  cannot fuse today (distinct → takeWhile, takeWhile → skip, …).
-
-**Result.**
-Filter is a first-class cps distill;
-  401c no longer carries operator-specific guards.
-Cps+cps pairs whose merged captures union is ≤ 1 fuse via 401d
-  (Step 3, landed). Two stateful cps adjacencies stay unfused
-  until a `502c-cps-multi-cap-to-lambda` lowering lands.
-
-### Step 3 — Add `401d-fuse-cps-cps.phr` (landed, capture union ≤ 1)
-
-`401d-fuse-cps-cps.phr` is in the tree and uses phino's `graft`
-  where-function (phino#721, shipped in 0.0.0.71) to replace each
-  top-level `Φ.hone.emit` in the first body with the second body's
-  opcodes. Captures merge via `join`; the rule fires when the
-  union has cardinality 0 or 1, gated by phino's built-in
-  `length:` predicate on the two pattern-captured binding groups
-  (the predicate language has `eq` but no `le`, so the constraint
-  is unfolded into three OR'd AND-pairs covering (0,0), (0,1),
-  (1,0)). The zero / one outcomes are exactly what 502a / 502b
-  already lower.
-
-The remaining work — wiring the two-stateful-cps adjacencies
-  (distinct → takeWhile, takeWhile → skip, …) — needs a
-  `502c-cps-multi-cap-to-lambda` lowering. Once that lands, the
-  `length:` guard on 401d's `when:` clause can drop the upper
-  bound and the rule will fuse the full cps+cps matrix.
-
-**Files modified (landed).**
-
-<!-- markdownlint-disable MD013 MD060 -->
-| File                                                                  | Change                                                 |
-|-----------------------------------------------------------------------|--------------------------------------------------------|
-| `src/main/resources/.../streams/401d-fuse-cps-cps.phr`                | graft-based cps+cps fuser, capture union ≤ 1           |
-| `src/test/phino/401d-fuse-cps-cps.yml`                                | filter → filter pinning test (zero-capture corner)     |
-<!-- markdownlint-enable MD013 MD060 -->
-
-**Verification (landed).**
-
-- `bash src/test/phino/run.sh` green.
-- `mvn -Pdeep test` green.
-- `streams-full-non-terminal.yml`'s `after.invokedynamic` re-pinned.
-- Future work: drop 401d's `length:` upper bound once 502c lands,
-  and add expression tests for the two-stateful-cps cases.
-  under `src/test/resources/org/eolang/hone/rules/streams/expressions/`.
-- Re-pin the flagship fixture's `after.*` counts
-  and the explanatory header comment
-  to drop the `flatMap` / `flatMapTo*` / `mapMulti` / `mapMultiTo*`
-  lines from the structural-limit list.
-
-**Result.**
-Every multi-emit operator participates in fusion.
-The only surviving dispatches in the flagship are sorted (4) + limit (2)
-  plus a small residue of fused-segment dispatches —
-  Steps 4 / 5 / 6 address sorted and limit.
+Every step in this plan obeys one rule: every `Φ.hone.emit`
+marker that must fuse with neighbouring operators lives at the
+TOP LEVEL of the distill `body ↦ ⟦ ... ⟧` binding group. Nested
+formations (loops with `Φ.jeo.label` / `Φ.jeo.opcode.goto`) are
+allowed — those are opcodes in a sequence, and splice / graft
+walk past opcodes correctly. What is not allowed is a sub-
+formation (a separate `⟦ ... ⟧` block bound to its own
+metavariable) containing emit markers that need to be reached
+from outside.
 
 ### Step 4 — Add the `"driver"` emit-shape and the 501-driver lowering
 
@@ -844,7 +616,7 @@ Find the merge-base of the current branch and `origin/master`:
 Check out that SHA in a worktree.
 Run `mvn -Pdeep test` and capture per-fixture timings.
 This is the baseline,
-  before any of Steps 1-7 changed the codebase.
+  before any of Steps 4-7 changed the codebase.
 
 **HEAD verification.**
 

@@ -1,0 +1,115 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Pins the driver+auto fusion path introduced in #570 Step 7a. The rule
+# fires whenever a driver-shape distill (here: a 213-shape sorted
+# driver with one ArrayList capture and one placeholder top-level
+# Φ.hone.emit marker) sits adjacent to an auto-shape distill (here: a
+# 302-shape map auto distill with zero captures and an invokestatic
+# body). 401g uses phino's `splice` where-function to insert the auto
+# body in front of every top-level emit marker in the driver body — at
+# the former emit point the auto body runs against the about-to-be-
+# emitted item, transforms it, and the surviving driver marker fires
+# downstream on the transformed value. Result emit-shape stays
+# `"driver"`; downstream lowering by 501-distill-to-driver-method sees
+# the merged distill exactly as it would see any single-operator
+# driver distill.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/401g-fuse-driver-auto.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        t1 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "sorted",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "Ljava/util/ArrayList;",
+              init ↦ ⟦
+                k0-new ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.new,
+                  i1 ↦ "java/util/ArrayList"
+                ⟧,
+                k1-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+                k2-init ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.invokespecial,
+                  i2 ↦ "java/util/ArrayList",
+                  i3 ↦ "<init>",
+                  i4 ↦ "()V",
+                  i5 ↦ Φ.false
+                ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "driver",
+          body ↦ ⟦
+            b0-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧,
+        t2 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "map",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦ ρ ↦ ∅ ⟧,
+          emit-shape ↦ "auto",
+          body ↦ ⟦
+            u1 ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ "Foo",
+              i3 ↦ "lambda$0",
+              i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+              i5 ↦ Φ.false
+            ⟧
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "sorted",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦ 𝐵-merged-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦ 𝐵-fused-body, ρ ↦ ∅ ⟧
+    ⟧
+  - |
+    ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ "Foo",
+      i3 ↦ "lambda$0",
+      i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+      i5 ↦ Φ.false
+    ⟧
+  - |
+    ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧

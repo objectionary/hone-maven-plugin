@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Pins the driver+driver fusion path introduced in #570 Step 7a. The
+# rule fires whenever two adjacent driver-shape distills sit in the
+# same method body — here a 213-shape sorted (one ArrayList capture)
+# followed by a 216-shape limit (one long[1] counter capture). 401i
+# uses phino's `graft` where-function to REPLACE every top-level emit
+# marker in the first driver's body with the second driver's body —
+# at the former emission point the second driver now runs against the
+# about-to-be-emitted item and drives downstream through its own
+# top-level emit markers. The merged distill carries both captures
+# (sorted's ArrayList + limit's long[1] counter), inherits sorted's
+# bridge-input / start (so downstream routes through sorted's driver
+# lowering) and limit's bridge-output / returned. `graft` auto-renames
+# every τ-labelled binding in the grafted copy, so the synthetic
+# b0-emit / b1-… keys that 213 / 214 / 216 emit cannot collide. This
+# fixture exercises the flagship's `sorted → limit` adjacency, the
+# canonical driver+driver shape in real Java stream pipelines.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/401i-fuse-driver-driver.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        t1 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "sorted",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "Ljava/util/ArrayList;",
+              init ↦ ⟦
+                k0-new ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.new,
+                  i1 ↦ "java/util/ArrayList"
+                ⟧,
+                k1-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+                k2-init ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.invokespecial,
+                  i2 ↦ "java/util/ArrayList",
+                  i3 ↦ "<init>",
+                  i4 ↦ "()V",
+                  i5 ↦ Φ.false
+                ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "driver",
+          body ↦ ⟦
+            b0-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧,
+        t2 ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ "Foo",
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "limit",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "[J",
+              count ↦ 5,
+              init ↦ ⟦
+                k0-iconst-1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+                k1-newarray ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.newarray,
+                  i1 ↦ "long"
+                ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "driver",
+          body ↦ ⟦
+            b0-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "sorted",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦ 𝐵-merged-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦ 𝐵-fused-body, ρ ↦ ∅ ⟧
+    ⟧
+  - |
+    ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧

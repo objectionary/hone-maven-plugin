@@ -1,0 +1,130 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses two adjacent Φ.hone.distill pragmas when the first is driver-
+# shape (owns its outer loop, emits via top-level Φ.hone.emit markers)
+# and the second is cps-shape (consumes the top-of-stack item via its
+# leading store and drives downstream emission through its own
+# Φ.hone.emit markers). The cps body is spliced into the driver body
+# immediately before EVERY top-level driver emit marker — so at each
+# emission point the cps body runs against the about-to-be-emitted
+# item, applies its gate / state update, and either drives downstream
+# via its own emit markers or skips the item. Because `splice`
+# preserves the driver's original sentinel marker, the merged body
+# carries BOTH the driver's original emit markers and the cps body's
+# emit markers at top level. This is intentional: the driver emit
+# marker now sits AFTER the spliced cps body, but the cps body's
+# leading dup-and-store consumes the item before reaching it, so by
+# the time control flow reaches the driver marker the item slot is
+# in whichever state the cps body left it (consumed on the pass-
+# through path, popped on the reject path). The downstream emit
+# semantics therefore route through the cps body's own emit markers,
+# and the driver's surviving placeholder marker becomes a dead-stack
+# point that the cps body's reject branch jumps past via its
+# Lreject / Lend labels — exactly the shape 401c produces when it
+# splices an auto body into a cps body's emit position.
+#
+# `splice` is chosen over `graft` because the driver body's outer
+# control flow (the future while-hasNext / for-each loop synthesised
+# by 213 / 214 / 216) WILL want to know that a per-element emission
+# point exists in the body — keeping the original marker preserves
+# that contract while the cps body owns the actual downstream
+# dispatch. If a future driver lowering needs the driver markers
+# replaced rather than preserved, switch to `graft`; for the
+# placeholder-marker shape today both work, and `splice` mirrors
+# 401g / 401c.
+#
+# A `part-of` guard on the driver body's binding group keeps the
+# rule from firing when no emit marker exists — without it, the cps
+# distill would be consumed yet its body would land nowhere,
+# silently dropping the operation.
+#
+# Bridge narrowing follows the same pattern as 401-fuse / 401b /
+# 401c / 401d: the merged distill inherits the FIRST side's
+# `bridge-input`, `accepted`, `start` (these define how upstream
+# feeds in and which driver lowering downstream selects) and the
+# SECOND side's `bridge-output`, `returned` (each spliced cps body
+# is invoked with the driver's about-to-be-emitted item and drives
+# downstream emission of its own output type). The cps side's
+# bridge-input is trusted to align with the driver side's
+# bridge-output because they sit adjacent on the same Stream<T> in
+# the original pipeline.
+#
+# Captures merge via `join`. Result emit-shape stays `"driver"`;
+# downstream lowering by 501-distill-to-driver-method sees the
+# merged distill exactly as it would see any single-operator driver
+# distill. Issue #570 Step 7a.
+name: fuse-driver-cps
+pattern: |
+  ⟦
+    𝐵-body-head,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-second-start,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      captures ↦ ⟦ 𝐵-second-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "cps",
+      body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+when:
+  part-of:
+    - Φ.hone.emit
+    - 𝐵-first-body
+result: |
+  ⟦
+    𝐵-body-head,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-result-static,
+      captures ↦ ⟦ 𝐵-merged-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦
+        𝐵-spliced-body,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+where:
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-first-static, 𝑒-second-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'
+  - meta: 𝐵-merged-captures
+    function: join
+    args: [𝐵-first-captures, 𝐵-second-captures]
+  - meta: 𝐵-spliced-body
+    function: splice
+    args: [𝐵-first-body, Φ.hone.emit, 𝐵-second-body]

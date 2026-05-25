@@ -1,0 +1,110 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses two adjacent Φ.hone.distill pragmas when the first is driver-shape
+# (owns its own outer loop and emits via top-level Φ.hone.emit markers)
+# and the second is auto-shape (one-in-one-out body that transforms the
+# top-of-stack item). The auto body is spliced into the driver body
+# immediately before EVERY top-level Φ.hone.emit marker — so on every
+# emission point the auto body transforms the about-to-be-emitted item,
+# then the original driver marker fires on the transformed value. The
+# auto side has no captures by convention; merged captures are exactly
+# the driver's.
+#
+# The splicing is delegated to phino's `splice` where-function (landed
+# in phino 0.0.0.69, objectionary/phino#708) — the same mechanism
+# 401c uses to fuse cps + auto. On a single firing it walks the driver
+# body's binding group, and in front of every τ-binding whose `φ` value
+# equals `Φ.hone.emit` it inserts a fresh-renamed copy of the auto body.
+# A `part-of` guard on the driver body's binding group keeps the rule
+# from firing when no emit marker exists — without it, the auto distill
+# would be consumed yet its body would land nowhere, silently dropping
+# the operation. Today every driver producer (213, 214, 216) carries
+# exactly one placeholder top-level emit marker, so splicing always
+# fires against that marker.
+#
+# Bridge narrowing follows the same pattern as 401-fuse / 401b / 401c /
+# 401d: the merged distill inherits the FIRST side's `bridge-input`,
+# `accepted`, `start` (these define how upstream feeds into the wrapper
+# and which driver lowering downstream selects) and the SECOND side's
+# `bridge-output`, `returned` (each spliced auto body transforms an
+# about-to-be-emitted value into the auto's output type, which becomes
+# the merged distill's emission type). The auto side's bridge-input is
+# trusted to align with the driver side's bridge-output because they
+# sit adjacent on the same Stream<T> in the original pipeline.
+#
+# Result emit-shape stays `"driver"`; downstream lowering by the driver-
+# method rule (501-distill-to-driver-method) sees the merged distill
+# exactly as it would see any single-operator driver distill. Issue
+# #570 Step 7a.
+name: fuse-driver-auto
+pattern: |
+  ⟦
+    𝐵-body-head,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-second-start,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      captures ↦ ⟦ ρ ↦ ∅ ⟧,
+      emit-shape ↦ "auto",
+      body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+when:
+  part-of:
+    - Φ.hone.emit
+    - 𝐵-first-body
+result: |
+  ⟦
+    𝐵-body-head,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-result-static,
+      captures ↦ ⟦ 𝐵-first-captures, ρ ↦ ∅ ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦
+        𝐵-spliced-body,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+where:
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-first-static, 𝑒-second-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'
+  - meta: 𝐵-spliced-body
+    function: splice
+    args: [𝐵-first-body, Φ.hone.emit, 𝐵-second-body]

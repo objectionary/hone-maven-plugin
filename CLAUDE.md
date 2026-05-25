@@ -108,14 +108,13 @@ If you insert a rule with a prefix that lies between two phases (say,
 a prefix that reflects which invariant your rule preserves on its
 *output* — that determines what later rules see.
 
-### Every operation lives on the distill path (issue #570)
+### Every operation lives on the distill path
 
-The 3xx description above is now the *actual* behaviour — every
-non-terminal Stream operator folds to a `Φ.hone.distill` pragma, and
-the 4xx fuse pass collapses adjacent distills before 5xx emits one
-`Φ.hone.mapMulti` per remaining distill. The pragma carries two
-pieces of payload that distinguish what shape of body the wrapper
-method ends up with:
+Every non-terminal Stream operator folds to a `Φ.hone.distill`
+pragma, and the 4xx fuse pass collapses adjacent distills before
+5xx emits one `Φ.hone.mapMulti` per remaining distill. The pragma
+carries two pieces of payload that distinguish what shape of body
+the wrapper method ends up with:
 
 - **captures** — a binding group of state types
   (`captures ↦ ⟦ 𝐵-captures, ρ ↦ ∅ ⟧`) whose values become fields on
@@ -131,7 +130,7 @@ method ends up with:
   via one or more `Φ.hone.emit` markers that `491-emit-to-accept-call`
   lowers to explicit `consumer.accept(...)` calls.
 
-The full operator-to-rule mapping after Steps 1-10:
+The full operator-to-rule mapping:
 
 ```text
 filter, map, peek, mapToInt/Long/Double, boxed, dup, transform, type
@@ -257,10 +256,10 @@ the *slow-path* counterpart to the 4xx distill fuser:
   immediately followed by a `Φ.hone.unbox` pragma and synthesises a
   single `mapMultiToInt`/`Long`/`Double` lambda.
 
-Once every non-terminal folded into distill (Steps 1-10), the fast
-path's `501-distill-to-mapMulti` only ever emits *one* `mapMulti`
-formation per pipeline, so 512's input pattern stopped occurring in
-any deep-test fixture and the rule was deleted as dead code. 513
+With every non-terminal folded into distill, the fast path's
+`501-distill-to-mapMulti` only ever emits *one* `mapMulti` formation
+per pipeline, so 512's input pattern no longer occurs in any
+deep-test fixture and the rule was deleted as dead code. 513
 survives because the 2xx primitive-collapse rules (e.g.
 `232-boxed-primitive-filter-to-filter.phr`) can still leave a
 `Φ.hone.unbox` pragma adjacent to a `mapMulti` even after fusion —
@@ -282,11 +281,11 @@ with a single-pass `mapMulti` pipeline:
   would have to abort the surrounding `forEach` driver mid-stream, which
   the `BiConsumer.accept` contract has no clean way to express.
 
-The chosen approach is **option (A)** from the plan: recognise both
-operators as named pragmas so neighbouring stateless segments can still
-fuse around them, but never fold them into distill and never merge them
-into the surrounding `mapMulti`. Each `sorted` or `limit` therefore
-survives as its own `invokeinterface` dispatch in the final bytecode.
+The chosen approach: recognise both operators as named pragmas so
+neighbouring stateless segments can still fuse around them, but never
+fold them into distill and never merge them into the surrounding
+`mapMulti`. Each `sorted` or `limit` therefore survives as its own
+`invokeinterface` dispatch in the final bytecode.
 
 The mechanics:
 
@@ -314,18 +313,6 @@ value as if it were the downstream item).
 That is by design — the architecture's value is fusing the *streamable*
 part of the pipeline, not eliminating intrinsically-non-streamable
 operators.
-
-An earlier draft (#570 Steps 4-7e) prototyped a third "driver"
-emit-shape that would have folded sorted / limit into a buffered
-`Φ.hone.distill` pragma with iterator-walking + buffer-sort + per-
-element-counter bodies. The bodies were left as `Φ.hone.emit`
-placeholders pending a multi-capture 501-driver lowering, and that
-lowering turned out to need real loop opcodes synthesised at the
-producer side first — a chicken-and-egg gap that doesn't fit the
-splice / graft top-level constraint without inventing a new
-`Φ.hone.intake` marker. The driver-shape rules were reverted; the
-two-emit-shape (`auto` / `cps`) architecture above is the shipped
-form.
 
 ## phino: the only rewrite engine
 

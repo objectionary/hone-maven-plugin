@@ -1,0 +1,116 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognizes a bare `invokeinterface java/util/stream/Stream.sorted:
+# ()Ljava/util/stream/Stream;` opcode (the no-arg Stream.sorted() form
+# — the Comparator variant is handled by 212-lambda-to-sorted) and
+# folds it into a Φ.hone.distill with `emit-shape ↦ "driver"` and one
+# ArrayList capture. The capture's `init` carries the
+# `new + dup + invokespecial` triple that allocates an empty ArrayList
+# at lambda creation time; a future multi-capture driver lowering will
+# splice these opcodes into the caller body just before the driver
+# invokestatic call. The body holds a placeholder top-level
+# `Φ.hone.emit` marker so future fusion (Step 7) can splice / graft
+# against it; the real `while hasNext / sort / for-each` loop is
+# synthesized once the multi-capture driver lowering and fusion-rule
+# matrix land.
+#
+# The pattern descends into the enclosing Φ.jeo.class formation in
+# the same shape that 502a/b use, so the produced distill carries the
+# real enclosing class name in its `class` field (rather than the
+# empty-string placeholder a flat raw-opcode pattern would leave). The
+# downstream driver lowering and Step 7 fusion rules pivot on that
+# field, so it must agree with the auto/cps distill producers from
+# the start.
+#
+# If nothing downstream consumes this distill (today: every
+# downstream consumer except the zero-capture 501-driver lowering is
+# missing), the inverse rule 607b-sorted-no-arg-driver-to-
+# invokeinterface fires and reconstructs the original
+# `invokeinterface Stream.sorted()` opcode. The recognise/unrecognise
+# pair therefore has zero net effect on bytecode today, while leaving
+# the driver-shape pragma visible in the intermediate phino state
+# where Step 7 fusion will hook in. Issue #570 Step 5a.
+name: sorted-to-driver
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/Stream",
+          i3 ↦ "sorted",
+          i4 ↦ "()Ljava/util/stream/Stream;",
+          i5 ↦ Φ.true
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-distill ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "sorted",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "Ljava/util/ArrayList;",
+              init ↦ ⟦
+                k0-new ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.new,
+                  i1 ↦ "java/util/ArrayList"
+                ⟧,
+                k1-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+                k2-init ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.invokespecial,
+                  i2 ↦ "java/util/ArrayList",
+                  i3 ↦ "<init>",
+                  i4 ↦ "()V",
+                  i5 ↦ Φ.false
+                ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "driver",
+          body ↦ ⟦
+            b0-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-distill
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail']

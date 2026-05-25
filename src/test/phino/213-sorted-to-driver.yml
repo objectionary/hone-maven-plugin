@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 213 recognizes the bare `invokeinterface java/util/stream/Stream.sorted:
+# ()Ljava/util/stream/Stream;` opcode (the no-arg Stream.sorted() form)
+# inside its enclosing Φ.jeo.class formation, captures the real
+# enclosing class name, and folds the opcode into a Φ.hone.distill
+# with `emit-shape ↦ "driver"` and one ArrayList capture. The
+# Comparator variant of sorted is recognised by 212-lambda-to-sorted
+# and is out of scope here. Issue #570 Step 5a.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/213-sorted-to-driver.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 66,
+    access ↦ 33,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4096,
+      name ↦ "main",
+      descriptor ↦ "()V",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/Stream",
+          i3 ↦ "sorted",
+          i4 ↦ "()Ljava/util/stream/Stream;",
+          i5 ↦ Φ.true
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - |
+    ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Object;",
+      bridge-output ↦ "Ljava/lang/Object;",
+      start ↦ "sorted",
+      accepted ↦ "Ljava/lang/Object;",
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ "true",
+      captures ↦ ⟦
+        c0 ↦ ⟦
+          φ ↦ Φ.hone.capture,
+          type ↦ "Ljava/util/ArrayList;",
+          init ↦ ⟦
+            k0-new ↦ ⟦
+              φ ↦ Φ.jeo.opcode.new,
+              i1 ↦ "java/util/ArrayList"
+            ⟧,
+            k1-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+            k2-init ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokespecial,
+              i2 ↦ "java/util/ArrayList",
+              i3 ↦ "<init>",
+              i4 ↦ "()V",
+              i5 ↦ Φ.false
+            ⟧
+          ⟧
+        ⟧
+      ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦
+        b0-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+      ⟧
+    ⟧

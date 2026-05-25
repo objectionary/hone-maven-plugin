@@ -146,12 +146,12 @@ skip(0L)
   → 311-skip-zero-to-noop (rewritten to Φ.jeo.opcode.nop, never reaches distill)
 ```
 
-`401-fuse` (auto + auto), `401b-fuse-auto-cps` (auto then cps), and
-`401c-fuse-cps-auto` (cps then auto) compose two distills into one
-whenever they sit adjacent in the same method body. `501` then
-synthesises a single private `BiConsumer` wrapper for each remaining
-distill, and `502a`/`502b` lower the distill to the `mapMulti`
-dispatch pair.
+`401-fuse` (auto + auto), `401b-fuse-auto-cps` (auto then cps),
+`401c-fuse-cps-auto` (cps then auto), and `401d-fuse-cps-cps`
+(cps then cps) compose two distills into one whenever they sit
+adjacent in the same method body. `501` then synthesises a single
+private `BiConsumer` wrapper for each remaining distill, and
+`502a`/`502b` lower the distill to the `mapMulti` dispatch pair.
 
 #### Multi-emit fusion is supported (Step 7, landed)
 
@@ -167,6 +167,52 @@ land nowhere, silently dropping the operation. The `mapMulti` /
 captured `Consumer`), so the guard correctly leaves their adjacent
 auto neighbours unfused; that limitation is a property of 215's
 body shape, not of 401c.
+
+#### CPS+CPS fusion is supported (Step 3, landed — capture union ≤ 1)
+
+`401d-fuse-cps-cps` fuses two adjacent cps distills using phino's
+`graft` where-function (objectionary/phino#721, shipped in phino
+0.0.0.71). `graft` is the marker-replacing sibling of `splice`:
+where `splice` inserts the replacement bindings in front of every
+sentinel and keeps the sentinel in place, `graft` REPLACES the
+sentinel with the replacement. That difference is exactly what
+cps+cps fusion needs: a cps body consumes the top-of-stack item
+via its leading store and would crash if the original
+`Φ.hone.emit` marker still fired with no item left on the operand
+stack. `graft` also renames every τ-labelled binding inside the
+grafted copy on each firing, so the synthetic `i1, i2, i3, …`
+keys that 3xx-fold rules emit in every cps body cannot collide
+when the same body is grafted at multiple emit positions or
+alongside the first body's own bindings — the binding-collision
+footgun that blocked the earlier concatenation-based attempt at
+401d.
+
+Captures merge via `join`; the rule fires only when the union has
+cardinality 0 or 1, gated by phino's built-in `length:` predicate
+on the two pattern-captured binding groups in the `when:` clause.
+The predicate language has `eq` but no `le`, so the
+sum-of-lengths ≤ 1 constraint is unfolded into three OR'd AND-
+pairs: (first = 0 AND second = 0), (first = 0 AND second = 1),
+(first = 1 AND second = 0). The zero / one outcomes are exactly
+what `502a-cps-no-cap-to-lambda` and `502b-cps-one-cap-to-lambda`
+already lower. This covers every pairwise adjacency where at
+most one side carries state — every (filter / flatMap / mapMulti)
+pair, plus every (filter / flatMap / mapMulti) ↔ (distinct /
+takeWhile / dropWhile / skip-N) adjacency in either order. Two
+stateful cps producers adjacent to each other (distinct →
+takeWhile, takeWhile → distinct, …) still survive as separate
+`invokedynamic` dispatches: the merged distill would carry two
+captures and no `502*` rule lowers multi-capture cps today. A
+future `502c` would close that remaining gap.
+
+Bridge narrowing follows the same pattern as 401-fuse / 401b /
+401c: the fused distill inherits the first side's `bridge-input`,
+`accepted`, `start` and the second side's `bridge-output`,
+`returned`. The merged body keeps the cps emit-shape, so further
+fusion by 401b / 401c / 401d can splice or graft neighbours around
+the surviving emit markers; lowering by 491 + 502a sees the merged
+distill exactly as it would see any single-operator zero- or
+one-capture cps distill.
 
 #### Typed-bridge fusion is supported (Step 8c, landed)
 
@@ -306,12 +352,13 @@ The previous round of work landed three relevant pieces:
   Phino is pinned to `0.0.0.70`
   (required for the rule-chaining fix in phino#714).
 
-`streams-full-non-terminal.yml`'s `after.invokedynamic` sits at 21
-  because the flagship's flatMap calls are adjacent to mapMulti (cps+cps,
-  no fusion rule because Step 3's 401d was reverted —
-  see Step 2 below),
-  filter is now cps (Step 2 landed),
-  and sorted / limit have not yet been migrated to driver-shape.
+`streams-full-non-terminal.yml`'s `after.invokedynamic` continues
+  to track the residue from sorted / limit (not yet migrated to
+  driver-shape) plus the two-stateful-cps adjacencies that 401d
+  cannot fuse today (distinct → takeWhile etc., pending 502c).
+  Filter is cps (Step 2 landed) and cps+cps pairs whose merged
+  captures union is ≤ 1 fuse via 401d (Step 3 landed, scoped to
+  capture-union ≤ 1).
 
 ### The splice-doesn't-recurse constraint
 
@@ -424,20 +471,23 @@ The transition tail-boxing rule was split in two:
   (e.g. `Integer → Integer` from a fused filter+map block)
   lowers to the correct `mapMulti` variant.
 
-**The Step-3 follow-up (`401d-fuse-cps-cps.phr`) was reverted.**
-The rule's naive concatenation of pre-emit / second-body / post-emit
-  binding groups causes duplicate-key errors
-  (e.g. `Duplicated attribute 'i3'`)
-  whenever both bodies use the synthetic `i1, i2, i3, …` keys
-  the 3xx-fold rules emit.
-The phino test for 401d sidestepped that by hand-writing prefixes
-  like `t0-store` / `u0-store` in the input,
-  but in production the recognition rules always use `i*`.
-The clean fix is a phino `splice` variant that performs
-  marker *replacement* with safe key renaming;
-  until that lands,
-  cps+cps fusion stays out of the pipeline
-  and the corresponding adjacencies survive as separate dispatches.
+**The Step-3 follow-up (`401d-fuse-cps-cps.phr`) landed in scoped form.**
+The rule's first concatenation-based attempt was reverted because
+  pre-emit / second-body / post-emit fusion caused duplicate-key
+  errors (e.g. `Duplicated attribute 'i3'`) whenever both bodies
+  used the synthetic `i1, i2, i3, …` keys that the 3xx-fold rules
+  emit. Phino 0.0.0.71 introduced `graft` (phino#721) — a `splice`
+  variant that performs marker replacement with safe key renaming —
+  and 401d was re-added on top of `graft`. The rule fires whenever
+  the merged captures union is 0 or 1 (every (filter / flatMap /
+  mapMulti) pair, plus every adjacency between such a zero-capture
+  cps producer and a one-capture cps producer like distinct /
+  takeWhile / dropWhile / skip-N), gated by phino's built-in
+  `length:` predicate. Two stateful cps producers in adjacent
+  positions still survive as separate dispatches because no `502*`
+  rule lowers multi-capture cps; see "CPS+CPS fusion is supported
+  (Step 3, landed — capture union ≤ 1)" above for the constraint
+  rationale and the future-work pointer.
 
 **Files modified (working tree).**
 
@@ -447,8 +497,8 @@ The clean fix is a phino `splice` variant that performs
 | `src/main/resources/.../streams/305-object-filter-to-distill.phr`     | cps emit-shape, internal dup + branch + forward goto   |
 | `src/main/resources/.../streams/304-primitive-filter-to-distill.phr`  | same, primitive comparison + dup width                 |
 | `src/main/resources/.../streams/401c-fuse-cps-auto.phr`               | filter guard removed; doc updated                      |
-| `src/main/resources/.../streams/401d-fuse-cps-cps.phr`                | deleted (binding-key collision, see above)             |
-| `src/test/phino/401d-fuse-cps-cps.yml`                                | deleted                                                |
+| `src/main/resources/.../streams/401d-fuse-cps-cps.phr`                | re-added on top of phino's `graft`, capture union ≤ 1  |
+| `src/test/phino/401d-fuse-cps-cps.yml`                                | re-added (filter → filter, zero-capture corner of range)|
 | `src/main/resources/.../streams/422-transform-distill-tail-to-object.phr` | locked to `emit-shape ↦ "auto"`                    |
 | `src/main/resources/.../streams/422b-transform-distill-cps-tail-to-object.phr` | new; primitive→boxed emit lowering for cps    |
 | `src/main/resources/.../streams/502a-cps-no-cap-to-lambda.phr`        | derives `mapMulti-method` from both bridge sides       |
@@ -456,72 +506,59 @@ The clean fix is a phino `splice` variant that performs
 
 **Verification (landed).**
 
-- `bash src/test/phino/run.sh` green (69 / 69
-  after the 401d test was removed alongside the rule).
+- `bash src/test/phino/run.sh` green (70 / 70 with the re-added
+  401d test).
 - `mvn -Pdeep test` green.
-- `streams-all-ops.yml` re-pinned:
-  `after.return` dropped from 17 to 16
-  (the cps filter body's reject branch
-  replaces a `return` with a `goto + emit + return`
-  per filter, balancing out across the pipeline;
-  net change is -1).
-- `streams-full-non-terminal.yml` re-pinned:
-  `after.invokedynamic` is 21
-  (was 20 on the pre-Step-2 master tip).
-  The +1 reflects the cps+cps adjacencies introduced by filter's switch
-  that 401d would have fused
-  but cannot today,
-  partially offset by mapMulti+filter cases that 401c now fuses
-  through the dropped guard.
+- `streams-all-ops.yml` re-pinned: `after.return` dropped from 17 to 16
+  on the Step-2 switch (the cps filter body's reject branch
+  replaces a `return` with a `goto + emit + return` per filter).
+- `streams-full-non-terminal.yml` re-pinned after Steps 2 and 3.
+  The current value reflects sorted / limit (not yet migrated to
+  driver-shape) plus the two-stateful-cps adjacencies that 401d
+  cannot fuse today (distinct → takeWhile, takeWhile → skip, …).
 
 **Result.**
 Filter is a first-class cps distill;
   401c no longer carries operator-specific guards.
-Adjacent cps+cps pairs stay unfused until phino offers a
-  marker-replacement splice with safe key renaming
-  (see Step 3 below — deferred).
+Cps+cps pairs whose merged captures union is ≤ 1 fuse via 401d
+  (Step 3, landed). Two stateful cps adjacencies stay unfused
+  until a `502c-cps-multi-cap-to-lambda` lowering lands.
 
-### Step 3 — Add `401d-fuse-cps-cps.phr` (deferred)
+### Step 3 — Add `401d-fuse-cps-cps.phr` (landed, capture union ≤ 1)
 
-The flagship's flatMaps are followed by mapMulti (cps+cps),
-  and no fusion rule today handles that case.
-`401c` only fires for cps+auto.
+`401d-fuse-cps-cps.phr` is in the tree and uses phino's `graft`
+  where-function (phino#721, shipped in 0.0.0.71) to replace each
+  top-level `Φ.hone.emit` in the first body with the second body's
+  opcodes. Captures merge via `join`; the rule fires when the
+  union has cardinality 0 or 1, gated by phino's built-in
+  `length:` predicate on the two pattern-captured binding groups
+  (the predicate language has `eq` but no `le`, so the constraint
+  is unfolded into three OR'd AND-pairs covering (0,0), (0,1),
+  (1,0)). The zero / one outcomes are exactly what 502a / 502b
+  already lower.
 
-**Mechanism.**
+The remaining work — wiring the two-stateful-cps adjacencies
+  (distinct → takeWhile, takeWhile → skip, …) — needs a
+  `502c-cps-multi-cap-to-lambda` lowering. Once that lands, the
+  `length:` guard on 401d's `when:` clause can drop the upper
+  bound and the rule will fuse the full cps+cps matrix.
 
-Add a new rule `401d-fuse-cps-cps.phr`
-  that matches two adjacent cps distills
-  and merges them using `splice`:
-  the second body is spliced in front of every top-level
-  `Φ.hone.emit` marker in the first body,
-  exactly as `401c` does for cps+auto.
-The resulting distill is cps,
-  carries the union of both captures via `join`,
-  takes its `start` from the first
-  (so 491's lowering picks the right slot layout),
-  takes its `bridge-output` and `returned` from the second.
-
-The splice operation produces, at each former emit position,
-  the second body's opcodes (which themselves contain top-level emit markers).
-Those emits remain in the merged body at top level,
-  ready to be spliced further by subsequent fusion rules
-  or lowered by 491 at the end.
-
-**Files to modify.**
+**Files modified (landed).**
 
 <!-- markdownlint-disable MD013 MD060 -->
 | File                                                                  | Change                                                 |
 |-----------------------------------------------------------------------|--------------------------------------------------------|
-| **new** `src/main/resources/.../streams/401d-fuse-cps-cps.phr`        | splice-based cps+cps fuser                             |
+| `src/main/resources/.../streams/401d-fuse-cps-cps.phr`                | graft-based cps+cps fuser, capture union ≤ 1           |
+| `src/test/phino/401d-fuse-cps-cps.yml`                                | filter → filter pinning test (zero-capture corner)     |
 <!-- markdownlint-enable MD013 MD060 -->
 
-**Verification.**
+**Verification (landed).**
 
 - `bash src/test/phino/run.sh` green.
 - `mvn -Pdeep test` green.
-- `streams-full-non-terminal.yml`'s `after.invokedynamic`
-  drops as flatMap+mapMulti pairs merge.
-- Add an expression test for flatMap-followed-by-mapMulti fusion
+- `streams-full-non-terminal.yml`'s `after.invokedynamic` re-pinned.
+- Future work: drop 401d's `length:` upper bound once 502c lands,
+  and add expression tests for the two-stateful-cps cases.
   under `src/test/resources/org/eolang/hone/rules/streams/expressions/`.
 - Re-pin the flagship fixture's `after.*` counts
   and the explanatory header comment

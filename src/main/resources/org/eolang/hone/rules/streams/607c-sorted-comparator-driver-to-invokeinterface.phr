@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Inverse of 214-sorted-comparator-to-driver: lowers a Φ.hone.distill that
+# carries the sorted-comparator driver signature (start ↦ "sorted-
+# comparator", emit-shape ↦ "driver", two captures: a Comparator with an
+# inline Φ.jeo.opcode.invokedynamic init and an ArrayList with a `new +
+# dup + invokespecial` init) back into the original opcode pair:
+# `invokedynamic + invokeinterface java/util/stream/Stream.sorted:
+# (Ljava/util/function/Comparator;)Ljava/util/stream/Stream;`.
+#
+# The Comparator capture's init binding group is captured wholesale via
+# the 𝐵-c0-init metavar and spliced verbatim into the caller body just
+# before the invokeinterface opcode — that is, the original
+# Φ.jeo.opcode.invokedynamic opcode reappears at the correct stack
+# position to leave the Comparator instance on stack for sorted to
+# consume. The ArrayList capture's init is matched via metavars (any
+# shape) and dropped — the recognise/unrecognise pair has no use for it
+# because the original bytecode does not allocate a list.
+#
+# Fires whenever no downstream rule has consumed the driver-shape
+# pragma; today the only driver lowering (501-distill-to-driver-method)
+# matches zero-capture distills only, so 607c is the standard exit path
+# for the two-capture variant. The recognise/unrecognise pair therefore
+# cancels and the net bytecode is unchanged in Step 5b. The
+# `start ↦ "sorted-comparator"` literal guard keeps this rule from
+# firing on 213's no-arg distill (which carries `start ↦ "sorted"` and
+# only one ArrayList capture); 607b handles that case.
+#
+# Sibling of 607b-sorted-no-arg-driver-to-invokeinterface, which handles
+# the no-arg variant. See issue #570 Step 5b. Replaces 607-sorted-to-
+# lambda; both 212 and 607 are deleted to avoid a fixed-point loop
+# between 212 and 214 on the same Φ.hone.lambda input.
+name: sorted-comparator-driver-to-invokeinterface
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      start ↦ "sorted-comparator",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ "true",
+      captures ↦ ⟦
+        𝜏-c0 ↦ ⟦
+          φ ↦ Φ.hone.capture,
+          type ↦ "Ljava/util/Comparator;",
+          init ↦ ⟦ 𝐵-c0-init, ρ ↦ ∅ ⟧
+        ⟧,
+        𝜏-c1 ↦ ⟦
+          φ ↦ Φ.hone.capture,
+          type ↦ "Ljava/util/ArrayList;",
+          init ↦ 𝑒-c1-init
+        ⟧,
+        ρ ↦ ∅
+      ⟧,
+      emit-shape ↦ "driver",
+      body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝐵-c0-init,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/Stream",
+      i3 ↦ "sorted",
+      i4 ↦ "(Ljava/util/function/Comparator;)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-invokeinterface
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after', '𝐵-c0-init' ]

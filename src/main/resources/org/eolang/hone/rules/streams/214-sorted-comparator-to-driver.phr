@@ -1,0 +1,167 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognizes a Φ.hone.lambda whose stream call is Stream.sorted(Comparator)
+# and folds it into a Φ.hone.distill with `emit-shape ↦ "driver"` and two
+# captures. The Comparator capture's `init` carries an inline
+# Φ.jeo.opcode.invokedynamic opcode that allocates the Comparator instance
+# at lambda creation time, reconstructed verbatim from the matched
+# Φ.hone.lambda's target handle, lambda-signature, and bridge-signature.
+# The ArrayList capture's `init` carries the same `new + dup + invokespecial`
+# triple that 213 uses for the no-arg sorted() case. A future multi-capture
+# driver lowering will splice these capture inits into the caller body just
+# before the driver invokestatic call. The body holds a placeholder
+# top-level Φ.hone.emit marker so future fusion (Step 7) can splice / graft
+# against it; the real `while hasNext / sort with comparator / for-each`
+# loop is synthesized once the multi-capture driver lowering and
+# fusion-rule matrix land.
+#
+# The pattern descends into the enclosing Φ.jeo.class formation in the
+# same shape that 213 and 502a/b use, so the produced distill carries the
+# real enclosing class name in its `class` field. The `start` field is
+# "sorted-comparator" (rather than "sorted" used by 213) so the inverse
+# rule 607c can distinguish this Comparator distill from 213's no-arg
+# variant when no downstream consumer fires.
+#
+# If nothing downstream consumes this distill (today: every downstream
+# consumer except the zero-capture 501-driver lowering is missing), the
+# inverse rule 607c-sorted-comparator-driver-to-invokeinterface fires
+# and reconstructs the original invokedynamic + invokeinterface opcode
+# pair. The recognise/unrecognise pair therefore has zero net effect on
+# bytecode today, while leaving the driver-shape pragma visible in the
+# intermediate phino state where Step 7 fusion will hook in. Issue #570
+# Step 5b. Replaces 212-lambda-to-sorted and its inverse 607-sorted-to-
+# lambda; both are deleted to avoid a fixed-point loop with 214.
+name: sorted-comparator-to-driver
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-lambda ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class-name,
+          method ↦ "compare",
+          interface ↦ "()Ljava/util/function/Comparator;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)I",
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ 𝑒-static,
+          opcode ↦ 𝑒-opcode,
+          target ↦ ⟦
+            handle ↦ 𝑒-target-handle,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "sorted",
+            signature ↦ "(Ljava/util/function/Comparator;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-distill ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "sorted-comparator",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          captures ↦ ⟦
+            c0 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "Ljava/util/Comparator;",
+              init ↦ ⟦
+                k0-indy ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.invokedynamic,
+                  i2 ↦ "compare",
+                  i3 ↦ "()Ljava/util/function/Comparator;",
+                  i4 ↦ ⟦
+                    φ ↦ Φ.jeo.handle,
+                    i1 ↦ 6,
+                    i2 ↦ "java/lang/invoke/LambdaMetafactory",
+                    i3 ↦ "metafactory",
+                    i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+                    i5 ↦ Φ.false
+                  ⟧,
+                  i5 ↦ ⟦
+                    φ ↦ Φ.jeo.type,
+                    i1 ↦ "(Ljava/lang/Object;Ljava/lang/Object;)I"
+                  ⟧,
+                  i6 ↦ ⟦
+                    φ ↦ Φ.jeo.handle,
+                    i1 ↦ 𝑒-target-handle,
+                    i2 ↦ 𝑒-target-class,
+                    i3 ↦ 𝑒-target-method,
+                    i4 ↦ 𝑒-target-signature,
+                    i5 ↦ 𝑒-target-is-interface
+                  ⟧,
+                  i7 ↦ ⟦
+                    φ ↦ Φ.jeo.type,
+                    i1 ↦ 𝑒-bridge-signature
+                  ⟧
+                ⟧
+              ⟧
+            ⟧,
+            c1 ↦ ⟦
+              φ ↦ Φ.hone.capture,
+              type ↦ "Ljava/util/ArrayList;",
+              init ↦ ⟦
+                k0-new ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.new,
+                  i1 ↦ "java/util/ArrayList"
+                ⟧,
+                k1-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+                k2-init ↦ ⟦
+                  φ ↦ Φ.jeo.opcode.invokespecial,
+                  i2 ↦ "java/util/ArrayList",
+                  i3 ↦ "<init>",
+                  i4 ↦ "()V",
+                  i5 ↦ Φ.false
+                ⟧
+              ⟧
+            ⟧
+          ⟧,
+          emit-shape ↦ "driver",
+          body ↦ ⟦
+            b0-emit ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-distill
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail']

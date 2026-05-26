@@ -5,12 +5,15 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
+import com.yegor256.Jaxec;
 import com.yegor256.MayBeSlow;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
+import com.yegor256.Result;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.cactoos.io.ResourceOf;
 import org.cactoos.iterable.Mapped;
 import org.cactoos.text.IoCheckedText;
@@ -35,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -157,6 +163,111 @@ final class OptimizeMojoTest {
                 );
             }
         );
+    }
+
+    @ParameterizedTest
+    @Tag("deep")
+    @Timeout(60L)
+    @DisabledWithoutPhino
+    @MethodSource("phinoPacks")
+    @SuppressWarnings("unchecked")
+    void appliesPhinoRulesAsSpecifiedInYamlPack(final Path yml,
+        @Mktmp final Path dir) throws Exception {
+        final Map<String, Object> pack;
+        try (InputStream stream = Files.newInputStream(yml)) {
+            pack = new Yaml().load(stream);
+        }
+        final List<String> rules = (List<String>) pack.get("rules");
+        final String raw = (String) pack.get("input");
+        final List<String> expected = (List<String>) pack.get("expected");
+        if (rules == null || rules.isEmpty()) {
+            throw new IllegalStateException(
+                String.format("YAML pack '%s' must declare at least one 'rules' entry", yml)
+            );
+        }
+        if (raw == null) {
+            throw new IllegalStateException(
+                String.format("YAML pack '%s' must declare an 'input' field", yml)
+            );
+        }
+        if (expected == null || expected.isEmpty()) {
+            throw new IllegalStateException(
+                String.format("YAML pack '%s' must declare at least one 'expected' pattern", yml)
+            );
+        }
+        final Path root = Paths.get(System.getProperty("target.directory")).getParent();
+        final String trimmed = raw.replaceFirst("^\\s+", "");
+        final String content;
+        if (trimmed.startsWith("{") || trimmed.startsWith("Φ")) {
+            content = raw;
+        } else {
+            content = String.format("{%s}", raw);
+        }
+        final Path input = dir.resolve("input.phi");
+        Files.write(
+            input,
+            String.format("%s%n", content).getBytes(StandardCharsets.UTF_8)
+        );
+        final List<String> cmd = new ArrayList<>();
+        cmd.add("phino");
+        cmd.add("rewrite");
+        cmd.add("--sweet");
+        for (final String rule : rules) {
+            final Path resolved = root.resolve(rule);
+            if (!Files.exists(resolved)) {
+                throw new IllegalStateException(
+                    String.format(
+                        "rule file '%s' from pack '%s' does not exist", resolved, yml
+                    )
+                );
+            }
+            cmd.add(String.format("--rule=%s", resolved));
+        }
+        cmd.add(input.toString());
+        final Result rewrite = new Jaxec(cmd.toArray(new String[0]))
+            .withCheck(false).execUnsafe();
+        MatcherAssert.assertThat(
+            String.format(
+                "phino rewrite cannot fail for pack '%s', stderr: %s",
+                yml, rewrite.stderr()
+            ),
+            rewrite.code(),
+            Matchers.is(0)
+        );
+        final Path output = dir.resolve("output.phi");
+        Files.write(output, rewrite.stdout().getBytes(StandardCharsets.UTF_8));
+        for (final String pattern : expected) {
+            final Result match = new Jaxec(
+                "phino", "match", "--pattern", pattern, output.toString()
+            ).withCheck(false).execUnsafe();
+            MatcherAssert.assertThat(
+                String.format(
+                    "expected pattern from pack '%s' cannot fail to match%n  pattern: %s%n  actual: %s",
+                    yml, pattern, rewrite.stdout()
+                ),
+                match.code(),
+                Matchers.is(0)
+            );
+        }
+    }
+
+    /**
+     * Source method for {@link #appliesPhinoRulesAsSpecifiedInYamlPack}.
+     * Walks {@code src/test/phino/} and yields every {@code .yml} pack.
+     * @return Stream of YAML pack paths in alphabetical order
+     * @throws IOException If the directory cannot be listed
+     */
+    static Stream<Path> phinoPacks() throws IOException {
+        final Path src = Paths.get(System.getProperty("target.directory"))
+            .getParent().resolve("src").resolve("test").resolve("phino");
+        final List<Path> packs;
+        try (Stream<Path> entries = Files.list(src)) {
+            packs = entries
+                .filter(p -> p.toString().endsWith(".yml"))
+                .sorted()
+                .collect(Collectors.toList());
+        }
+        return packs.stream();
     }
 
     /**

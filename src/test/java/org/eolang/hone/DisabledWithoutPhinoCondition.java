@@ -4,6 +4,10 @@
  */
 package org.eolang.hone;
 
+import java.io.IOException;
+import org.cactoos.io.ResourceOf;
+import org.cactoos.text.IoCheckedText;
+import org.cactoos.text.TextOf;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -16,10 +20,22 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public final class DisabledWithoutPhinoCondition implements ExecutionCondition {
 
     @Override
-    @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
     public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext ctx) {
         final ConditionEvaluationResult result;
-        if (new Phino().available("0.0.0.43")) {
+        final String expected;
+        try {
+            expected = new IoCheckedText(
+                new TextOf(
+                    new ResourceOf("org/eolang/hone/default-phino-version.txt")
+                )
+            ).asString().trim();
+        } catch (final IOException ex) {
+            throw new IllegalStateException(
+                "Cannot read the pinned phino version from default-phino-version.txt",
+                ex
+            );
+        }
+        if (new Phino().available(expected)) {
             result = ConditionEvaluationResult.enabled("Phino is available");
         } else {
             result = ConditionEvaluationResult.disabled("Phino is not available");

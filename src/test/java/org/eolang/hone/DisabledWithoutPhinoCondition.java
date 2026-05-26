@@ -21,7 +21,6 @@ public final class DisabledWithoutPhinoCondition implements ExecutionCondition {
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext ctx) {
-        final ConditionEvaluationResult result;
         final String expected;
         try {
             expected = new IoCheckedText(
@@ -35,6 +34,7 @@ public final class DisabledWithoutPhinoCondition implements ExecutionCondition {
                 ex
             );
         }
+        final ConditionEvaluationResult result;
         if (new Phino().available(expected)) {
             result = ConditionEvaluationResult.enabled("Phino is available");
         } else {

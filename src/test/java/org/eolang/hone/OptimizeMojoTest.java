@@ -13,7 +13,6 @@ import com.yegor256.Result;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,7 +59,8 @@ import org.yaml.snakeyaml.Yaml;
 @ExtendWith(MktmpResolver.class)
 @SuppressWarnings({
     "PMD.AvoidDuplicateLiterals",
-    "PMD.TooManyMethods"
+    "PMD.TooManyMethods",
+    "PMD.GodClass"
 })
 final class OptimizeMojoTest {
 
@@ -170,26 +170,25 @@ final class OptimizeMojoTest {
     @Timeout(60L)
     @DisabledWithoutPhino
     @MethodSource("phinoPacks")
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "PMD.UnitTestContainsTooManyAsserts"})
     void appliesPhinoRulesAsSpecifiedInYamlPack(final Path yml,
         @Mktmp final Path dir) throws Exception {
-        final Map<String, Object> pack;
-        try (InputStream stream = Files.newInputStream(yml)) {
-            pack = new Yaml().load(stream);
-        }
+        final Map<String, Object> pack = new Yaml().load(
+            Files.readString(yml, StandardCharsets.UTF_8)
+        );
         final List<String> rules = (List<String>) pack.get("rules");
-        final String raw = (String) pack.get("input");
-        final List<String> expected = (List<String>) pack.get("expected");
         if (rules == null || rules.isEmpty()) {
             throw new IllegalStateException(
                 String.format("YAML pack '%s' must declare at least one 'rules' entry", yml)
             );
         }
+        final String raw = (String) pack.get("input");
         if (raw == null) {
             throw new IllegalStateException(
                 String.format("YAML pack '%s' must declare an 'input' field", yml)
             );
         }
+        final List<String> expected = (List<String>) pack.get("expected");
         if (expected == null || expected.isEmpty()) {
             throw new IllegalStateException(
                 String.format("YAML pack '%s' must declare at least one 'expected' pattern", yml)
@@ -258,10 +257,11 @@ final class OptimizeMojoTest {
      * @throws IOException If the directory cannot be listed
      */
     static Stream<Path> phinoPacks() throws IOException {
-        final Path src = Paths.get(System.getProperty("target.directory"))
-            .getParent().resolve("src").resolve("test").resolve("phino");
         final List<Path> packs;
-        try (Stream<Path> entries = Files.list(src)) {
+        try (Stream<Path> entries = Files.list(
+            Paths.get(System.getProperty("target.directory"))
+                .getParent().resolve("src").resolve("test").resolve("phino")
+        )) {
             packs = entries
                 .filter(p -> p.toString().endsWith(".yml"))
                 .sorted()

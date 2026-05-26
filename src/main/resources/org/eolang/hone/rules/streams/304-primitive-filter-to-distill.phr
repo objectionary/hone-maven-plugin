@@ -2,23 +2,6 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 304-primitive-filter-to-distill
-#
-# Primitive-stream counterpart of 305. Folds Φ.hone.p-filter into a cps
-# Φ.hone.distill with zero captures and a self-contained body: the
-# primitive item (I / J / D, possibly cat2) is on top of stack at entry,
-# the body duplicates it (dup or dup2 per width), runs the predicate
-# directly (no booleanValue unbox — the predicate already returns Z),
-# branches on the result, and either falls through to Φ.hone.emit with
-# the original on stack (accept path) or pops the original and jumps to
-# the end label (reject path). 491 lowers the emit to a
-# IntConsumer.accept / LongConsumer.accept / DoubleConsumer.accept call
-# that consumes the item.
-#
-# See 305-object-filter-to-distill for the rationale behind the cps
-# revision (frame discipline, fuse-cps-auto guard removal, etc.).
-#
-# Issue #570 Step 2.
 name: primitive-filter-to-distill
 pattern: |
   ⟦
@@ -48,12 +31,7 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    captures ↦ ⟦ ρ ↦ ∅ ⟧,
-    emit-shape ↦ "cps",
     body ↦ ⟦
-      i1 ↦ ⟦
-        φ ↦ Φ.jeo.opcode.𝜏-dup
-      ⟧,
       i2 ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-opcode,
         i2 ↦ 𝑒-target-class,
@@ -65,24 +43,17 @@ result: |
         φ ↦ Φ.jeo.opcode.ifne,
         i2 ↦ ⟦
           φ ↦ Φ.jeo.label,
-          i1 ↦ 𝑒-label-accept
+          i1 ↦ 𝑒-label
         ⟧
       ⟧,
       i4 ↦ ⟦
-        φ ↦ Φ.jeo.opcode.𝜏-pop
+        φ ↦ Φ.jeo.opcode.return
       ⟧,
       i5 ↦ ⟦
-        φ ↦ Φ.jeo.opcode.goto,
-        i2 ↦ ⟦
-          φ ↦ Φ.jeo.label,
-          i1 ↦ 𝑒-label-end
-        ⟧
+        φ ↦ Φ.jeo.label,
+        i1 ↦ 𝑒-label
       ⟧,
       i6 ↦ ⟦
-        φ ↦ Φ.jeo.label,
-        i1 ↦ 𝑒-label-accept
-      ⟧,
-      i7 ↦ ⟦
         φ ↦ Φ.jeo.frame,
         type ↦ 4,
         nlocal ↦ 0,
@@ -92,50 +63,16 @@ result: |
           φ ↦ Φ.jeo.seq.of1,
           item ↦ 𝑒-stack-item
         ⟧
-      ⟧,
-      i8 ↦ ⟦ φ ↦ Φ.hone.emit, emit-context ↦ "top-level" ⟧,
-      i9 ↦ ⟦
-        φ ↦ Φ.jeo.label,
-        i1 ↦ 𝑒-label-end
-      ⟧,
-      i10 ↦ ⟦
-        φ ↦ Φ.jeo.frame,
-        type ↦ 3,
-        nlocal ↦ 0,
-        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
-        nstack ↦ 0,
-        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
       ⟧
     ⟧
   ⟧
 where:
-  - meta: 𝑒-label-accept
+  - meta: 𝑒-label
     function: random-string
-    args: ['"LpfilterAccept%d"']
-  - meta: 𝑒-label-end
-    function: random-string
-    args: ['"LpfilterEnd%d"']
+    args: ['"L%d"']
   - meta: 𝜏-opcode
     function: tau
     args: [𝑒-opcode]
-  - meta: 𝑒-dup
-    function: sed
-    args:
-      - 𝑒-accepted
-      - '"s/^[DJ]$/dup2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
-  - meta: 𝜏-dup
-    function: tau
-    args: [𝑒-dup]
-  - meta: 𝑒-pop
-    function: sed
-    args:
-      - 𝑒-accepted
-      - '"s/^[DJ]$/pop2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/pop/g"'
-  - meta: 𝜏-pop
-    function: tau
-    args: [𝑒-pop]
   - meta: 𝑒-stack-item
     function: sed
     args:

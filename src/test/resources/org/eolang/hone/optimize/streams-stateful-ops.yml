@@ -50,11 +50,9 @@ log:
   - "The result is 4 3 5"
 before:
   new: 0
-  newarray: 0
   baload: 0
   bastore: 0
 after:
-  new: 1
-  newarray: 2
-  baload: 2
-  bastore: 2
+  new: 0
+  baload: 0
+  bastore: 0

@@ -317,7 +317,7 @@
       <plugin>
         <artifactId>maven-invoker-plugin</artifactId>
         <configuration>
-          <streamLogs>true</streamLogs>
+          <streamLogs>false</streamLogs>
         </configuration>
       </plugin>
     </plugins>

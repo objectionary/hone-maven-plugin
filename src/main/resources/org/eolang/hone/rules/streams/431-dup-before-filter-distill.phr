@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: transform-distill-tail-to-object
+name: dup-before-filter-distill
 pattern: |
   ⟦
     φ ↦ Φ.hone.distill,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
-    start ↦ 𝑒-start,
+    start ↦ "filter",
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
@@ -21,37 +21,23 @@ result: |
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
-    start ↦ 𝑒-start,
+    start ↦ "dup",
     accepted ↦ 𝑒-accepted,
-    returned ↦ 𝑒-bridge-output,
+    returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     body ↦ ⟦
+      i-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
       𝐵-body,
-      i-transform ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokestatic,
-        i2 ↦ 𝑒-transform-class,
-        i3 ↦ "valueOf",
-        i4 ↦ 𝑒-transform-signature,
-        i5 ↦ Φ.false
-      ⟧,
       ρ ↦ ∅
     ⟧
   ⟧
-when:
-  and:
-    - matches:
-        - '^[BCDFIJSZ]$'
-        - 𝑒-returned
-    - not:
-        matches:
-          - '^[BCDFIJSZ]$'
-          - 𝑒-bridge-output
 where:
-  - meta: 𝑒-transform-class
+  - meta: 𝑒-dup
     function: sed
     args:
-      - 𝑒-bridge-output
-      - '"s/L(.+);/$1/g"'
-  - meta: 𝑒-transform-signature
-    function: concat
-    args: ['"("', 𝑒-returned, '")"', 𝑒-bridge-output]
+      - 𝑒-accepted
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+  - meta: 𝜏-dup
+    function: tau
+    args: [𝑒-dup]

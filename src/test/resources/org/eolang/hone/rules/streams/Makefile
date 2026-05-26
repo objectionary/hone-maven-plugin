@@ -9,14 +9,11 @@ SHELL := bash
 
 ROOT=../../../../../../../..
 RULES_DIR=$(ROOT)/src/main/resources/org/eolang/hone/rules/streams
-TESTS_DIR=expressions
 TARGET=$(ROOT)/target/foo
 
 RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)
 RULES=$(sort $(subst $(RULES_DIR)/,,$(RULE_FILES)))
 RULE_NAMES=$(subst .phr,,$(RULES))
-TEST_FILES=$(wildcard $(TESTS_DIR)/*.phi)
-TESTS=$(subst .phi,,$(subst $(TESTS_DIR)/,,$(TEST_FILES)))
 
 JEO_VERSION=$(shell cat "$(ROOT)/src/main/resources/org/eolang/hone/default-jeo-version.txt" | xargs)
 
@@ -45,21 +42,6 @@ jeo-test: $(TARGET)/before/Foo.xmir
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
 		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \
 		"-Djeo.assemble.skip.verification"
-
-.SILENT:
-test: $(TEST_FILES)
-	mkdir -p "$(TARGET)/tests-output"
-	for t in $(TESTS); do
-		rule=$$(find "$(RULES_DIR)/" -name "$${t}.phr")
-		if [ -z "$${rule}" ]; then
-			n=$$(echo "$${t}" | sed 's/-.*$$//g')
-			rule=$$(find "$(RULES_DIR)/" -name "$${n}-*.phr")
-		fi
-		printf "\nParsing \e[1m%s\e[0m...\n" "$${t}"
-		phino rewrite --sweet "$(TESTS_DIR)/$${t}.phi" > /dev/null
-		printf "Testing \e[1m%s\e[0m against \e[1m%s\e[0m...\n" "$${t}" "$${rule}"
-		phino rewrite --sweet --must=1 --rule "$${rule}" "$(TESTS_DIR)/$${t}.phi" > "$(TARGET)/tests-output/$${t}.phi"
-	done
 
 $(TARGET)/before/%.class: %.java Makefile
 	javac -d "$$(dirname $@)" $<

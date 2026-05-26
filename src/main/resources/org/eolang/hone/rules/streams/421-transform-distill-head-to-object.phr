@@ -13,8 +13,6 @@ pattern: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    captures ↦ 𝑒-captures,
-    emit-shape ↦ 𝑒-emit-shape,
     body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
   ⟧
 result: |
@@ -27,10 +25,8 @@ result: |
     accepted ↦ 𝑒-bridge-input,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    captures ↦ 𝑒-captures,
-    emit-shape ↦ 𝑒-emit-shape,
     body ↦ ⟦
-      i-transform-head ↦ ⟦
+      i-transform ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokevirtual,
         i2 ↦ 𝑒-transform-class,
         i3 ↦ 𝑒-transform-method,

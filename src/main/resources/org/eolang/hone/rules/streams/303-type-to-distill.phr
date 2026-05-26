@@ -20,8 +20,6 @@ result: |
     accepted ↦ "Ljava/lang/Object;",
     returned ↦ "Ljava/lang/Object;",
     static ↦ "true",
-    captures ↦ ⟦ ρ ↦ ∅ ⟧,
-    emit-shape ↦ "auto",
     body ↦ ⟦
       i ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-opcode ⟧
     ⟧

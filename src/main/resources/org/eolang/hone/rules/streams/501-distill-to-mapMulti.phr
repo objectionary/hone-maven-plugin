@@ -27,8 +27,6 @@ pattern: |
           accepted ↦ 𝑒-accepted,
           returned ↦ 𝑒-returned,
           static ↦ 𝑒-static,
-          captures ↦ ⟦ ρ ↦ ∅ ⟧,
-          emit-shape ↦ "auto",
           body ↦ 𝑒-body
         ⟧,
         𝐵-body-tail

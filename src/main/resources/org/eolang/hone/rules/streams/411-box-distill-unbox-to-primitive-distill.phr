@@ -19,8 +19,6 @@ pattern: |
       accepted ↦ 𝑒-distill-accepted,
       returned ↦ 𝑒-distill-returned,
       static ↦ 𝑒-distill-static,
-      captures ↦ 𝑒-distill-captures,
-      emit-shape ↦ 𝑒-distill-emit-shape,
       body ↦ 𝑒-distill-body
     ⟧,
     𝜏-unbox ↦ ⟦
@@ -49,8 +47,6 @@ result: |
       accepted ↦ 𝑒-distill-accepted,
       returned ↦ 𝑒-distill-returned,
       static ↦ 𝑒-distill-static,
-      captures ↦ 𝑒-distill-captures,
-      emit-shape ↦ 𝑒-distill-emit-shape,
       body ↦ 𝑒-distill-body
     ⟧,
     𝐵-after

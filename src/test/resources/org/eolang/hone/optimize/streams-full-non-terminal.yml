@@ -1,54 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-# Full non-terminal stream coverage test. The pipeline exercises every
-# one of the 21 non-terminal operators of the Java 21 Stream API
-# (distinct, dropWhile, filter, flatMap, flatMapToDouble, flatMapToInt,
-# flatMapToLong, limit, map, mapMulti, mapMultiToDouble, mapMultiToInt,
-# mapMultiToLong, mapToDouble, mapToInt, mapToLong, peek, skip, sorted,
-# sorted(Comparator), takeWhile). The Stream<T> operators appear twice
-# each, the nine *To{Int,Long,Double} variants appear once each with
-# boxed() between them as the only bridge back to Stream<T> (boxed is
-# not itself one of the 21 but is unavoidable for the type system).
-# The opcodes assertion pins the current count of invokedynamic in the
-# optimised class: 20 after #570 Step 3 added `401d-fuse-cps-cps.phr`
-# (graft-based cps+cps fusion, restricted to zero-capture pairs). The
-# rule lowers by one the residue that Step 2 had pushed to 21 when
-# filter switched from auto to cps. The architecture's long-term
-# floor is one mapMulti emitter per *fusable* segment; the structural
-# reasons this particular fixture sits well above that floor are:
-#  - Sorted and limit are non-fusable barriers (Step 10 option A) —
-#    each of the four sorted variants and two limit calls in the
-#    pipeline survives as its own invokeinterface dispatch and forces
-#    the surrounding stateless segments apart.
-#  - mapMulti / mapMultiTo* cps distill bodies carry no Φ.hone.emit
-#    marker (the user lambda owns emission via consumer.accept), so
-#    401c-fuse-cps-auto cannot splice a downstream auto body anywhere
-#    and each call surfaces its own mapMulti wrapper.
-#  - flatMap-shape cps distills (plain flatMap and flatMapTo*) emit a
-#    user-produced Stream rather than a single item, so 401c excludes
-#    them from fusion via the `not eq: start "flatMap"` arm of its
-#    `when` guard — splicing a downstream auto body before the emit
-#    would try to operate on a Stream value as an item and crash
-#    VerifyError. 401b can still pre-pend an upstream auto to a
-#    flatMap cps body (the auto leaves an item on stack, which the
-#    flatMap lambda happily consumes), but in this fixture no flatMap
-#    sits directly downstream of an auto distill.
-#  - 401d (cps+cps fusion) is restricted to zero-capture pairs because
-#    no 502* rule lowers a multi-capture cps distill today. Adjacent
-#    cps+cps pairs whose union of captures is non-empty (filter →
-#    distinct, distinct → takeWhile, takeWhile → skip, etc.) therefore
-#    stay unfused.
-#  - 401d also excludes flatMap-first pairs by a `not eq: 𝑒-first-start
-#    "flatMap"` guard. flatMap's cps body keeps the user-stream's
-#    Iterator on the operand stack throughout the loop, and the
-#    second body's internal Φ.jeo.frame nodes (filter's accept / end
-#    frames in particular) declare stack depth as if the body started
-#    at a clean wrapper entry — grafting the second body into
-#    flatMap's iterator pump under-counts that depth by one and
-#    jeo:assemble flags the result with a stackmap VerifyError.
-# Together those reasons account for the bulk of the 20 invokedynamic
-# dispatches that remain. See issues #556 and #570.
+# Full non-terminal stream coverage test.
 java: |
   package allnonterminal;
   import java.util.Comparator;
@@ -112,4 +65,4 @@ log:
 before:
   invokedynamic: 23
 after:
-  invokedynamic: 20
+  invokedynamic: 21

@@ -23,7 +23,7 @@ binary is found.
 <!-- markdownlint-disable MD013 -->
 | Concern                              | File                                                                  |
 | ------------------------------------ | --------------------------------------------------------------------- |
-| Stream rules (one per file)          | `src/main/resources/org/eolang/hone/rules/streams/NNN-name.phr`       |
+| Stream rules (one per file)          | `src/main/resources/org/eolang/hone/rules/streams/Nxx/NNN-name.phr`   |
 | Demo / sanity rules                  | `src/main/resources/org/eolang/hone/rules/{none.yml,33-to-42.yml}`    |
 | Pinned tool versions                 | `src/main/resources/org/eolang/hone/default-{phino,jeo}-version.txt`  |
 | Pipeline orchestration               | `src/main/resources/org/eolang/hone/scaffolding/entry.sh`             |
@@ -348,7 +348,7 @@ To run phino on a single `.phi` file by hand without Maven:
 
 ```bash
 phino rewrite --max-cycles 1 --max-depth 500 --sweet \
-  --rule src/main/resources/org/eolang/hone/rules/streams/401-fuse.phr \
+  --rule src/main/resources/org/eolang/hone/rules/streams/4xx/401-fuse.phr \
   /tmp/Foo.phi
 ```
 
@@ -362,7 +362,9 @@ The output is the rewritten expression on stdout.
    Phase boundaries are recorded above; check `streams/` for the
    nearest neighbours before choosing.
 2. **Write the `.phr` file** under
-   `src/main/resources/org/eolang/hone/rules/streams/` following the
+   `src/main/resources/org/eolang/hone/rules/streams/Nxx/` (the
+   `Nxx/` subdirectory whose digit matches the rule's hundreds prefix
+   — e.g. a `4xx` fuse rule lives in `streams/4xx/`), following the
    header block (`SPDX` + `# yamllint disable rule:line-length`). Take
    the closest existing rule as a template; the metavariable conventions
    are not enforced by the tool but make rules readable.
@@ -402,13 +404,30 @@ Two extension mechanisms exist; they are independent.
   `<rules>arithmetic/*</rules>`. The `Rules` class will discover them
   via ClassGraph because anything under `org/eolang/hone/rules/` is
   picked up automatically. The selection grammar supports wildcards and
-  negation: `streams/4*,!streams/411-*` includes all `4xx` rules except
-  one.
+  negation: `streams/4xx/*,!streams/4xx/411-*` includes all `4xx` rules
+  except one.
 - **External (extra) rules.** Without rebuilding the plugin, point
   `<extra>` at a directory of `.phr`/`.yml` files. `OptimizeMojo`
   copies them into a `hone-extra/` directory and `entry.sh` appends
   them to `RULES` *after* the built-in selection. Useful for project-
   local experiments.
+
+## Running the test suite
+
+The `pom.xml` sets `<excludedGroups>deep</excludedGroups>` by default,
+which causes the end-to-end optimize fixtures (the `streams-*.yml`
+packs under `src/test/resources/org/eolang/hone/optimize/` and the
+`src/test/phino/*.yml` rule-unit packs) to be skipped — running
+`mvn test` alone exercises roughly half of the suite and silently
+hides regressions in any `.phr` rule. Always run
+
+```bash
+mvn -Pdeep test
+```
+
+when verifying a rule change; the `deep` profile clears
+`excludedGroups` so every `@Tag("deep")` test runs against the real
+`phino` binary on the host.
 
 ## Tools to keep on hand when working on rules
 

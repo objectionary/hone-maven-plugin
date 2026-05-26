@@ -3,7 +3,7 @@
 ---
 # yamllint disable rule:line-length
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/131-remove-this-before-nonstatic-lambda.phr
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/131-remove-this-before-nonstatic-lambda.phr
 input: |
   {⟦
     body ↦ ⟦

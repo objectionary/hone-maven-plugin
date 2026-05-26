@@ -3,7 +3,7 @@
 ---
 # yamllint disable rule:line-length
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/602-box-to-boxed.phr
+  - src/main/resources/org/eolang/hone/rules/streams/6xx/602-box-to-boxed.phr
 input: |
   {⟦
     foo ↦ ⟦

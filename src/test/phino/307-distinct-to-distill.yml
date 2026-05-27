@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/307-distinct-to-distill.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "distinct", 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧

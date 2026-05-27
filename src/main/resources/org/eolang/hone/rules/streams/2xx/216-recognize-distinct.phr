@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognises a stream `.distinct()` call — the bare `invokeinterface
+# java/util/stream/Stream.distinct:()Ljava/util/stream/Stream;` opcode —
+# and abstracts it into a single Φ.hone.distinct pragma. Unlike map and
+# filter, distinct carries no lambda, so it has no class of its own; the
+# pattern matches at class scope to capture the enclosing class name,
+# which 307 needs on the resulting distill so 401-fuse can compose it
+# with the neighbouring map/filter distills (they share one `class`).
+name: recognize-distinct
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏1 ↦ "java/util/stream/Stream",
+          𝜏2 ↦ "distinct",
+          𝜏3 ↦ "()Ljava/util/stream/Stream;",
+          𝜏4 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-distinct ↦ ⟦
+          φ ↦ Φ.hone.distinct,
+          class ↦ 𝑒-class-name,
+          stream-class ↦ "java/util/stream/Stream"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-distinct
+    function: random-tau
+    args: [ '𝐵-body-head', '𝐵-body-tail' ]

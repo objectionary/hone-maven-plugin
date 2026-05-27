@@ -15,6 +15,7 @@ pattern: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-first-returned,
       static ↦ 𝑒-first-static,
+      state ↦ ⟦ 𝐵-first-state, ρ ↦ ∅ ⟧,
       body ↦ ⟦ 𝐵-first-body, ρ ↦ ∅ ⟧
     ⟧,
     𝜏-second ↦ ⟦
@@ -26,6 +27,7 @@ pattern: |
       accepted ↦ 𝑒-second-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-second-static,
+      state ↦ ⟦ 𝐵-second-state, ρ ↦ ∅ ⟧,
       body ↦ ⟦ 𝐵-second-body, ρ ↦ ∅ ⟧
     ⟧,
     𝐵-body-tail
@@ -42,6 +44,7 @@ result: |
       accepted ↦ 𝑒-first-accepted,
       returned ↦ 𝑒-second-returned,
       static ↦ 𝑒-result-static,
+      state ↦ ⟦ 𝐵-joined-state, ρ ↦ ∅ ⟧,
       body ↦ ⟦
         𝐵-body,
         ρ ↦ ∅
@@ -62,3 +65,6 @@ where:
   - meta: 𝐵-body
     function: join
     args: [𝐵-first-body, 𝐵-second-body]
+  - meta: 𝐵-joined-state
+    function: join
+    args: [𝐵-first-state, 𝐵-second-state]

@@ -13,6 +13,7 @@ pattern: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ "false",
+    state ↦ 𝑒-state,
     body ↦ ⟦ 𝐵-body ⟧
   ⟧
 result: |
@@ -25,6 +26,7 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ "false",
+    state ↦ 𝑒-state,
     body ↦ ⟦
       𝜏-load-this ↦ ⟦
         φ ↦ Φ.jeo.opcode.aload,

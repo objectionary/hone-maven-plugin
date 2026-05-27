@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Resolves a Φ.hone.fetch marker — left in a distill body by 307 to mean
+# "push my state-var onto the stack" — into the concrete load from the
+# captured Object[]. Inside the wrapper that 512 builds, the array is
+# argument 0, so the fetch becomes `aload 0; iconst_0; aaload; checkcast
+# <type>`.
+#
+# v1 reads slot 0: there is one state variable per wrapper, because
+# 401-fuse does not yet merge two stateful distills into one body. A
+# future revision replaces iconst_0 with a per-element counter (iload +
+# iinc) so several fetches read consecutive slots, and fixpoint
+# application of this rule resolves them all.
+name: fetch-to-load
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-fetch ↦ ⟦
+      φ ↦ Φ.hone.fetch,
+      type ↦ 𝑒-type
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-load-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+    𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+    𝜏-aaload ↦ ⟦ φ ↦ Φ.jeo.opcode.aaload ⟧,
+    𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-type ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-load-arr
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after']
+  - meta: 𝜏-idx
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr']
+  - meta: 𝜏-aaload
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-idx']
+  - meta: 𝜏-cast
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-idx', '𝜏-aaload']

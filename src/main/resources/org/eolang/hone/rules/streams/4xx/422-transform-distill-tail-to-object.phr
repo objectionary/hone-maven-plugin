@@ -13,6 +13,7 @@ pattern: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
     body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
   ⟧
 result: |
@@ -25,6 +26,7 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-bridge-output,
     static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
     body ↦ ⟦
       𝐵-body,
       i-transform ↦ ⟦

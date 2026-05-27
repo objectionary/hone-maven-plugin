@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# `.distinct()` folds into the distill and fuses with the stateless
+# segments around it, so the whole pipeline below collapses into a
+# SINGLE Stream.mapMulti dispatch backed by one captured
+# java/util/HashSet.
+#
+#   [1,2,2,3,1,3,4] --map(+1)--> [2,3,3,4,2,4,5]
+#                   --distinct--> [2,3,4,5]
+#                   --map(*2)--> [4,6,8,10]  --count()--> 4
+#
+# The `after` counts assert the fused shape: the two maps and distinct
+# become one dispatch (invokedynamic == 1); distinct carries no
+# invokeinterface of its own and the two maps share one mapMulti,
+# leaving invokeinterface == 3 (one mapMulti + count + the single
+# wrapper's consumer.accept); exactly one HashSet is allocated
+# (new == 1) and consulted via HashSet.add (invokevirtual == 4).
+# Boxing is unchanged (invokestatic == 13) since the lambda bodies
+# only move into the one synthesised wrapper.
+java: |
+  package distinct;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      long n = Stream.of(1, 2, 2, 3, 1, 3, 4)
+        .map(x -> x + 1).distinct().map(x -> x * 2).count();
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 4"
+before:
+  invokedynamic: 2
+  invokeinterface: 4
+  invokestatic: 11
+  invokevirtual: 3
+  new: 0
+after:
+  invokedynamic: 1
+  invokeinterface: 3
+  invokestatic: 13
+  invokevirtual: 4
+  new: 1

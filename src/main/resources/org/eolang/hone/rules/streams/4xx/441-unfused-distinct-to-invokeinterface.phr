@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a distinct distill that never fused. After the 4xx fuse pass a
+# distinct that found a stateless neighbour has extra opcodes spliced
+# into its body; one that sat next to a barrier (sorted, limit, peek …)
+# still carries ONLY the bare distinct guard 307 produced. Turning such a
+# lone distinct into a mapMulti would cost an extra invokedynamic, a
+# wrapper and a HashSet for no fusion benefit, so we put it back as a
+# plain Stream.distinct() call.
+#
+# The reverted opcode carries a `reverted ↦ Φ.true` marker. 216 matches
+# the four-operand distinct opcode jeo emits; the marker gives this one a
+# fifth binding, so 216's closed pattern no longer matches it and the
+# 216 → 307 → 441 cycle cannot spin. jeo ignores the extra binding when
+# assembling, so the bytecode is an ordinary invokeinterface.
+#
+# The body match below is closed (exactly the nine guard bindings, no
+# 𝐵-rest), so a fused distinct — whose body holds additional opcodes —
+# is left for 502 to lower.
+name: unfused-distinct-to-invokeinterface
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "distinct",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-dupx ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ "java/util/HashSet",
+        i2 ↦ "add",
+        i3 ↦ "(Ljava/lang/Object;)Z",
+        i4 ↦ Φ.false
+      ⟧,
+      𝜏-ifne ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.opcode.invokeinterface,
+    i2 ↦ "java/util/stream/Stream",
+    i3 ↦ "distinct",
+    i4 ↦ "()Ljava/util/stream/Stream;",
+    i5 ↦ Φ.true,
+    reverted ↦ Φ.true
+  ⟧

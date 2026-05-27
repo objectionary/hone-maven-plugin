@@ -31,7 +31,7 @@ binary is found.
 | Rule discovery and pattern selection | `src/main/java/org/eolang/hone/Rules.java`                            |
 | Mojo with all user-facing knobs      | `src/main/java/org/eolang/hone/OptimizeMojo.java`                     |
 | End-to-end test fixtures             | `src/test/resources/org/eolang/hone/optimize/streams-*.yml`           |
-| Single-rule expression tests         | `src/test/resources/org/eolang/hone/rules/streams/expressions/*.phi`  |
+| Single-rule unit tests               | `src/test/phino/*.yml`                                                |
 <!-- markdownlint-enable MD013 -->
 
 ## Anatomy of a `.phr` file
@@ -108,211 +108,61 @@ If you insert a rule with a prefix that lies between two phases (say,
 a prefix that reflects which invariant your rule preserves on its
 *output* — that determines what later rules see.
 
-### Every operation lives on the distill path
+### Every operation folds to a distill
 
-Every non-terminal Stream operator folds to a `Φ.hone.distill`
-pragma, and the 4xx fuse pass collapses adjacent distills before
-5xx emits one `Φ.hone.mapMulti` per remaining distill. The pragma
-carries two pieces of payload that distinguish what shape of body
-the wrapper method ends up with:
-
-- **captures** — a binding group of state types
-  (`captures ↦ ⟦ 𝐵-captures, ρ ↦ ∅ ⟧`) whose values become fields on
-  the `BiConsumer` instance synthesised by `501`. Stateless distills
-  carry an empty captures group; stateful ones carry one or more
-  capture types
-  (`[J` for `long[1]` counters, `[Z` for `boolean[1]` gate cells,
-  `Ljava/util/HashSet;` for distinct's seen-set, etc.).
-- **emit-shape** — `"auto"` or `"cps"`. Auto bodies are
-  one-in-one-out: phino splices the operator opcodes between an
-  `aload item` and a single auto-emit at the end. CPS bodies own
-  their own emission and drive the downstream `Consumer` themselves
-  via one or more `Φ.hone.emit` markers that `491-emit-to-accept-call`
-  lowers to explicit `consumer.accept(...)` calls.
-
-The full operator-to-rule mapping:
+Every recognised non-terminal Stream operator folds to a uniform
+`Φ.hone.distill` pragma, the 4xx fuse pass collapses adjacent distills
+into one, and 5xx emits a single `Φ.hone.mapMulti` per remaining
+distill. The pragma carries exactly nine bindings and nothing else:
 
 ```text
-filter, map, peek, mapToInt/Long/Double, boxed, dup, transform, type
-  → 301..307 / 411..413 → auto distill (fuses freely via 401)
-distinct, take-while, drop-while, skip(N),
-  flatMap, mapMulti (verbatim),
-  flatMapToInt/Long/Double, mapMultiToInt/Long/Double
-  → 208, 215, 351..356 → cps distill (captures = state, emit-shape = cps)
-sorted, sorted(Comparator), limit(N)
-  → 212, 216 → named pragma, never folded (see next subsection)
-skip(0L)
-  → 311-skip-zero-to-noop (rewritten to Φ.jeo.opcode.nop, never reaches distill)
+φ ↦ Φ.hone.distill   the pragma marker (or Φ.hone.pre-distill before 311)
+class                the enclosing class, for the synthesised method
+bridge-input         the JVM type the body consumes (e.g. "Ljava/lang/Object;")
+bridge-output        the JVM type the body produces
+start                a label naming the originating operator ("map", "filter", …)
+accepted             the SAM-accepted signature fragment
+returned             the SAM-returned signature fragment
+static               "true"/"false"; whether the synthesised method is static
+body                 the opcode formation spliced between item-load and emit
 ```
 
-`401-fuse` (auto + auto), `401b-fuse-auto-cps` (auto then cps),
-`401c-fuse-cps-auto` (cps then auto), and `401d-fuse-cps-cps`
-(cps then cps) compose two distills into one whenever they sit
-adjacent in the same method body. `501` then synthesises a single
-private `BiConsumer` wrapper for each remaining distill, and
-`502a`/`502b` lower the distill to the `mapMulti` dispatch pair.
+The body is always one-in-one-out (auto-style): phino feeds it a single
+item and it produces a single item. There is no per-distill state, no
+capture group, and no continuation-passing variant — every distill has
+the same shape, which is what lets `401-fuse` concatenate any two
+adjacent bodies blindly.
 
-#### Multi-emit fusion is supported
+The full operator-to-rule mapping (every rule named below exists under
+`streams/`):
 
-`401c-fuse-cps-auto` now uses phino's `splice` where-function
-(objectionary/phino#708, shipped in phino 0.0.0.69) to insert the
-auto body in front of *every* `Φ.hone.emit` marker in the cps body
-on a single firing. A `part-of` guard on the cps body's binding
-group keeps the rule from firing when no emit marker exists —
-without it, the auto distill would be consumed yet its body would
-land nowhere, silently dropping the operation. The `mapMulti` /
-`mapMultiTo*` producers (215, 215b-d) emit cps distills with zero
-`Φ.hone.emit` markers (the user lambda owns emission via the
-captured `Consumer`), so the guard correctly leaves their adjacent
-auto neighbours unfused; that limitation is a property of 215's
-body shape, not of 401c.
+```text
+filter, map (object + primitive) → 201..204 → Φ.hone.{filter,map}
+boxed/unbox, box                 → 205, 206  → Φ.hone.{unbox,box}
+box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold primitives back to map/filter
+type / transform adjustments     → 241..243, 251..261, 271, 272
+dup insertion (for filter)       → 281, 282
+dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)
+load `this` into a pre-distill   → 311 → flips Φ.hone.pre-distill to distill
+box-distill-unbox collapse       → 411 → primitive-typed distill
+transform-distill normalisation  → 421, 422
+dup before a filter distill      → 431
+```
 
-#### CPS+CPS fusion is supported (capture union ≤ 1)
+`401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
+formations in the same method body, `join`s their two bodies into one,
+and narrows the bridge types so the fused distill inherits the first
+side's `bridge-input` / `accepted` / `start` and the second side's
+`bridge-output` / `returned`. Because every distill body is auto-style,
+no guard on body shape is needed — any two adjacent distills fuse.
 
-`401d-fuse-cps-cps` fuses two adjacent cps distills using phino's
-`graft` where-function (objectionary/phino#721, shipped in phino
-0.0.0.71). `graft` is the marker-replacing sibling of `splice`:
-where `splice` inserts the replacement bindings in front of every
-sentinel and keeps the sentinel in place, `graft` REPLACES the
-sentinel with the replacement. That difference is exactly what
-cps+cps fusion needs: a cps body consumes the top-of-stack item
-via its leading store and would crash if the original
-`Φ.hone.emit` marker still fired with no item left on the operand
-stack. `graft` also renames every τ-labelled binding inside the
-grafted copy on each firing, so the synthetic `i1, i2, i3, …`
-keys that 3xx-fold rules emit in every cps body cannot collide
-when the same body is grafted at multiple emit positions or
-alongside the first body's own bindings — the binding-collision
-footgun that blocked the earlier concatenation-based attempt at
-401d.
-
-Captures merge via `join`; the rule fires only when the union has
-cardinality 0 or 1, gated by phino's built-in `length:` predicate
-on the two pattern-captured binding groups in the `when:` clause.
-The predicate language has `eq` but no `le`, so the
-sum-of-lengths ≤ 1 constraint is unfolded into three OR'd AND-
-pairs: (first = 0 AND second = 0), (first = 0 AND second = 1),
-(first = 1 AND second = 0). The zero / one outcomes are exactly
-what `502a-cps-no-cap-to-lambda` and `502b-cps-one-cap-to-lambda`
-already lower. This covers every pairwise adjacency where at
-most one side carries state — every (filter / flatMap / mapMulti)
-pair, plus every (filter / flatMap / mapMulti) ↔ (distinct /
-takeWhile / dropWhile / skip-N) adjacency in either order. Two
-stateful cps producers adjacent to each other (distinct →
-takeWhile, takeWhile → distinct, …) still survive as separate
-`invokedynamic` dispatches: the merged distill would carry two
-captures and no `502*` rule lowers multi-capture cps today. A
-future `502c` would close that remaining gap.
-
-Bridge narrowing follows the same pattern as 401-fuse / 401b /
-401c: the fused distill inherits the first side's `bridge-input`,
-`accepted`, `start` and the second side's `bridge-output`,
-`returned`. The merged body keeps the cps emit-shape, so further
-fusion by 401b / 401c / 401d can splice or graft neighbours around
-the surviving emit markers; lowering by 491 + 502a sees the merged
-distill exactly as it would see any single-operator zero- or
-one-capture cps distill.
-
-#### Typed-bridge fusion is supported
-
-`401b-fuse-auto-cps` and `401c-fuse-cps-auto` previously locked
-both sides to `bridge-input ↦ "Ljava/lang/Object;"` (and likewise
-`bridge-output` / `accepted` / `returned`), which excluded typed
-auto distills produced by 411–413 (e.g. `Integer → Integer` from
-`.map(n -> n + 1)` on a `Stream<Integer>`, or primitive `I` / `J` /
-`D` from box-distill-unbox collapse) from joining adjacent cps
-operators. The metavar-only revision drops the gate: 401b takes the
-auto side's bridge-input / accepted and the cps side's bridge-output
-/ returned (mirroring `401-fuse`'s narrowing convention); 401c does
-the dual swap on cps's bridge-input / auto's bridge-output.
-`502a-cps-no-cap-to-lambda` was widened to derive the SAM class,
-lambda-signature, stream class, item load opcode, max-locals, and
-consumer index from `bridge-input` via the same sed dispatch table
-that `502b` already used.
-
-401c's `when` arm gains a second guard:
-`not eq: 𝑒-first-start "flatMap"`. The flatMap-family cps distills
-(`208-flatMap-to-distill`, `207b/c/d` primitive variants) emit a
-user-produced `Stream` and rely on 493 lowering the marker into
-`Stream.forEach(Consumer)` — the item-shape splice that 401c does
-for `distinct` / `takeWhile` / `dropWhile` / `skip` would force the
-spliced auto body to operate on a `Stream` value as if it were the
-downstream element, which jeo:assemble flags as a VerifyError.
-401b complements this: its result inherits the cps side's `start`
-(rather than the auto side's), so a `.filter().flatMap()` chain
-that 401b fuses into a single distill still carries
-`start ↦ "flatMap"` downstream, keeping 491 from incorrectly lowering
-the emit as `Consumer.accept(Stream)` and routing the lowering
-through 493 instead.
-
-#### Why `513-merge-mapMulti-unbox` survives but `512` does not
-
-The 5xx phase historically carried two adjacent-mapMulti mergers as
-the *slow-path* counterpart to the 4xx distill fuser:
-
-- `512-merge-mapMulti.phr` matched two adjacent `Φ.hone.mapMulti`
-  formations in the same body and merged them into one.
-- `513-merge-mapMulti-unbox.phr` matches a `Φ.hone.mapMulti`
-  immediately followed by a `Φ.hone.unbox` pragma and synthesises a
-  single `mapMultiToInt`/`Long`/`Double` lambda.
-
-With every non-terminal folded into distill, the fast path's
-`501-distill-to-mapMulti` only ever emits *one* `mapMulti` formation
-per pipeline, so 512's input pattern no longer occurs in any
-deep-test fixture and the rule was deleted as dead code. 513
-survives because the 2xx primitive-collapse rules (e.g.
-`232-boxed-primitive-filter-to-filter.phr`) can still leave a
-`Φ.hone.unbox` pragma adjacent to a `mapMulti` even after fusion —
-verified by running every `streams-*.yml` fixture under
-`-Dhone.small-steps=true` and observing 513 firing in
-`streams-closures`, `streams-fusion`, and `streams-sources`.
-
-### Sorted and limit stay non-fusable
-
-Two stream operators are deliberately excluded from the distill
-migration above: `sorted` and `limit`. They are *fundamentally* incompatible
-with a single-pass `mapMulti` pipeline:
-
-- `sorted` is a fully-buffering barrier — every upstream element must be
-  consumed and held in memory before any downstream element can be
-  emitted. There is no continuation-passing body shape that preserves
-  this semantics while still flowing through a per-element `BiConsumer`.
-- `limit(N)` short-circuits after N downstream emits. A merged distill
-  would have to abort the surrounding `forEach` driver mid-stream, which
-  the `BiConsumer.accept` contract has no clean way to express.
-
-The chosen approach: recognise both operators as named pragmas so
-neighbouring stateless segments can still fuse around them, but never
-fold them into distill and never merge them into the surrounding
-`mapMulti`. Each `sorted` or `limit` therefore survives as its own
-`invokeinterface` dispatch in the final bytecode.
-
-The mechanics:
-
-- `212-lambda-to-sorted` recognises `Stream.sorted(Comparator)` as a
-  named `Φ.hone.sorted` pragma so nothing in the 3xx / 4xx phases
-  folds or fuses around it. `607-sorted-to-lambda` is the paired
-  unrecognise. The no-arg `Stream.sorted()` variant carries no
-  lambda and survives as a raw `invokeinterface` opcode throughout
-  the pipeline.
-- `216-recognize-limit-ldc` recognises `ldc N + invokeinterface
-  Stream.limit(J)` as a named `Φ.hone.limit` pragma carrying the
-  count as a string literal. `722-limit-ldc-to-invokeinterface` is
-  the paired unrecognise.
-
-The practical consequence: every `sorted` and `limit` call survives as
-its own `invokeinterface` dispatch, and the `streams-full-non-terminal`
-fixture pins the resulting `after.invokedynamic` count (currently 20,
-dominated by the 4 sorted + 2 limit barriers, the 5 `mapMulti` /
-`mapMultiTo*` dispatches whose user-lambda emission shape leaves no
-fusion seam, and the `flatMap` / `flatMapTo*` dispatches whose emit
-shape is Stream-driven via `forEach` rather than item-driven via
-`Consumer.accept` — 401c excludes flatMap-shaped cps from fusion
-because the spliced auto body would otherwise operate on a `Stream`
-value as if it were the downstream item).
-That is by design — the architecture's value is fusing the *streamable*
-part of the pipeline, not eliminating intrinsically-non-streamable
-operators.
+`501-distill-to-mapMulti` then rewrites each remaining distill into a
+`Φ.hone.mapMulti` dispatch, and `511-distill-lambda-to-method` hoists
+the distill body out into a private static `(item, consumer) → void`
+method that the `mapMulti` call references. The 6xx rules (601, 602,
+603) unrecognise `Φ.hone.mapMulti` / `box` / `unbox` back into
+`Φ.hone.lambda` + `invokeinterface`, and the 7xx rules (701, 702)
+lower the lambdas to `invokedynamic`.
 
 ## phino: the only rewrite engine
 
@@ -379,10 +229,9 @@ The output is the rewritten expression on stdout.
 
    Inspect `target/hone/phi-optimized/...phi.NN` files to verify the
    delta.
-4. **Add a single-expression test** under
-   `src/test/resources/org/eolang/hone/rules/streams/expressions/` with
-   a minimal `.phi` that the rule should transform, and a sibling test
-   that asserts on the rewritten output.
+4. **Add a single-rule unit test** under `src/test/phino/` (a `.yml`
+   pack named after the rule) with a minimal input the rule should
+   transform and the expected rewritten output.
 5. **Add or update an end-to-end YAML** in
    `src/test/resources/org/eolang/hone/optimize/`. These specify the
    Java source to compile, the expected `log` lines, and the expected

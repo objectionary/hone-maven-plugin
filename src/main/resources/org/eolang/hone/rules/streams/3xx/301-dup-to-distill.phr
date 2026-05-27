@@ -19,6 +19,7 @@ result: |
     accepted ↦ "Ljava/lang/Object;",
     returned ↦ "Ljava/lang/Object;",
     static ↦ "true",
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
     body ↦ ⟦
       i ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-opcode ⟧
     ⟧

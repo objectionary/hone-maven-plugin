@@ -26,6 +26,7 @@ result: |
     accepted ↦ 𝑒-bridge-input,
     returned ↦ 𝑒-bridge-output,
     static ↦ "true",
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
     body ↦ ⟦
       i ↦ ⟦
         φ ↦ Φ.jeo.opcode.𝜏-opcode,

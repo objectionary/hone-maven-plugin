@@ -16,43 +16,43 @@ java: |
         .map(n -> n + 1)
         .peek(n -> {})
         .distinct()
-        .sorted()
-        .sorted(Comparator.naturalOrder())
-        .takeWhile(n -> n < 100)
+        .sorted() // off
+        .sorted(Comparator.naturalOrder()) // off
+        .takeWhile(n -> n < 100) // off
         .dropWhile(n -> n < 0)
-        .limit(20L)
+        .limit(20L) // off
         .skip(0L)
-        .flatMap(n -> Stream.of(n, n))
-        .<Integer>mapMulti((n, c) -> c.accept(n))
+        .flatMap(n -> Stream.of(n, n)) // off
+        .<Integer>mapMulti((n, c) -> c.accept(n)) // off
         .filter(n -> n != null)
         .map(n -> n + 0)
         .peek(n -> {})
-        .sorted(Comparator.reverseOrder())
-        .sorted()
+        .sorted(Comparator.reverseOrder()) // off
+        .sorted() // off
         .distinct()
-        .takeWhile(n -> n >= 0)
+        .takeWhile(n -> n >= 0) // off
         .dropWhile(n -> n < -1)
-        .limit(100L)
+        .limit(100L) // off
         .skip(0L)
-        .flatMap(n -> Stream.of(n))
-        .<Integer>mapMulti((n, c) -> c.accept(n))
+        .flatMap(n -> Stream.of(n)) // off
+        .<Integer>mapMulti((n, c) -> c.accept(n)) // off
         .mapToInt(Integer::intValue)
         .boxed()
         .mapToLong(Integer::longValue)
         .boxed()
         .mapToDouble(Long::doubleValue)
         .boxed()
-        .flatMapToInt(d -> IntStream.of(d.intValue()))
+        .flatMapToInt(d -> IntStream.of(d.intValue())) // off
         .boxed()
-        .flatMapToLong(n -> LongStream.of(n.longValue()))
+        .flatMapToLong(n -> LongStream.of(n.longValue())) // off
         .boxed()
-        .flatMapToDouble(n -> DoubleStream.of(n.doubleValue()))
+        .flatMapToDouble(n -> DoubleStream.of(n.doubleValue())) // off
         .boxed()
-        .mapMultiToInt((d, c) -> c.accept(d.intValue()))
+        .mapMultiToInt((d, c) -> c.accept(d.intValue())) // off
         .boxed()
-        .mapMultiToLong((n, c) -> c.accept(n.longValue()))
+        .mapMultiToLong((n, c) -> c.accept(n.longValue())) // off
         .boxed()
-        .mapMultiToDouble((n, c) -> c.accept(n.doubleValue()))
+        .mapMultiToDouble((n, c) -> c.accept(n.doubleValue())) // off
         .sum();
       System.out.printf("The result is %d\n", (int) r);
     }

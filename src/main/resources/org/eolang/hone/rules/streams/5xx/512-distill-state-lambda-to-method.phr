@@ -32,7 +32,7 @@ result: |
     signature ↦ "",
     maxs ↦ ⟦
       φ ↦ Φ.jeo.maxs,
-      max-stack ↦ 6,
+      max-stack ↦ 10,
       max-locals ↦ 3
     ⟧,
     params ↦ ⟦

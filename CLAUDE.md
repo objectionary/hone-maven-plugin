@@ -132,9 +132,10 @@ body                 the opcode formation spliced between item-load and emit
 The body is one-in-one-out (auto-style): phino feeds it a single item
 and it produces a single item, so `401-fuse` can concatenate any two
 adjacent bodies blindly. Pointwise operators (map, filter, …) carry an
-empty `state`; the only stateful operator today is `distinct`, whose
-`state` builds a `java/util/HashSet` and whose body consults it — see
-"Stateful operators (distinct)" below. There is still no
+empty `state`; the two stateful operators today are `distinct` (whose
+`state` builds a `java/util/HashSet` and whose body consults it) and
+`skip` (whose `state` builds a `long[1]` countdown counter) — see
+"Stateful operators (distinct, skip)" below. There is still no
 continuation-passing variant.
 
 The full operator-to-rule mapping (every rule named below exists under
@@ -154,6 +155,9 @@ dup before a filter distill      → 431
 distinct                         → 216 → 307 → state distill;
                                     441 reverts it to invokeinterface
                                     if it never fused
+skip                             → 220 → 308 → state distill;
+                                    442 reverts it (count and call)
+                                    to invokeinterface if it never fused
 ```
 
 `401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
@@ -171,9 +175,9 @@ method that the `mapMulti` call references. The 6xx rules (601, 602,
 `Φ.hone.lambda` + `invokeinterface`, and the 7xx rules (701, 702)
 lower the lambdas to `invokedynamic`.
 
-### Stateful operators (distinct)
+### Stateful operators (distinct, skip)
 
-`distinct` is the one operator that needs per-element state — a
+`distinct` is the canonical operator that needs per-element state — a
 `java/util/HashSet` of the elements already seen. It is treated as "a
 filter that owns a HashSet" and rides the same auto-style distill, with
 three extra pieces:
@@ -208,6 +212,35 @@ three extra pieces:
   pattern is closed on four operands, so the marker stops it re-recognising
   the opcode and prevents a 216 → 307 → 441 loop (jeo ignores the extra
   binding when assembling).
+
+`skip` is the second stateful operator and is built as a strict parallel
+of distinct — "a filter that owns a countdown counter":
+
+- **`state` block.** `308-skip-to-distill` stashes the bytecode that builds
+  a one-element `Object[]` holding a fresh `long[1]`, seeded from the
+  *captured count-push* — `220-recognize-skip` grabs the single `lconst_0`
+  / `lconst_1` / `ldc {long}` opcode that precedes `Stream.skip(J)` and
+  carries it on the pragma as `push`, so the original count rides into the
+  counter cell. The block builds the `long[]` first and only then wraps it
+  in the `Object[]` (a `dup_x1`/`swap` shuffle) to keep its stack peak at 5,
+  matching distinct's — anything higher overflows the *caller's* max-stack,
+  which jeo never recomputes.
+- **`Φ.hone.fetch` marker.** The body opens with `⟦ φ ↦ Φ.hone.fetch,
+  type ↦ "[J" ⟧` (its state-var is a `long[]`), reads the counter, writes
+  it back decremented (a long counter never wraps in any reachable stream),
+  and branches on the *old* count: while it was positive the item is
+  dropped, otherwise it survives to `consumer.accept`. `dup2_x2` stashes the
+  old count below the store group so the array is consumed *before* the
+  branch — the keep label is left with just `[item]`, the same single-item
+  frame distinct uses, so `503` fills it unchanged. Skip reuses 502 / 512 /
+  521 / 601 verbatim; the only shared-rule change it forced was bumping
+  `512`'s wrapper max-stack to 10 to fit the long juggling.
+- **`442` unfused revert.** `442-unfused-skip-to-invokeinterface` is 441's
+  twin: a skip that never fused is reverted, but because skip takes an
+  argument the revert replays the count-push (recovered from the `state`
+  block) before the `invokeinterface Stream.skip(J)` — a lone skip lowered
+  to a mapMulti would be strictly slower than the native skip. Same
+  `reverted ↦ Φ.true` marker breaks the 220 → 308 → 442 loop.
 
 Limitations (v1): one state variable per fused wrapper — `401-fuse` is
 gated so two stateful distills never merge (the array fill and fetch

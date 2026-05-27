@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A skip distill that still carries only the bare countdown guard (it never
+# fused) reverts to a plain Stream.skip(J) opcode preceded by the original
+# count-push and tagged with the `reverted` marker, so 220 cannot
+# re-recognise it and re-enter the fold/revert cycle.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/442-unfused-skip-to-invokeinterface.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        start ↦ "skip",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true",
+        state ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
+          s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+          s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧,
+          s6 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+          s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+          s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
+          s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+          s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          s11 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+          s12 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          s13 ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body ↦ ⟦
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+          b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+          b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+          b5 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+          b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+          b7 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+          b8 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+          b9 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+          b10 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+          b11 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+          b12 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+          b13 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+          b14 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+          b15 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-a, reverted ↦ Φ.true, 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧

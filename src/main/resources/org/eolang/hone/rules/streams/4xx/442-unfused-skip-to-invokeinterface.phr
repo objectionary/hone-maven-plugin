@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a skip distill that never fused — the exact analogue of 441 for
+# distinct. After the 4xx fuse pass a skip that found a stateless neighbour
+# has extra opcodes spliced into its body; one that sat alone still carries
+# ONLY the bare countdown guard 308 produced. Lowering such a lone skip to a
+# mapMulti would cost an extra invokedynamic, a wrapper and a long[] for no
+# fusion benefit — and is strictly slower than the native Stream.skip(n) the
+# JVM already has — so we put it back as a plain skip call.
+#
+# The original count was folded into the `state` block (the lconst/ldc the
+# count rode in on); we recover it from there as 𝑒-push and replay it before
+# the reverted call. The reverted opcode carries a `reverted ↦ Φ.true`
+# marker: 220's skip pattern is closed on the four-operand opcode jeo emits,
+# so the fifth operand binding stops it re-recognising this one and the
+# 220 → 308 → 442 cycle cannot spin. jeo ignores the extra binding when
+# assembling, so the bytecode is an ordinary invokeinterface.
+#
+# Both the state block and the body match below are closed (no 𝐵-rest), so a
+# fused skip — whose state and body hold additional opcodes — is left for 502
+# to lower.
+name: unfused-skip-to-invokeinterface
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      start ↦ "skip",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      state ↦ ⟦
+        𝜏-clen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+        𝜏-new-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
+        𝜏-dup-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-cidx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        𝜏-push ↦ 𝑒-push,
+        𝜏-cstore ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+        𝜏-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+        𝜏-new-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
+        𝜏-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+        𝜏-swap-hi ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+        𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        𝜏-swap-lo ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+        𝜏-store ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+        ρ ↦ ∅
+      ⟧,
+      body ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+        𝜏-zero ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        𝜏-dup2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+        𝜏-dupx ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+        𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+        𝜏-sub ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+        𝜏-back ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+        𝜏-zerol ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+        𝜏-cmp ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+        𝜏-ifle ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧ ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+        𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back ↦ 𝑒-push,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/Stream",
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-push-back
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after']
+  - meta: 𝜏-skip
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-push-back']

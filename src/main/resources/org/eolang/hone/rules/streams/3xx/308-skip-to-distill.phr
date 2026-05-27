@@ -1,0 +1,126 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds Φ.hone.skip (produced by 220) into a Φ.hone.distill, exactly like 307
+# folds distinct — skip is "a filter that owns a countdown counter".
+#
+# The per-element state, a one-cell java long[] holding "elements still to
+# skip", is carried as the `state` binding: a block of bytecode that
+# allocates a one-element Object[] and stores a fresh long[1] in it, seeded
+# from the captured count-push (𝑒-push, the original lconst_0 / lconst_1 /
+# ldc {long}). Keeping the construction as ready-made opcodes means 401-fuse
+# composes two stateful operators by joining their `state` blocks, and 502
+# emits the array by relocating the block verbatim in front of the mapMulti
+# dispatch. The opcode names are random so two skip() calls in one method do
+# not collide when their blocks land in the same body.
+#
+# The body is auto emit-shape, like a filter guard. It opens with a
+# Φ.hone.fetch marker meaning "push my long[] onto the stack" (521 turns it
+# into the array load at emit), reads the counter, writes it back decremented
+# (long never wraps in any reachable stream), and branches on the OLD count:
+# while it was positive the item is dropped (counter spent), otherwise the
+# item survives to the wrapper's appended consumer.accept. The counter array
+# is consumed before the branch, so the keep label leaves only [item] on the
+# stack — a single-item frame. Its type is left as the Φ.hone.frame-item
+# marker that 503 resolves from bridge-input at emit time: after 401-fuse the
+# distill inherits its neighbour's element type, so the frame must be filled
+# then, not hard-coded here (the same reason 307's distinct guard defers it).
+name: skip-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.skip,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    push ↦ 𝑒-push
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    start ↦ "skip",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Object;",
+    static ↦ "true",
+    state ↦ ⟦
+      𝜏-clen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-new-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
+      𝜏-dup-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-cidx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-push ↦ 𝑒-push,
+      𝜏-cstore ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      𝜏-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-new-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
+      𝜏-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-swap-hi ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-swap-lo ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-store ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      i11 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifle,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i14 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      i15 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L%d"']
+  - meta: 𝜏-clen
+    function: random-tau
+    args: []
+  - meta: 𝜏-new-cnt
+    function: random-tau
+    args: ['𝜏-clen']
+  - meta: 𝜏-dup-cnt
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt']
+  - meta: 𝜏-cidx
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt']
+  - meta: 𝜏-push
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx']
+  - meta: 𝜏-cstore
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push']
+  - meta: 𝜏-len
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore']
+  - meta: 𝜏-new-arr
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-len']
+  - meta: 𝜏-dup-arr
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-len', '𝜏-new-arr']
+  - meta: 𝜏-swap-hi
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-len', '𝜏-new-arr', '𝜏-dup-arr']
+  - meta: 𝜏-idx
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-swap-hi']
+  - meta: 𝜏-swap-lo
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-swap-hi', '𝜏-idx']
+  - meta: 𝜏-store
+    function: random-tau
+    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-swap-hi', '𝜏-idx', '𝜏-swap-lo']

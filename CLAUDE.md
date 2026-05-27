@@ -143,7 +143,7 @@ The full operator-to-rule mapping (every rule named below exists under
 ```text
 filter, map (object + primitive) → 201..204 → Φ.hone.{filter,map}
 boxed/unbox, box                 → 205, 206  → Φ.hone.{unbox,box}
-box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold primitives back to map/filter
+box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold back to map/filter
 type / transform adjustments     → 241..243, 251..261, 271, 272
 dup insertion (for filter)       → 281, 282
 dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)

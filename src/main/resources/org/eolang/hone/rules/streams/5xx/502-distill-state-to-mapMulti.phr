@@ -2,7 +2,20 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: distill-to-mapMulti
+# State-carrying sibling of 501. A distill whose `state` block is
+# non-empty (today only distinct's HashSet builder) is lowered into the
+# same Φ.hone.mapMulti + Φ.hone.distill-lambda pair as 501, except the
+# `state` opcodes are relocated verbatim in front of the mapMulti
+# dispatch. Those opcodes leave a freshly built Object[] on the stack,
+# which the invokedynamic factory (widened by 601 via `captured`)
+# captures into the BiConsumer; 512 makes the wrapper take that array as
+# argument 0 and 521 turns the body's fetch markers into loads from it.
+#
+# This rule is state-type agnostic: it never mentions HashSet. It fires
+# only when the state block carries at least one opcode (the leading
+# 𝜏-state-first binding), which is exactly what keeps 501 — matching an
+# empty state — on the stateless path.
+name: distill-state-to-mapMulti
 pattern: |
   ⟦
     φ ↦ Φ.jeo.class,
@@ -26,8 +39,12 @@ pattern: |
           start ↦ 𝑒-start,
           accepted ↦ 𝑒-accepted,
           returned ↦ 𝑒-returned,
-          static ↦ 𝑒-static,
-          state ↦ ⟦ ρ ↦ ∅ ⟧,
+          static ↦ "true",
+          state ↦ ⟦
+            𝜏-state-first ↦ 𝑒-state-first,
+            𝐵-state-rest,
+            ρ ↦ ∅
+          ⟧,
           body ↦ 𝑒-body
         ⟧,
         𝐵-body-tail
@@ -52,6 +69,8 @@ result: |
       𝐵-method-head,
       body ↦ ⟦
         𝐵-body-head,
+        𝜏-state-first ↦ 𝑒-state-first,
+        𝐵-state-rest,
         𝜏-distill ↦ ⟦
           φ ↦ Φ.hone.mapMulti,
           class ↦ 𝑒-class,
@@ -61,9 +80,9 @@ result: |
           lambda-signature ↦ 𝑒-lambda-signature,
           consumer ↦ 𝑒-consumer,
           stream-class ↦ 𝑒-stream-class,
-          static ↦ 𝑒-static,
+          static ↦ "true",
           is-interface ↦ 𝑒-is-interface,
-          captured ↦ ""
+          captured ↦ "[Ljava/lang/Object;"
         ⟧,
         𝐵-body-tail
       ⟧,
@@ -72,10 +91,11 @@ result: |
     𝐵-class-tail,
     𝜏-distill-lambda ↦ ⟦
       φ ↦ Φ.hone.distill-lambda,
-      static ↦ 𝑒-static,
+      static ↦ "true",
       bridge-input ↦ 𝑒-bridge-input,
       consumer ↦ 𝑒-consumer,
       target-method ↦ 𝑒-target-method,
+      captured ↦ "[Ljava/lang/Object;",
       body ↦ 𝑒-body
     ⟧,
     ρ ↦ ∅

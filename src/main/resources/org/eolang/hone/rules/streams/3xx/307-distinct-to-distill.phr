@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds Φ.hone.distinct (produced by 216) into a Φ.hone.distill, exactly
+# like 305 folds a filter — distinct is "a filter that owns a HashSet".
+#
+# The per-element state, a java/util/HashSet seen-set, is carried as the
+# `state` binding: a block of bytecode that allocates a one-element
+# Object[] and stores a fresh HashSet in it. Keeping the construction as
+# ready-made opcodes (rather than an abstract descriptor) means 401-fuse
+# composes two stateful operators by simply joining their `state` blocks,
+# and 502 emits the array by relocating the block verbatim in front of
+# the mapMulti dispatch — no rule has to understand HashSet. The opcode
+# names are random so two distinct() calls in one method do not collide
+# when their blocks land in the same body.
+#
+# The body itself is index-agnostic (auto emit-shape, like a filter
+# guard): it opens with a Φ.hone.fetch marker meaning "push my seen-set
+# onto the stack", which 521 turns into the concrete array load at emit.
+# The wrapper's leading item-load (512) leaves [item]; the fetch leaves
+# [item, set]; HashSet.add returns true on a previously-unseen element,
+# so the item survives to the wrapper's appended consumer.accept; a
+# duplicate is popped and the wrapper returns early, emitting nothing.
+name: distinct-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distinct,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    start ↦ "distinct",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Object;",
+    static ↦ "true",
+    state ↦ ⟦
+      𝜏-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-new-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
+      𝜏-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-new-set ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
+      𝜏-dup-set ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-init ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokespecial,
+        i2 ↦ "java/util/HashSet",
+        i3 ↦ "<init>",
+        i4 ↦ "()V",
+        i5 ↦ Φ.false
+      ⟧,
+      𝜏-store ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      i4 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ "java/util/HashSet",
+        i2 ↦ "add",
+        i3 ↦ "(Ljava/lang/Object;)Z",
+        i4 ↦ Φ.false
+      ⟧,
+      i5 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L%d"']
+  - meta: 𝜏-len
+    function: random-tau
+    args: []
+  - meta: 𝜏-new-arr
+    function: random-tau
+    args: ['𝜏-len']
+  - meta: 𝜏-dup-arr
+    function: random-tau
+    args: ['𝜏-len', '𝜏-new-arr']
+  - meta: 𝜏-idx
+    function: random-tau
+    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr']
+  - meta: 𝜏-new-set
+    function: random-tau
+    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx']
+  - meta: 𝜏-dup-set
+    function: random-tau
+    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx', '𝜏-new-set']
+  - meta: 𝜏-init
+    function: random-tau
+    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx', '𝜏-new-set', '𝜏-dup-set']
+  - meta: 𝜏-store
+    function: random-tau
+    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx', '𝜏-new-set', '𝜏-dup-set', '𝜏-init']

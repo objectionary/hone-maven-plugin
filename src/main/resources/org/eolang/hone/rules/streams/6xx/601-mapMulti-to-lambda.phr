@@ -14,7 +14,8 @@ pattern: |
     consumer ↦ 𝑒-consumer,
     stream-class ↦ 𝑒-stream-class,
     static ↦ 𝑒-static,
-    is-interface ↦ 𝑒-is-interface
+    is-interface ↦ 𝑒-is-interface,
+    captured ↦ 𝑒-captured
   ⟧
 result: |
   ⟦
@@ -30,7 +31,7 @@ result: |
       handle ↦ 𝑒-handle,
       class ↦ 𝑒-class,
       method ↦ 𝑒-target-method,
-      signature ↦ 𝑒-bridge-signature,
+      signature ↦ 𝑒-impl-signature,
       is-interface ↦ 𝑒-is-interface
     ⟧,
     stream ↦ ⟦
@@ -56,7 +57,7 @@ where:
       - 𝑒-class-as-argument-pattern
   - meta: 𝑒-interface
     function: concat
-    args: ['"("', 𝑒-class-as-argument, '")"', 𝑒-map-multi-consumer]
+    args: ['"("', 𝑒-class-as-argument, 𝑒-captured, '")"', 𝑒-map-multi-consumer]
   - meta: 𝑒-handle-str
     function: sed
     args:
@@ -70,6 +71,14 @@ where:
     function: concat
     args:
       - '"("'
+      - 𝑒-bridge-input
+      - 𝑒-consumer
+      - '")V"'
+  - meta: 𝑒-impl-signature
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-captured
       - 𝑒-bridge-input
       - 𝑒-consumer
       - '")V"'

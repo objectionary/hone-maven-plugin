@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# State-carrying sibling of 511. Builds the private static wrapper for a
+# distill that captured state, distinguished from 511's stateless
+# distill-lambda by the extra `captured` binding. The captured Object[]
+# is argument 0, the item is argument 1, the downstream Consumer is
+# argument 2, so the leading item-load is `aload 1` and the trailing
+# consumer-load is `aload 2` (511's are 0 and 1). The body's fetch
+# markers, left in place here, are resolved against argument 0 by 521.
+#
+# v1 handles the object-stream shape only (distinct is Stream<T>); the
+# item is a reference, hence aload / dup_x1 / Consumer.accept. Primitive
+# stateful operators would generalise this the way 511 does.
+name: distill-state-lambda-to-method
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.method,
+    access ↦ 4106,
+    descriptor ↦ 𝑒-descriptor,
+    signature ↦ "",
+    maxs ↦ ⟦
+      φ ↦ Φ.jeo.maxs,
+      max-stack ↦ 6,
+      max-locals ↦ 3
+    ⟧,
+    params ↦ ⟦
+      φ ↦ Φ.jeo.params,
+      i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-captured ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-bridge-input ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ 𝑒-consumer ⟧
+    ⟧,
+    body ↦ ⟦
+      φ ↦ Φ.jeo.seq.of,
+      i-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝐵-body,
+      i-load-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
+      i-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      i-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ 𝑒-consumer-class,
+        i3 ↦ "accept",
+        i4 ↦ "(Ljava/lang/Object;)V",
+        i5 ↦ Φ.true
+      ⟧,
+      i-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      ρ ↦ ∅
+    ⟧,
+    name ↦ 𝑒-target-method
+  ⟧
+where:
+  - meta: 𝑒-descriptor
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-captured
+      - 𝑒-bridge-input
+      - 𝑒-consumer
+      - '")V"'
+  - meta: 𝑒-consumer-class
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/L(.+);/$1/g"'

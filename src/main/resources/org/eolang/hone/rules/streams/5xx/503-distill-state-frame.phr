@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Resolves the Φ.hone.frame-item marker that 307 leaves at distinct's
+# keep-label. distinct is type-transparent — it returns the item it was
+# given — so the stackmap frame there must declare the item's real type,
+# which a type-agnostic fold cannot know. By the time the distill has
+# been lowered to a Φ.hone.distill-lambda (502) the wrapper's item type
+# is fixed as `bridge-input`, so this rule fills the frame from it. It
+# runs before 512 wraps the lambda into a method (503 < 512), so the
+# marker never reaches jeo.
+#
+# (Stackmap recomputation is really the assembler's job; an opt-in
+# COMPUTE_FRAMES on jeo:assemble would let every hone rule, this one and
+# filter's 305 alike, drop hand-built frames. Tracked as a jeo follow-up.)
+#
+# v1 reads the type off `bridge-input`, correct when every operator
+# before distinct in the fused body preserves the element type (true for
+# the map/filter pipelines exercised today).
+name: distill-state-frame
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 4,
+        nlocal ↦ 0,
+        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+        nstack ↦ 1,
+        stack ↦ ⟦
+          φ ↦ Φ.jeo.seq.of1,
+          item ↦ 𝑒-frame-stack
+        ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-frame-stack
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^B$/byte/g"'
+      - '"s/^C$/char/g"'
+      - '"s/^D$/double/g"'
+      - '"s/^F$/float/g"'
+      - '"s/^I$/integer/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^S$/short/g"'
+      - '"s/^Z$/boolean/g"'
+      - '"s/^L(.+);$/$1/g"'

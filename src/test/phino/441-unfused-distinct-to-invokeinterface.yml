@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A distinct distill that still carries only the bare guard (it never
+# fused) reverts to a plain Stream.distinct() opcode tagged with the
+# `reverted` marker, so 216 cannot re-recognise it and re-enter the
+# fold/revert cycle.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/441-unfused-distinct-to-invokeinterface.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        start ↦ "distinct",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true",
+        state ↦ ⟦ s ↦ ⟦ new ↦ "java/util/HashSet", init ↦ "()V" ⟧, ρ ↦ ∅ ⟧,
+        body ↦ ⟦
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+          b4 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokevirtual,
+            i1 ↦ "java/util/HashSet",
+            i2 ↦ "add",
+            i3 ↦ "(Ljava/lang/Object;)Z",
+            i4 ↦ Φ.false
+          ⟧,
+          b5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+          b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+          b7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+          b8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+          b9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-a, reverted ↦ Φ.true, 𝐵-b ⟧

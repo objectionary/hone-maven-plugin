@@ -4,11 +4,10 @@
 # Consolidated .skip() roundtrip suite covering every shape the rule
 # pipeline handles:
 #
-#   objNop   : Stream.skip(0L)                 -> rule 311 lowers to nop
-#   objNon0  : Stream.skip(2L) with no .map    -> 220 recognises, no fold
-#   objFused : Stream.skip(2L) after .map      -> 353 mapMulti+long[1]
-#   objOne   : Stream.skip(1L) after .map      -> same shape as 353 with
-#                                                 lconst_1 in counter-init
+#   objNop   : Stream.skip(0L)                 -> rule 308 lowers to nop
+#   objNon0  : Stream.skip(2L) with no .map    -> rule 309 state distill
+#   objFused : Stream.skip(2L) after .map      -> 306 + 309 fuse
+#   objOne   : Stream.skip(1L) after .map      -> 306 + 310 fuse
 #   intP     : IntStream.skip(0L)              -> 313 nop
 #   intF     : IntStream.skip(2L) after .map   -> 355 mapMulti+long[1]
 #   longP    : LongStream.skip(2L) bare        -> 226 recognise, 722 mirror
@@ -16,8 +15,9 @@
 #   doubleP  : DoubleStream.skip(0L)           -> 313 nop
 #   doubleF  : DoubleStream.skip(1L) bare      -> primitive roundtrip
 #
-# Opcode pins are intentionally omitted: the combined class folds
-# skip-as-nop, skip-as-mapMulti, and skip-as-roundtrip into one
+# Opcode pins are intentionally omitted: the combined class mixes
+# skip-as-nop, object skip-as-stateful-mapMulti, and primitive roundtrip
+# shapes into one
 # bytecode body, and the per-rule `invokeinterface` deltas no longer
 # attribute cleanly. The runtime output is the regression guard --
 # each numeric value is sensitive to a one-element off-by-one or a

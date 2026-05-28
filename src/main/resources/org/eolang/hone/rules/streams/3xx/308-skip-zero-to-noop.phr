@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Eliminates Φ.hone.skip when its count is "0". `Stream.skip(0L)` is a
+# no-op slice, so the recognized pair can become a single nop.
+name: skip-zero-to-noop
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      stream-class ↦ 𝑒-stream-class,
+      count ↦ "0",
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-nop ↦ ⟦
+      φ ↦ Φ.jeo.opcode.nop
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-nop
+    function: random-tau
+    args: [ '𝐵-before', '𝐵-after' ]

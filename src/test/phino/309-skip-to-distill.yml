@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/309-skip-to-distill.phr
+input: |
+  {⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        body ↦ ⟦
+          op1 ↦ ⟦
+            φ ↦ Φ.hone.skip,
+            stream-class ↦ "java/util/stream/Stream",
+            count ↦ "2"
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "skip", 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/lang/IllegalArgumentException" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.ldc, i1 ↦ ⟦ φ ↦ Φ.jeo.long, i1 ↦ "2" ⟧ ⟧

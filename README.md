@@ -199,6 +199,7 @@ Rules `301-dup-to-distill`, `302-transform-to-distill`,
   `303-type-to-distill`, `304-primitive-filter-to-distill`,
   `305-object-filter-to-distill`, and `306-map-to-distill`
   handle the individual cases,
+  `308-` through `310-` handle object `Stream.skip(long)`,
   and `311-load-this-in-pre-distill` prepares the stack
   for instance-method lambdas.
 After this stage,

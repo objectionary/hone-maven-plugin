@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Sibling of 309 for the javac `lconst_1` shape. It avoids re-emitting
+# the threshold as `ldc Φ.jeo.long(1)`.
+name: skip-one-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.skip,
+          stream-class ↦ "java/util/stream/Stream",
+          count ↦ "1"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.distill,
+          class ↦ 𝑒-class-name,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          start ↦ "skip-one",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true",
+          state ↦ ⟦
+            𝜏-state-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+            𝜏-state-new-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
+            𝜏-state-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+            𝜏-state-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            𝜏-counter-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+            𝜏-counter-new ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
+            𝜏-state-store ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+            ρ ↦ ∅
+          ⟧,
+          body ↦ ⟦
+            i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+            i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+            i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+            i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+            i6 ↦ ⟦
+              φ ↦ Φ.jeo.opcode.ifge,
+              i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧
+            ⟧,
+            i7 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+            i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+            i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+            i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+            i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+            i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+            i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.ladd ⟧,
+            i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+            i15 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+            i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+            i17 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+            i18 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label-accept ⟧,
+            i19 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝑒-label-accept
+    function: random-string
+    args: [ '"LskipOneAccept%d"' ]
+  - meta: 𝜏-state-len
+    function: random-tau
+    args: []
+  - meta: 𝜏-state-new-arr
+    function: random-tau
+    args: [ '𝜏-state-len' ]
+  - meta: 𝜏-state-dup-arr
+    function: random-tau
+    args: [ '𝜏-state-len', '𝜏-state-new-arr' ]
+  - meta: 𝜏-state-idx
+    function: random-tau
+    args: [ '𝜏-state-len', '𝜏-state-new-arr', '𝜏-state-dup-arr' ]
+  - meta: 𝜏-counter-len
+    function: random-tau
+    args: [ '𝜏-state-len', '𝜏-state-new-arr', '𝜏-state-dup-arr', '𝜏-state-idx' ]
+  - meta: 𝜏-counter-new
+    function: random-tau
+    args: [ '𝜏-state-len', '𝜏-state-new-arr', '𝜏-state-dup-arr', '𝜏-state-idx', '𝜏-counter-len' ]
+  - meta: 𝜏-state-store
+    function: random-tau
+    args: [ '𝜏-state-len', '𝜏-state-new-arr', '𝜏-state-dup-arr', '𝜏-state-idx', '𝜏-counter-len', '𝜏-counter-new' ]

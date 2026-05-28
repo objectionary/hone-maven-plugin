@@ -132,9 +132,9 @@ body                 the opcode formation spliced between item-load and emit
 The body is one-in-one-out (auto-style): phino feeds it a single item
 and it produces a single item, so `401-fuse` can concatenate any two
 adjacent bodies blindly. Pointwise operators (map, filter, …) carry an
-empty `state`; the only stateful operator today is `distinct`, whose
-`state` builds a `java/util/HashSet` and whose body consults it — see
-"Stateful operators (distinct)" below. There is still no
+empty `state`; stateful object-stream operators use an `Object[]`
+state slot and `Φ.hone.fetch` markers inside the body — see
+"Stateful operators" below. There is still no
 continuation-passing variant.
 
 The full operator-to-rule mapping (every rule named below exists under
@@ -147,6 +147,7 @@ box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold back to map/fil
 type / transform adjustments     → 241..243, 251..261, 271, 272
 dup insertion (for filter)       → 281, 282
 dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)
+skip(0), skip(1), skip(N)         → 210, 212, 220 → 308..310
 load `this` into a pre-distill   → 311 → flips Φ.hone.pre-distill to distill
 box-distill-unbox collapse       → 411 → primitive-typed distill
 transform-distill normalisation  → 421, 422
@@ -171,7 +172,7 @@ method that the `mapMulti` call references. The 6xx rules (601, 602,
 `Φ.hone.lambda` + `invokeinterface`, and the 7xx rules (701, 702)
 lower the lambdas to `invokedynamic`.
 
-### Stateful operators (distinct)
+### Stateful operators
 
 `distinct` is the one operator that needs per-element state — a
 `java/util/HashSet` of the elements already seen. It is treated as "a
@@ -209,13 +210,24 @@ three extra pieces:
   the opcode and prevents a 216 → 307 → 441 loop (jeo ignores the extra
   binding when assembling).
 
+`skip(long)` uses the same stateful distill path for object streams.
+Rules `210`, `212`, and `220` recognise the three javac count shapes
+(`lconst_0`, `lconst_1`, and `ldc Φ.jeo.long`). Rule `308` removes
+`skip(0L)` as a no-op, while `309` and `310` create a state block that
+stores one `long[1]` counter in the captured `Object[]`. The `309`
+state block first preserves the eager negative-count exception for
+non-0/1 constants. The distill body compares the counter with the
+threshold, increments it while dropping the first N items, and falls
+through for later items.
+
 Limitations (v1): one state variable per fused wrapper — `401-fuse` is
 gated so two stateful distills never merge (the array fill and fetch
-resolution are single-slot); object streams only (`512` hardcodes the
-`Object` item shape); and `503` reads the frame type off `bridge-input`,
-correct while every operator before the distinct preserves the element
-type. Lifting these is future work (a `size`-driven fixpoint fill plus a
-runtime fetch counter generalise to any number of state vars).
+resolution are single-slot); stateful operators are object streams only
+(`512` hardcodes the `Object` item shape); and `503` reads the frame type
+off `bridge-input`, correct while every operator before the stateful
+operator preserves the element type. Lifting these is future work (a
+`size`-driven fixpoint fill plus a runtime fetch counter generalise to
+any number of state vars).
 
 ## phino: the only rewrite engine
 

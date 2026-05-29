@@ -2,29 +2,19 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Resolves the Φ.hone.frame-item marker that 307 / 308 leave at a
-# stateful guard's keep-label. The operator is type-transparent — it
-# returns the item it was given — so the stackmap frame there must
-# declare the item's real type, which a type-agnostic fold cannot know.
-# By the time the distill has been lowered to a Φ.hone.distill-lambda
-# (502) the wrapper's shape is fixed, so this rule fills a FULL frame
-# from it: locals are [captured List, item (bridge-input), Consumer,
-# the int counter at slot 3] and the single stack item is the item. A
-# full frame is required (not same-locals-1) because the counter 512
-# adds at slot 3 outlives every branch — a same-locals frame would drop
-# it and the next guard's `iload 3` would read an undefined local.
-# Applied at fixpoint it fills the keep-label of every fused guard. It
-# runs before 512 wraps the lambda into a method (503 < 512), so the
-# marker never reaches jeo.
-#
-# (Stackmap recomputation is really the assembler's job; an opt-in
-# COMPUTE_FRAMES on jeo:assemble would let every hone rule, this one and
-# filter's 305 alike, drop hand-built frames. Tracked as a jeo follow-up.)
-#
-# v1 reads the type off `bridge-input`, correct when every operator
-# before distinct in the fused body preserves the element type (true for
-# the map/filter pipelines exercised today).
-name: distill-state-frame
+# Promotes the same-locals-1 keep-frame that 305 leaves on a filter guard
+# into a FULL frame when that guard has fused into a STATEFUL distill —
+# one whose wrapper (512) owns the per-call counter at local 3. A
+# same-locals-1 frame inherits its locals from the previous frame, so if a
+# filter guard is the first branch target in the wrapper it inherits the
+# bare param frame (List, item, Consumer) and the counter at slot 3 is
+# undefined — the next fetch's `iload 3` then fails verification. Rewriting
+# every such frame to a full frame that lists the counter keeps slot 3
+# live across all guards. Scoped to Φ.hone.distill-lambda with `captured`,
+# so stateless filter frames (511's wrapper has no counter) are untouched.
+# Runs at fixpoint before 512 wraps the lambda, alongside 503 which does
+# the same for distinct / skip keep-labels.
+name: distill-state-filter-frame
 pattern: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,
@@ -35,7 +25,14 @@ pattern: |
     captured ↦ 𝑒-captured,
     body ↦ ⟦
       𝐵-before,
-      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 4,
+        nlocal ↦ 0,
+        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+        nstack ↦ 1,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ 𝑒-item ⟧
+      ⟧,
       𝐵-after,
       ρ ↦ ∅
     ⟧
@@ -56,13 +53,13 @@ result: |
         locals ↦ ⟦
           φ ↦ Φ.jeo.seq.of4,
           x0 ↦ 𝑒-frame-captured,
-          x1 ↦ 𝑒-frame-stack,
+          x1 ↦ 𝑒-frame-item,
           x2 ↦ 𝑒-frame-consumer,
           x3 ↦ "integer"
         ⟧,
         stack ↦ ⟦
           φ ↦ Φ.jeo.seq.of1,
-          x0 ↦ 𝑒-frame-stack
+          x0 ↦ 𝑒-item
         ⟧
       ⟧,
       𝐵-after,
@@ -70,7 +67,7 @@ result: |
     ⟧
   ⟧
 where:
-  - meta: 𝑒-frame-stack
+  - meta: 𝑒-frame-item
     function: sed
     args:
       - 𝑒-bridge-input

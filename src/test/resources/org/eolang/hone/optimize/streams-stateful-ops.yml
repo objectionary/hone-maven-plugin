@@ -3,12 +3,14 @@
 ---
 # State-carrying intermediate operators. Only distinct is folded into
 # the distill today; it fuses with the preceding .map(n -> n) into one
-# Stream.mapMulti backed by a captured java/util/HashSet, so the pinned
-# `new` count proves the seen-set was allocated.
+# Stream.mapMulti backed by a captured java/util/List that holds the
+# seen-set, so the pinned `new` count proves both the List and the
+# java/util/HashSet inside it were allocated.
 #
 #   distinct (216 -> 307 -> 502): captures a java/util/HashSet seen-set
+#     inside the wrapper's java/util/List
 #     input [1, 2, 2, 3, 1, 3, 4] -> [1, 2, 3, 4]; count() = 4
-#     emits 1 `new` (HashSet allocation) and a HashSet.add call.
+#     emits 2 `new` (the ArrayList and the HashSet) and a HashSet.add call.
 #
 # takeWhile and dropWhile are NOT recognised yet — no rule folds them —
 # so they survive as their original lambdas and allocate no state cell
@@ -43,6 +45,6 @@ before:
   baload: 0
   bastore: 0
 after:
-  new: 1
+  new: 2
   baload: 0
   bastore: 0

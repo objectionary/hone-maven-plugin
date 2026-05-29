@@ -22,10 +22,12 @@
 # The `after` counts assert it: the two fused pipelines drop invokedynamic
 # 4 -> 2 (each pair of maps becomes one dispatch, the lone skip keeps none);
 # exactly two long[1] counters are allocated (newarray == 2), one per fused
-# skip; boxing only relocates into the synthesised wrappers
-# (invokestatic 27 -> 31). Primitive-stream skip (IntStream/LongStream/
-# DoubleStream) is out of scope for v1 — only java/util/stream/Stream.skip is
-# recognised — exactly as for distinct.
+# skip, each wrapped in its own captured java/util/List (new == 2);
+# invokeinterface climbs 10 -> 12 as each fused skip gains a List.add (state
+# build) and a List.get (fetch); boxing only relocates into the synthesised
+# wrappers (invokestatic 27 -> 31). Primitive-stream skip (IntStream/
+# LongStream/DoubleStream) is out of scope for v1 — only
+# java/util/stream/Stream.skip is recognised — exactly as for distinct.
 java: |
   package skip;
   import java.util.stream.*;
@@ -55,9 +57,11 @@ before:
   invokestatic: 27
   invokevirtual: 5
   newarray: 0
+  new: 0
 after:
   invokedynamic: 2
-  invokeinterface: 8
+  invokeinterface: 12
   invokestatic: 31
   invokevirtual: 5
   newarray: 2
+  new: 2

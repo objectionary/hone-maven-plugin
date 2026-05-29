@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Two ADJACENT stateful distills must fuse into one. This is the case that
+# regressed: a distinct (HashSet state) sitting next to a skip (long[1]
+# state). 401-fuse joins their `state` appends into one block and their
+# `body` guards into one body, so the result is a SINGLE Φ.hone.distill
+# whose state carries both appends (new HashSet + newarray) and whose body
+# carries both Φ.hone.fetch markers. Because each operator's state is now
+# an append to a shared List rather than its own array allocation, joining
+# two of them is pure concatenation — no array stacking, no overflow.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/401-fuse.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        start ↦ "distinct",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true",
+        state ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body ↦ ⟦
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        start ↦ "skip",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true",
+        state ↦ ⟦
+          t1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+          t2 ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body ↦ ⟦
+          c1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "distinct", 𝐵-b ⟧
+  - ⟦ 𝐵-x, 𝜏-s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧, 𝐵-y, 𝜏-s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧, 𝐵-z ⟧
+  - ⟦ 𝐵-p, 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧, 𝐵-q, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧, 𝐵-r ⟧

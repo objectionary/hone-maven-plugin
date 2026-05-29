@@ -41,13 +41,17 @@ pattern: |
         𝜏-cidx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
         𝜏-push ↦ 𝑒-push,
         𝜏-cstore ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
-        𝜏-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
-        𝜏-new-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
-        𝜏-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
         𝜏-swap-hi ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
-        𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        𝜏-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
         𝜏-swap-lo ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
-        𝜏-store ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-add-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
         ρ ↦ ∅
       ⟧,
       body ↦ ⟦

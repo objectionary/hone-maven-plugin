@@ -27,13 +27,17 @@ input: |
           s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
           s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧,
           s6 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
-          s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
-          s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
-          s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
-          s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
-          s11 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-          s12 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
-          s13 ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+          s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+          s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          s10 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            i2 ↦ "java/util/List",
+            i3 ↦ "add",
+            i4 ↦ "(Ljava/lang/Object;)Z",
+            i5 ↦ Φ.true
+          ⟧,
+          s11 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
           ρ ↦ ∅
         ⟧,
         body ↦ ⟦

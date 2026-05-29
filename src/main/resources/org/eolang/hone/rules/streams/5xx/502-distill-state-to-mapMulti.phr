@@ -3,18 +3,20 @@
 ---
 # yamllint disable rule:line-length
 # State-carrying sibling of 501. A distill whose `state` block is
-# non-empty (today only distinct's HashSet builder) is lowered into the
-# same Φ.hone.mapMulti + Φ.hone.distill-lambda pair as 501, except the
-# `state` opcodes are relocated verbatim in front of the mapMulti
-# dispatch. Those opcodes leave a freshly built Object[] on the stack,
-# which the invokedynamic factory (widened by 601 via `captured`)
-# captures into the BiConsumer; 512 makes the wrapper take that array as
-# argument 0 and 521 turns the body's fetch markers into loads from it.
+# non-empty (an append produced by 307 / 308) is lowered into the same
+# Φ.hone.mapMulti + Φ.hone.distill-lambda pair as 501, except a fresh
+# java/util/ArrayList is built here and the relocated `state` opcodes
+# append every fused operator's state object to it in body order. The
+# finished List is left on the stack, which the invokedynamic factory
+# (widened by 601 via `captured`) captures into the BiConsumer; 512 makes
+# the wrapper take the List as argument 0 and 521 turns the body's fetch
+# markers into List.get(counter++) reads from it. One List per wrapper
+# holds any number of state vars, so two stateful distills fuse cleanly.
 #
-# This rule is state-type agnostic: it never mentions HashSet. It fires
-# only when the state block carries at least one opcode (the leading
-# 𝜏-state-first binding), which is exactly what keeps 501 — matching an
-# empty state — on the stateless path.
+# This rule is state-type agnostic: it never mentions HashSet or long[].
+# It fires only when the state block carries at least one opcode (the
+# leading 𝜏-state-first binding), which is exactly what keeps 501 —
+# matching an empty state — on the stateless path.
 name: distill-state-to-mapMulti
 pattern: |
   ⟦
@@ -69,6 +71,15 @@ result: |
       𝐵-method-head,
       body ↦ ⟦
         𝐵-body-head,
+        𝜏-new-list ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/ArrayList" ⟧,
+        𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-init-list ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokespecial,
+          i2 ↦ "java/util/ArrayList",
+          i3 ↦ "<init>",
+          i4 ↦ "()V",
+          i5 ↦ Φ.false
+        ⟧,
         𝜏-state-first ↦ 𝑒-state-first,
         𝐵-state-rest,
         𝜏-distill ↦ ⟦
@@ -82,7 +93,7 @@ result: |
           stream-class ↦ 𝑒-stream-class,
           static ↦ "true",
           is-interface ↦ 𝑒-is-interface,
-          captured ↦ "[Ljava/lang/Object;"
+          captured ↦ "Ljava/util/List;"
         ⟧,
         𝐵-body-tail
       ⟧,
@@ -95,7 +106,7 @@ result: |
       bridge-input ↦ 𝑒-bridge-input,
       consumer ↦ 𝑒-consumer,
       target-method ↦ 𝑒-target-method,
-      captured ↦ "[Ljava/lang/Object;",
+      captured ↦ "Ljava/util/List;",
       body ↦ 𝑒-body
     ⟧,
     ρ ↦ ∅
@@ -104,6 +115,15 @@ where:
   - meta: 𝜏-distill-lambda
     function: random-tau
     args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail']
+  - meta: 𝜏-new-list
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝐵-state-rest']
+  - meta: 𝜏-dup-list
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝐵-state-rest', '𝜏-new-list']
+  - meta: 𝜏-init-list
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝐵-state-rest', '𝜏-new-list', '𝜏-dup-list']
   - meta: 𝑒-target-method
     function: random-string
     args: [ '"distill_%d"' ]

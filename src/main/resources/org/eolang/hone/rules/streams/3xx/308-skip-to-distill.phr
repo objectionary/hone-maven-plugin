@@ -48,7 +48,7 @@ result: |
     returned ↦ "Ljava/lang/Object;",
     static ↦ "true",
     state ↦ ⟦
-      𝜏-clen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-alen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       𝜏-new-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
       𝜏-dup-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       𝜏-cidx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
@@ -92,36 +92,36 @@ where:
   - meta: 𝑒-label
     function: random-string
     args: ['"L%d"']
-  - meta: 𝜏-clen
+  - meta: 𝜏-alen
     function: random-tau
     args: []
   - meta: 𝜏-new-cnt
     function: random-tau
-    args: ['𝜏-clen']
+    args: ['𝜏-alen']
   - meta: 𝜏-dup-cnt
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt']
+    args: ['𝜏-alen', '𝜏-new-cnt']
   - meta: 𝜏-cidx
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt']
   - meta: 𝜏-push
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx']
   - meta: 𝜏-cstore
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push']
   - meta: 𝜏-swap-hi
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore']
   - meta: 𝜏-dup-arr
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi']
   - meta: 𝜏-swap-lo
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr']
   - meta: 𝜏-add
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr', '𝜏-swap-lo']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr', '𝜏-swap-lo']
   - meta: 𝜏-pop
     function: random-tau
-    args: ['𝜏-clen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr', '𝜏-swap-lo', '𝜏-add']
+    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr', '𝜏-swap-lo', '𝜏-add']

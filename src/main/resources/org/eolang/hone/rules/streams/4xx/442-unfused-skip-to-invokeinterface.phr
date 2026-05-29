@@ -35,7 +35,7 @@ pattern: |
       returned ↦ 𝑒-returned,
       static ↦ 𝑒-static,
       state ↦ ⟦
-        𝜏-clen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+        𝜏-alen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
         𝜏-new-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
         𝜏-dup-cnt ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
         𝜏-cidx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,

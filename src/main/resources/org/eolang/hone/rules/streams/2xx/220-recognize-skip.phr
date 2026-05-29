@@ -23,7 +23,7 @@
 # `.skip(n)` was written on its own source line.
 #
 # v1 assumes the count is a compile-time constant (a single opcode pushes the
-# whole value). A computed argument would mis-capture only the last opcode of
+# whole value). A computed argument would miscapture only the last opcode of
 # its expression; such streams are left unoptimised.
 name: recognize-skip
 pattern: |

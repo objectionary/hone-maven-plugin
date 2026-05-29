@@ -8,14 +8,15 @@
 # the bytecode semantically identical — the optimised class simply carries no
 # line-number table, which is fine for transformed code.
 #
-# Labels are deliberately left intact: a label may be a jump or frame target,
-# and deciding that locally is not possible, so removing one is unsafe. Only
-# the line-numbers go.
+# Labels are deliberately left intact: a label may be a jump, a frame, a
+# try-catch boundary or a local-variable-table scope target, and deciding
+# that locally is not possible, so removing one is unsafe. Only the
+# line-numbers go.
 #
 # Done first, as a 1xx prep step, this keeps the only debug entry that can
 # appear anywhere out of the way of later rules that reason about opcode
 # adjacency (an own-line `.skip(n)` is left with just a bare label between the
-# count-push and the call, which 222 handles, rather than a label plus a
+# count-push and the call, which 219 removes, rather than a label plus a
 # line-number).
 name: remove-line-numbers
 pattern: |

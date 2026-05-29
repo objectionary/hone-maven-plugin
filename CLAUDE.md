@@ -94,7 +94,7 @@ that same order. The `NNN-` prefix is *the* mechanism that defines the
 pipeline stages:
 
 ```text
-1xx  prep         remove dead labels, lower invokedynamic to Φ.hone.lambda
+1xx  prep         strip line-numbers, lower invokedynamic to Φ.hone.lambda
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
 4xx  fuse         adjacent distills → one combined distill  ← the actual win

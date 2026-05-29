@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Companion to 101. When a fluent stream call is written on its own source
+# line, javac emits a label (the line-number anchor for that line) right
+# before the operator's `invokeinterface java/util/stream/Stream` opcode. 101
+# only strips that label when the operator is a lambda one (an invokedynamic
+# immediately precedes it — map/filter); a bare operator such as `distinct()`
+# or `skip(n)` has no preceding invokedynamic, so its anchor label survives
+# and wedges between two operators. A label between two pipeline opcodes
+# breaks adjacency, and 401-fuse needs adjacency, so a debug-compiled
+# (javac -g) pipeline of stateful operators fuses only partially and emits an
+# unverifiable wrapper.
+#
+# Removing a label is unsafe in general — a try-catch boundary or a
+# local-variable-table scope may reference it by name from a sibling binding a
+# body-local rule cannot see. This rule is scoped to the one provably dead
+# case (the same reasoning 101 and 219 rely on): a label whose ONLY reference
+# is the line-number entry that immediately follows it (the `𝑒-label-value`
+# bound on both sides forces that pairing), sitting right before a
+# `java/util/stream/Stream` call. A jump target carries a stackmap frame, not
+# a bare line-number, so this never matches a branch target; no statement
+# boundary, try-region edge or variable scope falls between two operators of
+# one fluent chain. Run before 151 so the line-number is still present to
+# witness the pairing.
+name: remove-pipeline-labels
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-label ↦ ⟦
+      φ ↦ Φ.jeo.label,
+      𝜏-label-value ↦ 𝑒-label-value,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-line-number ↦ ⟦
+      φ ↦ Φ.jeo.line-number,
+      number ↦ 𝑒-line-number,
+      𝜏-ln-label ↦ ⟦
+        φ ↦ Φ.jeo.label,
+        𝜏-ln-label-value ↦ 𝑒-label-value,
+        ρ ↦ ∅
+      ⟧,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝐵-call
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝐵-call
+    ⟧,
+    𝐵-after
+  ⟧

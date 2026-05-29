@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A trailing mapToInt / mapToLong / mapToDouble that ends an object
+# pipeline must fuse into the operators in front of it rather than survive
+# as its own native call. 205 already recognises each mapToX as a
+# Φ.hone.unbox; 451 then splices that unbox onto the tail of the preceding
+# (pointwise) distill, widening the distill to a type-transition shape
+# (object in, primitive out), and 501/511/601 lower the whole chain to a
+# SINGLE Stream.mapMultiToInt / mapMultiToLong / mapMultiToDouble dispatch.
+# The mapper here is a lambda (n -> n.intValue() etc.) because the boundary
+# mapToX only folds when 111 has lambda-ised it; a method-reference mapToX
+# (Integer::intValue) is a separate, not-yet-handled case.
+#
+# Three independent pipelines, one per primitive, each collapse from three
+# invokedynamic factories (filter + map + mapToX) to one, so the optimizer
+# drops invokedynamic 9 -> 3.
+java: |
+  package mapto;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int i = Stream.of(5, 3, 8, 2, 7)
+        .filter(n -> n > 0)
+        .map(n -> n + 1)
+        .mapToInt(n -> n.intValue())
+        .sum();
+      long j = Stream.of(5L, 3L, 8L, 2L, 7L)
+        .filter(n -> n > 0)
+        .map(n -> n + 1)
+        .mapToLong(n -> n.longValue())
+        .sum();
+      double d = Stream.of(5.0, 3.0, 8.0, 2.0, 7.0)
+        .filter(n -> n > 0)
+        .map(n -> n + 1)
+        .mapToDouble(n -> n.doubleValue())
+        .sum();
+      System.out.printf("The results are %d %d %.1f\n", i, j, d);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The results are 30 30 30.0"
+before:
+  invokedynamic: 9
+  invokeinterface: 12
+after:
+  invokedynamic: 3
+  invokeinterface: 9

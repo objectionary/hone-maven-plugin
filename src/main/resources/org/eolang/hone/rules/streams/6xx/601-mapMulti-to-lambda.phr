@@ -13,6 +13,8 @@ pattern: |
     lambda-signature ↦ 𝑒-lambda-signature,
     consumer ↦ 𝑒-consumer,
     stream-class ↦ 𝑒-stream-class,
+    result-stream-class ↦ 𝑒-result-stream-class,
+    stream-method ↦ 𝑒-stream-method,
     static ↦ 𝑒-static,
     is-interface ↦ 𝑒-is-interface,
     captured ↦ 𝑒-captured
@@ -36,7 +38,7 @@ result: |
     ⟧,
     stream ↦ ⟦
       class ↦ 𝑒-stream-class,
-      method ↦ "mapMulti",
+      method ↦ 𝑒-stream-method,
       signature ↦ 𝑒-stream-signature
     ⟧
   ⟧
@@ -88,5 +90,5 @@ where:
       - '"("'
       - 𝑒-map-multi-consumer
       - '")L"'
-      - 𝑒-stream-class
+      - 𝑒-result-stream-class
       - '";"'

@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A boundary mapToInt (a Φ.hone.unbox, object in / int out) sitting right
+# after an object distill must fuse into it: the unbox's target invocation
+# is spliced onto the tail of the distill body and the distill's output is
+# widened from the object type to the primitive "I". The result is a single
+# type-transition distill (bridge-input Ljava/lang/Integer; , bridge-output
+# "I") that 501/511/601 lower to one Stream.mapMultiToInt dispatch.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/451-fuse-distill-unbox.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "A",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        start ↦ "map",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        body ↦ ⟦
+          i1 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i2 ↦ "A",
+            i3 ↦ "lambda$f$0",
+            i4 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
+            i5 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokestatic",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Integer;)I",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "A",
+          method ↦ "lambda$f$1",
+          signature ↦ "(Ljava/lang/Integer;)I",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, bridge-input ↦ "Ljava/lang/Integer;", 𝐵-c, bridge-output ↦ "I", 𝐵-d ⟧
+  - ⟦ 𝐵-p, 𝜏-first ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$f$0", 𝐵-y ⟧, 𝜏-second ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i3 ↦ "lambda$f$1", 𝐵-w ⟧, ρ ↦ ∅ ⟧

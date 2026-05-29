@@ -61,6 +61,8 @@ result: |
           lambda-signature ↦ 𝑒-lambda-signature,
           consumer ↦ 𝑒-consumer,
           stream-class ↦ 𝑒-stream-class,
+          result-stream-class ↦ 𝑒-result-stream-class,
+          stream-method ↦ 𝑒-stream-method,
           static ↦ 𝑒-static,
           is-interface ↦ 𝑒-is-interface,
           captured ↦ ""
@@ -87,6 +89,15 @@ where:
   - meta: 𝑒-target-method
     function: random-string
     args: [ '"distill_%d"' ]
+  # Stream.mapMultiToX takes a plain BiConsumer<T, XConsumer>, so the SAM
+  # type and its erased samMethodType are decided by the distill INPUT
+  # exactly as for an ordinary mapMulti — only the XConsumer the body
+  # actually drives (the `consumer` below), the resulting stream and the
+  # method name change with the OUTPUT type. For a symmetric distill
+  # (input == output) every value coincides with the original derivation;
+  # for a type-transition distill (object in, primitive out, produced by
+  # 451) the consumer/result/method split off, so the chain lowers to
+  # Stream.mapMultiToX rather than Stream.mapMulti.
   - meta: 𝑒-map-multi-consumer
     function: sed
     args:
@@ -106,7 +117,7 @@ where:
   - meta: 𝑒-consumer
     function: sed
     args:
-      - 𝑒-bridge-input
+      - 𝑒-bridge-output
       - '"s/^L.+;$/Ljava\\/util\\/function\\/Consumer;/g"'
       - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
       - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
@@ -119,3 +130,35 @@ where:
       - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
       - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
       - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
+  - meta: 𝑒-result-stream-class
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/java\\/util\\/stream\\/Stream/g"'
+      - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
+      - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
+      - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
+  - meta: 𝑒-in-cat
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^L.+;$/O/g"'
+  - meta: 𝑒-out-cat
+    function: sed
+    args:
+      - 𝑒-bridge-output
+      - '"s/^L.+;$/O/g"'
+  - meta: 𝑒-io
+    function: concat
+    args: [𝑒-in-cat, 𝑒-out-cat]
+  - meta: 𝑒-stream-method
+    function: sed
+    args:
+      - 𝑒-io
+      - '"s/^OO$/mapMulti/g"'
+      - '"s/^II$/mapMulti/g"'
+      - '"s/^JJ$/mapMulti/g"'
+      - '"s/^DD$/mapMulti/g"'
+      - '"s/^OI$/mapMultiToInt/g"'
+      - '"s/^OJ$/mapMultiToLong/g"'
+      - '"s/^OD$/mapMultiToDouble/g"'

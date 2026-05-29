@@ -91,6 +91,8 @@ result: |
           lambda-signature ↦ 𝑒-lambda-signature,
           consumer ↦ 𝑒-consumer,
           stream-class ↦ 𝑒-stream-class,
+          result-stream-class ↦ 𝑒-stream-class,
+          stream-method ↦ "mapMulti",
           static ↦ "true",
           is-interface ↦ 𝑒-is-interface,
           captured ↦ "Ljava/util/List;"

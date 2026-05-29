@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A trailing mapToInt that ends an object pipeline must fuse into the
+# operators in front of it rather than survive as its own native call.
+# 205 already recognises mapToInt as a Φ.hone.unbox; 451 then splices that
+# unbox onto the tail of the preceding (pointwise) distill, widening the
+# distill to a type-transition shape (object in, int out), and 501/511/601
+# lower the whole chain to a SINGLE Stream.mapMultiToInt dispatch. The
+# mapper here is a lambda (n -> n.intValue()) because the boundary mapToX
+# only folds when 111 has lambda-ised it; a method-reference mapToInt
+# (Integer::intValue) is a separate, not-yet-handled case.
+#
+# filter + map + mapToInt collapse from three invokedynamic factories to
+# one, so the optimizer drops invokedynamic 3 -> 1.
+java: |
+  package maptoint;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int r = Stream.of(5, 3, 8, 2, 7)
+        .filter(n -> n > 0)
+        .map(n -> n + 1)
+        .mapToInt(n -> n.intValue())
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 30"
+before:
+  invokedynamic: 3
+  invokeinterface: 4
+after:
+  invokedynamic: 1
+  invokeinterface: 3

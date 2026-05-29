@@ -114,12 +114,19 @@ where:
   - meta: 𝜏-load-item
     function: tau
     args: [𝑒-load-item]
+  # The value the body leaves on the stack before the emit is the OUTPUT
+  # type, so the stack-arrangement dup and the consumer.accept argument
+  # follow the consumer (an int/long/double consumer for a type-transition
+  # distill), not the input item. For a symmetric distill the consumer
+  # category matches bridge-input, so this is unchanged there.
   - meta: 𝑒-dup-x
     function: sed
     args:
-      - 𝑒-bridge-input
-      - '"s/^[DJ]$/dup_x2/g"'
-      - '"s/^(L.+;|I)$/dup_x1/g"'
+      - 𝑒-consumer
+      - '"s/^Ljava\\/util\\/function\\/DoubleConsumer;$/dup_x2/g"'
+      - '"s/^Ljava\\/util\\/function\\/LongConsumer;$/dup_x2/g"'
+      - '"s/^Ljava\\/util\\/function\\/IntConsumer;$/dup_x1/g"'
+      - '"s/^Ljava\\/util\\/function\\/Consumer;$/dup_x1/g"'
   - meta: 𝜏-dup-x
     function: tau
     args: [𝑒-dup-x]
@@ -131,8 +138,11 @@ where:
   - meta: 𝑒-invokeinterface-input
     function: sed
     args:
-      - 𝑒-bridge-input
-      - '"s/^L.+;$/Ljava\\/lang\\/Object;/g"'
+      - 𝑒-consumer
+      - '"s/^Ljava\\/util\\/function\\/Consumer;$/Ljava\\/lang\\/Object;/g"'
+      - '"s/^Ljava\\/util\\/function\\/IntConsumer;$/I/g"'
+      - '"s/^Ljava\\/util\\/function\\/LongConsumer;$/J/g"'
+      - '"s/^Ljava\\/util\\/function\\/DoubleConsumer;$/D/g"'
   - meta: 𝑒-invokeinterface-signature
     function: concat
     args: ['"("', 𝑒-invokeinterface-input,'")V"']

@@ -1,0 +1,110 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses a trailing mapToInt / mapToLong / mapToDouble into the object
+# distill that precedes it. 205 recognises mapToX as a Φ.hone.unbox, but a
+# lone unbox never reaches a distill: paired with a following box it folds
+# back to a map (221) or collapses an IntStream-native sandwich (411), yet
+# a boundary mapToX that ends the object pipeline just sits idle and 603
+# lowers it straight back to a native mapToX. That is fine when the mapToX
+# stands alone, but wasteful when an object distill sits right in front of
+# it — the two could share one mapMultiToX dispatch.
+#
+# This rule runs after 401 (so every object operator has already collapsed
+# into a SINGLE preceding distill) and after 411 (so the only Φ.hone.unbox
+# left is a genuine boundary mapToX, never the synthetic unbox 211 wedges
+# into an IntStream-native box-distill-unbox sandwich). It splices the
+# unbox's target invocation onto the tail of the distill body and widens
+# the distill's output to the primitive the unbox produces, turning the
+# distill into a type-transition distill: object item in, primitive out.
+# 401 already joins on bridge types blindly, so any further object distill
+# in front fuses in too. The emit pass (501/511/601) reads the now-distinct
+# bridge-input (object) and bridge-output (primitive) and lowers the whole
+# chain to one Stream.mapMultiToX call.
+#
+# A mapToX with no distill in front of it never matches here, so it keeps
+# its native form via 603 — exactly the "do not pessimise a lone mapToX"
+# behaviour the distinct/skip reverts (441/442) give their operators.
+name: fuse-distill-unbox
+pattern: |
+  ⟦
+    𝐵-body-head,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-distill-bridge-output,
+      start ↦ 𝑒-start,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-distill-static,
+      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-opcode,
+      class ↦ 𝑒-class,
+      bridge-signature ↦ 𝑒-unbox-bridge-signature,
+      static ↦ 𝑒-unbox-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+result: |
+  ⟦
+    𝐵-body-head,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-unbox-output,
+      start ↦ 𝑒-start,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-unbox-output,
+      static ↦ 𝑒-result-static,
+      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      body ↦ ⟦
+        𝐵-body,
+        𝜏-unbox-op ↦ ⟦
+          φ ↦ Φ.jeo.opcode.𝜏-opcode,
+          i2 ↦ 𝑒-target-class,
+          i3 ↦ 𝑒-target-method,
+          i4 ↦ 𝑒-target-signature,
+          i5 ↦ 𝑒-target-is-interface
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-body-tail
+  ⟧
+when:
+  matches: ['^L.+;$', 𝑒-distill-bridge-output]
+where:
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]
+  - meta: 𝑒-unbox-output
+    function: sed
+    args:
+      - 𝑒-unbox-bridge-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'
+  - meta: 𝑒-both-statics
+    function: concat
+    args: [𝑒-distill-static, 𝑒-unbox-static]
+  - meta: 𝑒-result-static
+    function: sed
+    args:
+      - 𝑒-both-statics
+      - '"s/truetrue/true/g"'
+      - '"s/.*false.*/false/g"'
+  - meta: 𝜏-unbox-op
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body', '𝐵-body-tail']

@@ -151,6 +151,7 @@ dup insertion (for filter)       → 281, 282, 283 (after distinct/skip)
 dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)
 load `this` into a pre-distill   → 311 → flips Φ.hone.pre-distill to distill
 box-distill-unbox collapse       → 411 → primitive-typed distill
+trailing mapToX into a distill   → 451 → type-transition distill
 transform-distill normalisation  → 421, 422
 dup before a filter distill      → 431
 distinct                         → 216 → 307 → state distill;
@@ -167,6 +168,36 @@ and narrows the bridge types so the fused distill inherits the first
 side's `bridge-input` / `accepted` / `start` and the second side's
 `bridge-output` / `returned`. Because every distill body is auto-style,
 no guard on body shape is needed — any two adjacent distills fuse.
+
+### Type-transition distills (trailing mapToInt/Long/Double)
+
+A `mapToInt` / `mapToLong` / `mapToDouble` that ends an object pipeline is
+recognised by `205` as a `Φ.hone.unbox` (object in, primitive out). A lone
+unbox only ever folded when a following `.boxed()` paired with it (`221`,
+`411`); a boundary mapToX just sat idle and `603` lowered it back to a
+native call. `451-fuse-distill-unbox` closes that gap: it runs after the
+`4xx` fuse pass and splices the unbox's target invocation onto the tail of
+the single *pointwise* distill in front of it, widening that distill into a
+**type-transition** distill — `bridge-input` stays the object element type
+but `bridge-output` becomes the primitive (`I`/`J`/`D`). It deliberately
+matches only empty-state distills, so a stateful predecessor
+(distinct/skip) keeps its native mapToX, and a mapToX with no distill in
+front of it never matches and stays native via `603` — the same
+"do not pessimise a lone operator" stance as the `441`/`442` reverts.
+
+Because a transition distill has `bridge-input ≠ bridge-output`, the emit
+pass is **output-aware**: `Stream.mapMultiToX` takes a plain
+`BiConsumer<T, XConsumer>`, so the mapMulti SAM and its erased
+samMethodType still follow the INPUT (exactly as an ordinary mapMulti),
+while the `consumer` the body drives, the resulting stream class and the
+method name (`mapMulti` vs `mapMultiToInt`/`…Long`/`…Double`) follow the
+OUTPUT. `501`/`511`/`601` thread two extra pragma fields — `stream-method`
+and `result-stream-class` — to carry that split (a symmetric distill sets
+them to its input-side values, so nothing changes there). Limitation: the
+mapper must be a lambda; a method-reference mapToX (`Integer::intValue`)
+is not yet lifted, because `111` only turns `lambda$…` targets into a
+`Φ.hone.lambda`, and admitting method refs there breaks the
+`boxed`-roundtrip and stateful paths. That is the next puzzle.
 
 `501-distill-to-mapMulti` then rewrites each remaining *empty-state*
 distill into a `Φ.hone.mapMulti` dispatch, and `511-distill-lambda-to-method`

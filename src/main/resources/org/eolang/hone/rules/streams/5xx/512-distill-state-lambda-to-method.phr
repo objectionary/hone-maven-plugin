@@ -4,11 +4,14 @@
 # yamllint disable rule:line-length
 # State-carrying sibling of 511. Builds the private static wrapper for a
 # distill that captured state, distinguished from 511's stateless
-# distill-lambda by the extra `captured` binding. The captured Object[]
+# distill-lambda by the extra `captured` binding. The captured List (one
+# per wrapper, holding every fused operator's state object in body order)
 # is argument 0, the item is argument 1, the downstream Consumer is
 # argument 2, so the leading item-load is `aload 1` and the trailing
-# consumer-load is `aload 2` (511's are 0 and 1). The body's fetch
-# markers, left in place here, are resolved against argument 0 by 521.
+# consumer-load is `aload 2` (511's are 0 and 1). The body opens by
+# zeroing a per-call counter at local 3 (`iconst_0; istore 3`); 521 turns
+# each fetch marker into List.get(counter); iinc so the N fetches walk the
+# List in body order — guard k reads state var k.
 #
 # v1 handles the object-stream shape only (distinct is Stream<T>); the
 # item is a reference, hence aload / dup_x1 / Consumer.accept. Primitive
@@ -32,8 +35,8 @@ result: |
     signature ↦ "",
     maxs ↦ ⟦
       φ ↦ Φ.jeo.maxs,
-      max-stack ↦ 6,
-      max-locals ↦ 3
+      max-stack ↦ 10,
+      max-locals ↦ 4
     ⟧,
     params ↦ ⟦
       φ ↦ Φ.jeo.params,
@@ -43,6 +46,8 @@ result: |
     ⟧,
     body ↦ ⟦
       φ ↦ Φ.jeo.seq.of,
+      i-init-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i-store-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 3 ⟧,
       i-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
       𝐵-body,
       i-load-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,

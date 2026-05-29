@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A Φ.jeo.line-number entry is dropped; the label it anchored and the
+# surrounding opcodes stay. The closed body pattern confirms the line-number
+# is gone (only the label and the nop remain).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/151-remove-line-numbers.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      l1 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L1" ⟧,
+      ln1 ↦ ⟦ φ ↦ Φ.jeo.line-number, number ↦ 7, l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L1" ⟧ ⟧,
+      o1 ↦ ⟦ φ ↦ Φ.jeo.opcode.nop ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ 𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L1" ⟧, 𝜏-nop ↦ ⟦ φ ↦ Φ.jeo.opcode.nop ⟧, ρ ↦ ∅ ⟧

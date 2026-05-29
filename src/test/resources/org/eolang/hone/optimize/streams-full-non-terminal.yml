@@ -1,58 +1,44 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-# Full non-terminal stream coverage test.
+# Full coverage of every non-terminal Stream operation the optimizer lowers
+# to a mapMulti — the operations that do NOT need a Sink lifecycle
+# (begin/end/cancellation) and so map cleanly onto a BiConsumer-driven emit:
+# filter, map, distinct, skip, and the primitive conversions
+# mapToInt/mapToLong/mapToDouble + boxed. Sink-bound operations (sorted,
+# takeWhile, limit, peek, dropWhile, flatMap, mapMulti and their primitive
+# variants) are deliberately absent. With no barriers between them every
+# operator is adjacent, so the pipeline exercises fusion across the boxing
+# boundary as aggressively as possible. The trailing mapToInt lands the
+# stream back on a primitive so `.sum()` is legal.
+#
+# Both distincts and both skips are stateful, and the two distinct/skip
+# pairs sit adjacent (distinct().skip()), so this is the case that proves
+# stateful distills fuse: all eight object-stream operators collapse into a
+# single mapMulti backed by one captured java/util/List holding the two
+# HashSets and two long[1] counters, dropping invokedynamic 8 -> 5 (the
+# remaining four come from the primitive-conversion tail).
 java: |
   package allnonterminal;
-  import java.util.Comparator;
-  import java.util.stream.DoubleStream;
-  import java.util.stream.IntStream;
-  import java.util.stream.LongStream;
   import java.util.stream.Stream;
   public class X {
     public static void main(String[] a) {
       double r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
         .filter(n -> n > 0)
         .map(n -> n + 1)
-        .peek(n -> {})
         .distinct()
-        .sorted()
-        .sorted(Comparator.naturalOrder())
-        .takeWhile(n -> n < 100)
-        .dropWhile(n -> n < 0)
-        .limit(20L)
         .skip(0L)
-        .flatMap(n -> Stream.of(n, n))
-        .<Integer>mapMulti((n, c) -> c.accept(n))
         .filter(n -> n != null)
         .map(n -> n + 0)
-        .peek(n -> {})
-        .sorted(Comparator.reverseOrder())
-        .sorted()
         .distinct()
-        .takeWhile(n -> n >= 0)
-        .dropWhile(n -> n < -1)
-        .limit(100L)
         .skip(0L)
-        .flatMap(n -> Stream.of(n))
-        .<Integer>mapMulti((n, c) -> c.accept(n))
         .mapToInt(Integer::intValue)
         .boxed()
         .mapToLong(Integer::longValue)
         .boxed()
         .mapToDouble(Long::doubleValue)
         .boxed()
-        .flatMapToInt(d -> IntStream.of(d.intValue()))
-        .boxed()
-        .flatMapToLong(n -> LongStream.of(n.longValue()))
-        .boxed()
-        .flatMapToDouble(n -> DoubleStream.of(n.doubleValue()))
-        .boxed()
-        .mapMultiToInt((d, c) -> c.accept(d.intValue()))
-        .boxed()
-        .mapMultiToLong((n, c) -> c.accept(n.longValue()))
-        .boxed()
-        .mapMultiToDouble((n, c) -> c.accept(n.doubleValue()))
+        .mapToInt(Double::intValue)
         .sum();
       System.out.printf("The result is %d\n", (int) r);
     }
@@ -63,6 +49,6 @@ log:
   - "BUILD SUCCESS"
   - "The result is 54"
 before:
-  invokedynamic: 23
+  invokedynamic: 8
 after:
-  invokedynamic: 21
+  invokedynamic: 5

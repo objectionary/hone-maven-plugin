@@ -2,17 +2,20 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Resolves a Φ.hone.fetch marker — left in a distill body by 307 to mean
-# "push my state-var onto the stack" — into the concrete load from the
-# captured Object[]. Inside the wrapper that 512 builds, the array is
-# argument 0, so the fetch becomes `aload 0; iconst_0; aaload; checkcast
-# <type>`.
+# Resolves a Φ.hone.fetch marker — left in a distill body by 307 / 308 to
+# mean "push my state-var onto the stack" — into a read from the captured
+# java/util/List. Inside the wrapper that 512 builds, the List is argument
+# 0 and a per-call counter sits at local 3, so the fetch becomes
+# `aload 0; iload 3; List.get(I); iinc 3 1; checkcast <type>`.
 #
-# v1 reads slot 0: there is one state variable per wrapper, because
-# 401-fuse does not yet merge two stateful distills into one body. A
-# future revision replaces iconst_0 with a per-element counter (iload +
-# iinc) so several fetches read consecutive slots, and fixpoint
-# application of this rule resolves them all.
+# The counter (zeroed by 512 at method entry) is the mechanism that lets
+# two stateful distills fuse into one body: 401-fuse appends each
+# operator's state to the List in body order, the guards execute in that
+# same order, and each fetch reads the next slot. Applied at fixpoint this
+# rule resolves every fetch in the fused body; the runtime counter — not a
+# static index — keeps slot k aligned with guard k. An early `return` in
+# an earlier guard just means later get calls never run that call, and the
+# counter resets each call.
 name: fetch-to-load
 pattern: |
   ⟦
@@ -27,8 +30,15 @@ result: |
   ⟦
     𝐵-before,
     𝜏-load-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
-    𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-    𝜏-aaload ↦ ⟦ φ ↦ Φ.jeo.opcode.aaload ⟧,
+    𝜏-load-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 3 ⟧,
+    𝜏-get ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/List",
+      i3 ↦ "get",
+      i4 ↦ "(I)Ljava/lang/Object;",
+      i5 ↦ Φ.true
+    ⟧,
+    𝜏-inc ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧,
     𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-type ⟧,
     𝐵-after
   ⟧
@@ -36,12 +46,15 @@ where:
   - meta: 𝜏-load-arr
     function: random-tau
     args: ['𝐵-before', '𝐵-after']
-  - meta: 𝜏-idx
+  - meta: 𝜏-load-idx
     function: random-tau
     args: ['𝐵-before', '𝐵-after', '𝜏-load-arr']
-  - meta: 𝜏-aaload
+  - meta: 𝜏-get
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-idx']
+    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-load-idx']
+  - meta: 𝜏-inc
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-load-idx', '𝜏-get']
   - meta: 𝜏-cast
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-idx', '𝜏-aaload']
+    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-load-idx', '𝜏-get', '𝜏-inc']

@@ -94,7 +94,7 @@ that same order. The `NNN-` prefix is *the* mechanism that defines the
 pipeline stages:
 
 ```text
-1xx  prep         remove dead labels, lower invokedynamic to Φ.hone.lambda
+1xx  prep         strip line-numbers, lower invokedynamic to Φ.hone.lambda
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
 4xx  fuse         adjacent distills → one combined distill  ← the actual win
@@ -124,17 +124,19 @@ start                a label naming the originating operator ("map", "filter", �
 accepted             the SAM-accepted signature fragment
 returned             the SAM-returned signature fragment
 static               "true"/"false"; whether the synthesised method is static
-state                a block of bytecode that builds the operator's captured
-                       state; empty (⟦ ρ ↦ ∅ ⟧) for the pointwise operators
+state                a block of bytecode that appends the operator's captured
+                       state to a shared List; empty (⟦ ρ ↦ ∅ ⟧) for pointwise
+                       operators
 body                 the opcode formation spliced between item-load and emit
 ```
 
 The body is one-in-one-out (auto-style): phino feeds it a single item
 and it produces a single item, so `401-fuse` can concatenate any two
 adjacent bodies blindly. Pointwise operators (map, filter, …) carry an
-empty `state`; the only stateful operator today is `distinct`, whose
-`state` builds a `java/util/HashSet` and whose body consults it — see
-"Stateful operators (distinct)" below. There is still no
+empty `state`; the two stateful operators today are `distinct` (whose
+`state` builds a `java/util/HashSet` and whose body consults it) and
+`skip` (whose `state` builds a `long[1]` countdown counter) — see
+"Stateful operators (distinct, skip)" below. There is still no
 continuation-passing variant.
 
 The full operator-to-rule mapping (every rule named below exists under
@@ -145,7 +147,7 @@ filter, map (object + primitive) → 201..204 → Φ.hone.{filter,map}
 boxed/unbox, box                 → 205, 206  → Φ.hone.{unbox,box}
 box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold back to map/filter
 type / transform adjustments     → 241..243, 251..261, 271, 272
-dup insertion (for filter)       → 281, 282
+dup insertion (for filter)       → 281, 282, 283 (after distinct/skip)
 dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)
 load `this` into a pre-distill   → 311 → flips Φ.hone.pre-distill to distill
 box-distill-unbox collapse       → 411 → primitive-typed distill
@@ -154,6 +156,9 @@ dup before a filter distill      → 431
 distinct                         → 216 → 307 → state distill;
                                     441 reverts it to invokeinterface
                                     if it never fused
+skip                             → 220 → 308 → state distill;
+                                    442 reverts it (count and call)
+                                    to invokeinterface if it never fused
 ```
 
 `401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
@@ -171,34 +176,40 @@ method that the `mapMulti` call references. The 6xx rules (601, 602,
 `Φ.hone.lambda` + `invokeinterface`, and the 7xx rules (701, 702)
 lower the lambdas to `invokedynamic`.
 
-### Stateful operators (distinct)
+### Stateful operators (distinct, skip)
 
-`distinct` is the one operator that needs per-element state — a
+`distinct` is the canonical operator that needs per-element state — a
 `java/util/HashSet` of the elements already seen. It is treated as "a
 filter that owns a HashSet" and rides the same auto-style distill, with
 three extra pieces:
 
 - **`state` block.** `307-distinct-to-distill` does not allocate the set
-  inline; it stashes the *bytecode* that builds a one-element `Object[]`
-  holding a fresh `HashSet` into the distill's `state` binding (with
-  `random-tau` opcode names so two distincts in one method don't clash).
-  `401-fuse` `join`s the `state` blocks when it fuses, so a fused
-  `map.distinct` carries the set-builder along for free.
+  inline; it stashes the *bytecode* that **appends** a fresh `HashSet` to a
+  shared `java/util/List` (`dup; new HashSet; …; List.add; pop`) into the
+  distill's `state` binding (with `random-tau` opcode names so two distincts
+  in one method don't clash). Each append begins and ends at `[list]`, so
+  `401-fuse` `join`s the `state` blocks of *any* number of operators into
+  one block whose stack peak never grows — the key that lets two stateful
+  distills fuse without overflowing the caller's max-stack.
 - **`Φ.hone.fetch` marker.** The distill body is index-agnostic: it opens
   with `⟦ φ ↦ Φ.hone.fetch, type ↦ … ⟧` meaning "push my state-var onto
   the stack", then runs the guard (`HashSet.add`; keep the item iff the
   add was new, else `return` early). Because the body never names a slot,
   fusion stays pure concatenation. At emit, `502-distill-state-to-mapMulti`
-  relocates the `state` opcodes in front of the `mapMulti` dispatch (so
-  the array is built and captured), `512-distill-state-lambda-to-method`
-  builds the `(Object[], item, consumer) → void` wrapper, `521-fetch-to-load`
-  rewrites each `fetch` into `aload 0; iconst_0; aaload; checkcast`, and
-  `503-distill-state-frame` fills the guard's stackmap frame from the
-  wrapper's item type (jeo is a verbatim assembler — it never recomputes
-  frames, so rules must supply them). `601` widens the invokedynamic
-  factory descriptor by the captured `Object[]` (its `captured` binding);
-  the implMethod handle gets the captured prefix but the
-  `instantiatedMethodType` does not.
+  builds one fresh `java/util/ArrayList` and relocates the `state` appends
+  in front of the `mapMulti` dispatch (so the List is built and captured),
+  `512-distill-state-lambda-to-method` builds the `(List, item, consumer) →
+  void` wrapper and zeroes a per-call counter at local 3, `521-fetch-to-load`
+  rewrites each `fetch` into `aload 0; iload 3; List.get(I); iinc 3 1;
+  checkcast` so the N fetches walk the List in body order (guard *k* reads
+  state var *k*), and `503-distill-state-frame` fills each guard's stackmap
+  frame — a FULL frame that lists the counter local, because a
+  same-locals-1 frame would drop it (`504-distill-state-filter-frame` does
+  the same promotion for a filter guard's keep-frame fused into the same
+  wrapper). jeo is a verbatim assembler — it never recomputes frames, so
+  rules must supply them. `601` widens the invokedynamic factory descriptor
+  by the captured `List` (its `captured` binding); the implMethod handle
+  gets the captured prefix but the `instantiatedMethodType` does not.
 - **`441` unfused revert.** A distinct only earns the `mapMulti` machinery
   when it actually fuses with a neighbour. `441-unfused-distinct-to-invokeinterface`
   runs after the 4xx fuse pass: if a distinct distill still carries *only*
@@ -209,13 +220,47 @@ three extra pieces:
   the opcode and prevents a 216 → 307 → 441 loop (jeo ignores the extra
   binding when assembling).
 
-Limitations (v1): one state variable per fused wrapper — `401-fuse` is
-gated so two stateful distills never merge (the array fill and fetch
-resolution are single-slot); object streams only (`512` hardcodes the
-`Object` item shape); and `503` reads the frame type off `bridge-input`,
-correct while every operator before the distinct preserves the element
-type. Lifting these is future work (a `size`-driven fixpoint fill plus a
-runtime fetch counter generalise to any number of state vars).
+`skip` is the second stateful operator and is built as a strict parallel
+of distinct — "a filter that owns a countdown counter":
+
+- **`state` block.** `308-skip-to-distill` stashes the bytecode that builds
+  a fresh `long[1]` and **appends** it to the shared `java/util/List`, seeded
+  from the *captured count-push* — `220-recognize-skip` grabs the single
+  `lconst_0` / `lconst_1` / `ldc {long}` opcode that precedes `Stream.skip(J)`
+  and carries it on the pragma as `push`, so the original count rides into the
+  counter cell. The block builds the `long[]` first and only then maneuvers
+  the List underneath it (a `swap`/`dup_x1`/`swap` shuffle before `List.add`)
+  to keep its stack peak at 6 — anything higher overflows the *caller's*
+  max-stack, which jeo never recomputes.
+- **`Φ.hone.fetch` marker.** The body opens with `⟦ φ ↦ Φ.hone.fetch,
+  type ↦ "[J" ⟧` (its state-var is a `long[]`), reads the counter, writes
+  it back decremented (a long counter never wraps in any reachable stream),
+  and branches on the *old* count: while it was positive the item is
+  dropped, otherwise it survives to `consumer.accept`. `dup2_x2` stashes the
+  old count below the store group so the array is consumed *before* the
+  branch — the keep label is left with just `[item]`, the same single-item
+  frame distinct uses, so `503` fills it unchanged. Skip reuses 502 / 512 /
+  521 / 601 verbatim; `512`'s wrapper max-stack is 10 to fit the long
+  juggling and its max-locals is 4 (params 0-2 plus the counter at slot 3).
+- **`442` unfused revert.** `442-unfused-skip-to-invokeinterface` is 441's
+  twin: a skip that never fused is reverted, but because skip takes an
+  argument the revert replays the count-push (recovered from the `state`
+  block) before the `invokeinterface Stream.skip(J)` — a lone skip lowered
+  to a mapMulti would be strictly slower than the native skip. Same
+  `reverted ↦ Φ.true` marker breaks the 220 → 308 → 442 loop.
+
+Any number of stateful operators now fuse into one wrapper: the shared
+`java/util/List` holds every state var (built by `List.add` appends, read
+by `List.get(counter++)`), so `401-fuse` merges two stateful distills with
+no special gating. A filter that follows a `distinct`/`skip` needs its own
+`dup` before the predicate; `281` only inserts that after a map/filter
+predecessor, so `283-insert-dup-before-filter-after-stateful` covers the
+stateful-predecessor case.
+
+Limitations (v1): object streams only (`512` hardcodes the `Object` item
+shape); and `503` reads the frame type off `bridge-input`, correct while
+every operator before the distinct preserves the element type. Lifting
+these is future work.
 
 ## phino: the only rewrite engine
 

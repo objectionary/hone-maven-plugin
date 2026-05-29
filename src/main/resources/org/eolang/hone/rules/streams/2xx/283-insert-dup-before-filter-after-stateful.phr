@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Sibling of 281. A filter guard consumes the item with its predicate, so
+# it needs a throwaway copy duplicated in front of it; 281 inserts that
+# Φ.hone.dup when the filter follows a map or another filter, but its
+# pattern is shaped for the map/filter pragma (opcode + target bindings)
+# and so never matches a stateful predecessor. A filter that follows a
+# distinct or skip — whose pragma carries class / stream-class (/ push)
+# instead — would therefore be left without its dup, its predicate would
+# eat the only item, and the keep-label frame would find an empty stack.
+# This rule plugs that gap: when 𝜏-first is distinct or skip and 𝜏-second
+# is a filter, it splices the same Φ.hone.dup between them. After
+# insertion the two are no longer adjacent, so it fires once per site.
+name: insert-dup-before-filter-after-stateful
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      class ↦ 𝑒-class,
+      𝐵-first-rest
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      class ↦ 𝑒-class,
+      𝐵-first-rest
+    ⟧,
+    𝜏-dup ↦ ⟦
+      φ ↦ Φ.hone.dup,
+      opcode ↦ 𝑒-dup-opcode,
+      class ↦ 𝑒-class
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-one, 'distinct']
+        - eq: [𝜏-one, 'skip']
+    - or:
+        - eq: [𝜏-two, 'o-filter']
+        - eq: [𝜏-two, 'p-filter']
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+    args: [𝐵-before, 𝜏-first, 𝜏-second, 𝐵-after]
+  - meta: 𝑒-dup-opcode
+    function: sed
+    args:
+      - 𝑒-second-bridge-input
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'

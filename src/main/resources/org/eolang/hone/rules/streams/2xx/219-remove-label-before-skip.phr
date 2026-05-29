@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Normalises an own-line `.skip(n)`. When `.skip(n)` is written on its own
+# source line, javac emits the count-push, then a label (the line-number
+# anchor for that line), then the `invokeinterface
+# java/util/stream/Stream.skip` — so the push and the call are NOT adjacent
+# and 220 cannot see them as a pair. 151 has already dropped the line-number,
+# leaving `push, label, call`; this rule drops that one label so the push sits
+# immediately before the call, both for 220 to recognise the skip and for
+# 401-fuse to treat the resulting distill as adjacent to its neighbours.
+#
+# Removing a label is unsafe in general — a try-catch boundary or a
+# local-variable-table scope may reference it by name, and those tables live
+# in sibling bindings a body-local rule cannot inspect, so dropping a
+# referenced label leaves a dangling exception range that fails class
+# verification on assemble. This rule is therefore scoped to the ONE position
+# that is provably a dead line-number anchor: a label wedged between a
+# count-push and a `Stream.skip(J)` call. No statement boundary, try-region
+# edge or variable scope ever falls between the two opcodes of a single
+# `push; skip` expression, so this label is referenced by nothing once 151 has
+# removed its line-number. (The earlier blanket "drop every label before an
+# opcode" rule was withdrawn precisely because it also deleted method-entry
+# and try-catch labels that real classes do reference.)
+name: remove-label-before-skip
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
+    𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, 𝐵-label-rest ⟧,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏2 ↦ "skip",
+      𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏2 ↦ "skip",
+      𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧

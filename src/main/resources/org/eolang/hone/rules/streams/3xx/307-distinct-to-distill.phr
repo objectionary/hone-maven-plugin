@@ -6,19 +6,21 @@
 # like 305 folds a filter — distinct is "a filter that owns a HashSet".
 #
 # The per-element state, a java/util/HashSet seen-set, is carried as the
-# `state` binding: a block of bytecode that allocates a one-element
-# Object[] and stores a fresh HashSet in it. Keeping the construction as
-# ready-made opcodes (rather than an abstract descriptor) means 401-fuse
-# composes two stateful operators by simply joining their `state` blocks,
-# and 502 emits the array by relocating the block verbatim in front of
-# the mapMulti dispatch — no rule has to understand HashSet. The opcode
+# `state` binding: a block of bytecode that APPENDS a fresh HashSet to the
+# captured java/util/List that 502 builds in front of the dispatch. The
+# block assumes the List is already on the stack, pushes a new HashSet,
+# calls List.add and pops the boolean — so it begins and ends at [list],
+# leaving the stack peak bounded (4) no matter how many state blocks
+# 401-fuse joins ahead of it. That bounded peak is the whole point: N
+# fused stateful operators append N elements to ONE list rather than
+# stacking N arrays, so the caller's max-stack never overflows. The opcode
 # names are random so two distinct() calls in one method do not collide
 # when their blocks land in the same body.
 #
 # The body itself is index-agnostic (auto emit-shape, like a filter
 # guard): it opens with a Φ.hone.fetch marker meaning "push my seen-set
-# onto the stack", which 521 turns into the concrete array load at emit.
-# The wrapper's leading item-load (512) leaves [item]; the fetch leaves
+# onto the stack", which 521 turns into List.get(counter++) at emit. The
+# wrapper's leading item-load (512) leaves [item]; the fetch leaves
 # [item, set]; HashSet.add returns true on a previously-unseen element,
 # so the item survives to the wrapper's appended consumer.accept; a
 # duplicate is popped and the wrapper returns early, emitting nothing.
@@ -40,10 +42,7 @@ result: |
     returned ↦ "Ljava/lang/Object;",
     static ↦ "true",
     state ↦ ⟦
-      𝜏-len ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
-      𝜏-new-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.anewarray, i1 ↦ "java/lang/Object" ⟧,
-      𝜏-dup-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝜏-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       𝜏-new-set ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
       𝜏-dup-set ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       𝜏-init ↦ ⟦
@@ -53,7 +52,14 @@ result: |
         i4 ↦ "()V",
         i5 ↦ Φ.false
       ⟧,
-      𝜏-store ↦ ⟦ φ ↦ Φ.jeo.opcode.aastore ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       ρ ↦ ∅
     ⟧,
     body ↦ ⟦
@@ -81,27 +87,21 @@ where:
   - meta: 𝑒-label
     function: random-string
     args: ['"L%d"']
-  - meta: 𝜏-len
+  - meta: 𝜏-dup-list
     function: random-tau
     args: []
-  - meta: 𝜏-new-arr
-    function: random-tau
-    args: ['𝜏-len']
-  - meta: 𝜏-dup-arr
-    function: random-tau
-    args: ['𝜏-len', '𝜏-new-arr']
-  - meta: 𝜏-idx
-    function: random-tau
-    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr']
   - meta: 𝜏-new-set
     function: random-tau
-    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx']
+    args: ['𝜏-dup-list']
   - meta: 𝜏-dup-set
     function: random-tau
-    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx', '𝜏-new-set']
+    args: ['𝜏-dup-list', '𝜏-new-set']
   - meta: 𝜏-init
     function: random-tau
-    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx', '𝜏-new-set', '𝜏-dup-set']
-  - meta: 𝜏-store
+    args: ['𝜏-dup-list', '𝜏-new-set', '𝜏-dup-set']
+  - meta: 𝜏-add
     function: random-tau
-    args: ['𝜏-len', '𝜏-new-arr', '𝜏-dup-arr', '𝜏-idx', '𝜏-new-set', '𝜏-dup-set', '𝜏-init']
+    args: ['𝜏-dup-list', '𝜏-new-set', '𝜏-dup-set', '𝜏-init']
+  - meta: 𝜏-pop
+    function: random-tau
+    args: ['𝜏-dup-list', '𝜏-new-set', '𝜏-dup-set', '𝜏-init', '𝜏-add']

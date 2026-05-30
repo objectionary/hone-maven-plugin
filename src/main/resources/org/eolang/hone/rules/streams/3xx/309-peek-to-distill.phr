@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a recognised `.peek(consumer)` into the uniform auto-style distill.
+# A peek runs its Consumer for the side effect and forwards the element
+# unchanged, so its one-in-one-out body is a `dup` (keep the element for
+# the next stage) followed by the consumer invocation that swallows the
+# duplicate and returns void. Because the body leaves exactly the element
+# it was fed, the distill carries an empty `state` and is pointwise, and
+# 401-fuse concatenates it with any neighbour blindly.
+name: peek-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.peek,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.𝜏-distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "peek",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.dup
+      ⟧,
+      i2 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-opcode,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]
+  - meta: 𝑒-distill
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/true/distill/g"'
+      - '"s/false/pre-distill/g"'
+  - meta: 𝜏-distill
+    function: tau
+    args: [𝑒-distill]

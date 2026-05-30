@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/207-lambda-to-peek.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "fusion/X",
+        method ↦ "accept",
+        interface ↦ "()Ljava/util/function/Consumer;",
+        lambda-signature ↦ "(Ljava/lang/Object;)V",
+        bridge-signature ↦ "(Ljava/lang/Integer;)V",
+        static ↦ "true",
+        opcode ↦ "invokestatic",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$1",
+          signature ↦ "(Ljava/lang/Integer;)V",
+          is-interface ↦ Φ.false
+        ⟧,
+        stream ↦ ⟦
+          class ↦ "java/util/stream/Stream",
+          method ↦ "peek",
+          signature ↦ "(Ljava/util/function/Consumer;)Ljava/util/stream/Stream;"
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ body ↦ ⟦ 𝜏-op ↦ ⟦ φ ↦ Φ.hone.peek, opcode ↦ "invokestatic", class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Integer;", returned ↦ "Ljava/lang/Integer;", 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧

@@ -4,20 +4,27 @@
 # Full coverage of every non-terminal Stream operation the optimizer lowers
 # to a mapMulti — the operations that do NOT need a Sink lifecycle
 # (begin/end/cancellation) and so map cleanly onto a BiConsumer-driven emit:
-# filter, map, distinct, skip, and the primitive conversions
-# mapToInt/mapToLong/mapToDouble + boxed. Sink-bound operations (sorted,
-# takeWhile, limit, peek, dropWhile, flatMap, mapMulti and their primitive
+# filter, map, peek, distinct, skip, and the primitive conversions
+# mapToInt/mapToLong/mapToDouble + boxed. The remaining Sink-bound operations
+# (sorted, takeWhile, limit, dropWhile, flatMap, mapMulti and their primitive
 # variants) are deliberately absent. With no barriers between them every
 # operator is adjacent, so the pipeline exercises fusion across the boxing
 # boundary as aggressively as possible. The trailing mapToInt lands the
 # stream back on a primitive so `.sum()` is legal.
 #
+# This fixture is compiled with debug info (javac -g, the Maven default), so
+# javac wedges a line-number-anchor label before every operator. 101 strips
+# the label of a lambda operator (map/filter) and 102 strips it of a bare one
+# (peek/distinct/skip), keeping the operators adjacent so 401-fuse can fold
+# the whole chain — without 102 the stateful chain fuses only partially and
+# emits a wrapper that fails class verification.
+#
 # Both distincts and both skips are stateful, and the two distinct/skip
 # pairs sit adjacent (distinct().skip()), so this is the case that proves
-# stateful distills fuse: all eight object-stream operators collapse into a
-# single mapMulti backed by one captured java/util/List holding the two
-# HashSets and two long[1] counters, dropping invokedynamic 8 -> 5 (the
-# remaining four come from the primitive-conversion tail).
+# stateful distills fuse: all nine object-stream operators (peek included)
+# collapse into a single mapMulti backed by one captured java/util/List
+# holding the two HashSets and two long[1] counters, dropping invokedynamic
+# 9 -> 5 (the remaining four come from the primitive-conversion tail).
 java: |
   package allnonterminal;
   import java.util.stream.Stream;
@@ -26,6 +33,7 @@ java: |
       double r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
         .filter(n -> n > 0)
         .map(n -> n + 1)
+        .peek(n -> {})
         .distinct()
         .skip(0L)
         .filter(n -> n != null)
@@ -49,6 +57,6 @@ log:
   - "BUILD SUCCESS"
   - "The result is 54"
 before:
-  invokedynamic: 8
+  invokedynamic: 9
 after:
   invokedynamic: 5

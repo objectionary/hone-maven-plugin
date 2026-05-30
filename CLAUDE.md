@@ -132,8 +132,11 @@ body                 the opcode formation spliced between item-load and emit
 
 The body is one-in-one-out (auto-style): phino feeds it a single item
 and it produces a single item, so `401-fuse` can concatenate any two
-adjacent bodies blindly. Pointwise operators (map, filter, …) carry an
-empty `state`; the two stateful operators today are `distinct` (whose
+adjacent bodies blindly. Pointwise operators (map, filter, peek, …) carry
+an empty `state`; `peek` is the one whose body opens with a `dup` — it runs
+its Consumer for the side effect and forwards the element unchanged, so the
+body keeps a copy before the consumer invocation swallows the duplicate and
+returns void (see 309). The two stateful operators today are `distinct` (whose
 `state` builds a `java/util/HashSet` and whose body consults it) and
 `skip` (whose `state` builds a `long[1]` countdown counter) — see
 "Stateful operators (distinct, skip)" below. There is still no
@@ -144,6 +147,7 @@ The full operator-to-rule mapping (every rule named below exists under
 
 ```text
 filter, map (object + primitive) → 201..204 → Φ.hone.{filter,map}
+peek                             → 207 → 309 → Φ.hone.peek → distill
 boxed/unbox, box                 → 205, 206  → Φ.hone.{unbox,box}
 box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold back to map/filter
 type / transform adjustments     → 241..243, 251..261, 271, 272

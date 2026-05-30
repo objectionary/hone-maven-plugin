@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A trailing mapToInt whose mapper is a METHOD REFERENCE (Integer::intValue),
+# the canonical idiom, must fuse into the preceding object pipeline exactly as
+# the lambda form (n -> n.intValue()) already does. A method reference points
+# its invokedynamic target handle straight at the referenced method, so 111
+# (which only lifts lambda$… targets) leaves it native. 103-methodref-to-lambda
+# desugars it first: it synthesises a private-static lambda$hone$N wrapper whose
+# body performs the unboxing the LambdaMetafactory would have generated and
+# repoints the invokedynamic at it, after which 111 / 205 / 451 lower the whole
+# map + mapToInt chain to a single Stream.mapMultiToInt dispatch.
+#
+# 103 fires only when the method reference directly follows a pointwise object
+# operator (here .map), where 451 can fuse the resulting unbox; that drops the
+# two invokedynamic factories (map + mapToInt) to one.
+java: |
+  package methodref;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
+        .map(n -> n + 1)
+        .mapToInt(Integer::intValue)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 60"
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 1

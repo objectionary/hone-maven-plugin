@@ -94,7 +94,8 @@ that same order. The `NNN-` prefix is *the* mechanism that defines the
 pipeline stages:
 
 ```text
-1xx  prep         strip line-numbers, lower invokedynamic to Φ.hone.lambda
+1xx  prep         strip line-numbers, desugar method refs to lambdas (103),
+                  lower invokedynamic to Φ.hone.lambda
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
 4xx  fuse         adjacent distills → one combined distill  ← the actual win
@@ -197,11 +198,30 @@ while the `consumer` the body drives, the resulting stream class and the
 method name (`mapMulti` vs `mapMultiToInt`/`…Long`/`…Double`) follow the
 OUTPUT. `501`/`511`/`601` thread two extra pragma fields — `stream-method`
 and `result-stream-class` — to carry that split (a symmetric distill sets
-them to its input-side values, so nothing changes there). Limitation: the
-mapper must be a lambda; a method-reference mapToX (`Integer::intValue`)
-is not yet lifted, because `111` only turns `lambda$…` targets into a
-`Φ.hone.lambda`, and admitting method refs there breaks the
-`boxed`-roundtrip and stateful paths. That is the next puzzle.
+them to its input-side values, so nothing changes there).
+
+A method-reference mapToX (`Integer::intValue`, the canonical idiom) is
+handled by `103-methodref-to-lambda`, which runs before `111` and desugars
+the reference into the lambda the compiler could have emitted: it synthesises
+a `private static lambda$hone$N` wrapper whose body is the unboxing the
+`LambdaMetafactory` would have generated (`aload 0; invokevirtual C.m ();
+Xreturn`), appends it to the class (the same class-level binding-insertion
+`501` uses), and repoints the `invokedynamic`'s target handle at it
+(`invokestatic THIS.lambda$hone$N`). `111` then lifts the repointed indy like
+any javac lambda, so `205`/`451` fuse it with no special-casing. `103` fires
+only when the reference directly follows a pointwise object operator
+(`map`/`filter`/`peek`), where `451` can fuse the resulting unbox — desugaring
+a reference after a barrier, a stateful `distinct`/`skip`, or a `boxed()`
+roundtrip would only add a wrapper that never fuses (a pessimisation), and
+admitting method refs in `111` directly breaks those `boxed`-roundtrip and
+stateful paths (the wrapper's `invokestatic`-to-a-real-method shape is what
+keeps the downstream — which assumes `lambda$…` are static methods — correct).
+`103` currently covers only the adaptation-free unbound-instance case (handle
+5, no-arg target, `To{Int,Long,Double}Function` SAM, no checkcast or
+box/unbox/widen). Static refs (handle 6), constructor refs (handle 8),
+interface targets (handle 9), captured-receiver refs and any argument/return
+adaptation are the next puzzles — the wrapper mechanism extends to them by
+generating the matching adaptation body.
 
 `501-distill-to-mapMulti` then rewrites each remaining *empty-state*
 distill into a `Φ.hone.mapMulti` dispatch, and `511-distill-lambda-to-method`

@@ -95,7 +95,8 @@ pipeline stages:
 
 ```text
 1xx  prep         strip line-numbers, desugar method refs to lambdas
-                  (103 unbound, 104 static), lower invokedynamic to Φ.hone.lambda
+                  (103 unbound, 104 static, 105 peek/return-drop), lower
+                  invokedynamic to Φ.hone.lambda
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
 4xx  fuse         adjacent distills → one combined distill  ← the actual win
@@ -210,6 +211,8 @@ that gap before `111`:
 
 - `103-methodref-to-lambda` — **unbound-instance** refs (handle 5).
 - `104-static-methodref-to-lambda` — **static** refs (handle 6).
+- `105-methodref-peek-to-lambda` — **unbound-instance** refs feeding a
+  `.peek(...)` (handle 5, **return-dropping**).
 
 Each synthesises a `private static lambda$hone$N` wrapper whose body is the
 forwarding the `LambdaMetafactory` would have generated (`<load arg>;
@@ -219,6 +222,21 @@ target handle at it (`invokestatic THIS.lambda$hone$N`). `111` then lifts the
 repointed indy like any javac lambda, so `201`-`207`/`451` recognise and fuse
 it. The wrapper's call opcode carries an `origin ↦ Φ.true` marker (which jeo
 ignores, like `441`'s `reverted`) so the revert below can find it.
+
+`105` is the **void-SAM** case. A peek's SAM is a `Consumer` (`accept` returns
+void); a reference like `Integer::intValue` returns a value, so javac points the
+indy at a kind-5 handle with an instantiated type of `(L…;)V` and lets the
+metafactory DROP the return. `103` declines that (its return-category guard has
+no void branch), so `105` is its return-dropping twin: the wrapper body is
+`aload 0; invoke C.m ()R; pop|pop2; return` (the drop opcode chosen by `R`'s
+category). Crucially, `105` keeps `103`'s original **predecessor gate** — it
+fires only when the reference directly follows a pointwise `map`/`filter`/`peek`
+— because, unlike a mapToX unbox (which reverts to native via `603`/`701`/`711`
+when it never fuses), a peek folds to a distill **unconditionally** (`309`) and a
+lone distill is emitted as a standalone `mapMulti` (`501`) that `711` cannot
+revert (the folded distill has dropped the SAM/instantiated types the revert
+needs). The gate guarantees a fusable neighbour, so a lone peek reference is
+left native — never pessimised.
 
 A reference that does **not** fuse (it followed a barrier, a stateful
 operator, or a `boxed()` roundtrip, or feeds a terminal) is restored to its
@@ -235,15 +253,16 @@ stateful paths at run time; the wrapper's `invokestatic`-to-a-real-method shape
 is what keeps the downstream, which assumes `lambda$…` are static methods,
 correct.)
 
-`103`/`104` currently cover only the **adaptation-free** case: the referenced
-method's argument and return types match the SAM's instantiated type, so the
-wrapper needs no receiver `checkcast`, argument/return box/unbox/widen, and a
-single argument. Boxing/widening adaptation (e.g. `String::length` returning
-`int` where a `Function` wants `Integer`), multi-argument refs (`Integer::sum`),
-constructor refs (handle 8, `Integer[]::new`), interface targets (handle 9) and
-captured-receiver refs (`self::decorate`, which need invokedynamic-argument
-surgery) stay native and are the next puzzles — the wrapper mechanism extends
-to them by generating the matching adaptation body.
+`103`/`104` cover the **adaptation-free** case (argument and return types match
+the SAM's instantiated type, single argument, no receiver `checkcast`); `105`
+adds the one **return-dropping** adaptation (a value-returning ref against a
+void `Consumer` SAM). Still native and the next puzzles: boxing/widening
+adaptation (e.g. `String::length` returning `int` where a `Function` wants
+`Integer`), multi-argument refs (`Integer::sum`), constructor refs (handle 8,
+`Integer[]::new`), interface targets (handle 9), captured-receiver refs
+(`self::decorate`, which need invokedynamic-argument surgery), and a static
+(handle 6) peek ref — the wrapper mechanism extends to them by generating the
+matching adaptation body.
 
 `501-distill-to-mapMulti` then rewrites each remaining *empty-state*
 distill into a `Φ.hone.mapMulti` dispatch, and `511-distill-lambda-to-method`

@@ -6,12 +6,26 @@
 # 309 folds it into the uniform auto-style distill, whose body is a `dup`
 # (keep the element for the next stage) followed by the consumer invocation
 # that swallows the duplicate. Because the body is one-in-one-out, 401-fuse
-# concatenates it blindly with its map neighbours, so the whole
-# `.map(+1).peek({}).map(*2)` chain collapses into a SINGLE Stream.mapMulti
-# dispatch. The surviving single invokedynamic proves the fusion: three
-# lambdas (two maps and one peek) became one mapMulti.
+# concatenates it blindly with its map neighbours, so a `.map(+1).peek({})`
+# pair collapses into one Stream.mapMulti dispatch.
 #
-#   [1,2,3,4,5] --map(+1)--> [2,3,4,5,6] --peek--> (forwarded unchanged)
+# This pack also pins how a peek fed a METHOD REFERENCE fuses. A peek's SAM is
+# a Consumer, whose `accept` returns void; `Integer::intValue` returns int, so
+# javac compiles the reference to a direct kind-5 method handle
+# (java/lang/Integer.intValue ()I) with an instantiated type of
+# `(Ljava/lang/Integer;)V` — the LambdaMetafactory DROPS the int return to fit
+# the void SAM. 105 desugars exactly that return-dropping case: it synthesises
+# a `lambda$hone$N` wrapper whose body is `aload 0; invokevirtual intValue;
+# pop; return`, repoints the invokedynamic at it, and 111/207/309 then fold it
+# into an ordinary peek distill. So all four operators fuse into a SINGLE
+# Stream.mapMulti and only one invokedynamic survives. The inlined `intValue`
+# call is the extra invokevirtual in the `after` count. 105 keeps 103's
+# predecessor gate (it fires only after a pointwise map/filter/peek) because a
+# folded peek that never fuses would emit as a standalone mapMulti that 711
+# cannot revert — so a lone method-ref peek is left native, never pessimised.
+#
+#   [1,2,3,4,5] --map(+1)--> [2,3,4,5,6] --peek({})--> (forwarded unchanged)
+#               --peek(Integer::intValue)--> (intValue called, result dropped)
 #               --map(*2)--> [4,6,8,10,12] --count()--> 5
 java: |
   package peek;
@@ -21,6 +35,7 @@ java: |
       long n = Stream.of(1, 2, 3, 4, 5)
         .map(x -> x + 1)
         .peek(x -> {})
+        .peek(Integer::intValue)
         .map(x -> x * 2)
         .count();
       System.out.printf("The result is %d\n", n);
@@ -32,14 +47,14 @@ log:
   - "BUILD SUCCESS"
   - "The result is 5"
 before:
-  invokedynamic: 3
-  invokeinterface: 4
+  invokedynamic: 4
+  invokeinterface: 5
   invokestatic: 9
   invokevirtual: 3
   return: 3
 after:
   invokedynamic: 1
   invokeinterface: 3
-  invokestatic: 12
-  invokevirtual: 3
-  return: 4
+  invokestatic: 13
+  invokevirtual: 4
+  return: 5

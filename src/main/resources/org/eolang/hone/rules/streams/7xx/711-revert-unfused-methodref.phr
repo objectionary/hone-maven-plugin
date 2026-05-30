@@ -1,0 +1,113 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a method-reference wrapper that never fused back to the original
+# native method reference, so desugaring a reference (103) never pessimises
+# code that the pipeline could not optimise. 103 turns `Stream…mapToInt(
+# Integer::intValue)` into an invokedynamic pointing at a synthesised
+# lambda$hone$N wrapper; when that wrapper fuses into a distill it is inlined
+# and the invokedynamic disappears, but when it does NOT fuse the 6xx/7xx
+# unrecognise pass lowers it straight back to `invokedynamic → lambda$hone$N`,
+# leaving an extra wrapper method and an extra call frame that the original
+# native reference never had.
+#
+# This rule runs after the lambdas are lowered (701/702). It matches a class
+# in which an invokedynamic still targets a lambda$hone$N wrapper AND that
+# wrapper is still present, recovers the referenced method from the wrapper's
+# origin-marked call opcode, repoints the invokedynamic's target handle at it
+# (handle 5, invokevirtual — the only kind 103 currently produces) and drops
+# the now-unused wrapper. The result is byte-identical to the method reference
+# javac emitted. The `origin ↦ Φ.true` marker on the wrapper's call opcode is
+# what tells a HONE wrapper apart from a real javac lambda$… method and locates
+# the referenced target; jeo ignores the extra binding (see 441's `reverted`).
+# A fused wrapper is never matched here — its invokedynamic is gone and the
+# wrapper is reached only through an invokestatic inside the distill method.
+name: revert-unfused-methodref
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-sam-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ 𝑒-bootstrap,
+          𝜏11 ↦ 𝑒-sam-type,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 6,
+            𝜏15 ↦ 𝑒-class,
+            𝜏16 ↦ 𝑒-wrapper-name,
+            𝜏17 ↦ 𝑒-wrapper-descriptor,
+            𝜏18 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ 𝑒-instantiated-type,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-method-tail
+    ⟧,
+    𝐵-class-mid,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-wrapper-head,
+      body ↦ ⟦
+        𝐵-wrapper-body-head,
+        𝜏-origin ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          v0 ↦ 𝑒-origin-class,
+          v1 ↦ 𝑒-origin-method,
+          v2 ↦ 𝑒-origin-signature,
+          v3 ↦ 𝑒-origin-is-interface,
+          origin ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-wrapper-body-tail
+      ⟧,
+      name ↦ 𝑒-wrapper-name,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-tail
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-sam-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ 𝑒-bootstrap,
+          𝜏11 ↦ 𝑒-sam-type,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 5,
+            𝜏15 ↦ 𝑒-origin-class,
+            𝜏16 ↦ 𝑒-origin-method,
+            𝜏17 ↦ 𝑒-origin-signature,
+            𝜏18 ↦ 𝑒-origin-is-interface,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ 𝑒-instantiated-type,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-method-tail
+    ⟧,
+    𝐵-class-mid,
+    𝐵-class-tail
+  ⟧

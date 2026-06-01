@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The filter twin of 443. Reverts a capturing primitive-filter (folded by 314)
+# that never fused back to its native invokedynamic + Stream.filter, replaying
+# the capture-push and marking the call `reverted ↦ Φ.true` so 113 cannot
+# re-lift it (its invokeinterface pattern is closed, the same loop-break 442/443
+# rely on). The closed state + body match only an UNFUSED c-filter; a fused one
+# carries a neighbour's guard and is left for 502. The body match includes the
+# leading item-preserve dup and the keep-guard 314 built (fetch; intValue; swap;
+# predicate; ifne; return; label; frame-item), and the Predicate SAM constants
+# are reconstructed literally for the int-capture Stream<Integer> case.
+name: unfused-capturing-filter-to-invokedynamic
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      start ↦ "c-filter",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      state ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ 𝑒-push,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        ρ ↦ ∅
+      ⟧,
+      body ↦ ⟦
+        𝜏-itemdup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-unbox ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
+        𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+        𝜏-call ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i1 ↦ 𝑒-target-class,
+          i2 ↦ 𝑒-target-method,
+          i3 ↦ 𝑒-target-signature,
+          i4 ↦ 𝑒-target-is-interface
+        ⟧,
+        𝜏-ifne ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifne,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+        ⟧,
+        𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+        𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back ↦ 𝑒-push,
+    𝜏-indy ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      v0 ↦ "test",
+      v1 ↦ "(I)Ljava/util/function/Predicate;",
+      h2 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        v0 ↦ 6,
+        v1 ↦ "java/lang/invoke/LambdaMetafactory",
+        v2 ↦ "metafactory",
+        v3 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+        v4 ↦ Φ.false
+      ⟧,
+      t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)Z" ⟧,
+      h4 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        v0 ↦ 6,
+        v1 ↦ 𝑒-target-class,
+        v2 ↦ 𝑒-target-method,
+        v3 ↦ 𝑒-target-signature,
+        v4 ↦ 𝑒-target-is-interface
+      ⟧,
+      t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Integer;)Z" ⟧
+    ⟧,
+    𝜏-filter ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      v0 ↦ "java/util/stream/Stream",
+      v1 ↦ "filter",
+      v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;",
+      v3 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-push-back
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after']
+  - meta: 𝜏-indy
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-push-back']
+  - meta: 𝜏-filter
+    function: random-tau
+    args: ['𝐵-before', '𝐵-after', '𝜏-push-back', '𝜏-indy']

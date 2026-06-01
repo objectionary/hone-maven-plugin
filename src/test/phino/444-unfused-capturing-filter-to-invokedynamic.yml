@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The filter twin of 443: a capturing-filter distill that never fused (closed
+# state + the dup/guard body 314 built) reverts to the native invokedynamic +
+# Stream.filter, replaying the captured push and marking the call reverted so 113
+# cannot re-lift it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/444-unfused-capturing-filter-to-invokedynamic.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        start ↦ "c-filter",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        state ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 5 ⟧,
+          s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
+          s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+          s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body ↦ ⟦
+          b0 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+          b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$0", i3 ↦ "(ILjava/lang/Integer;)Z", i4 ↦ Φ.false ⟧,
+          b5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L9" ⟧ ⟧,
+          b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+          b7 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L9" ⟧,
+          b8 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokedynamic, 𝐵-a, v1 ↦ "(I)Ljava/util/function/Predicate;", 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "filter", v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;", v3 ↦ Φ.true, reverted ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 5 ⟧

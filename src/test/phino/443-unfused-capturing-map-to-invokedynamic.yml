@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A capturing-map distill that never fused (closed state + bare auto-body) is
+# reverted to the native invokedynamic + Stream.map, replaying the captured push
+# (iload 5) and marking the call reverted↦Φ.true so 112 cannot re-lift it. This
+# is the never-pessimise guarantee for a lone `map(i -> i + x)` — the issue-#636
+# example with no neighbour to fuse.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/443-unfused-capturing-map-to-invokedynamic.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        start ↦ "c-map",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        state ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 5 ⟧,
+          s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
+          s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+          s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body ↦ ⟦
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+          b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$0", i3 ↦ "(ILjava/lang/Integer;)Ljava/lang/Integer;", i4 ↦ Φ.false ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokedynamic, 𝐵-a, v1 ↦ "(I)Ljava/util/function/Function;", 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true, reverted ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 5 ⟧
+  - ⟦ φ ↦ Φ.jeo.handle, 𝐵-e, v2 ↦ "lambda$run$0", 𝐵-f ⟧

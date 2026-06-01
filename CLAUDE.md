@@ -232,11 +232,11 @@ no void branch), so `105` is its return-dropping twin: the wrapper body is
 category). Crucially, `105` keeps `103`'s original **predecessor gate** — it
 fires only when the reference directly follows a pointwise `map`/`filter`/`peek`
 — because, unlike a mapToX unbox (which reverts to native via `603`/`701`/`711`
-when it never fuses), a peek folds to a distill **unconditionally** (`309`) and a
-lone distill is emitted as a standalone `mapMulti` (`501`) that `711` cannot
-revert (the folded distill has dropped the SAM/instantiated types the revert
-needs). The gate guarantees a fusable neighbour, so a lone peek reference is
-left native — never pessimised.
+when it never fuses), a peek folds to a distill **unconditionally** (`309`)
+and a lone distill is emitted as a standalone `mapMulti` (`501`) that `711`
+cannot revert (the folded distill has dropped the SAM/instantiated types the
+revert needs). The gate guarantees a fusable neighbour, so a lone peek
+reference is left native — never pessimised.
 
 A reference that does **not** fuse (it followed a barrier, a stateful
 operator, or a `boxed()` roundtrip, or feeds a terminal) is restored to its

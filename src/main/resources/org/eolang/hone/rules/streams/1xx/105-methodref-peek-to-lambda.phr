@@ -1,0 +1,272 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Desugars an unbound-instance method reference feeding `.peek(...)` into the
+# lambda the compiler could have emitted, so the rest of the pipeline (which
+# only recognises lambda$… targets, 111) folds and fuses it like any peek
+# lambda. A peek's SAM is a Consumer, whose `accept` returns void; a reference
+# such as Integer::intValue returns a value, so javac points the invokedynamic
+# straight at the referenced method (handle 5) with an instantiated type of
+# `(L…;)V` and lets LambdaMetafactory DROP the return to fit void. 103 desugars
+# only the adaptation-free case and so leaves this one native; this rule is its
+# return-dropping twin: the synthesised wrapper is `aload 0; invoke C.m ()R;
+# pop|pop2; return` — the same forwarding LambdaMetafactory would generate,
+# discarding the result before the void return.
+#
+# Unlike 103's mapToX path — where an unfused unbox reverts to native via
+# 603/701/711 — a peek folds to a distill UNCONDITIONALLY (309) and a lone
+# distill is emitted as a standalone mapMulti (501), which a method reference
+# (whose native form synthesises no method) would be pessimised by, and which
+# 711 cannot revert (the folded distill has dropped the SAM/instantiated types
+# the revert needs). So this rule keeps 103's original predecessor gate: it
+# fires only when the reference directly follows a pointwise map / filter /
+# peek, which is exactly the neighbour 401 fuses it into. A peek reference with
+# no fusable predecessor is left native — no wrapper, no pessimisation, the
+# same "do not pessimise a lone operator" stance as the 441/442 reverts.
+#
+# It handles only the unbound-instance, single-object-parameter, value-return
+# case (handle 5, target `()R` with R not void): no receiver checkcast (the
+# instantiated type already names the parameter), no argument adaptation, just
+# the trailing pop. A single basic block needs no stackmap frames (see 511).
+# Captured/bound refs (System.out::println), static refs (handle 6) and any
+# argument adaptation stay native and are follow-up puzzles.
+name: methodref-peek-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-predecessor ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏20 ↦ "java/util/stream/Stream",
+          𝜏22 ↦ 𝑒-predecessor-method,
+          𝜏23 ↦ 𝑒-predecessor-signature,
+          𝜏28 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            ρ ↦ ∅
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 5,
+            𝜏15 ↦ 𝑒-target-class,
+            𝜏16 ↦ 𝑒-target-method,
+            𝜏17 ↦ 𝑒-target-signature,
+            𝜏18 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ 𝑒-bridge-signature,
+            ρ ↦ ∅
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ 𝑒-stream-class,
+          𝜏25 ↦ 𝑒-stream-method,
+          𝜏26 ↦ 𝑒-stream-signature,
+          𝜏27 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-predecessor ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏20 ↦ "java/util/stream/Stream",
+          𝜏22 ↦ 𝑒-predecessor-method,
+          𝜏23 ↦ 𝑒-predecessor-signature,
+          𝜏28 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            ρ ↦ ∅
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 6,
+            𝜏15 ↦ 𝑒-class,
+            𝜏16 ↦ 𝑒-wrapper-name,
+            𝜏17 ↦ 𝑒-bridge-signature,
+            𝜏18 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ 𝑒-bridge-signature,
+            ρ ↦ ∅
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ 𝑒-stream-class,
+          𝜏25 ↦ 𝑒-stream-method,
+          𝜏26 ↦ 𝑒-stream-signature,
+          𝜏27 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-bridge-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 𝑒-max-stack,
+        max-locals ↦ 1
+      ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.params ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+        w-call ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          v0 ↦ 𝑒-target-class,
+          v1 ↦ 𝑒-target-method,
+          v2 ↦ 𝑒-target-signature,
+          v3 ↦ Φ.false,
+          origin ↦ Φ.true
+        ⟧,
+        w-drop ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-drop ⟧,
+        w-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-name
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+when:
+  and:
+    - not:
+        matches:
+          - 'lambda\$.+'
+          - 𝑒-target-method
+    - or:
+        - eq: [𝑒-predecessor-method, '"map"']
+        - eq: [𝑒-predecessor-method, '"filter"']
+        - eq: [𝑒-predecessor-method, '"peek"']
+    - matches: ['\(\)Ljava/util/function/Consumer;', 𝑒-interface]
+    - matches: ['\(L[^;]*;\)V', 𝑒-bridge-signature]
+    - matches: ['\(\).+', 𝑒-target-signature]
+    - not:
+        matches: ['\(\)V', 𝑒-target-signature]
+where:
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: ['𝐵-class-body-head', '𝐵-class-body-tail', '𝜏-function']
+  - meta: 𝑒-wrapper-name
+    function: random-string
+    args: ['"lambda$hone$%d"']
+  - meta: 𝑒-drop-op
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/^\\(\\)[JD]$/pop2/g"'
+      - '"s/^\\(\\).*$/pop/g"'
+  - meta: 𝜏-drop
+    function: tau
+    args: [𝑒-drop-op]
+  - meta: 𝑒-max-stack-str
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/^\\(\\)[JD]$/2/g"'
+      - '"s/^\\(\\).*$/1/g"'
+  - meta: 𝑒-max-stack
+    function: number
+    args: [𝑒-max-stack-str]

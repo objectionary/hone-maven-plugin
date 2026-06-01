@@ -94,13 +94,16 @@ that same order. The `NNN-` prefix is *the* mechanism that defines the
 pipeline stages:
 
 ```text
-1xx  prep         strip line-numbers, lower invokedynamic to Φ.hone.lambda
+1xx  prep         strip line-numbers, desugar method refs to lambdas
+                  (103 unbound, 104 static, 105 peek/return-drop), lower
+                  invokedynamic to Φ.hone.lambda
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
 4xx  fuse         adjacent distills → one combined distill  ← the actual win
 5xx  emit         distill → Φ.hone.mapMulti + private static method
 6xx  unrecognise  Φ.hone.* pragmas → Φ.hone.lambda + invokeinterface
-7xx  lower        Φ.hone.lambda → Φ.jeo.opcode.invokedynamic
+7xx  lower        Φ.hone.lambda → Φ.jeo.opcode.invokedynamic; revert an
+                  unfused method-ref wrapper to its native ref (711, 712)
 ```
 
 If you insert a rule with a prefix that lies between two phases (say,
@@ -197,11 +200,69 @@ while the `consumer` the body drives, the resulting stream class and the
 method name (`mapMulti` vs `mapMultiToInt`/`…Long`/`…Double`) follow the
 OUTPUT. `501`/`511`/`601` thread two extra pragma fields — `stream-method`
 and `result-stream-class` — to carry that split (a symmetric distill sets
-them to its input-side values, so nothing changes there). Limitation: the
-mapper must be a lambda; a method-reference mapToX (`Integer::intValue`)
-is not yet lifted, because `111` only turns `lambda$…` targets into a
-`Φ.hone.lambda`, and admitting method refs there breaks the
-`boxed`-roundtrip and stateful paths. That is the next puzzle.
+them to its input-side values, so nothing changes there).
+
+A method reference (`Integer::intValue`, `String::toUpperCase`, `X::keep`, …)
+is **desugared into a lambda** up front so the rest of the pipeline picks it
+up with no special-casing. A method-ref `invokedynamic` is byte-identical to a
+lambda's except its target handle points straight at the referenced method, so
+`111` (which only lifts `lambda$…` targets) leaves it native. Two rules close
+that gap before `111`:
+
+- `103-methodref-to-lambda` — **unbound-instance** refs (handle 5).
+- `104-static-methodref-to-lambda` — **static** refs (handle 6).
+- `105-methodref-peek-to-lambda` — **unbound-instance** refs feeding a
+  `.peek(...)` (handle 5, **return-dropping**).
+
+Each synthesises a `private static lambda$hone$N` wrapper whose body is the
+forwarding the `LambdaMetafactory` would have generated (`<load arg>;
+invoke{virtual,static} C.m …; Xreturn`), appends it to the class (the same
+class-level binding-insertion `501` uses), and repoints the `invokedynamic`'s
+target handle at it (`invokestatic THIS.lambda$hone$N`). `111` then lifts the
+repointed indy like any javac lambda, so `201`-`207`/`451` recognise and fuse
+it. The wrapper's call opcode carries an `origin ↦ Φ.true` marker (which jeo
+ignores, like `441`'s `reverted`) so the revert below can find it.
+
+`105` is the **void-SAM** case. A peek's SAM is a `Consumer` (`accept` returns
+void); a reference like `Integer::intValue` returns a value, so javac points the
+indy at a kind-5 handle with an instantiated type of `(L…;)V` and lets the
+metafactory DROP the return. `103` declines that (its return-category guard has
+no void branch), so `105` is its return-dropping twin: the wrapper body is
+`aload 0; invoke C.m ()R; pop|pop2; return` (the drop opcode chosen by `R`'s
+category). Crucially, `105` keeps `103`'s original **predecessor gate** — it
+fires only when the reference directly follows a pointwise `map`/`filter`/`peek`
+— because, unlike a mapToX unbox (which reverts to native via `603`/`701`/`711`
+when it never fuses), a peek folds to a distill **unconditionally** (`309`)
+and a lone distill is emitted as a standalone `mapMulti` (`501`) that `711`
+cannot revert (the folded distill has dropped the SAM/instantiated types the
+revert needs). The gate guarantees a fusable neighbour, so a lone peek
+reference is left native — never pessimised.
+
+A reference that does **not** fuse (it followed a barrier, a stateful
+operator, or a `boxed()` roundtrip, or feeds a terminal) is restored to its
+native form by `711-revert-unfused-methodref` (handle 5) and
+`712-revert-unfused-static-methodref` (handle 6): once `701`/`702` have
+lowered the unfused wrapper-lambda back to `invokedynamic → lambda$hone$N`,
+the revert reads the referenced method from the `origin`-marked wrapper call,
+repoints the indy at it and deletes the wrapper — leaving exactly the bytecode
+javac emitted. So conversion is universal and **never pessimises**: it fuses
+where it can and reverts where it cannot, the same stance as the `441`/`442`
+distinct/skip reverts. (Admitting method refs in `111` *directly* instead does
+not work — it `IncompatibleClassChangeError`s the `boxed`-roundtrip and
+stateful paths at run time; the wrapper's `invokestatic`-to-a-real-method shape
+is what keeps the downstream, which assumes `lambda$…` are static methods,
+correct.)
+
+`103`/`104` cover the **adaptation-free** case (argument and return types match
+the SAM's instantiated type, single argument, no receiver `checkcast`); `105`
+adds the one **return-dropping** adaptation (a value-returning ref against a
+void `Consumer` SAM). Still native and the next puzzles: boxing/widening
+adaptation (e.g. `String::length` returning `int` where a `Function` wants
+`Integer`), multi-argument refs (`Integer::sum`), constructor refs (handle 8,
+`Integer[]::new`), interface targets (handle 9), captured-receiver refs
+(`self::decorate`, which need invokedynamic-argument surgery), and a static
+(handle 6) peek ref — the wrapper mechanism extends to them by generating the
+matching adaptation body.
 
 `501-distill-to-mapMulti` then rewrites each remaining *empty-state*
 distill into a `Φ.hone.mapMulti` dispatch, and `511-distill-lambda-to-method`

@@ -1,0 +1,277 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The static-method-reference twin of 103. A static method reference
+# (Integer::valueOf, X::keep, X::triple) compiles to an invokedynamic whose
+# target handle is kind 6 (invokestatic) pointing straight at the referenced
+# static method, so 111 leaves it native. This rule desugars it into the
+# lambda the compiler could have emitted: a private-static lambda$hone$N
+# wrapper that just forwards the argument to the referenced method, with the
+# invokedynamic repointed at the wrapper. 111 then lifts it; 205/451 fuse it
+# where a pointwise predecessor allows, otherwise 712 reverts it to the native
+# reference (so nothing is pessimised).
+#
+# It handles only the adaptation-free case: a SINGLE argument whose type the
+# referenced method accepts unchanged and whose return the SAM accepts
+# unchanged — i.e. the instantiated SAM type equals the target signature. The
+# wrapper body is the straight line `<load arg>; invokestatic C.m (arg)R;
+# Xreturn` (single basic block, no frames). Multi-argument refs (Integer::sum),
+# constructor refs and any boxing/widening adaptation do not match and stay
+# native; those are follow-up puzzles.
+name: static-methodref-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            ρ ↦ ∅
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 6,
+            𝜏15 ↦ 𝑒-target-class,
+            𝜏16 ↦ 𝑒-target-method,
+            𝜏17 ↦ 𝑒-target-signature,
+            𝜏18 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ 𝑒-bridge-signature,
+            ρ ↦ ∅
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ 𝑒-stream-class,
+          𝜏25 ↦ 𝑒-stream-method,
+          𝜏26 ↦ 𝑒-stream-signature,
+          𝜏27 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            ρ ↦ ∅
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 6,
+            𝜏15 ↦ 𝑒-class,
+            𝜏16 ↦ 𝑒-wrapper-name,
+            𝜏17 ↦ 𝑒-bridge-signature,
+            𝜏18 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ 𝑒-bridge-signature,
+            ρ ↦ ∅
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ 𝑒-stream-class,
+          𝜏25 ↦ 𝑒-stream-method,
+          𝜏26 ↦ 𝑒-stream-signature,
+          𝜏27 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-wrapper ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-bridge-signature,
+      signature ↦ "",
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        max-stack ↦ 𝑒-max-stack,
+        max-locals ↦ 𝑒-max-locals
+      ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.params ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load, v0 ↦ 0 ⟧,
+        w-call ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          v0 ↦ 𝑒-target-class,
+          v1 ↦ 𝑒-target-method,
+          v2 ↦ 𝑒-target-signature,
+          v3 ↦ Φ.false,
+          origin ↦ Φ.true
+        ⟧,
+        w-return ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrapper-name
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+when:
+  and:
+    - not:
+        matches:
+          - 'lambda\$.+'
+          - 𝑒-target-method
+    - matches: ['\(\).+', 𝑒-interface]
+    - eq: [𝑒-bridge-signature, 𝑒-target-signature]
+    - or:
+        - matches: ['\(L[^;]*;\)', 𝑒-bridge-signature]
+        - matches: ['\(.\)', 𝑒-bridge-signature]
+where:
+  - meta: 𝜏-wrapper
+    function: random-tau
+    args: ['𝐵-class-body-head', '𝐵-class-body-tail', '𝜏-function']
+  - meta: 𝑒-wrapper-name
+    function: random-string
+    args: ['"lambda$hone$%d"']
+  - meta: 𝑒-param
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\).*/$1/g"'
+  - meta: 𝑒-return
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'
+  - meta: 𝑒-load-op
+    function: sed
+    args:
+      - 𝑒-param
+      - '"s/^[IZBCS]$/iload/g"'
+      - '"s/^J$/lload/g"'
+      - '"s/^D$/dload/g"'
+      - '"s/^F$/fload/g"'
+      - '"s/^(L.+;|\\[.+)$/aload/g"'
+  - meta: 𝜏-load
+    function: tau
+    args: [𝑒-load-op]
+  - meta: 𝑒-return-op
+    function: sed
+    args:
+      - 𝑒-return
+      - '"s/^[IZBCS]$/ireturn/g"'
+      - '"s/^J$/lreturn/g"'
+      - '"s/^D$/dreturn/g"'
+      - '"s/^F$/freturn/g"'
+      - '"s/^(L.+;|\\[.+)$/areturn/g"'
+  - meta: 𝜏-return
+    function: tau
+    args: [𝑒-return-op]
+  - meta: 𝑒-param-width
+    function: sed
+    args:
+      - 𝑒-param
+      - '"s/^[JD]$/2/g"'
+      - '"s/^[^2].*$/1/g"'
+  - meta: 𝑒-max-locals
+    function: number
+    args: [𝑒-param-width]
+  - meta: 𝑒-widths
+    function: concat
+    args: [𝑒-param-width, 𝑒-return]
+  - meta: 𝑒-max-stack-str
+    function: sed
+    args:
+      - 𝑒-widths
+      - '"s/^2.*$/2/g"'
+      - '"s/^1[JD]$/2/g"'
+      - '"s/^1.*$/1/g"'
+  - meta: 𝑒-max-stack
+    function: number
+    args: [𝑒-max-stack-str]

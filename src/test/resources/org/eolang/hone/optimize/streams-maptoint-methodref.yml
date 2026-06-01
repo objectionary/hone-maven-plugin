@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A pipeline whose mappers are METHOD REFERENCES, the canonical idiom, must
+# fuse exactly as the lambda forms (X.plusOne(n), o.toString(), s.length())
+# would. A method reference points its invokedynamic target handle straight at
+# the referenced method, so 111 (which only lifts lambda$… targets) leaves it
+# native. The 1xx desugaring rules rewrite each one first: they synthesise a
+# private-static lambda$hone$N wrapper whose body is the forwarding the
+# LambdaMetafactory would have generated and repoint the invokedynamic at it,
+# after which 111 / 205 / 451 lower the chain to a single Stream.mapMultiToInt
+# dispatch.
+#
+# The chain mixes both reference kinds, so it exercises both desugaring rules:
+# X::plusOne is a STATIC reference (handle 6, the element is an argument), which
+# 104 handles, while Object::toString and String::length are UNBOUND-INSTANCE
+# references (handle 5, the method runs on each element), which 103 handles. All
+# three fuse: the static map and the object map collapse together and 451 folds
+# the trailing String::length unbox onto them, dropping the three invokedynamic
+# factories (two maps and the mapToInt) to one.
+java: |
+  package methodref;
+  import java.util.stream.Stream;
+  public class X {
+    static Integer plusOne(Integer n) {
+      return n + 1;
+    }
+    public static void main(String[] a) {
+      int r = Stream.of(5, 3, 8, 5, 2, 7, 4, 1, 6, 9)
+        .map(X::plusOne)
+        .map(Object::toString)
+        .mapToInt(String::length)
+        .sum();
+      System.out.printf("The result is %d\n", r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 11"
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 1

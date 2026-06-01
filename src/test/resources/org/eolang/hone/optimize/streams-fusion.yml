@@ -9,7 +9,10 @@
 #   mapped : a chain of .map().filter().map().map().mapToInt().sum() --
 #            every operator on the stateless point-wise path; the
 #            collapsed body should leave one mapMulti and one
-#            mapToInt+sum dispatch.
+#            mapToInt+sum dispatch. Two of its operators are method
+#            references -- X::addOne is a static ref (desugared by 104)
+#            and Integer::intValue an unbound-instance ref (103) -- so a
+#            mix of refs and lambdas must fuse together.
 #   sorted : .map().sorted(Comparator) -- sorted is a fundamental
 #            non-fusable barrier; the Comparator handle must survive.
 #            See issue #549.
@@ -24,12 +27,15 @@ java: |
   import java.util.*;
   import java.util.stream.*;
   public class X {
+    static Integer addOne(Integer n) {
+      return n + 1;
+    }
     public static void main(String[] a) {
       long peeked = Stream.of(1, 2, 3, 4, 5)
         .map(n -> n + 1).peek(n -> {}).count();
       int mapped = Arrays.asList(1, 2, 3, 4).stream()
         .map(n -> n * 2).filter(n -> n % 2 == 0)
-        .map(n -> n + 1).map(n -> n + 2)
+        .map(X::addOne).map(n -> n + 2)
         .mapToInt(Integer::intValue).sum();
       long sorted = Stream.of(5, 3, 8, 1, 4)
         .map(n -> n + 1).sorted((x, y) -> y - x).count();

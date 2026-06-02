@@ -8,7 +8,7 @@
 # re-lift it (its invokeinterface pattern is closed, the same loop-break 442/443
 # rely on). The closed state + body match only an UNFUSED c-filter; a fused one
 # carries a neighbour's guard and is left for 502. The body match includes the
-# leading item-preserve dup and the keep-guard 314 built (fetch; intValue; swap;
+# leading item-preserving dup and the keep-guard 314 built (fetch; intValue; swap;
 # predicate; ifne; return; label; frame-item), and the Predicate SAM constants
 # are reconstructed literally for the int-capture Stream<Integer> case.
 name: unfused-capturing-filter-to-invokedynamic

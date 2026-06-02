@@ -167,4 +167,3 @@ when:
 where:
   - meta: 𝜏-cp-filter
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic', '𝜏-capture']

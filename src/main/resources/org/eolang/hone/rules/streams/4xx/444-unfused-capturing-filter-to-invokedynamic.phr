@@ -114,10 +114,7 @@ result: |
 where:
   - meta: 𝜏-push-back
     function: random-tau
-    args: ['𝐵-before', '𝐵-after']
   - meta: 𝜏-indy
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-push-back']
   - meta: 𝜏-filter
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-push-back', '𝜏-indy']

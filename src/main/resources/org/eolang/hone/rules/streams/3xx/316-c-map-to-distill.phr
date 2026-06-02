@@ -75,10 +75,7 @@ result: |
 where:
   - meta: 𝜏-park
     function: random-tau
-    args: ['𝐵-bacc']
   - meta: 𝜏-reload
     function: random-tau
-    args: ['𝐵-bacc', '𝜏-park']
   - meta: 𝜏-call
     function: random-tau
-    args: ['𝐵-bacc', '𝜏-park', '𝜏-reload']

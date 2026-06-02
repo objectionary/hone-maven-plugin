@@ -108,16 +108,11 @@ where:
     args: ['"L%d"']
   - meta: 𝜏-dup
     function: random-tau
-    args: []
   - meta: 𝜏-load
     function: random-tau
-    args: ['𝜏-dup']
   - meta: 𝜏-box
     function: random-tau
-    args: ['𝜏-dup', '𝜏-load']
   - meta: 𝜏-add
     function: random-tau
-    args: ['𝜏-dup', '𝜏-load', '𝜏-box']
   - meta: 𝜏-pop
     function: random-tau
-    args: ['𝜏-dup', '𝜏-load', '𝜏-box', '𝜏-add']

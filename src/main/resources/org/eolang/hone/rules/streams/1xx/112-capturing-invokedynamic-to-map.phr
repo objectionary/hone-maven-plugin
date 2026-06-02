@@ -176,4 +176,3 @@ when:
 where:
   - meta: 𝜏-c-map
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']

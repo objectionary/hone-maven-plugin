@@ -3,13 +3,17 @@
 ---
 # Consolidated closure / method-reference end-to-end suite. One class
 # exercises every lambda-metafactory, Predicate / Function and capture
-# shape the rule pipeline must either PRESERVE untouched or FUSE, and the
-# whole thing is asserted by the runtime result alone: the pipeline must
-# never corrupt a roundtrip and never pessimise a lone operator, so a
-# correct printout proves every path lowered to runnable bytecode. Per-rule
-# fusion (which indy collapses into which mapMulti) is proven precisely by
-# the src/test/phino/ packs; this fixture proves the rules COMPOSE on a real
-# class without changing observable behaviour.
+# shape the rule pipeline must either PRESERVE untouched or FUSE. Two things
+# are asserted. The runtime result: the pipeline must never corrupt a
+# roundtrip nor pessimise a lone operator, so a correct printout proves every
+# path lowered to runnable bytecode. And the invokedynamic tally: it drops
+# from 41 to 32 as the capturing and non-capturing operators collapse into 10
+# Stream.mapMulti dispatches. The indys that remain are the string-concat
+# (makeConcatWithConstants in decorate / the reduce) and the genuinely native
+# or reverted cases (capObj, capArr, capFld, lone, named, the trailing
+# mapToInt unboxes, …); the nine that disappear are the fusion win. Which indy
+# collapses into which mapMulti is proven per-rule by the src/test/phino/
+# packs — this fixture proves the rules COMPOSE on a real class.
 #
 # Native roundtrip shapes — must survive untouched:
 #   bound   : String::length             unbound-instance method ref
@@ -134,6 +138,10 @@ java: |
       );
     }
   }
+before:
+  invokedynamic: 41
+after:
+  invokedynamic: 32
 log:
   - "BUILD SUCCESS"
   - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24 387 5 54 12"

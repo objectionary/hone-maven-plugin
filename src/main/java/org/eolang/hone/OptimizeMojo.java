@@ -77,9 +77,12 @@ public final class OptimizeMojo extends AbstractMojo {
      * happen to appear as a prefix or suffix of a longer byte sequence
      * (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>). See issue #449.</p>
      *
+     * <p>Uses negative lookbehind/lookahead to match complete hex-encoded method names
+     * only (not substrings like "6M-61-70" inside "6M-61-70-70-65-64-2F-58").</p>
+     *
      * @since 0.19.0
      */
-    static final String DEFAULT_GREP_IN = ">(66-69-6C-74-65-72|6D-61-70)<";
+    static final String DEFAULT_GREP_IN = "(?<!-)(66-69-6C-74-65-72|6D-61-70)(?!-)";
 
     /**
      * Splitter for comma-separated values (with optional whitespace).

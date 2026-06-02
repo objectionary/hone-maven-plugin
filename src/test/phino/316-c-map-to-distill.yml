@@ -2,38 +2,49 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# A capturing map pragma (112's output) folds into a stateful Φ.hone.distill: the
-# captured int is boxed and appended to the shared List in `state`, and the body
-# reads it back with a fetch, unboxes it, SWAPs it below the item and calls the
-# static lambda$. The start label is "c-map" so 431/281 leave it alone.
+# 316 assembles the accumulators 114 has filled into a stateful Φ.hone.distill.
+# The input is a two-capture c-map: state-acc already holds two boxing appends
+# (capture x at v0=0 then y at v0=1) and body-acc two `fetch; intValue` pairs.
+# 316 copies state-acc into the distill `state` verbatim and wraps body-acc into
+# the auto emit-shape `astore 1; <fetches>; aload 1; invokestatic lambda$` — the
+# item parked in its own dead local-1 slot, the unboxed captures left below it
+# exactly as the static lambda$ (int, int, Integer) signature wants. start is
+# "c-map" so 401 fuses it and 443 can find a lone single-capture map.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/3xx/316-c-map-to-distill.phr
 input: |
   {⟦
-    body ↦ ⟦
-      op ↦ ⟦
-        φ ↦ Φ.hone.c-map,
-        class ↦ "Foo",
-        bridge-input ↦ "Ljava/lang/Integer;",
-        bridge-output ↦ "Ljava/lang/Integer;",
-        accepted ↦ "Ljava/lang/Integer;",
-        returned ↦ "Ljava/lang/Integer;",
-        static ↦ "true",
-        captured ↦ "I",
-        capture-push ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 7 ⟧,
-        interface ↦ "(I)Ljava/util/function/Function;",
-        method ↦ "apply",
-        lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
-        bridge-signature ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
-        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(ILjava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
-      ⟧,
+    φ ↦ Φ.hone.c-map,
+    state-acc ↦ ⟦
+      s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧,
+      s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
+      s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+      s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      s6 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧,
+      s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
+      s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+      s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       ρ ↦ ∅
-    ⟧
+    ⟧,
+    body-acc ↦ ⟦
+      b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+      b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+      b3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+      b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+      ρ ↦ ∅
+    ⟧,
+    class ↦ "Foo",
+    bridge-input ↦ "Ljava/lang/Integer;",
+    bridge-output ↦ "Ljava/lang/Integer;",
+    accepted ↦ "Ljava/lang/Integer;",
+    returned ↦ "Ljava/lang/Integer;",
+    static ↦ "true",
+    target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$1", signature ↦ "(IILjava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
   ⟧}
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "c-map", 𝐵-b ⟧
-  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 7 ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.swap ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-c, i3 ↦ "valueOf", 𝐵-d ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-e, i2 ↦ "lambda$run$0", 𝐵-f ⟧
+  - ⟦ 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝐵-br ⟧
+  - ⟦ 𝐵-e, 𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$1", i3 ↦ "(IILjava/lang/Integer;)Ljava/lang/Integer;", i4 ↦ Φ.false ⟧, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-f, state ↦ ⟦ 𝜏-d1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-g ⟧

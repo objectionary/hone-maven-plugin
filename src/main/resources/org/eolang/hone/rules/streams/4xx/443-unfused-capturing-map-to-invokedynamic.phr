@@ -7,15 +7,21 @@
 # machinery (an extra invokedynamic, a wrapper, an ArrayList and a List.get per
 # element) and would be strictly slower than the native Stream.map the JVM
 # already has, so a c-map distill still carrying ONLY its single boxing append
-# and bare auto-body is put back as the original invokedynamic + Stream.map. This
+# and the single-capture park/reload body (astore 1; fetch; intValue; aload 1;
+# invokestatic) is put back as the original invokedynamic + Stream.map. This
 # matters for the issue-#636 example itself (`map(i -> i + x)` with no neighbour
 # to fuse): it must come out native, never pessimised.
 #
 # Both the state block and the body match below are CLOSED (no 𝐵-rest), so a
 # FUSED c-map — whose state and body carry a second operator's append and
-# guard — is left for 502. The capture-push (𝑒-push) is recovered from the state
-# and replayed before the indy; the target handle is read from the body's
-# invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
+# guard — is left for 502. A MULTI-capture lone map (two or more appends, the
+# v1.1 `map(i -> i + x + y)` shape) likewise fails this single-append, single-
+# fetch pattern and is emitted as a standalone mapMulti rather than reverted:
+# correct, only marginally slower than native, and a rarer shape than the lone
+# single-capture map. Reverting it (replaying N pushes and rebuilding the
+# "(I^N)" descriptor) is a follow-up puzzle. The capture-push (𝑒-push) is
+# recovered from the state and replayed before the indy; the target handle is
+# read from the body's invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
 # the erased lambda-signature, the captured "(I)" interface) are constants for an
 # int-capture Stream<Integer> map, so they are reconstructed literally. The
 # reverted Stream.map carries `reverted ↦ Φ.true`: 112's invokeinterface pattern
@@ -56,6 +62,7 @@ pattern: |
         ρ ↦ ∅
       ⟧,
       body ↦ ⟦
+        𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
         𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
         𝜏-unbox ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokevirtual,
@@ -64,7 +71,7 @@ pattern: |
           i3 ↦ "()I",
           i4 ↦ Φ.false
         ⟧,
-        𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+        𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
         𝜏-call ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokestatic,
           i1 ↦ 𝑒-target-class,

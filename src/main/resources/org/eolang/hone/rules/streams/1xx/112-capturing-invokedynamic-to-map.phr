@@ -3,34 +3,37 @@
 ---
 # yamllint disable rule:line-length
 # Lifts a CAPTURING map invokedynamic — one that 111 declines because its
-# factory descriptor carries a captured argument (e.g. "(I)L…Function;"
-# instead of "()L…Function;") — into a Φ.hone.c-map pragma, the capturing
-# sibling of the Φ.hone.map that 202 produces. 111 is left untouched: its
-# `\(\).+` interface guard matches the zero-capture space, this rule's
-# anchored `^\(I\)…$` guard matches the single-int-capture space, so the two
+# factory descriptor carries captured arguments (e.g. "(I)L…Function;" or
+# "(III)L…Function;" instead of "()L…Function;") — into a Φ.hone.c-map pragma,
+# the capturing sibling of the Φ.hone.map that 202 produces. 111 is left
+# untouched: its `\(\).+` interface guard matches the zero-capture space, this
+# rule's `\(I+\)…` guard matches the one-or-more-int-capture space, so the two
 # partition the indy population with no overlap.
 #
-# The capture rides the lambda-metafactory's only extra argument. javac
-# pushes it with a single leaf-load (`iload k`) immediately before the indy
-# and the indy consumes it to build the Function. We GRAB that push (𝜏-capture,
-# modelled on 220's count-push grab) out of the body and carry it on the pragma
-# as `capture-push`, so the value is gone from the operand stack (leaving it
-# inline would strand an int nothing consumes). 316 re-materialises it as a
-# boxed append to the shared state List; 443 replays it before the reverted
-# indy when the operator never fuses. The captured JVM type rides as `captured`.
+# Each capture rides the lambda-metafactory as one extra factory argument.
+# javac pushes them with a run of leaf-loads (`iload k`) immediately before the
+# indy and the indy consumes them to build the Function. This rule does NOT
+# grab those pushes — it leaves the whole run inline before the emitted c-map
+# and seeds two EMPTY accumulators (`state-acc`, `body-acc`). 114 then peels the
+# pushes one at a time (right-to-left, greedy-left makes the match exact),
+# prepending one boxed append to `state-acc` and one fetch+unbox to `body-acc`
+# per capture, so the captures land in the shared state List in left-to-right
+# order. 316 finally assembles the two accumulators into a stateful distill.
+# Treating a capture as "a pointwise operator that owns one slot in the shared
+# state List" is what lets N captures (and any number of fused capturing
+# operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
 #
-# v1 scope (issue #636): a single category-1 INT capture, a type-preserving
-# Stream<Integer> map (bridge-signature "(Ljava/lang/Integer;)Ljava/lang/Integer;"),
-# a handle-6 static lambda$ target, the push a constant-index iload. Reference
-# captures, other element types, type-transforming maps, category-2 captures,
-# multi-capture and field/computed pushes are declined here (left native) and
-# tracked as follow-up puzzles.
+# v1.1 scope (issue #636): one OR MORE category-1 INT captures, a type-preserving
+# Stream<Integer> map (instantiated type "(Ljava/lang/Integer;)Ljava/lang/Integer;"),
+# a handle-6 static lambda$ target, every push a constant-index iload. Reference
+# captures, other element types, type-transforming maps and category-2 captures
+# are declined here (left native) and tracked as follow-up puzzles.
 #
-# @todo #636:60min Generalise the capture beyond a single int on a
-#  Stream<Integer> map: a reference capture (drop the box/unbox), other
-#  type-preserving element types (relax the literal bridge-signature to a
-#  bridge-input==bridge-output guard), and multi-capture (grab the run of
-#  leaf-loads). Each extends the same shared-List channel.
+# @todo #636:60min Generalise the capture beyond ints on a Stream<Integer> map:
+#  a reference capture (drop the box/unbox), other type-preserving element types
+#  (relax the literal instantiated-type guard to a bridge-input==bridge-output
+#  guard), and category-2 (J/D) captures. Each extends the same shared-List
+#  channel; a multi-capture FILTER (113/314) is the nearest unfinished twin.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦
@@ -59,10 +62,6 @@ pattern: |
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
         𝐵-body-head,
-        𝜏-capture ↦ ⟦
-          φ ↦ Φ.jeo.opcode.iload,
-          𝐵-cap-rest
-        ⟧,
         𝜏-invokedynamic ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokedynamic,
           𝜏3 ↦ 𝑒-method,
@@ -142,21 +141,14 @@ result: |
         𝐵-body-head,
         𝜏-c-map ↦ ⟦
           φ ↦ Φ.hone.c-map,
+          state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           class ↦ 𝑒-class,
           bridge-input ↦ "Ljava/lang/Integer;",
           bridge-output ↦ "Ljava/lang/Integer;",
           accepted ↦ "Ljava/lang/Integer;",
           returned ↦ "Ljava/lang/Integer;",
           static ↦ "true",
-          captured ↦ "I",
-          capture-push ↦ ⟦
-            φ ↦ Φ.jeo.opcode.iload,
-            𝐵-cap-rest
-          ⟧,
-          interface ↦ 𝑒-interface,
-          method ↦ 𝑒-method,
-          lambda-signature ↦ 𝑒-lambda-signature,
-          bridge-signature ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
           target ↦ ⟦
             handle ↦ 6,
             class ↦ 𝑒-target-class,
@@ -179,9 +171,9 @@ when:
         - 'lambda\$.+'
         - 𝑒-target-method
     - matches:
-        - '\(I\)Ljava/util/function/Function;'
+        - '\(I+\)Ljava/util/function/Function;'
         - 𝑒-interface
 where:
   - meta: 𝜏-c-map
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic', '𝜏-capture']
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']

@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Peels one captured push off a Φ.hone.c-map and folds it into the operator's
+# shared-List state. 112 emits the c-map with the whole run of `iload k` pushes
+# still inline in front of it and two EMPTY accumulators; this rule does the
+# gathering, one capture per firing, re-applying at fixpoint until the run is
+# gone (the same self-iteration 521 uses to resolve every fetch).
+#
+# It matches the single `iload` directly in front of the c-map: phino's leading
+# `𝐵-h` group is greedy, so for a run "iload x; iload y; iload z; <c-map>" the
+# bound `𝜏-il` is always the LAST push (z), and the rule peels right-to-left
+# (z, then y, then x). Each peel PREPENDS its unit to the accumulators, so the
+# captures end up in left-to-right (x, y, z) order — exactly the order javac
+# pushed them and the order the static lambda$ expects, and the order in which
+# they are appended to the List (slot 0 = x, …) so guard k reads capture k.
+#
+# state-acc gains one boxing append `dup; iload k; Integer.valueOf; List.add;
+# pop` (begins and ends at [list], peak 3, so any number of them — across this
+# operator and any fused neighbours — join without growing the caller's stack).
+# body-acc gains one `fetch; intValue` (521 turns the fetch into List.get(counter++)
+# at emit, the intValue unboxes it). 316 wraps the finished body-acc as
+# `astore 1; <fetches>; aload 1; invokestatic lambda$`, so the unboxed captures
+# sit below the parked item exactly as the lambda$ (int…, Integer) signature wants.
+#
+# The run is always bounded on the left by the previous stream operator's
+# invokeinterface (which left a Stream ref on the stack), never by another
+# iload, so peeling stops cleanly once every capture has been gathered.
+name: c-map-peel-capture
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-il ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, 𝐵-ilr ⟧,
+    𝜏-cm ↦ ⟦
+      φ ↦ Φ.hone.c-map,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cm-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cm ↦ ⟦
+      φ ↦ Φ.hone.c-map,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, 𝐵-ilr ⟧,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-iv ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cm-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc']
+  - meta: 𝜏-load
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc', '𝜏-dup']
+  - meta: 𝜏-box
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc', '𝜏-dup', '𝜏-load']
+  - meta: 𝜏-add
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc', '𝜏-dup', '𝜏-load', '𝜏-box']
+  - meta: 𝜏-pop
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc', '𝜏-dup', '𝜏-load', '𝜏-box', '𝜏-add']
+  - meta: 𝜏-fetch
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc', '𝜏-dup', '𝜏-load', '𝜏-box', '𝜏-add', '𝜏-pop']
+  - meta: 𝜏-iv
+    function: random-tau
+    args: ['𝐵-sacc', '𝐵-bacc', '𝜏-dup', '𝜏-load', '𝜏-box', '𝜏-add', '𝜏-pop', '𝜏-fetch']

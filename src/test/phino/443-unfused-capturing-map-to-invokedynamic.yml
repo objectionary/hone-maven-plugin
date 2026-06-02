@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# A capturing-map distill that never fused (closed state + bare auto-body) is
+# A single-capture map distill that never fused (closed state + park/reload body) is
 # reverted to the native invokedynamic + Stream.map, replaying the captured push
 # (iload 5) and marking the call reverted↦Φ.true so 112 cannot re-lift it. This
 # is the never-pessimise guarantee for a lone `map(i -> i + x)` — the issue-#636
@@ -30,9 +30,10 @@ input: |
           ρ ↦ ∅
         ⟧,
         body ↦ ⟦
+          b0 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
           b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
           b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
-          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
           b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$0", i3 ↦ "(ILjava/lang/Integer;)Ljava/lang/Integer;", i4 ↦ Φ.false ⟧,
           ρ ↦ ∅
         ⟧

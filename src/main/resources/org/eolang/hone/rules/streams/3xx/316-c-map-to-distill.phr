@@ -2,46 +2,43 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Folds a Φ.hone.c-map (a capturing map recognised by 112) into a Φ.hone.distill,
-# the capturing analogue of how 306 folds a plain map — except a capture is, in
-# this design, "a map that owns one slot in the shared state List". So the fold
-# borrows the state mechanism distinct/skip use (307/308): the captured int is
-# appended to the List in the `state` block and read back in the body via a
-# Φ.hone.fetch marker, so two capturing operators fuse by 401's blind state+body
-# join exactly like two distincts.
+# Folds a Φ.hone.c-map (a capturing map recognised by 112 and gathered by 114)
+# into a Φ.hone.distill, the capturing analogue of how 306 folds a plain map —
+# except a capture is, in this design, "a map that owns one slot in the shared
+# state List per captured value". So the fold borrows the state mechanism
+# distinct/skip use (307/308): every captured int is appended to the List in the
+# `state` block and read back in the body via a Φ.hone.fetch marker, so two
+# capturing operators fuse by 401's blind state+body join exactly like two
+# distincts.
 #
-# state: with the List already on the stack, `dup; <capture-push>; Integer.valueOf;
-# List.add; pop` boxes the captured int and appends it — beginning and ending at
-# [list], peak 3, so any number of these join without growing the caller's stack.
-# The <capture-push> is the original `iload k` 112 lifted out of the body, so the
-# value is read in the ORIGINAL method's frame where local k is still live.
-#
-# body (auto emit-shape, one item in one item out): `fetch; intValue; swap;
-# invokestatic lambda$`. The fetch (521 -> aload0; iload3; List.get; iinc;
-# checkcast Integer) pushes the boxed capture, intValue unboxes it, and the SWAP
-# is the load-bearing step — the static lambda$ wants (int captured, Integer item)
-# with the item on top, but item+fetch leaves [item, captured]; the swap restores
-# [captured, item]. Omitting it inverts the two operands silently (both are
-# int-ish, so the verifier accepts it) — a miscompile the e2e numeric result
-# catches. The start label "c-map" (not "map") keeps 431/281 off this body — the
-# dup they insert for a plain filter has no business here — and lets 443 find an
-# unfused capturing map to revert.
+# 114 has already assembled both halves into the c-map's accumulators:
+#   state-acc — one `dup; iload k; Integer.valueOf; List.add; pop` per capture,
+#               in left-to-right order (slot 0 = first capture); it becomes the
+#               distill `state` verbatim.
+#   body-acc  — one `fetch; intValue` per capture (521 later turns each fetch
+#               into List.get(counter++); the intValue unboxes it).
+# This rule wraps body-acc into the auto emit-shape (one item in, one item out):
+#   astore 1            park the incoming item in its own (now-dead) param slot
+#   <body-acc>          push capture 0, 1, … N-1 as ints
+#   aload 1             reload the item on top
+#   invokestatic lambda$  call (int…, Integer) -> Integer with the right stack
+# Parking in local 1 (which 512's wrapper only reads once, at entry) needs no
+# extra local, so 512's max-locals is untouched. The N-ary park/reload replaces
+# v1's single-capture `swap`, so one capture and many captures share one shape.
+# The start label "c-map" (not "map") keeps 431/281 off this body and lets 443
+# find an unfused single-capture map to revert.
 name: c-map-to-distill
 pattern: |
   ⟦
     φ ↦ Φ.hone.c-map,
+    state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+    body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    captured ↦ 𝑒-captured,
-    capture-push ↦ 𝑒-capture-push,
-    interface ↦ 𝑒-interface,
-    method ↦ 𝑒-method,
-    lambda-signature ↦ 𝑒-lambda-signature,
-    bridge-signature ↦ 𝑒-bridge-signature,
     target ↦ ⟦
       handle ↦ 𝑒-target-handle,
       class ↦ 𝑒-target-class,
@@ -60,58 +57,28 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    state ↦ ⟦
-      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝜏-load ↦ 𝑒-capture-push,
-      𝜏-box ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokestatic,
-        i2 ↦ "java/lang/Integer",
-        i3 ↦ "valueOf",
-        i4 ↦ "(I)Ljava/lang/Integer;",
-        i5 ↦ Φ.false
-      ⟧,
-      𝜏-add ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokeinterface,
-        i2 ↦ "java/util/List",
-        i3 ↦ "add",
-        i4 ↦ "(Ljava/lang/Object;)Z",
-        i5 ↦ Φ.true
-      ⟧,
-      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-      ρ ↦ ∅
-    ⟧,
+    state ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
     body ↦ ⟦
-      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
-      i2 ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokevirtual,
-        i1 ↦ "java/lang/Integer",
-        i2 ↦ "intValue",
-        i3 ↦ "()I",
-        i4 ↦ Φ.false
-      ⟧,
-      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
-      i4 ↦ ⟦
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝐵-bacc,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-call ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokestatic,
         i1 ↦ 𝑒-target-class,
         i2 ↦ 𝑒-target-method,
         i3 ↦ 𝑒-target-signature,
         i4 ↦ 𝑒-target-is-interface
-      ⟧
+      ⟧,
+      ρ ↦ ∅
     ⟧
   ⟧
 where:
-  - meta: 𝜏-dup
+  - meta: 𝜏-park
     function: random-tau
-    args: []
-  - meta: 𝜏-load
+    args: ['𝐵-bacc']
+  - meta: 𝜏-reload
     function: random-tau
-    args: ['𝜏-dup']
-  - meta: 𝜏-box
+    args: ['𝐵-bacc', '𝜏-park']
+  - meta: 𝜏-call
     function: random-tau
-    args: ['𝜏-dup', '𝜏-load']
-  - meta: 𝜏-add
-    function: random-tau
-    args: ['𝜏-dup', '𝜏-load', '𝜏-box']
-  - meta: 𝜏-pop
-    function: random-tau
-    args: ['𝜏-dup', '𝜏-load', '𝜏-box', '𝜏-add']
+    args: ['𝐵-bacc', '𝜏-park', '𝜏-reload']

@@ -30,7 +30,7 @@ binary is found.
 | Phino invocation loop                | `src/main/resources/org/eolang/hone/scaffolding/rewrite.sh`           |
 | Rule discovery and pattern selection | `src/main/java/org/eolang/hone/Rules.java`                            |
 | Mojo with all user-facing knobs      | `src/main/java/org/eolang/hone/OptimizeMojo.java`                     |
-| End-to-end test fixtures             | `src/test/resources/org/eolang/hone/optimize/streams-*.yml`           |
+| End-to-end test fixtures             | `src/test/resources/org/eolang/hone/optimize/streams/*.yml`           |
 | Single-rule unit tests               | `src/test/phino/*.yml`                                                |
 <!-- markdownlint-enable MD013 -->
 
@@ -552,7 +552,7 @@ Two extension mechanisms exist; they are independent.
 ## Running the test suite
 
 The `pom.xml` sets `<excludedGroups>deep</excludedGroups>` by default,
-which causes the end-to-end optimize fixtures (the `streams-*.yml`
+which causes the end-to-end optimize fixtures (the `streams/*.yml`
 packs under `src/test/resources/org/eolang/hone/optimize/` and the
 `src/test/phino/*.yml` rule-unit packs) to be skipped — running
 `mvn test` alone exercises roughly half of the suite and silently

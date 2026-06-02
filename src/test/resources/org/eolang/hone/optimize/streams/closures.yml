@@ -1,21 +1,34 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-# Consolidated closure / method-reference roundtrip suite. Each
-# block below exercises a distinct lambda-metafactory or Predicate /
-# Function instantiation shape the rule pipeline must preserve:
+# Consolidated closure / method-reference end-to-end suite. One class
+# exercises every lambda-metafactory, Predicate / Function and capture
+# shape the rule pipeline must either PRESERVE untouched or FUSE, and the
+# whole thing is asserted by the runtime result alone: the pipeline must
+# never corrupt a roundtrip and never pessimise a lone operator, so a
+# correct printout proves every path lowered to runnable bytecode. Per-rule
+# fusion (which indy collapses into which mapMulti) is proven precisely by
+# the src/test/phino/ packs; this fixture proves the rules COMPOSE on a real
+# class without changing observable behaviour.
 #
-#   bound  : String::length             (unbound-instance method ref)
-#   capObj : List captured in lambda     (reference capture)
-#   capArr : int[1] captured (effectively-final workaround)
-#   capFld : this.field read from lambda (implicit-this capture)
-#   capLoc : effectively-final local capture
-#   instRef: bound instance method ref   (self::decorate)
-#   refArg : Predicate/Function passed in as method parameters
-#   refs   : every operator is a static method reference
-#   sField : private static final read from lambda body
-#   sHelp  : lambda body delegates to a private static helper
-#   named  : Predicate/Function as user-defined named classes
+# Native roundtrip shapes — must survive untouched:
+#   bound   : String::length             unbound-instance method ref
+#   capObj  : List captured in lambda     reference capture
+#   capArr  : int[1] captured             array / effectively-final workaround
+#   capFld  : this.field read             implicit-this capture (instanceRun)
+#   instRef : self::decorate              bound (captured-receiver) instance ref
+#   refArg  : Predicate / Function params refs supplied as method arguments
+#   refs    : X::isOdd / X::triple        every operator a static method ref
+#   sField  : static final read           constant read from a lambda body
+#   sHelp   : isPrime / square helpers    lambda delegates to a static helper
+#   named   : new Good() / new Doubler()  Predicate / Function as named classes
+#
+# Capturing fusion shapes (issue #636) — must fuse, revert, or stay native:
+#   capLoc    : filter(n>t).map(n+off)    single-int-capture filter+map FUSE
+#   multiCap  : map(+1).map(+x+y+z)       three-int-capture map fuses (v1.1)
+#   lone      : map(n+off)                lone single-capture map REVERTS to native
+#   loneMulti : map(n+p+q)                lone multi-capture map -> standalone mapMulti
+#   multiFil  : filter(n>lo && n<hi)      multi-int-capture filter stays native (deferred)
 java: |
   package closures;
   import java.util.*;
@@ -55,6 +68,25 @@ java: |
       return Stream.of(1, 2, 3, 4, 5).filter(p).map(f)
         .mapToInt(Integer::intValue).sum();
     }
+    static int multiCapture(int x, int y, int z) {
+      return Stream.of(1, 2, 3, 4, 5, 6)
+        .map(i -> i + 1)
+        .map(i -> i + x + y + z)
+        .mapToInt(Integer::intValue)
+        .sum();
+    }
+    static long loneMap(int offset) {
+      return Stream.of(1, 2, 3, 4, 5).map(n -> n + offset).count();
+    }
+    static int loneMultiMap(int p, int q) {
+      return Stream.of(1, 2, 3, 4).map(n -> n + p + q)
+        .mapToInt(Integer::intValue).sum();
+    }
+    static int multiFilter(int lo, int hi) {
+      return Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(n -> n > lo && n < hi)
+        .mapToInt(Integer::intValue).sum();
+    }
     public static void main(String[] a) {
       int bound = Stream.of("a", "bb", "ccc", "dddd", "eeeee")
         .filter(s -> s.length() > 1).map(String::length)
@@ -90,13 +122,18 @@ java: |
       int named = Stream.of(1, 2, 3, 4, 5)
         .filter(new Good()).map(new Doubler())
         .mapToInt(Integer::intValue).sum();
+      int multiCap = multiCapture(10, 20, 30);
+      long lone = loneMap(100);
+      int loneMulti = loneMultiMap(5, 6);
+      int multiFil = multiFilter(2, 6);
       System.out.printf(
-        "The result is %d %d %d %d %d %s %d %d %d %d %d\n",
+        "The result is %d %d %d %d %d %s %d %d %d %d %d %d %d %d %d%n",
         bound, capObj, capArr, capFld, capLoc,
-        instRef, refArg, refs, sField, sHelp, named
+        instRef, refArg, refs, sField, sHelp, named,
+        multiCap, lone, loneMulti, multiFil
       );
     }
   }
 log:
   - "BUILD SUCCESS"
-  - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24"
+  - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24 387 5 54 12"

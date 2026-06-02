@@ -85,7 +85,6 @@ result: |
 where:
   - meta: 𝜏-distill-lambda
     function: random-tau
-    args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail']
   - meta: 𝑒-target-method
     function: random-string
     args: [ '"distill_%d"' ]

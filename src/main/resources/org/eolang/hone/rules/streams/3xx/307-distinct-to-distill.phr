@@ -89,19 +89,13 @@ where:
     args: ['"L%d"']
   - meta: 𝜏-dup-list
     function: random-tau
-    args: []
   - meta: 𝜏-new-set
     function: random-tau
-    args: ['𝜏-dup-list']
   - meta: 𝜏-dup-set
     function: random-tau
-    args: ['𝜏-dup-list', '𝜏-new-set']
   - meta: 𝜏-init
     function: random-tau
-    args: ['𝜏-dup-list', '𝜏-new-set', '𝜏-dup-set']
   - meta: 𝜏-add
     function: random-tau
-    args: ['𝜏-dup-list', '𝜏-new-set', '𝜏-dup-set', '𝜏-init']
   - meta: 𝜏-pop
     function: random-tau
-    args: ['𝜏-dup-list', '𝜏-new-set', '𝜏-dup-set', '𝜏-init', '𝜏-add']

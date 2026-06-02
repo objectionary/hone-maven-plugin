@@ -81,4 +81,3 @@ result: |
 where:
   - meta: 𝜏-skip
     function: random-tau
-    args: [ '𝐵-body-head', '𝐵-body-tail' ]

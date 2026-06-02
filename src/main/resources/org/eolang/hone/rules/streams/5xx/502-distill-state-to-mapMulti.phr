@@ -116,16 +116,12 @@ result: |
 where:
   - meta: 𝜏-distill-lambda
     function: random-tau
-    args: ['name', '𝐵-class-head-before', '𝐵-class-head-after', '𝐵-class-tail']
   - meta: 𝜏-new-list
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝐵-state-rest']
   - meta: 𝜏-dup-list
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝐵-state-rest', '𝜏-new-list']
   - meta: 𝜏-init-list
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝐵-state-rest', '𝜏-new-list', '𝜏-dup-list']
   - meta: 𝑒-target-method
     function: random-string
     args: [ '"distill_%d"' ]

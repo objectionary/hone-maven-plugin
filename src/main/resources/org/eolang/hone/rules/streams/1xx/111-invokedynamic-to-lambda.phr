@@ -148,4 +148,3 @@ when:
 where:
   - meta: 𝜏-lambda
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']

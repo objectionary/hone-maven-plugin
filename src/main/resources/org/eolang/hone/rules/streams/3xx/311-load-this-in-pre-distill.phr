@@ -40,13 +40,10 @@ result: |
 where:
   - meta: 𝜏-load-this
     function: random-tau
-    args: [ 𝐵-body ]
   - meta: 𝜏-dupx
     function: random-tau
-    args: [ 𝐵-body, 𝜏-load-this ]
   - meta: 𝜏-pop
     function: random-tau
-    args: [ 𝐵-body, 𝜏-load-this, 𝜏-dupx ]
   - meta: 𝑒-dup-x
     function: sed
     args:

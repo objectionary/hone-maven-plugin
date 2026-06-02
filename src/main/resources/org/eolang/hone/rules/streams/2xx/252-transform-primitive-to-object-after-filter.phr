@@ -87,7 +87,6 @@ when:
 where:
   - meta: 𝜏-transform
     function: random-tau
-    args: [𝐵-before, 𝜏-first, 𝜏-second, 𝐵-after]
   - meta: 𝑒-transform-target-class
     function: sed
     args:

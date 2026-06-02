@@ -5,7 +5,7 @@
 # Folds a Φ.hone.cp-filter (a capturing primitive filter recognised by 113) into
 # a Φ.hone.distill, the capturing analogue of 304 + the state mechanism of
 # 307/308. The captured int rides the shared List exactly as in 316 (see its
-# header for the state block and the load-bearing swap).
+# header for the state block).
 #
 # body: a filter guard prefixed with the fetch+unbox+swap that brings the
 # captured int below the item. Because the predicate consumes the item, the body

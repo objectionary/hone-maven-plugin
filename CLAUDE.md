@@ -450,7 +450,7 @@ FILTER and the lone-multi-capture-map revert (both above); reference captures
 (drop the box/unbox); other type-preserving element types (relax the literal
 `Stream<Integer>` instantiated type to a `bridge-input == bridge-output`
 guard); category-2 captures; `this`-field captures; and capturing
-`peek`/`mapToX`. See the `@todo` in `112`'s header.
+`peek`/`mapToX`. See the puzzle marker in `112`'s header.
 
 ## phino: the only rewrite engine
 

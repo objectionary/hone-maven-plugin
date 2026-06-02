@@ -76,8 +76,8 @@ The string-level helpers that `where` blocks can call:
 - `sed` — apply one or more sed-style substitutions to an `𝑒-` value.
 - `tau` — derive a `𝜏-` binding name from a string value (used to give
   the result formation a name computed from the input).
-- `random-tau` — generate a fresh, unused `𝜏-` name, with the args
-  listing existing names to avoid collisions.
+- `random-tau` — generate a fresh, unused `𝜏-` name (phino guarantees
+  it never collides with an existing name, so it takes no args).
 - `random-string` — generate a fresh string from a `printf`-style format.
 - `number` / `string` / `sum` — type coercions and arithmetic; rarely
   needed but legal.

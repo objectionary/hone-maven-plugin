@@ -62,4 +62,3 @@ result: |
 where:
   - meta: 𝜏-distinct
     function: random-tau
-    args: [ '𝐵-body-head', '𝐵-body-tail' ]

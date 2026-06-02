@@ -107,4 +107,3 @@ where:
       - '"s/.*false.*/false/g"'
   - meta: 𝜏-unbox-op
     function: random-tau
-    args: ['𝐵-body-head', '𝐵-body', '𝐵-body-tail']

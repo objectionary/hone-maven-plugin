@@ -74,7 +74,5 @@ result: |
 where:
   - meta: 𝜏-invokedynamic
     function: random-tau
-    args: ['𝐵-before', '𝐵-after']
   - meta: 𝜏-invokeinterface
     function: random-tau
-    args: ['𝐵-before', '𝜏-invokedynamic', '𝐵-after']

@@ -45,16 +45,11 @@ result: |
 where:
   - meta: 𝜏-load-arr
     function: random-tau
-    args: ['𝐵-before', '𝐵-after']
   - meta: 𝜏-load-idx
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr']
   - meta: 𝜏-get
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-load-idx']
   - meta: 𝜏-inc
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-load-idx', '𝜏-get']
   - meta: 𝜏-cast
     function: random-tau
-    args: ['𝐵-before', '𝐵-after', '𝜏-load-arr', '𝜏-load-idx', '𝜏-get', '𝜏-inc']

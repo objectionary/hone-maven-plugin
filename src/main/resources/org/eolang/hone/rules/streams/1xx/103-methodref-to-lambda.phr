@@ -244,7 +244,6 @@ when:
 where:
   - meta: 𝜏-wrapper
     function: random-tau
-    args: ['𝐵-class-body-head', '𝐵-class-body-tail', '𝜏-function']
   - meta: 𝑒-wrapper-name
     function: random-string
     args: ['"lambda$hone$%d"']

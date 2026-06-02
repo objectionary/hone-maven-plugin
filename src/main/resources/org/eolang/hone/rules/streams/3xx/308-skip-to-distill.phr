@@ -94,34 +94,23 @@ where:
     args: ['"L%d"']
   - meta: 𝜏-alen
     function: random-tau
-    args: []
   - meta: 𝜏-new-cnt
     function: random-tau
-    args: ['𝜏-alen']
   - meta: 𝜏-dup-cnt
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt']
   - meta: 𝜏-cidx
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt']
   - meta: 𝜏-push
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx']
   - meta: 𝜏-cstore
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push']
   - meta: 𝜏-swap-hi
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore']
   - meta: 𝜏-dup-arr
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi']
   - meta: 𝜏-swap-lo
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr']
   - meta: 𝜏-add
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr', '𝜏-swap-lo']
   - meta: 𝜏-pop
     function: random-tau
-    args: ['𝜏-alen', '𝜏-new-cnt', '𝜏-dup-cnt', '𝜏-cidx', '𝜏-push', '𝜏-cstore', '𝜏-swap-hi', '𝜏-dup-arr', '𝜏-swap-lo', '𝜏-add']

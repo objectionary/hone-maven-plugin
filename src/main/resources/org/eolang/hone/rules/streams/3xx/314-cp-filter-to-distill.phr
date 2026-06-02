@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a Φ.hone.cp-filter (a capturing primitive filter recognised by 113) into
+# a Φ.hone.distill, the capturing analogue of 304 + the state mechanism of
+# 307/308. The captured int rides the shared List exactly as in 316 (see its
+# header for the state block).
+#
+# body: a filter guard prefixed with the fetch+unbox+swap that brings the
+# captured int below the item. Because the predicate consumes the item, the body
+# opens with a `dup` to keep a copy for the keep path — unlike a plain filter
+# (305/304) whose dup is spliced in later by 431/281, a c-filter carries its own
+# dup so the "c-filter" start label can keep 431 (which only matches start
+# "filter") away. The sequence on entry [item]:
+#   dup            [item, item]
+#   fetch;intValue [item, item, int captured]
+#   swap           [item, int captured, item]
+#   invokestatic   [item, Z]          (predicate consumes captured + item copy)
+#   ifne L         [item]             keep, else fall through and return (drop)
+# The keep label leaves a single [item], so the Φ.hone.frame-item marker (503
+# fills it with the counter-aware of4 frame once 502 has set captured=List) is
+# the same single-item frame distinct/skip use.
+name: cp-filter-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.cp-filter,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    captured ↦ 𝑒-captured,
+    capture-push ↦ 𝑒-capture-push,
+    interface ↦ 𝑒-interface,
+    method ↦ 𝑒-method,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "c-filter",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ ⟦
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-load ↦ 𝑒-capture-push,
+      𝜏-box ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ "java/lang/Integer",
+        i3 ↦ "valueOf",
+        i4 ↦ "(I)Ljava/lang/Integer;",
+        i5 ↦ Φ.false
+      ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+      i3 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ "java/lang/Integer",
+        i2 ↦ "intValue",
+        i3 ↦ "()I",
+        i4 ↦ Φ.false
+      ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      i5 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-target-class,
+        i2 ↦ 𝑒-target-method,
+        i3 ↦ 𝑒-target-signature,
+        i4 ↦ 𝑒-target-is-interface
+      ⟧,
+      i6 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L%d"']
+  - meta: 𝜏-dup
+    function: random-tau
+    args: []
+  - meta: 𝜏-load
+    function: random-tau
+    args: ['𝜏-dup']
+  - meta: 𝜏-box
+    function: random-tau
+    args: ['𝜏-dup', '𝜏-load']
+  - meta: 𝜏-add
+    function: random-tau
+    args: ['𝜏-dup', '𝜏-load', '𝜏-box']
+  - meta: 𝜏-pop
+    function: random-tau
+    args: ['𝜏-dup', '𝜏-load', '𝜏-box', '𝜏-add']

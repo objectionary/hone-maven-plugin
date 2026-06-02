@@ -1,0 +1,84 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a Φ.hone.c-map (a capturing map recognised by 112 and gathered by 114)
+# into a Φ.hone.distill, the capturing analogue of how 306 folds a plain map —
+# except a capture is, in this design, "a map that owns one slot in the shared
+# state List per captured value". So the fold borrows the state mechanism
+# distinct/skip use (307/308): every captured int is appended to the List in the
+# `state` block and read back in the body via a Φ.hone.fetch marker, so two
+# capturing operators fuse by 401's blind state+body join exactly like two
+# distincts.
+#
+# 114 has already assembled both halves into the c-map's accumulators:
+#   state-acc — one `dup; iload k; Integer.valueOf; List.add; pop` per capture,
+#               in left-to-right order (slot 0 = first capture); it becomes the
+#               distill `state` verbatim.
+#   body-acc  — one `fetch; intValue` per capture (521 later turns each fetch
+#               into List.get(counter++); the intValue unboxes it).
+# This rule wraps body-acc into the auto emit-shape (one item in, one item out):
+#   astore 1            park the incoming item in its own (now-dead) param slot
+#   <body-acc>          push capture 0, 1, … N-1 as ints
+#   aload 1             reload the item on top
+#   invokestatic lambda$  call (int…, Integer) -> Integer with the right stack
+# Parking in local 1 (which 512's wrapper only reads once, at entry) needs no
+# extra local, so 512's max-locals is untouched. The N-ary park/reload replaces
+# v1's single-capture `swap`, so one capture and many captures share one shape.
+# The start label "c-map" (not "map") keeps 431/281 off this body and lets 443
+# find an unfused single-capture map to revert.
+name: c-map-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.c-map,
+    state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+    body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "c-map",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝐵-bacc,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-target-class,
+        i2 ↦ 𝑒-target-method,
+        i3 ↦ 𝑒-target-signature,
+        i4 ↦ 𝑒-target-is-interface
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝜏-park
+    function: random-tau
+    args: ['𝐵-bacc']
+  - meta: 𝜏-reload
+    function: random-tau
+    args: ['𝐵-bacc', '𝜏-park']
+  - meta: 𝜏-call
+    function: random-tau
+    args: ['𝐵-bacc', '𝜏-park', '𝜏-reload']

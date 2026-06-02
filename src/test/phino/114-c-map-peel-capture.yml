@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 114 gathers the captures 112 left inline. The input mimics 112's output: a
+# Φ.hone.c-map with two EMPTY accumulators, preceded by two iload pushes (x at
+# slot v0=0, y at slot v0=1) and bounded on the left by the previous operator's
+# invokeinterface. Re-applied at fixpoint, 114 peels the iloads right-to-left
+# (greedy-left binds the LAST one first) and PREPENDS one unit per capture, so
+# state-acc ends up appending x THEN y (slot 0 = x) and body-acc gets two
+# `fetch; intValue` pairs. After it runs, no iload sits between the
+# invokeinterface and the c-map — every capture has moved into the accumulators.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/114-c-map-peel-capture.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
+      x ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧,
+      y ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧,
+      cm ↦ ⟦
+        φ ↦ Φ.hone.c-map,
+        state-acc ↦ ⟦⟧,
+        body-acc ↦ ⟦⟧,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$1", signature ↦ "(IILjava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-a, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝜏-iv ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, 𝐵-iv ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝐵-br ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-x, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", 𝐵-pr ⟧, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-cr ⟧, 𝐵-y ⟧

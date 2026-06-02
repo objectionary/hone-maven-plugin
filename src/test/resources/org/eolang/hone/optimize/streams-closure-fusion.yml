@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Focused end-to-end proof of capturing-lambda fusion (issue #636). Two
+# methods exercise both halves of the v1 behaviour:
+#
+#   fused : a capturing filter feeding a capturing map — the headline win.
+#           javac emits two capturing invokedynamics (filter "(I)L…Predicate;",
+#           map "(I)L…Function;") plus the mapToInt method-ref indy. 113/112
+#           lift them, 314/316 fold them into one stateful distill (the captured
+#           threshold and offset both ride the shared List), 401 fuses the pair
+#           and 502/512/521/601 emit a single Stream.mapMulti — so the two
+#           capturing indys collapse into one. The trailing mapToInt stays
+#           native (a stateful distill does not fuse a boundary unbox).
+#   lone  : a single capturing map with no neighbour. It cannot fuse, so 443
+#           reverts it to the native Stream.map invokedynamic — never the slower
+#           ArrayList+mapMulti. This is the issue's literal `map(i -> i + x)`
+#           example: correct AND not pessimised.
+#
+# invokedynamic count: before = filter + map + mapToInt (fused) + map (lone) = 4;
+# after = mapMulti + mapToInt (fused) + reverted map (lone) = 3. The single
+# dropped indy is the proof the two capturing operators fused into one dispatch.
+# The runtime line proves the captured values reach the lambda in the right
+# order (the body's swap): fused(3,100) keeps {4,5,6}, maps to {104,105,106},
+# sums to 315; lone(100) maps {1..5} and counts 5.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class X {
+    static int fused(int threshold, int offset) {
+      return Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(n -> n > threshold)
+        .map(n -> n + offset)
+        .mapToInt(Integer::intValue)
+        .sum();
+    }
+    static long lone(int offset) {
+      return Stream.of(1, 2, 3, 4, 5).map(n -> n + offset).count();
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d %d%n", fused(3, 100), lone(100));
+    }
+  }
+before:
+  invokedynamic: 4
+after:
+  invokedynamic: 3
+log:
+  - "BUILD SUCCESS"
+  - "The result is 315 5"

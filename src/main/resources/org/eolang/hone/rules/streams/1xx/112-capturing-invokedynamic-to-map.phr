@@ -1,0 +1,179 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Lifts a CAPTURING map invokedynamic — one that 111 declines because its
+# factory descriptor carries captured arguments (e.g. "(I)L…Function;" or
+# "(III)L…Function;" instead of "()L…Function;") — into a Φ.hone.c-map pragma,
+# the capturing sibling of the Φ.hone.map that 202 produces. 111 is left
+# untouched: its `\(\).+` interface guard matches the zero-capture space, this
+# rule's `\(I+\)…` guard matches the one-or-more-int-capture space, so the two
+# partition the indy population with no overlap.
+#
+# Each capture rides the lambda-metafactory as one extra factory argument.
+# javac pushes them with a run of leaf-loads (`iload k`) immediately before the
+# indy and the indy consumes them to build the Function. This rule does NOT
+# grab those pushes — it leaves the whole run inline before the emitted c-map
+# and seeds two EMPTY accumulators (`state-acc`, `body-acc`). 114 then peels the
+# pushes one at a time (right-to-left, greedy-left makes the match exact),
+# prepending one boxed append to `state-acc` and one fetch+unbox to `body-acc`
+# per capture, so the captures land in the shared state List in left-to-right
+# order. 316 finally assembles the two accumulators into a stateful distill.
+# Treating a capture as "a pointwise operator that owns one slot in the shared
+# state List" is what lets N captures (and any number of fused capturing
+# operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
+#
+# v1.1 scope (issue #636): one OR MORE category-1 INT captures, a type-preserving
+# Stream<Integer> map (instantiated type "(Ljava/lang/Integer;)Ljava/lang/Integer;"),
+# a handle-6 static lambda$ target, every push a constant-index iload. Reference
+# captures, other element types, type-transforming maps and category-2 captures
+# are declined here (left native) and tracked as follow-up puzzles.
+#
+# @todo #636:60min Generalise the capture beyond ints on a Stream<Integer> map:
+#  a reference capture (drop the box/unbox), other type-preserving element types
+#  (relax the literal instantiated-type guard to a bridge-input==bridge-output
+#  guard), and category-2 (J/D) captures. Each extends the same shared-List
+#  channel; a multi-capture FILTER (113/314) is the nearest unfinished twin.
+name: capturing-invokedynamic-to-map
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            ρ ↦ ∅
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 6,
+            𝜏15 ↦ 𝑒-target-class,
+            𝜏16 ↦ 𝑒-target-method,
+            𝜏17 ↦ 𝑒-target-signature,
+            𝜏18 ↦ 𝑒-target-is-interface,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
+            ρ ↦ ∅
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ "java/util/stream/Stream",
+          𝜏25 ↦ "map",
+          𝜏26 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+          𝜏27 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ Φ.true,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ 𝑒-method-maxs,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-c-map ↦ ⟦
+          φ ↦ Φ.hone.c-map,
+          state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          class ↦ 𝑒-class,
+          bridge-input ↦ "Ljava/lang/Integer;",
+          bridge-output ↦ "Ljava/lang/Integer;",
+          accepted ↦ "Ljava/lang/Integer;",
+          returned ↦ "Ljava/lang/Integer;",
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+when:
+  and:
+    - matches:
+        - 'lambda\$.+'
+        - 𝑒-target-method
+    - matches:
+        - '\(I+\)Ljava/util/function/Function;'
+        - 𝑒-interface
+where:
+  - meta: 𝜏-c-map
+    function: random-tau
+    args: ['𝐵-body-head', '𝐵-body-tail', '𝜏-invokeinterface', '𝜏-invokedynamic']

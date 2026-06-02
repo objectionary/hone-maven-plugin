@@ -96,7 +96,9 @@ pipeline stages:
 ```text
 1xx  prep         strip line-numbers, desugar method refs to lambdas
                   (103 unbound, 104 static, 105 peek/return-drop), lower
-                  invokedynamic to Φ.hone.lambda
+                  invokedynamic to Φ.hone.lambda; lift a capturing map/filter
+                  indy to Φ.hone.{c-map,cp-filter} (112, 113), peel a
+                  multi-int capture run into the c-map (114)
 2xx  recognise    lambda + invokeinterface → Φ.hone.{filter,map,unbox,box}
 3xx  fold         every pragma → uniform Φ.hone.distill
 4xx  fuse         adjacent distills → one combined distill  ← the actual win
@@ -167,6 +169,11 @@ distinct                         → 216 → 307 → state distill;
 skip                             → 220 → 308 → state distill;
                                     442 reverts it (count and call)
                                     to invokeinterface if it never fused
+capturing map (N ints)           → 112 → 114 → 316 → c-map state distill;
+                                    443 reverts a lone single-capture map if
+                                    unfused (multi-capture stays mapMulti)
+capturing filter (one int)       → 113 → 314 → c-filter state distill;
+                                    444 reverts it to invokedynamic if unfused
 ```
 
 `401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
@@ -357,6 +364,93 @@ Limitations (v1): object streams only (`512` hardcodes the `Object` item
 shape); and `503` reads the frame type off `bridge-input`, correct while
 every operator before the distinct preserves the element type. Lifting
 these is future work.
+
+### Capturing operators (closures)
+
+A capturing lambda — `map(i -> i + x)`, `map(i -> i + x + y + z)`,
+`filter(n -> n > t)` over effectively-final locals — is the case issue #636
+reported as unfusable. javac compiles each captured value as an extra argument
+on the lambda factory: the `invokedynamic` descriptor is `(I)L…Function;` (one
+capture) or `(III)L…Function;` (three) rather than the zero-capture
+`()L…Function;`, and a run of `iload k` pushes the values immediately before
+the indy. `111`'s `\(\).+` interface guard matches only zero captures, so a
+capturing indy never became a `Φ.hone.lambda` and was invisible to the whole
+2xx→7xx pipeline.
+
+The insight that makes it cheap: **a capture is just a pointwise operator
+that owns one slot in the shared state List** — structurally identical to
+`distinct`/`skip`, which already thread per-element state through that List.
+So capturing operators reuse the entire stateful machinery (`401` fuse,
+`502`/`512`/`521` emit, `503`/`504` frames, `601` factory-widen) with **no
+edits to any existing rule**. They ride a parallel set of pragma names
+(`Φ.hone.c-map`, `Φ.hone.cp-filter`) and distill `start` labels (`"c-map"`,
+`"c-filter"`) so no existing recogniser, fold, dup-inserter or revert ever
+touches them.
+
+The path (object streams, int captures; map handles any number, filter one):
+
+- `112` / `113` lift a capturing map / primitive-filter indy to
+  `Φ.hone.c-map` / `Φ.hone.cp-filter`. `113` (single capture) still **grabs the
+  one `iload k` push** and carries it as `capture-push`. `112` is now arity-
+  agnostic: its guard is `\(I+\)L…Function;` (one OR MORE ints) and it grabs
+  **no** push — it leaves the whole run of `iload`s inline in front of the
+  c-map and seeds two EMPTY accumulators (`state-acc`, `body-acc`). They
+  partition the indy space with `111`: `\(\)` matches zero captures, `\(I…\)`
+  matches int captures, a handle-6 static `lambda$` target, and a
+  `Stream<Integer>` instantiated type (the SAM type is capture-independent, so
+  it is unchanged by arity). A reference capture (push is `aload`), category-2
+  (`J`/`D`), `this`-capture (handle 5), type-transforming map, computed/field
+  push — all stay native.
+- `114` gathers `112`'s inline pushes into the c-map, one per firing,
+  re-applying at fixpoint (the same self-iteration `521` uses). It matches the
+  single `iload` **directly in front of** the c-map; phino's leading group is
+  greedy, so the bound push is always the LAST one and the rule peels
+  right-to-left. Each peel PREPENDS one boxing append
+  (`dup; iload k; Integer.valueOf; List.add; pop`) to `state-acc` and one
+  `fetch; intValue` to `body-acc`, so the captures end up appended in
+  left-to-right (x, y, z) order — slot 0 = x, guard *k* reads capture *k*. The
+  run is bounded on the left by the previous operator's invokeinterface, never
+  another iload, so peeling stops cleanly.
+- `316` / `314` fold into a stateful `Φ.hone.distill`. `316` copies the filled
+  `state-acc` into `state` and wraps `body-acc` into the auto emit-shape
+  `astore 1; <fetch; intValue>×N; aload 1; invokestatic lambda$`: the item is
+  parked in its own (now-dead) local-1 slot, the N unboxed captures left below
+  it exactly as the static `lambda$(int…, Integer)` signature wants. Parking in
+  local 1 needs no extra local, so `512`'s max-locals is untouched. This N-ary
+  park/reload **replaces v1's single-capture `swap`**, unifying one and many
+  captures (omit the reload and the operands silently invert — the verifier
+  accepts it, so the e2e asserts the numeric runtime result, not just opcode
+  counts). `314`'s single-capture FILTER still uses the `swap` body plus its
+  own opening `dup` and a `Φ.hone.frame-item` keep-label (the `"c-filter"`
+  start label keeps `431`/`281` away); a multi-capture filter stays native
+  (113's `\(I\)` guard declines it) — its park/reload twin, which must also
+  defer the keep-frame, is a follow-up puzzle.
+- `401` fuses two capturing distills exactly like two `distinct`s: `join`
+  concatenates the boxed appends into the List (slots in body order) and the
+  two bodies in order, so guard *k*'s fetch reads slot *k*. `502`/`512`/`521`
+  emit one `Stream.mapMulti` whose wrapper reads each capture back from the
+  List by the per-call counter; `601` widens the factory descriptor by the
+  captured List. No capture touches the indy descriptor (they hide inside the
+  List), so the `IncompatibleClassChangeError` class CLAUDE.md warns about does
+  not arise.
+- `443` / `444` are the never-pessimise reverts (twins of `441`/`442`): a LONE
+  single-capture operator that never fused — including the issue's literal
+  `map(i -> i + x)` — is put back as the native `invokedynamic` +
+  `Stream.{map,filter}`, replaying the push and marking the call
+  `reverted ↦ Φ.true` so `112`/`113` cannot re-lift it (closed patterns plus
+  the marker, the same loop-break `442` uses). `443` matches the park/reload
+  single-capture body. A LONE multi-capture map (two or more appends) fails
+  that closed pattern and is emitted as a standalone `mapMulti` — correct, only
+  marginally slower than native, and rarer than a lone single-capture map;
+  reverting it (replaying N pushes, rebuilding the `(I^N)` descriptor) is a
+  follow-up puzzle.
+
+Deferred puzzles (each extends the same shared-List channel): a multi-capture
+FILTER and the lone-multi-capture-map revert (both above); reference captures
+(drop the box/unbox); other type-preserving element types (relax the literal
+`Stream<Integer>` instantiated type to a `bridge-input == bridge-output`
+guard); category-2 captures; `this`-field captures; and capturing
+`peek`/`mapToX`. See the puzzle marker in `112`'s header.
 
 ## phino: the only rewrite engine
 

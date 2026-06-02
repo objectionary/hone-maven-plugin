@@ -4,7 +4,7 @@
 # yamllint disable rule:line-length
 # A capturing primitive-filter pragma (113's output) folds into a stateful
 # Φ.hone.distill: same boxed-capture append as 316, plus a guard body that opens
-# with a `dup` (the item-preserve the predicate consumes) then fetch; intValue;
+# with an item-preserving `dup` (the predicate consumes the item) then fetch; intValue;
 # swap; predicate; ifne keep; return drop. The keep label carries a
 # Φ.hone.frame-item marker that 503 fills once 502 has set captured=List.
 rules:

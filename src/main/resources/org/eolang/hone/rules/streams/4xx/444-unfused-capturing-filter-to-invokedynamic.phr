@@ -6,11 +6,18 @@
 # that never fused back to its native invokedynamic + Stream.filter, replaying
 # the capture-push and marking the call `reverted ↦ Φ.true` so 113 cannot
 # re-lift it (its invokeinterface pattern is closed, the same loop-break 442/443
-# rely on). The closed state + body match only an UNFUSED c-filter; a fused one
-# carries a neighbour's guard and is left for 502. The body match includes the
-# leading item-preserving dup and the keep-guard 314 built (fetch; intValue; swap;
+# rely on). The closed state + body match only an UNFUSED single-capture
+# c-filter; a fused one carries a neighbour's guard and is left for 502. The body
+# match includes the leading item-preserving dup and the single-capture
+# park/reload keep-guard 314 built (dup; astore 1; fetch; intValue; aload 1;
 # predicate; ifne; return; label; frame-item), and the Predicate SAM constants
-# are reconstructed literally for the int-capture Stream<Integer> case.
+# are reconstructed literally for the int-capture Stream<Integer> case. A MULTI-
+# capture lone filter (two or more appends / fetches, e.g. the issue's
+# `filter(n -> n > lo && n < hi)`) fails this single-append, single-fetch closed
+# pattern and is emitted as a standalone mapMulti rather than reverted — correct,
+# only marginally slower than native, exactly as 443 leaves a lone multi-capture
+# map. Reverting it (replaying N pushes, rebuilding the "(I^N)" descriptor) is a
+# follow-up puzzle.
 name: unfused-capturing-filter-to-invokedynamic
 pattern: |
   ⟦
@@ -46,6 +53,7 @@ pattern: |
       ⟧,
       body ↦ ⟦
         𝜏-itemdup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
         𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
         𝜏-unbox ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokevirtual,
@@ -54,7 +62,7 @@ pattern: |
           i3 ↦ "()I",
           i4 ↦ Φ.false
         ⟧,
-        𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+        𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
         𝜏-call ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokestatic,
           i1 ↦ 𝑒-target-class,

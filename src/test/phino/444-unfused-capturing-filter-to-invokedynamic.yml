@@ -30,14 +30,15 @@ input: |
         ⟧,
         body ↦ ⟦
           b0 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
-          b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
-          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
-          b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$0", i3 ↦ "(ILjava/lang/Integer;)Z", i4 ↦ Φ.false ⟧,
-          b5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L9" ⟧ ⟧,
-          b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-          b7 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L9" ⟧,
-          b8 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+          b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+          b2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+          b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+          b5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$0", i3 ↦ "(ILjava/lang/Integer;)Z", i4 ↦ Φ.false ⟧,
+          b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L9" ⟧ ⟧,
+          b7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+          b8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L9" ⟧,
+          b9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
           ρ ↦ ∅
         ⟧
       ⟧,

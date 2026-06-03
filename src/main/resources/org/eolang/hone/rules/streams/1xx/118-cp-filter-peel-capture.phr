@@ -1,0 +1,101 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The cp-filter twin of 114. Peels one captured push off a Φ.hone.cp-filter and
+# folds it into the operator's shared-List state, exactly as 114 does for a
+# Φ.hone.c-map. 113 emits the cp-filter with the whole run of `iload k` pushes
+# still inline in front of it and two EMPTY accumulators; this rule does the
+# gathering, one capture per firing, re-applying at fixpoint until the run is
+# gone (the same self-iteration 521 uses to resolve every fetch).
+#
+# It matches the single `iload` directly in front of the cp-filter: phino's
+# leading `𝐵-h` group is greedy, so for a run "iload lo; iload hi; <cp-filter>"
+# the bound `𝜏-il` is always the LAST push (hi), and the rule peels right-to-left
+# (hi, then lo). Each peel PREPENDS its unit to the accumulators, so the captures
+# end up in left-to-right (lo, hi) order — exactly the order javac pushed them and
+# the order the static lambda$ expects, and the order in which they are appended
+# to the List (slot 0 = lo, …) so guard k reads capture k.
+#
+# state-acc gains one boxing append `dup; iload k; Integer.valueOf; List.add;
+# pop` (begins and ends at [list], peak 3, so any number of them — across this
+# operator and any fused neighbours — join without growing the caller's stack).
+# body-acc gains one `fetch; intValue` (521 turns the fetch into List.get(counter++)
+# at emit, the intValue unboxes it). 314 wraps the finished body-acc as
+# `dup; astore 1; <fetches>; aload 1; invokestatic lambda$; ifne keep; return`, so
+# the unboxed captures sit below the reloaded item exactly as the predicate
+# lambda$ (int…, Integer)Z signature wants.
+#
+# The run is always bounded on the left by the previous stream operator's
+# invokeinterface (which left a Stream ref on the stack), never by another
+# iload, so peeling stops cleanly once every capture has been gathered.
+name: cp-filter-peel-capture
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-il ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, 𝐵-ilr ⟧,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, 𝐵-ilr ⟧,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-iv ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-iv
+    function: random-tau

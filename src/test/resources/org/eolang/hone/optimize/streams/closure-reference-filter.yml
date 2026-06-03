@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that the reference-capture channel reaches the FILTER, the
+# filter mirror of closure-reference.yml (issue #659). The captured value is a
+# REFERENCE — an effectively-final List<Integer> — read inside the filter:
+#
+#   Stream.of(...).filter(n -> base.contains(n)).map(n -> n * 2).reduce(0, ...)
+#
+# The filter captures `base`, so javac compiles its factory descriptor as
+# "(Ljava/util/List;)L…Predicate;" and its SAM instantiated type as
+# "(Ljava/lang/Integer;)Z". 113's new "(L…;)L…Predicate;" interface-guard branch
+# admits the single reference capture and lifts it to a Φ.hone.cp-filter; 119 peels
+# the lone `aload` push, appending the List to the shared state List WITHOUT a box
+# (a reference is already an Object) and reading it back via a `fetch` typed
+# java/util/List (no unbox), the cp-filter mirror of 115. 314 folds a stateful
+# distill and 401 fuses it with the following NON-capturing map (n -> n * 2, empty
+# state). 502/512/521/601 emit one Stream.mapMulti whose wrapper reads the captured
+# List back and calls List.contains() per element — the whole stateful machinery
+# reused verbatim, only the append/fetch lose their box/unbox.
+#
+# invokedynamic: before = filter(capturing) + map + reduce-accumulator lambda = 3;
+# after = the single fused mapMulti + the untouched reduce lambda = 2. The dropped
+# indy is the proof the filter and map collapsed into one dispatch. The runtime
+# line proves the captured List reaches the lambda correctly: base = {2,4,6}, so
+# {1,2,3,4,5} -> keep {2,4} -> *2 -> {8} ... sum: 4+8 == 12.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class CF {
+    static int run(List<Integer> base) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> base.contains(n))
+        .map(n -> n * 2)
+        .reduce(0, (a, b) -> a + b);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run(Arrays.asList(2, 4, 6)));
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 12"

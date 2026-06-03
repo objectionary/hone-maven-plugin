@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 119 gathers the SINGLE reference capture that 113 left inline, the cp-filter
+# mirror of 115. The input mimics 113's output for `filter(n -> base.contains(n))`:
+# a Φ.hone.cp-filter with two EMPTY accumulators, preceded by one `aload 0` push
+# (the captured List) and bounded on the left by the previous operator's
+# invokeinterface. The cp-filter's target signature
+# "(Ljava/util/List;Ljava/lang/Integer;)Z" carries the capture type in its first
+# L-slot. After 119 runs to fixpoint, state-acc appends the reference verbatim
+# (dup; aload 0; List.add; pop — NO Integer.valueOf box), body-acc gets one `fetch`
+# typed java/util/List (NO unbox), and no aload sits between the invokeinterface
+# and the cp-filter.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/119-cp-filter-peel-reference.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "filter", v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
+      a ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+      cf ↦ ⟦
+        φ ↦ Φ.hone.cp-filter,
+        state-acc ↦ ⟦⟧,
+        body-acc ↦ ⟦⟧,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(Ljava/util/List;Ljava/lang/Integer;)Z", is-interface ↦ Φ.false ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-a, body-acc ↦ ⟦ 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/List" ⟧, 𝐵-br ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-x, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", 𝐵-pr ⟧, 𝜏-cf ↦ ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-cr ⟧, 𝐵-y ⟧

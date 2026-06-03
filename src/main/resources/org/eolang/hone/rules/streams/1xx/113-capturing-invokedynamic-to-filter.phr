@@ -17,14 +17,17 @@
 # the static lambda$ (int…, Integer) signature wants — the same N-ary shape 316
 # gives a capturing map.
 #
-# v1 scope: one OR MORE category-1 INT captures (factory descriptor
-# "(I+)L…Predicate;", every push a constant-index iload, gathered by 118), a
-# Stream<Integer> predicate (instantiated type "(Ljava/lang/Integer;)Z"), a
-# handle-6 static lambda$ target. So both `filter(n -> n > t)` (one capture) and
-# `filter(n -> n > lo && n < hi)` (two captures) fuse exactly like the original
-# single-capture case. A category-2 (J/D) or reference capture in a filter stays
-# native — its peeler twins (116/117/115 for the map) are a follow-up puzzle;
-# see 112's header for the shared deferred generalisations.
+# Scope: one OR MORE category-1 INT captures (factory descriptor "(I+)L…Predicate;",
+# every push a constant-index iload, gathered by 118) OR a SINGLE reference capture
+# (factory descriptor "(L…;)L…Predicate;", push an aload, gathered by the reference
+# branch 119), over a Stream<Integer> predicate (instantiated type
+# "(Ljava/lang/Integer;)Z"), a handle-6 static lambda$ target. So `filter(n -> n > t)`
+# (one int capture), `filter(n -> n > lo && n < hi)` (two int captures) and
+# `filter(n -> base.contains(n))` (one reference capture) all fuse exactly like the
+# original single-capture case, the filter mirror of 112's int/reference map split.
+# A category-2 (J/D) capture in a filter stays native — its peeler twins (116/117 for
+# the map) are a follow-up puzzle; see 112's header for the shared deferred
+# generalisations.
 name: capturing-invokedynamic-to-filter
 pattern: |
   ⟦
@@ -161,9 +164,13 @@ when:
     - matches:
         - 'lambda\$.+'
         - 𝑒-target-method
-    - matches:
-        - '\(I+\)Ljava/util/function/Predicate;'
-        - 𝑒-interface
+    - or:
+        - matches:
+            - '\(I+\)Ljava/util/function/Predicate;'
+            - 𝑒-interface
+        - matches:
+            - '\(L[^;]+;\)Ljava/util/function/Predicate;'
+            - 𝑒-interface
 where:
   - meta: 𝜏-cp-filter
     function: random-tau

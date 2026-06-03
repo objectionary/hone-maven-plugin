@@ -33,7 +33,7 @@
 #
 # A MULTI-reference / mixed-with-reference capture run, and the lone-multi-capture
 # map/filter and category-2/reference FILTER reverts, remain native follow-ups
-# (see the @todo in 112's header).
+# (see the puzzle marker in 112's header).
 name: unfused-reference-capturing-map-to-invokedynamic
 pattern: |
   ⟦

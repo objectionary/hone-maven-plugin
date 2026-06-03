@@ -1,0 +1,87 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The category-2 DOUBLE twin of 114/116 (issue #652). Peels a captured double
+# (`dload`) push off a Φ.hone.c-map, exactly as 116 peels a long, swapping the
+# boxing to Double.valueOf and the unboxing to doubleValue. 114 (int), 116 (long)
+# and this rule interleave at fixpoint on their own opcode, so a mixed
+# int/long/double capture run is gathered in left-to-right order.
+#
+# state-acc gains `dup; dload k; Double.valueOf; List.add; pop` (a double is two
+# slots, so the append peaks one slot higher than 114's int append; 112 already
+# bumped the caller max-stack by 2). body-acc gains `fetch; doubleValue` (521
+# resolves the fetch to List.get(counter++); checkcast java/lang/Double; the
+# doubleValue unboxes it). 316 wraps it as `astore 1; <fetches>; aload 1;
+# invokestatic lambda$`, leaving the unboxed double below the parked item exactly
+# as the static lambda$ (double…, Integer) signature wants.
+name: c-map-peel-double
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-dl ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, 𝐵-dlr ⟧,
+    𝜏-cm ↦ ⟦
+      φ ↦ Φ.hone.c-map,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cm-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cm ↦ ⟦
+      φ ↦ Φ.hone.c-map,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, 𝐵-dlr ⟧,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Double",
+          i3 ↦ "valueOf",
+          i4 ↦ "(D)Ljava/lang/Double;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Double" ⟧,
+        𝜏-dv ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Double",
+          i2 ↦ "doubleValue",
+          i3 ↦ "()D",
+          i4 ↦ Φ.false
+        ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cm-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-dv
+    function: random-tau

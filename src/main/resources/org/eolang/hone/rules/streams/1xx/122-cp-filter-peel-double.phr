@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The cp-filter twin of 117 (the category-2 DOUBLE c-map peeler). Peels a captured
+# double (`dload`) push off a Φ.hone.cp-filter, exactly as 120 peels a long, swapping
+# the boxing to Double.valueOf and the unboxing to doubleValue. 118 (int), 120 (long)
+# and this rule interleave at fixpoint on their own opcode, so a mixed int/long/double
+# capture run feeding a filter is gathered in left-to-right order, the filter mirror
+# of how 114/116/117 gather a capturing map's run.
+#
+# state-acc gains `dup; dload k; Double.valueOf; List.add; pop` (a double is two
+# slots, so the append peaks one slot higher than 118's int append; 113 already
+# bumped the caller max-stack by 2). body-acc gains `fetch; doubleValue` (521
+# resolves the fetch to List.get(counter++); checkcast java/lang/Double; the
+# doubleValue unboxes it). 314 wraps it into the park/reload predicate guard, leaving
+# the unboxed double below the reloaded item exactly as the static lambda$
+# (double…, Integer)Z signature wants.
+name: cp-filter-peel-double
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-dl ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, 𝐵-dlr ⟧,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, 𝐵-dlr ⟧,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Double",
+          i3 ↦ "valueOf",
+          i4 ↦ "(D)Ljava/lang/Double;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Double" ⟧,
+        𝜏-dv ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Double",
+          i2 ↦ "doubleValue",
+          i3 ↦ "()D",
+          i4 ↦ Φ.false
+        ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-dv
+    function: random-tau

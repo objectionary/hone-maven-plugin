@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 122 is the category-2 DOUBLE twin of 118/120, the cp-filter mirror of 117. The
+# input mimics 113's output: a Φ.hone.cp-filter with two EMPTY accumulators,
+# preceded by a single dload push and bounded on the left by the previous operator's
+# invokeinterface. 122 peels the dload, PREPENDING a `dup; dload; Double.valueOf;
+# List.add; pop` boxing append to state-acc and a `fetch; doubleValue` pair to
+# body-acc.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/122-cp-filter-peel-double.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "filter", v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
+      x ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, v0 ↦ 0 ⟧,
+      cf ↦ ⟦
+        φ ↦ Φ.hone.cp-filter,
+        state-acc ↦ ⟦⟧,
+        body-acc ↦ ⟦⟧,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(DLjava/lang/Integer;)Z", is-interface ↦ Φ.false ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, v0 ↦ 0 ⟧, 𝜏-b ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Double", 𝐵-bx ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-a, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Double" ⟧, 𝜏-dv ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Double", 𝐵-dv ⟧, 𝐵-br ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-x, 𝜏-cf ↦ ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-cr ⟧, 𝐵-y ⟧

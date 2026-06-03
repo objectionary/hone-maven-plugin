@@ -179,10 +179,11 @@ capturing map (N prim OR 1 ref)  → 112 → 114 (int) / 116 (long) / 117 (doubl
                                     distill; 443 reverts a lone single-int-capture
                                     map if unfused (multi-capture, category-2 and
                                     lone-ref stay mapMulti)
-capturing filter (N int)         → 113 → 118 → 314 → c-filter state distill;
-                                    444 reverts a LONE single-int-capture filter
-                                    to invokedynamic if unfused (multi-capture
-                                    stays mapMulti)
+capturing filter (N prim)        → 113 → 118 (int) / 120 (long) / 122 (double)
+                                    → 314 → c-filter state distill; 444
+                                    reverts a LONE single-int-capture filter
+                                    to invokedynamic if unfused (multi-capture,
+                                    category-2 stay mapMulti)
 ```
 
 `401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
@@ -533,8 +534,10 @@ captures over Integer):
   keep-frame needed. The `"c-filter"` start label keeps `431`/`281` away. `444`
   reverts a LONE single-capture filter (closed on the single-capture park/reload
   body); a lone multi-capture filter is emitted as a standalone mapMulti, exactly
-  as `443` leaves a lone multi-capture map. A category-2/reference capture in a
-  filter stays native (its `116`/`117`/`115` peeler twins are a follow-up puzzle).
+  as `443` leaves a lone multi-capture map. A category-2 (`J`/`D`) capture in a
+  filter is now done (issue #661): `120`/`122` are the `cp-filter` mirrors of
+  `116`/`117` and `113` bumps the caller max-stack by 2 exactly as `112` does for
+  the map (a single reference capture, `119`, was done earlier in #659).
 - `401` fuses two capturing distills exactly like two `distinct`s: `join`
   concatenates the boxed appends into the List (slots in body order) and the
   two bodies in order, so guard *k*'s fetch reads slot *k*. `502`/`512`/`521`
@@ -580,22 +583,31 @@ guard admits one or more long/double captures (and mixed int/long/double runs),
 map is not reverted by `443` (closed on the int box/unbox shape), so it is emitted
 as a standalone `mapMulti`, like the lone-reference and lone-multi-capture maps.
 
-The multi-capture FILTER is **done** (issue #655): `113`'s `\(I+\)` guard admits
-one or more int captures, `118` peels them into the shared List, and `314` folds
-them with the same N-ary park/reload body as a capturing map — the keep-frame
-stays `503`'s plain `Φ.hone.frame-item` because the body keeps the item at the
-bottom of the stack. So `filter(n -> n > lo && n < hi)` fuses with its trailing
+The multi-capture FILTER is **done** (issue #655): `113`'s `\([IJD]+\)` guard
+admits one or more primitive captures, `118` peels the int pushes (`120`/`122`
+the long / double ones, issue #661) into the shared List, and `314` folds them
+with the same N-ary park/reload body as a capturing map — the keep-frame stays
+`503`'s plain `Φ.hone.frame-item` because the body keeps the item at the bottom
+of the stack. So `filter(n -> n > lo && n < hi)` fuses with its trailing
 `mapToInt` into one `Stream.mapMultiToInt`; see the `multiFil` case in
 `streams/closures.yml`. A lone multi-capture filter is not reverted by `444`
-(closed on the single-capture body), so it is emitted as a standalone `mapMulti`.
+(closed on the single-capture body), so it is emitted as a standalone
+`mapMulti`.
+
+The category-2 (`J`/`D`) capture FILTER is **done** (issue #661): `113`'s
+`\([IJD]+\)Ljava/util/function/Predicate;` guard admits long/double captures
+and bumps the caller max-stack by 2 exactly as `112` does for the map,
+`120`/`122` peel the `lload`/`dload` pushes with `Long`/`Double` box/unbox (the
+`cp-filter` mirrors of `116`/`117`), and `314` folds them into a stateful
+distill — see `streams/closure-long-filter.yml`.
 
 Deferred puzzles (each extends the same shared-List channel): the
 lone-multi-capture map/filter revert (above); a MULTI-reference /
-mixed-with-reference capture run (needs positional capture-type extraction); a
-category-2 (`J`/`D`) or reference capture in a FILTER (its `116`/`117`/`115`
-peeler twins); `this`-field captures; and capturing `peek`/`mapToX`. See the
+mixed-with-reference capture run (needs positional capture-type extraction);
+`this`-field captures; and capturing `peek`/`mapToX`. See the
 puzzle marker in `112`'s header. (The lone-reference-map revert is **done** via
-`445`.)
+`445`; a category-2 or reference capture in a FILTER is **done** via `120`/`122`
+and `119`.)
 
 ## phino: the only rewrite engine
 

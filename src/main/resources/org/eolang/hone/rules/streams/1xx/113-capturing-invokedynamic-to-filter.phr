@@ -17,17 +17,21 @@
 # the static lambda$ (int…, Integer) signature wants — the same N-ary shape 316
 # gives a capturing map.
 #
-# Scope: one OR MORE category-1 INT captures (factory descriptor "(I+)L…Predicate;",
-# every push a constant-index iload, gathered by 118) OR a SINGLE reference capture
-# (factory descriptor "(L…;)L…Predicate;", push an aload, gathered by the reference
-# branch 119), over a Stream<Integer> predicate (instantiated type
+# Scope: one OR MORE category-1/2 PRIMITIVE captures (factory descriptor
+# "([IJD]+)L…Predicate;", every push a constant-index iload/lload/dload, gathered by
+# 118 for int and by its category-2 twins 120/122 for long/double) OR a SINGLE
+# reference capture (factory descriptor "(L…;)L…Predicate;", push an aload, gathered
+# by the reference branch 119), over a Stream<Integer> predicate (instantiated type
 # "(Ljava/lang/Integer;)Z"), a handle-6 static lambda$ target. So `filter(n -> n > t)`
-# (one int capture), `filter(n -> n > lo && n < hi)` (two int captures) and
+# (one int capture), `filter(n -> n > lo && n < hi)` (two int captures),
+# `filter(n -> n > x)` over a captured long (one J capture) and
 # `filter(n -> base.contains(n))` (one reference capture) all fuse exactly like the
-# original single-capture case, the filter mirror of 112's int/reference map split.
-# A category-2 (J/D) capture in a filter stays native — its peeler twins (116/117 for
-# the map) are a follow-up puzzle; see 112's header for the shared deferred
-# generalisations.
+# original single-capture case, the filter mirror of 112's primitive/reference map
+# split. A category-2 (J/D) capture occupies two stack slots, so its relocated boxing
+# append (120/122) peaks one slot higher than an int's; this rule BUMPS the caller
+# max-stack by 2 whenever the factory descriptor carries a J or D capture, exactly as
+# 112 does for the map (see 112's header for the rationale and the still-deferred
+# generalisations).
 name: capturing-invokedynamic-to-filter
 pattern: |
   ⟦
@@ -51,7 +55,11 @@ pattern: |
       descriptor ↦ 𝑒-method-descriptor,
       signature ↦ 𝑒-method-signature,
       exceptions ↦ 𝑒-method-exceptions,
-      maxs ↦ 𝑒-method-maxs,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        𝜏-max-stack ↦ 𝑒-max-stack,
+        𝜏-max-locals ↦ 𝑒-max-locals
+      ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
@@ -128,7 +136,11 @@ result: |
       descriptor ↦ 𝑒-method-descriptor,
       signature ↦ 𝑒-method-signature,
       exceptions ↦ 𝑒-method-exceptions,
-      maxs ↦ 𝑒-method-maxs,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        𝜏-max-stack ↦ 𝑒-bumped-stack,
+        𝜏-max-locals ↦ 𝑒-max-locals
+      ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
@@ -166,11 +178,35 @@ when:
         - 𝑒-target-method
     - or:
         - matches:
-            - '\(I+\)Ljava/util/function/Predicate;'
+            - '\([IJD]+\)Ljava/util/function/Predicate;'
             - 𝑒-interface
         - matches:
             - '\(L[^;]+;\)Ljava/util/function/Predicate;'
             - 𝑒-interface
 where:
+  # Bump the caller max-stack by 2 when a category-2 (J/D) primitive capture is
+  # present (its relocated 2-slot boxing append, 120/122, peaks one slot higher
+  # than an int append); an int-only or reference capture bumps by 0. The same
+  # machinery 112 uses for the capturing map — see its header for the rationale.
+  - meta: 𝑒-cap-params
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
+      - '"s/L[^;]*;//g"'
+  - meta: 𝑒-bump-str
+    function: sed
+    args:
+      - 𝑒-cap-params
+      - '"s/.*[JD].*/2/"'
+      - '"s/^[^2].*$/0/"'
+      - '"s/^$/0/"'
+  - meta: 𝑒-bump
+    function: number
+    args: [𝑒-bump-str]
+  - meta: 𝑒-bumped-stack
+    function: sum
+    args: [𝑒-max-stack, 𝑒-bump]
   - meta: 𝜏-cp-filter
     function: random-tau

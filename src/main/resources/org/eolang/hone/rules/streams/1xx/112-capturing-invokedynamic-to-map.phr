@@ -74,14 +74,25 @@
 # reference-capture filter is not reverted (444 is closed on the int single-capture
 # body), so it is emitted as a standalone mapMulti, like a lone multi-capture filter.
 #
-# @todo #659:45min Generalise the CAPTURE channel further: a MIXED multi-capture
+# The category-2 (J/D) capture FILTER is now done (issue #661): 113's relaxed
+# "([IJD]+)L…Predicate;" interface guard admits one or more long/double captures and
+# bumps the caller max-stack by 2 exactly as this rule does for the map, the new 120
+# / 122 peel the lload/dload pushes with Long/Double box/unbox (the cp-filter mirrors
+# of 116/117), and 314 folds them into a stateful distill with the same N-ary
+# park/reload body — so `filter(n -> n > x)` over a captured long fuses exactly like
+# the category-2 map; see streams/closure-long-filter.yml. A lone single
+# long/double-capture filter is not reverted by 444 (closed on the int box/unbox
+# shape), so it is emitted as a standalone mapMulti, like the lone-reference and
+# lone-multi-capture filters.
+#
+# @todo #661:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
 #  in both the map (115) and the filter (119), because each reads the capture type
 #  out of target.signature's first L-type — a multi-reference run needs positional
-#  type extraction). Still native in the FILTER channel too: a category-2 (J/D)
-#  capture (its 116/117 peeler twins) and the lone-multi-capture-filter revert (444
-#  is closed on the single-capture park/reload body, so a lone multi-capture filter
-#  is emitted as a standalone mapMulti). Each extends the same shared-List channel.
+#  type extraction). Also still deferred: the lone-multi-capture-MAP/FILTER revert
+#  (443/444 are closed on the single-capture park/reload body, so a lone multi-capture
+#  map or filter is emitted as a standalone mapMulti rather than reverted to its
+#  native invokedynamic). Each extends the same shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

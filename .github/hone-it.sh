@@ -34,6 +34,10 @@ loc=$(cloc --quiet --csv --include-lang=Java "${dir}" 2>/dev/null | awk -F',' '$
 loc=${loc:-0}
 echo "Java LoC in ${repo}: ${loc}"
 
+streams=$( { grep -rhE '^[[:space:]]*import[[:space:]]+java\.util\.stream\.' --include='*.java' "${dir}" 2>/dev/null || true; } | wc -l | tr -d ' ')
+streams=${streams:-0}
+echo "import-Stream statements in ${repo}: ${streams}"
+
 count_classes() {
   local base=$1
   find "${base}" -type f -path '*/target/classes/*.class' | wc -l | tr -d ' '
@@ -91,7 +95,7 @@ seconds=$(( $(date +%s) - start ))
 row="${row},${outcome},${seconds}"
 
 if [ "${outcome}" != "pass" ]; then
-  printf '%s,0,0,0,skipped,0,%s\n' "${row}" "${loc}" >> "${csv}"
+  printf '%s,0,0,0,skipped,0,%s,%s\n' "${row}" "${loc}" "${streams}" >> "${csv}"
   rm -rf "${dir}"
   exit 1
 fi
@@ -107,6 +111,6 @@ rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || rc=$?
 outcome=$(build_outcome "${rc}")
 seconds=$(( $(date +%s) - start ))
-printf '%s,%s,%s,%s\n' "${row}" "${outcome}" "${seconds}" "${loc}" >> "${csv}"
+printf '%s,%s,%s,%s,%s\n' "${row}" "${outcome}" "${seconds}" "${loc}" "${streams}" >> "${csv}"
 rm -rf "${dir}"
 test "${outcome}" = "pass"

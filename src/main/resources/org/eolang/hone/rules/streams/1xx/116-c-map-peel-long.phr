@@ -1,0 +1,90 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The category-2 LONG twin of 114 (issue #652). 112 admits a factory descriptor
+# carrying one or more "[IJD]" primitive captures and leaves the run of pushes
+# inline in front of the c-map with two EMPTY accumulators; 114 peels the int
+# (`iload`) pushes, this rule peels the long (`lload`) pushes. The two (and 117
+# for double) interleave at fixpoint, each matching only its own opcode, so a
+# mixed int/long/double capture run is gathered in the right left-to-right order
+# exactly as 114 documents for a pure-int run.
+#
+# state-acc gains one boxing append `dup; lload k; Long.valueOf; List.add; pop`.
+# A long is two slots, so this append peaks one slot higher than 114's int
+# append; 112 already bumped the caller max-stack by 2 to absorb it. body-acc
+# gains one `fetch; longValue` (521 turns the fetch into List.get(counter++);
+# checkcast java/lang/Long at emit, the longValue unboxes it). 316 wraps the
+# finished body-acc as `astore 1; <fetches>; aload 1; invokestatic lambda$`, so
+# the unboxed long sits below the parked item exactly as the static lambda$
+# (long…, Integer) signature wants.
+name: c-map-peel-long
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-ll ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, 𝐵-llr ⟧,
+    𝜏-cm ↦ ⟦
+      φ ↦ Φ.hone.c-map,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cm-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cm ↦ ⟦
+      φ ↦ Φ.hone.c-map,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, 𝐵-llr ⟧,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Long",
+          i3 ↦ "valueOf",
+          i4 ↦ "(J)Ljava/lang/Long;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Long" ⟧,
+        𝜏-lv ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Long",
+          i2 ↦ "longValue",
+          i3 ↦ "()J",
+          i4 ↦ Φ.false
+        ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cm-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-lv
+    function: random-tau

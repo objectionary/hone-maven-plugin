@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A category-2 LONG-capturing map invokedynamic — descriptor "(J)L…Function;", the
+# captured long pushed by the preceding lload, a handle-6 static lambda$ target
+# whose signature is "(JLjava/lang/Integer;)Ljava/lang/Integer;" — is lifted to a
+# Φ.hone.c-map (116 later peels the lload). The instantiated type
+# "(Ljava/lang/Integer;)Ljava/lang/Integer;" is type-preserving, so 112's
+# "(LX;)LX;" backreference admits it; the relaxed "\([IJD]+\)" interface guard now
+# admits the J capture. Because a J/D capture is present, 112 BUMPS the method's
+# max-stack by 2 (6 -> 8) to make room for the two-slot boxing append 116 will
+# relocate into the caller; max-locals (3) is untouched, and the generated maxs
+# binding names ride through unchanged.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/112-capturing-invokedynamic-to-map.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 68,
+    access ↦ 33,
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, static ↦ Φ.false ⟧,
+    name ↦ "Foo",
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+    m$run ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 8,
+      modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, static ↦ Φ.true ⟧,
+      name ↦ "run",
+      descriptor ↦ "(J)I",
+      signature ↦ "",
+      exceptions ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, m1 ↦ 6, m2 ↦ 3 ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.params ⟧,
+      annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+      body ↦ ⟦
+        i20 ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 0 ⟧,
+        i23 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          v0 ↦ "apply",
+          v1 ↦ "(J)Ljava/util/function/Function;",
+          h2 ↦ ⟦ φ ↦ Φ.jeo.handle, v0 ↦ 6, v1 ↦ "java/lang/invoke/LambdaMetafactory", v2 ↦ "metafactory", v3 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", v4 ↦ Φ.false ⟧,
+          t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;" ⟧,
+          h4 ↦ ⟦ φ ↦ Φ.jeo.handle, v0 ↦ 6, v1 ↦ "Foo", v2 ↦ "lambda$run$0", v3 ↦ "(JLjava/lang/Integer;)Ljava/lang/Integer;", v4 ↦ Φ.false ⟧,
+          t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;" ⟧
+        ⟧,
+        i24 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧
+      ⟧,
+      trycatchblocks ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+      local-variable-table ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(JLjava/lang/Integer;)Ljava/lang/Integer;", 𝐵-i ⟧, 𝐵-j ⟧
+  - ⟦ φ ↦ Φ.jeo.maxs, 𝜏-ms ↦ 8, 𝜏-ml ↦ 3 ⟧
+  - ⟦ 𝐵-k, 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 0 ⟧, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-l ⟧, 𝐵-m ⟧

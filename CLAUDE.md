@@ -174,10 +174,11 @@ distinct                         → 216 → 307 → state distill;
 skip                             → 220 → 308 → state distill;
                                     442 reverts it (count and call)
                                     to invokeinterface if it never fused
-capturing map (N ints OR 1 ref)  → 112 → 114 (int peeler) / 115 (ref peeler)
-                                    → 316 → c-map state distill; 443 reverts a
-                                    lone single-int-capture map if unfused
-                                    (multi-capture and lone-ref stay mapMulti)
+capturing map (N prim OR 1 ref)  → 112 → 114 (int) / 116 (long) / 117 (double)
+                                    / 115 (ref peeler) → 316 → c-map state
+                                    distill; 443 reverts a lone single-int-capture
+                                    map if unfused (multi-capture, category-2 and
+                                    lone-ref stay mapMulti)
 capturing filter (one int)       → 113 → 314 → c-filter state distill;
                                     444 reverts it to invokedynamic if unfused
 ```
@@ -468,34 +469,43 @@ edits to any existing rule**. They ride a parallel set of pragma names
 `"c-filter"`) so no existing recogniser, fold, dup-inserter or revert ever
 touches them.
 
-The path (object streams, int captures; map handles any number of captures over
-any type-preserving reference element type, filter one capture over Integer):
+The path (object streams; map handles any number of category-1/2 primitive
+captures over any type-preserving reference element type, filter one int capture
+over Integer):
 
 - `112` / `113` lift a capturing map / primitive-filter indy to
   `Φ.hone.c-map` / `Φ.hone.cp-filter`. `113` (single capture) still **grabs the
   one `iload k` push** and carries it as `capture-push`. `112` is now arity-
-  agnostic: its guard is `\(I+\)L…Function;` (one OR MORE ints) OR
-  `\(L…;\)L…Function;` (a SINGLE reference), and it grabs **no** push — it
-  leaves the whole run of `iload`s / the lone `aload` inline in front of the
-  c-map and seeds two EMPTY accumulators (`state-acc`, `body-acc`). They
-  partition the indy space with `111`: `\(\)` matches zero captures, `\(I…\)`
-  matches int captures, `\(L…;\)` a single reference capture, a handle-6 static
-  `lambda$` target, and a **type-preserving** instantiated type — matched as
-  `(LX;)LX;` for any reference `X` via a backreference guard (Integer, String,
-  …), with `X` sed-extracted into the four bridge fields. Category-2 (`J`/`D`),
-  a MULTI-reference / mixed-with-reference run, `this`-capture (handle 5), a
+  agnostic: its guard is `\([IJD]+\)L…Function;` (one OR MORE category-1/2
+  primitives) OR `\(L…;\)L…Function;` (a SINGLE reference), and it grabs **no**
+  push — it leaves the whole run of `iload`/`lload`/`dload`s / the lone `aload`
+  inline in front of the c-map and seeds two EMPTY accumulators (`state-acc`,
+  `body-acc`). They partition the indy space with `111`: `\(\)` matches zero
+  captures, `\([IJD]…\)` matches primitive captures, `\(L…;\)` a single reference
+  capture, a handle-6 static `lambda$` target, and a **type-preserving**
+  instantiated type — matched as `(LX;)LX;` for any reference `X` via a
+  backreference guard (Integer, String, …), with `X` sed-extracted into the four
+  bridge fields. When a `J`/`D` capture is present `112` also BUMPS the caller
+  `max-stack` by 2 (the two-slot boxing append `116`/`117` relocate peaks one slot
+  higher than an int's; the two maxs values ride generated binding names, so they
+  are matched positionally with `𝜏-max-stack`/`𝜏-max-locals`). A
+  MULTI-reference / mixed-with-reference run, `this`-capture (handle 5), a
   **type-transforming** map (`(LX;)LY;`, declined by the backreference and left
   to the unbox/box machinery), computed/field push — all stay native.
-- `114` (int) / `115` (reference) gather `112`'s inline pushes into the c-map,
-  one per firing, re-applying at fixpoint (the same self-iteration `521` uses).
-  Each matches its push opcode **directly in front of** the c-map; phino's
-  leading group is greedy, so the bound push is always the LAST one and the rule
-  peels right-to-left. `114` PREPENDS one boxing append
-  (`dup; iload k; Integer.valueOf; List.add; pop`) to `state-acc` and one
+- `114` (int) / `116` (long) / `117` (double) / `115` (reference) gather `112`'s
+  inline pushes into the c-map, one per firing, re-applying at fixpoint (the same
+  self-iteration `521` uses). Each matches its own push opcode **directly in front
+  of** the c-map; phino's leading group is greedy, so the bound push is always the
+  LAST one and the rule peels right-to-left — a mixed int/long/double run is
+  gathered by the three primitive peelers interleaving. `114` PREPENDS one boxing
+  append (`dup; iload k; Integer.valueOf; List.add; pop`) to `state-acc` and one
   `fetch; intValue` to `body-acc`, so the captures end up appended in
-  left-to-right (x, y, z) order — slot 0 = x, guard *k* reads capture *k*. `115`
-  is the same shape minus the box/unbox: a reference is already an Object, so it
-  appends `dup; aload k; List.add; pop` and a bare `fetch` typed with the
+  left-to-right (x, y, z) order — slot 0 = x, guard *k* reads capture *k*.
+  `116` / `117` are byte-for-byte twins that box via `Long`/`Double.valueOf`
+  and unbox via `longValue`/`doubleValue` (their two-slot append is why `112`
+  bumps max-stack). `115` is the same shape minus the box/unbox: a reference is
+  already an Object, so it appends `dup; aload k; List.add; pop` and a bare
+  `fetch` typed with the
   capture's class (sed-extracted from `target.signature`'s first L-type, which
   is why only a SINGLE reference capture is admitted). The run is bounded on the
   left by the previous operator's invokeinterface, never another push, so
@@ -548,12 +558,19 @@ the `streams/closure-reference.yml` end-to-end fixture. A lone reference-capture
 map is not reverted by `443` (closed on the int box/unbox shape), so it is
 emitted as a standalone `mapMulti` — correct, like the lone-multi-capture map.
 
+Category-2 (`J`/`D`) captures are **done** (issue #652): `112`'s `\([IJD]+\)`
+guard admits one or more long/double captures (and mixed int/long/double runs),
+`116`/`117` peel the `lload`/`dload` pushes with `Long`/`Double` box/unbox, and
+`112` bumps the caller max-stack by 2 to absorb the two-slot append — see the
+`streams/closure-long.yml` end-to-end fixture. A lone single long/double-capture
+map is not reverted by `443` (closed on the int box/unbox shape), so it is emitted
+as a standalone `mapMulti`, like the lone-reference and lone-multi-capture maps.
+
 Deferred puzzles (each extends the same shared-List channel): a multi-capture
-FILTER and the lone-multi-capture-map revert (both above); category-2 (`J`/`D`)
-captures (whose relocated 2-slot append needs a caller max-stack bump); a
-MULTI-reference / mixed-with-reference capture run and a lone-reference-map
-revert; `this`-field captures; and capturing `peek`/`mapToX`. See the puzzle
-marker in `112`'s header.
+FILTER and the lone-multi-capture-map revert (both above); a MULTI-reference /
+mixed-with-reference capture run (needs positional capture-type extraction) and
+a lone-reference-map revert; `this`-field captures; and capturing `peek`/`mapToX`.
+See the puzzle marker in `112`'s header.
 
 ## phino: the only rewrite engine
 

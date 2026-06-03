@@ -23,32 +23,41 @@
 # state List" is what lets N captures (and any number of fused capturing
 # operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
 #
-# v1.3 scope (issues #636, #640, #647): the captures admitted are either
-# one OR MORE category-1 INT captures (factory descriptor "(I+)L…Function;",
-# every push a constant-index iload, gathered by 114) OR a SINGLE reference
-# capture (factory descriptor "(L…;)L…Function;", push an aload, gathered by the
-# reference branch 115) — the two are partitioned by the `or` in the interface
-# guard. In both cases the map is type-PRESERVING over ANY reference element type:
+# v1.4 scope (issues #636, #640, #647, #652): the captures admitted are either
+# one OR MORE category-1/2 PRIMITIVE captures (factory descriptor "([IJD]+)L…Function;",
+# every push a constant-index iload/lload/dload, gathered by 114 for int and by
+# its category-2 twins 116/117 for long/double) OR a SINGLE reference capture
+# (factory descriptor "(L…;)L…Function;", push an aload, gathered by the reference
+# branch 115) — the two are partitioned by the `or` in the interface guard, and a
+# mixed int/long/double run is gathered by 114/116/117 interleaving on their own
+# opcode. In both cases the map is type-PRESERVING over ANY reference element type:
 # the SAM instantiated type is matched as "(LX;)LX;" for any reference X (Integer,
 # String, …) via a backreference guard, and the element type X is sed-extracted
 # into 𝑒-bridge and threaded into all four bridge fields. The lambda$ target is a
 # handle-6 static method. So `map(s -> s.repeat(k))` on a Stream<String> (int
-# capture k) and `map(n -> n + base.size())` capturing a List (reference capture)
-# both fuse exactly like the original Stream<Integer> case.
+# capture k), `map(n -> (int)(n + x))` capturing a long, and `map(n -> n +
+# base.size())` capturing a List (reference capture) all fuse exactly like the
+# original Stream<Integer> case.
+#
+# A category-2 (J/D) capture occupies two stack slots, so the boxing append 116/117
+# relocate into the caller (502) — `dup; lload k; Long.valueOf; List.add; pop` —
+# peaks one slot higher than the int append. jeo never recomputes maxs, so this
+# rule BUMPS the enclosing method's max-stack by 2 (a safe over-allocation) whenever
+# the factory descriptor carries a J or D primitive capture; an int-only or a
+# reference capture leaves max-stack untouched. The two maxs values ride generated
+# binding names (jeo emits e.g. "v295 ↦ 5"), so they are matched positionally with
+# 𝜏-max-stack / 𝜏-max-locals (max-stack first, then max-locals).
 #
 # Type-TRANSFORMING maps stay native: the "(LX;)LX;" backreference declines an
 # instantiated type whose input and output differ (e.g. "(LString;)LInteger;"),
 # so those keep flowing through the unbox/box machinery untouched.
 #
-# @todo #647:45min Generalise the CAPTURE type further: category-2 (J/D) captures
-#  (push is `lload`/`dload`, box via Long/Double.valueOf, unbox via
-#  longValue/doubleValue) — the peeler branch is a near-copy of 114 but the
-#  relocated 2-slot append peaks one slot higher in the caller, so it needs a
-#  caller max-stack bump (jeo never recomputes maxs). Also a MIXED multi-capture
+# @todo #652:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
-#  because 115 reads the capture type out of target.signature's first L-type) and
-#  a multi-capture FILTER (113/314), the nearest unfinished twin. Each extends the
-#  same shared-List channel.
+#  because 115 reads the capture type out of target.signature's first L-type — a
+#  multi-reference run needs positional type extraction), and a multi-capture
+#  FILTER (113/314), the nearest unfinished twin (its park/reload body must also
+#  defer the keep-frame). Each extends the same shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦
@@ -72,7 +81,11 @@ pattern: |
       descriptor ↦ 𝑒-method-descriptor,
       signature ↦ 𝑒-method-signature,
       exceptions ↦ 𝑒-method-exceptions,
-      maxs ↦ 𝑒-method-maxs,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        𝜏-max-stack ↦ 𝑒-max-stack,
+        𝜏-max-locals ↦ 𝑒-max-locals
+      ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
@@ -149,7 +162,11 @@ result: |
       descriptor ↦ 𝑒-method-descriptor,
       signature ↦ 𝑒-method-signature,
       exceptions ↦ 𝑒-method-exceptions,
-      maxs ↦ 𝑒-method-maxs,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        𝜏-max-stack ↦ 𝑒-bumped-stack,
+        𝜏-max-locals ↦ 𝑒-max-locals
+      ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,
       body ↦ ⟦
@@ -187,7 +204,7 @@ when:
         - 𝑒-target-method
     - or:
         - matches:
-            - '\(I+\)Ljava/util/function/Function;'
+            - '\([IJD]+\)Ljava/util/function/Function;'
             - 𝑒-interface
         - matches:
             - '\(L[^;]+;\)Ljava/util/function/Function;'
@@ -202,5 +219,31 @@ where:
       - 𝑒-instantiated
       - '"s/[(]//"'
       - '"s/[)].*//"'
+  # Bump the caller max-stack by 2 when a category-2 (J/D) primitive capture is
+  # present (its relocated 2-slot boxing append, 116/117, peaks one slot higher
+  # than an int append); an int-only or reference capture bumps by 0. 𝑒-cap-params
+  # isolates the factory descriptor's parameter codes and drops every object type
+  # ("L…;"), leaving only the primitive capture codes, so a J or D there means a
+  # category-2 capture; over-allocating max-stack is always verifier-safe.
+  - meta: 𝑒-cap-params
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
+      - '"s/L[^;]*;//g"'
+  - meta: 𝑒-bump-str
+    function: sed
+    args:
+      - 𝑒-cap-params
+      - '"s/.*[JD].*/2/"'
+      - '"s/^[^2].*$/0/"'
+      - '"s/^$/0/"'
+  - meta: 𝑒-bump
+    function: number
+    args: [𝑒-bump-str]
+  - meta: 𝑒-bumped-stack
+    function: sum
+    args: [𝑒-max-stack, 𝑒-bump]
   - meta: 𝜏-c-map
     function: random-tau

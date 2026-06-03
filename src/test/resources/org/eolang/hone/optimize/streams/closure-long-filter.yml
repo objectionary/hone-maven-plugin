@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that the category-2 capture channel reaches the FILTER, the
+# filter mirror of closure-long.yml (the deferred half of issue #659). The captured
+# value is a CATEGORY-2 long — an effectively-final `long` parameter — read inside
+# the filter:
+#
+#   Stream.of(...).filter(n -> n > x).map(n -> n * 2).reduce(0, ...)
+#
+# The filter captures `x`, so javac compiles its factory descriptor as
+# "(J)L…Predicate;" and its SAM instantiated type as the type-preserving
+# "(Ljava/lang/Integer;)Z". 113's relaxed "\([IJD]+\)" interface-guard branch admits
+# the long capture and lifts it to a Φ.hone.cp-filter, bumping the caller max-stack
+# by 2 (a J capture's two-slot boxing append peaks one slot higher than an int's).
+# 120 peels the lone `lload` push, appending the long to the shared state List with a
+# Long.valueOf box and reading it back via a `fetch` typed java/lang/Long followed by
+# longValue. 314 folds a stateful distill and 401 fuses it with the following
+# NON-capturing map (n -> n * 2, empty state). 502/512/521/601 emit one
+# Stream.mapMulti whose wrapper reads the captured long back and tests it per element
+# — the whole stateful machinery reused verbatim, only the append/fetch box/unbox via
+# Long instead of Integer.
+#
+# invokedynamic: before = filter(capturing) + map + reduce-accumulator lambda = 3;
+# after = the single fused mapMulti + the untouched reduce lambda = 2. The dropped
+# indy is the proof the filter and map collapsed into one dispatch. The runtime line
+# proves the captured long reaches the lambda correctly: x == 2, so
+# {1,2,3,4,5} -> keep {3,4,5} -> *2 -> {6,8,10} -> sum == 24.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class C {
+    static int run(long x) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > x)
+        .map(n -> n * 2)
+        .reduce(0, (a, b) -> a + b);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run(2L));
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 24"

@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The cp-filter twin of 116 (the category-2 LONG c-map peeler). Peels a captured
+# long (`lload`) push off a Φ.hone.cp-filter and folds it into the operator's
+# shared-List state, exactly as 116 does for a Φ.hone.c-map and 118 does for an int
+# cp-filter capture. 113's relaxed "([IJD]+)L…Predicate;" interface guard now admits
+# a long capture (bumping the caller max-stack by 2), leaving the run of pushes
+# inline in front of the cp-filter; 118 peels the int (`iload`) pushes, this rule the
+# long (`lload`) pushes, and 122 the double (`dload`) pushes — the three interleave
+# at fixpoint on their own opcode, so a mixed int/long/double capture run is gathered
+# in the right left-to-right order exactly as 116/118 document.
+#
+# state-acc gains one boxing append `dup; lload k; Long.valueOf; List.add; pop`. A
+# long is two slots, so this append peaks one slot higher than 118's int append; 113
+# already bumped the caller max-stack by 2 to absorb it. body-acc gains one `fetch;
+# longValue` (521 turns the fetch into List.get(counter++); checkcast java/lang/Long
+# at emit, the longValue unboxes it). 314 wraps the finished body-acc into the
+# park/reload predicate guard, leaving the unboxed long below the reloaded item
+# exactly as the static lambda$ (long…, Integer)Z signature wants.
+name: cp-filter-peel-long
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-ll ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, 𝐵-llr ⟧,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, 𝐵-llr ⟧,
+        𝜏-box ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Long",
+          i3 ↦ "valueOf",
+          i4 ↦ "(J)Ljava/lang/Long;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Long" ⟧,
+        𝜏-lv ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Long",
+          i2 ↦ "longValue",
+          i3 ↦ "()J",
+          i4 ↦ Φ.false
+        ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-lv
+    function: random-tau

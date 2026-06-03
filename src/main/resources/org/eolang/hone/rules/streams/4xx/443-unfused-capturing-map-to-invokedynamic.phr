@@ -16,10 +16,12 @@
 # FUSED c-map — whose state and body carry a second operator's append and
 # guard — is left for 502. A MULTI-capture lone map (two or more appends, the
 # v1.1 `map(i -> i + x + y)` shape) likewise fails this single-append, single-
-# fetch pattern and is emitted as a standalone mapMulti rather than reverted:
-# correct, only marginally slower than native, and a rarer shape than the lone
-# single-capture map. Reverting it (replaying N pushes and rebuilding the
-# "(I^N)" descriptor) is a follow-up puzzle. The capture-push (𝑒-push) is
+# fetch pattern; the TWO-capture case is reverted by 446 (the multi-capture twin
+# of this rule), and only a lone map with THREE OR MORE captures is still emitted
+# as a standalone mapMulti rather than reverted — correct, only marginally slower
+# than native, and a rarer shape than the lone single- or two-capture map.
+# Reverting that (an arity-agnostic replay of N pushes rebuilding the "(I^N)"
+# descriptor) is a follow-up puzzle. The capture-push (𝑒-push) is
 # recovered from the state and replayed before the indy; the target handle is
 # read from the body's invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
 # the erased lambda-signature, the captured "(I)" interface) are constants for an

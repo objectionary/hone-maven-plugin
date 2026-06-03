@@ -1,0 +1,169 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The multi-capture twin of 443. Reverts a TWO-int-capture map distill (folded by
+# 316) that never fused back to its native invokedynamic + Stream.map, replaying
+# both capture-pushes and rebuilding the "(II)" factory descriptor. 443 only
+# reverts a LONE single-capture map (its state and body are closed on ONE boxing
+# append and ONE fetch); a lone two-capture map — e.g. `map(n -> n + p + q)` with
+# no neighbour to fuse, as in `loneMultiMap` ending in a terminal `.count()` —
+# fails 443's single-append pattern and used to be emitted as a standalone
+# mapMulti, which is strictly slower than the native Stream.map the JVM already
+# has. This rule closes that gap for the two-capture case.
+#
+# Both the state and the body match are CLOSED (no 𝐵-rest), enumerating EXACTLY
+# two boxing appends and EXACTLY two fetches plus a single park/reload/call. The
+# exact binding count is what makes the revert safe: a FUSED capturing map (two
+# operators joined by 401) carries TWO park/reload/call triples and a longer
+# state, so it cannot match this fixed-length pattern and is left for 502 — the
+# same never-touch-a-fused-distill guarantee 443 gets from its closed pattern,
+# only extended by one capture. A lone map with THREE OR MORE captures fails this
+# two-append pattern and is still emitted as a standalone mapMulti (a follow-up
+# puzzle; see 112's header). Both captured pushes (𝑒-push-a, 𝑒-push-b) are
+# recovered from the state and replayed before the indy in left-to-right order
+# (slot 0 = first capture); the target handle is read from the body's
+# invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
+# the erased lambda-signature, the captured "(II)" interface) are constants for a
+# two-int-capture map over any reference element type, so they are reconstructed
+# literally; the SAM instantiated type "(LX;)LX;" is rebuilt from the distill's
+# bridge-input/bridge-output, matching 112's element-type-agnostic lift. The
+# reverted Stream.map carries `reverted ↦ Φ.true`: 112's invokeinterface pattern
+# is closed on the four-operand opcode jeo emits, so the fifth binding stops 112
+# re-lifting this map and the 112 → 316 → 446 cycle cannot spin (jeo ignores the
+# extra binding, exactly as for 443's single-capture map).
+name: unfused-multi-capturing-map-to-invokedynamic
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      start ↦ "c-map",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      state ↦ ⟦
+        𝜏-dup-a ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load-a ↦ 𝑒-push-a,
+        𝜏-box-a ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add-a ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop-a ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝜏-dup-b ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load-b ↦ 𝑒-push-b,
+        𝜏-box-b ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add-b ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop-b ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        ρ ↦ ∅
+      ⟧,
+      body ↦ ⟦
+        𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+        𝜏-fetch-a ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-unbox-a ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
+        𝜏-fetch-b ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-unbox-b ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
+        𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        𝜏-call ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i1 ↦ 𝑒-target-class,
+          i2 ↦ 𝑒-target-method,
+          i3 ↦ 𝑒-target-signature,
+          i4 ↦ 𝑒-target-is-interface
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back-a ↦ 𝑒-push-a,
+    𝜏-push-back-b ↦ 𝑒-push-b,
+    𝜏-indy ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      v0 ↦ "apply",
+      v1 ↦ "(II)Ljava/util/function/Function;",
+      h2 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        v0 ↦ 6,
+        v1 ↦ "java/lang/invoke/LambdaMetafactory",
+        v2 ↦ "metafactory",
+        v3 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+        v4 ↦ Φ.false
+      ⟧,
+      t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;" ⟧,
+      h4 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        v0 ↦ 6,
+        v1 ↦ 𝑒-target-class,
+        v2 ↦ 𝑒-target-method,
+        v3 ↦ 𝑒-target-signature,
+        v4 ↦ 𝑒-target-is-interface
+      ⟧,
+      t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ 𝑒-instantiated ⟧
+    ⟧,
+    𝜏-map ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      v0 ↦ "java/util/stream/Stream",
+      v1 ↦ "map",
+      v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      v3 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝑒-instantiated
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-bridge-input
+      - '")"'
+      - 𝑒-bridge-output
+  - meta: 𝜏-push-back-a
+    function: random-tau
+  - meta: 𝜏-push-back-b
+    function: random-tau
+  - meta: 𝜏-indy
+    function: random-tau
+  - meta: 𝜏-map
+    function: random-tau

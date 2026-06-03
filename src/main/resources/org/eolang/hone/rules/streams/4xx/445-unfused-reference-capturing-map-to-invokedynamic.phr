@@ -1,0 +1,135 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The reference-capture twin of 443 (issue #657). 443 reverts an UNFUSED single
+# int-capture map back to its native invokedynamic + Stream.map; it is closed on
+# the int box/unbox body shape (`Integer.valueOf` append, `intValue` unbox), so a
+# lone SINGLE-reference-capture map — `map(n -> n + base.size())` over a captured
+# List, lifted by 112's "(L…;)" branch, peeled by 115 — fell through and was
+# emitted as a standalone mapMulti even though it never fused, strictly slower
+# than the native Stream.map. This rule closes that gap: a c-map distill that
+# still carries ONLY the reference append (`dup; aload k; List.add; pop`, no box,
+# because a reference is already an Object) and the single-capture park/reload
+# body 115/316 built WITHOUT an unbox (`astore 1; fetch; aload 1; invokestatic`)
+# is put back as the original invokedynamic + Stream.map.
+#
+# Both the state block and the body match are CLOSED (no 𝐵-rest), so a FUSED
+# reference c-map — whose state and body carry a neighbour's append and guard — is
+# left for 502, exactly as in 443. The capture-push (𝑒-push, an `aload k`) is
+# recovered from the state and replayed before the indy; the target handle is read
+# from the body's invokestatic. The 𝜑-calculus fields the fold dropped are
+# reconstructed literally: the Function SAM name "apply", the metafactory handle,
+# and the erased lambda-signature "(Ljava/lang/Object;)Ljava/lang/Object;". The
+# captured factory descriptor "(L<capture>;)L…Function;" is rebuilt from the
+# capture's class — read off the body's `fetch` type (𝑒-captype), which 115 seeded
+# from the lambda$ signature's first L-type — and the SAM instantiated type
+# "(LX;)LX;" is rebuilt from the distill's bridge-input/bridge-output (the
+# type-preserving element type X), matching 112's element-type-agnostic lift. The
+# reverted Stream.map carries `reverted ↦ Φ.true`: 112's invokeinterface pattern
+# is closed on the four-operand opcode jeo emits, so the fifth binding stops 112
+# re-lifting this map and the 112 → 316 → 445 cycle cannot spin (jeo ignores the
+# extra binding, exactly as for 442's skip and 443's int-capture map).
+#
+# A MULTI-reference / mixed-with-reference capture run, and the lone-multi-capture
+# map/filter and category-2/reference FILTER reverts, remain native follow-ups
+# (see the @todo in 112's header).
+name: unfused-reference-capturing-map-to-invokedynamic
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      start ↦ "c-map",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      state ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, 𝐵-load-args ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        ρ ↦ ∅
+      ⟧,
+      body ↦ ⟦
+        𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-captype ⟧,
+        𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        𝜏-call ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i1 ↦ 𝑒-target-class,
+          i2 ↦ 𝑒-target-method,
+          i3 ↦ 𝑒-target-signature,
+          i4 ↦ 𝑒-target-is-interface
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, 𝐵-load-args ⟧,
+    𝜏-indy ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      v0 ↦ "apply",
+      v1 ↦ 𝑒-factory,
+      h2 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        v0 ↦ 6,
+        v1 ↦ "java/lang/invoke/LambdaMetafactory",
+        v2 ↦ "metafactory",
+        v3 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+        v4 ↦ Φ.false
+      ⟧,
+      t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;" ⟧,
+      h4 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        v0 ↦ 6,
+        v1 ↦ 𝑒-target-class,
+        v2 ↦ 𝑒-target-method,
+        v3 ↦ 𝑒-target-signature,
+        v4 ↦ 𝑒-target-is-interface
+      ⟧,
+      t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ 𝑒-instantiated ⟧
+    ⟧,
+    𝜏-map ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      v0 ↦ "java/util/stream/Stream",
+      v1 ↦ "map",
+      v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      v3 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝑒-factory
+    function: concat
+    args:
+      - '"(L"'
+      - 𝑒-captype
+      - '";)Ljava/util/function/Function;"'
+  - meta: 𝑒-instantiated
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-bridge-input
+      - '")"'
+      - 𝑒-bridge-output
+  - meta: 𝜏-push-back
+    function: random-tau
+  - meta: 𝜏-indy
+    function: random-tau
+  - meta: 𝜏-map
+    function: random-tau

@@ -566,8 +566,11 @@ branch lifts `map(n -> n + base.size())` over a captured `List`, `115` peels the
 `aload` into the shared List with no box/unbox, and the whole stateful emit path
 (`316`/`401`/`502`/`512`/`521`/`601`) lowers it to one `Stream.mapMulti` — see
 the `streams/closure-reference.yml` end-to-end fixture. A lone reference-capture
-map is not reverted by `443` (closed on the int box/unbox shape), so it is
-emitted as a standalone `mapMulti` — correct, like the lone-multi-capture map.
+map is reverted to its native `invokedynamic` + `Stream.map` by
+`445-unfused-reference-capturing-map-to-invokedynamic` (issue #657, the
+reference-capture twin of `443`, closed on the box/unbox-free reference state and
+park/reload body), so it is never pessimised — see the
+`streams/closure-reference-lone.yml` end-to-end fixture.
 
 Category-2 (`J`/`D`) captures are **done** (issue #652): `112`'s `\([IJD]+\)`
 guard admits one or more long/double captures (and mixed int/long/double runs),
@@ -588,10 +591,11 @@ bottom of the stack. So `filter(n -> n > lo && n < hi)` fuses with its trailing
 
 Deferred puzzles (each extends the same shared-List channel): the
 lone-multi-capture map/filter revert (above); a MULTI-reference /
-mixed-with-reference capture run (needs positional capture-type extraction) and
-a lone-reference-map revert; a category-2 (`J`/`D`) or reference capture in a
-FILTER (its `116`/`117`/`115` peeler twins); `this`-field captures; and capturing
-`peek`/`mapToX`. See the puzzle marker in `112`'s header.
+mixed-with-reference capture run (needs positional capture-type extraction); a
+category-2 (`J`/`D`) or reference capture in a FILTER (its `116`/`117`/`115`
+peeler twins); `this`-field captures; and capturing `peek`/`mapToX`. See the
+puzzle marker in `112`'s header. (The lone-reference-map revert is **done** via
+`445`.)
 
 ## phino: the only rewrite engine
 

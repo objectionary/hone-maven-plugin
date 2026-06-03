@@ -61,15 +61,19 @@
 # lone [item]. So `filter(n -> n > lo && n < hi)` fuses exactly like the int
 # multi-capture map; see the multiFil case in streams/closures.yml.
 #
-# @todo #655:45min Generalise the CAPTURE channel further: a MIXED multi-capture
+# The lone-reference-map revert is now done (issue #657): a single-reference-capture
+# map that never fuses is reverted to its native invokedynamic + Stream.map by
+# 445-unfused-reference-capturing-map-to-invokedynamic, the reference-capture twin
+# of 443.
+#
+# @todo #657:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
 #  because 115 reads the capture type out of target.signature's first L-type — a
-#  multi-reference run needs positional type extraction) and a lone-reference-map
-#  revert. Still native in the FILTER channel too: a category-2 (J/D) or reference
-#  capture (its 116/117/115 peeler twins) and the lone-multi-capture-filter revert
-#  (444 is closed on the single-capture park/reload body, so a lone multi-capture
-#  filter is emitted as a standalone mapMulti). Each extends the same shared-List
-#  channel.
+#  multi-reference run needs positional type extraction). Still native in the
+#  FILTER channel too: a category-2 (J/D) or reference capture (its 116/117/115
+#  peeler twins) and the lone-multi-capture-filter revert (444 is closed on the
+#  single-capture park/reload body, so a lone multi-capture filter is emitted as a
+#  standalone mapMulti). Each extends the same shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

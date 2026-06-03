@@ -23,24 +23,32 @@
 # state List" is what lets N captures (and any number of fused capturing
 # operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
 #
-# v1.2 scope (issues #636, #640): one OR MORE category-1 INT captures, a
-# type-PRESERVING map over ANY reference element type — the SAM instantiated type
-# is matched as "(LX;)LX;" for any reference X (Integer, String, …) via a
-# backreference guard, and the element type X is sed-extracted into 𝑒-bridge and
-# threaded into all four bridge fields. A handle-6 static lambda$ target, every
-# push a constant-index iload. So `map(s -> s.repeat(k))` on a Stream<String>
-# (int capture k) now fuses exactly like the original Stream<Integer> case.
+# v1.3 scope (issues #636, #640, #647): the captures admitted are either
+# one OR MORE category-1 INT captures (factory descriptor "(I+)L…Function;",
+# every push a constant-index iload, gathered by 114) OR a SINGLE reference
+# capture (factory descriptor "(L…;)L…Function;", push an aload, gathered by the
+# reference branch 115) — the two are partitioned by the `or` in the interface
+# guard. In both cases the map is type-PRESERVING over ANY reference element type:
+# the SAM instantiated type is matched as "(LX;)LX;" for any reference X (Integer,
+# String, …) via a backreference guard, and the element type X is sed-extracted
+# into 𝑒-bridge and threaded into all four bridge fields. The lambda$ target is a
+# handle-6 static method. So `map(s -> s.repeat(k))` on a Stream<String> (int
+# capture k) and `map(n -> n + base.size())` capturing a List (reference capture)
+# both fuse exactly like the original Stream<Integer> case.
 #
 # Type-TRANSFORMING maps stay native: the "(LX;)LX;" backreference declines an
 # instantiated type whose input and output differ (e.g. "(LString;)LInteger;"),
 # so those keep flowing through the unbox/box machinery untouched.
 #
-# @todo #640:60min Generalise the CAPTURE type beyond category-1 ints: a reference
-#  capture (push is `aload`, drop the box/unbox in 114/316 — needs a reference
-#  branch in the peeler), and category-2 (J/D) captures (push is `lload`/`dload`,
-#  box via Long/Double.valueOf, unbox via longValue/doubleValue). Each extends the
-#  same shared-List channel; a multi-capture FILTER (113/314) is the nearest
-#  unfinished twin. The element-type half (Stream<X>) is already done here.
+# @todo #647:45min Generalise the CAPTURE type further: category-2 (J/D) captures
+#  (push is `lload`/`dload`, box via Long/Double.valueOf, unbox via
+#  longValue/doubleValue) — the peeler branch is a near-copy of 114 but the
+#  relocated 2-slot append peaks one slot higher in the caller, so it needs a
+#  caller max-stack bump (jeo never recomputes maxs). Also a MIXED multi-capture
+#  run that contains a reference (only a SINGLE lone reference is admitted today,
+#  because 115 reads the capture type out of target.signature's first L-type) and
+#  a multi-capture FILTER (113/314), the nearest unfinished twin. Each extends the
+#  same shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦
@@ -177,9 +185,13 @@ when:
     - matches:
         - 'lambda\$.+'
         - 𝑒-target-method
-    - matches:
-        - '\(I+\)Ljava/util/function/Function;'
-        - 𝑒-interface
+    - or:
+        - matches:
+            - '\(I+\)Ljava/util/function/Function;'
+            - 𝑒-interface
+        - matches:
+            - '\(L[^;]+;\)Ljava/util/function/Function;'
+            - 𝑒-interface
     - matches:
         - '\((L[^;]+;)\)\1'
         - 𝑒-instantiated

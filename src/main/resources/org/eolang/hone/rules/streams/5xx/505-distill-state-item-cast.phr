@@ -1,0 +1,101 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Narrows the Object item a distinct()/skip()-led pipeline carries before the
+# first body opcode that consumes it as a specific wrapper (#649). distinct and
+# skip erase the element type, so the fused stateful distill they head carries
+# bridge-input ↦ Ljava/lang/Object; — 512 loads the item with a fixed aload 1
+# and 503 frames it as Object. When a boxed() round-trip or a trailing mapToX
+# rides such a pipeline, the boxing / unbox body opens with an invokestatic onto
+# a desugared lambda$ wrapper whose parameter is a NARROWER reference (e.g.
+# Integer::doubleValue desugars to a (Ljava/lang/Integer;)D handle). The item on
+# the operand stack is still Object and is never narrowed, so the verifier
+# rejects the wrapper with "Bad type on operand stack: Type 'java/lang/Object'
+# is not assignable to 'java/lang/Integer'". It stays latent because every other
+# fixture leads with a typed map/filter, which pins bridge-input to the wrapper.
+#
+# The stateful guard (307 / 308) keeps the item at a keep-label whose stackmap
+# frame 503 fills (correctly) as Object; the very next opcode is that first
+# typed invokestatic. This rule anchors on the Φ.jeo.frame → invokestatic
+# adjacency and splices a `checkcast <wrapper>` between them, so the item is
+# narrowed exactly where it is first needed — the guard above ran on the Object
+# item through HashSet.add(Object) / the skip counter, neither of which needs a
+# narrower type. Because the cast runs AFTER the frame, the frame still rightly
+# declares Object, so 503 is left unchanged.
+#
+# It fires only when bridge-input is Object (the distinct/skip element-erasure
+# signature) and the following invokestatic takes a SINGLE non-Object reference
+# argument: a symmetric distinct/skip (no typed tail — the frame is the last
+# opcode, nothing follows) and an Object-accepting body are both left alone, and
+# the single-arg guard skips a captured lambda$ (which takes the List plus the
+# item). It runs after 503 (which turns the keep-label's frame-item into a
+# Φ.jeo.frame) and before 512 (which wraps the distill-lambda body into a
+# method), applied at fixpoint — a checkcast it already inserted now sits
+# between the frame and the invoke, so the adjacency does not re-match.
+#
+# Limitation: only the FIRST typed op directly after the (last) guard is
+# reached, which is exactly the boxed()/mapToX-after-distinct/skip shape #649
+# reports. A filter or peek wedged between the guard and the boxing tail opens
+# its body with a dup, breaking the frame → invokestatic adjacency; narrowing
+# through that interleaving is a follow-up puzzle on the same shared-state
+# channel.
+name: distill-state-item-cast
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-invoke-class,
+        i3 ↦ 𝑒-invoke-method,
+        i4 ↦ 𝑒-invoke-signature,
+        i5 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-invoke-class,
+        i3 ↦ 𝑒-invoke-method,
+        i4 ↦ 𝑒-invoke-signature,
+        i5 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches: ['^\(L[^;]+;\)', 𝑒-invoke-signature]
+    - not:
+        matches: ['^\(Ljava/lang/Object;\)', 𝑒-invoke-signature]
+where:
+  - meta: 𝜏-cast
+    function: random-tau
+  - meta: 𝑒-cast-class
+    function: sed
+    args:
+      - 𝑒-invoke-signature
+      - '"s/^\\(L([^;]+);.*/$1/g"'

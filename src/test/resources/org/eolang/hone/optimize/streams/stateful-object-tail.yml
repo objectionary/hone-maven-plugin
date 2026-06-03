@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A pipeline that BEGINS with distinct() — before any typed map/filter — and
+# then carries a boxed() round-trip and a trailing mapToX. distinct erases the
+# element type, so the fused stateful distill carries bridge-input ↦
+# Ljava/lang/Object; rather than the wrapper, and the synthesised wrapper loads
+# the item with a fixed aload 1 framed as Object. The boxing body's first opcode
+# invokes the desugared Integer::doubleValue lambda$, an (Ljava/lang/Integer;)D
+# handle, so before this fix the optimized class failed JVM verification with
+# "Bad type on operand stack: Type 'java/lang/Object' is not assignable to
+# 'java/lang/Integer'". 505 now splices a `checkcast java/lang/Integer` right
+# after the guard's keep-label frame, narrowing the item exactly where the
+# boxing tail first needs it — closing #649.
+#
+# distinct + the boxed() round-trip + the trailing mapToDouble all fold into ONE
+# stateful distill (one HashSet in the captured List) and lower to a single
+# Stream.mapMultiToDouble: the two method-ref invokedynamics javac emits collapse
+# to one. of(5,3,8,5,2,7).distinct() = 5,3,8,2,7; doubleValue/boxed/doubleValue
+# is the identity on the values; sum = 25.
+java: |
+  package statefulobjecttail;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      double r = Stream.of(5, 3, 8, 5, 2, 7)
+        .distinct()
+        .mapToDouble(Integer::doubleValue)
+        .boxed()
+        .mapToDouble(Double::doubleValue)
+        .sum();
+      System.out.printf("The result is %d\n", (int) r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 25"
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 1

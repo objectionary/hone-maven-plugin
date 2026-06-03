@@ -264,16 +264,22 @@ the trailing mapToX folds into the stateful distill too and the whole stateful
 pipeline collapses to ONE `Stream.mapMultiToX` (see `stateful-boxed-tail.yml`
 and `full-non-terminal.yml`, now 9 → 1) — closing #570 for the stateful path.
 
-One stateful boxed() shape is still unsupported and is a separate puzzle: a
-pipeline that *begins* with `distinct()`/`skip()` (before any typed
+A pipeline that *begins* with `distinct()`/`skip()` (before any typed
 `map`/`filter`) has `bridge-input ↦ Ljava/lang/Object;`, because distinct/skip
 erase the element type. A boxing tail whose desugared `lambda$` expects a
 specific wrapper (e.g. `Integer::doubleValue`, an `(Ljava/lang/Integer;)D`
-handle) then VerifyErrors — the object item is not assignable to `Integer`
-without a `checkcast`. This is pre-existing (it predates and is independent of
-the trailing-mapToX fusion) and is dodged by every fixture by leading with a
-typed operator; lifting it (insert a `checkcast` when `bridge-input` is
-`Object` and the body's first invoke wants a narrower type) is future work.
+handle) used to VerifyError — the object item is not assignable to `Integer`
+without a `checkcast`. `505-distill-state-item-cast` (issue #649) closes this:
+after `503` resolves the guard's keep-label `frame-item` into a `Φ.jeo.frame`,
+the very next opcode is that first typed `invokestatic`, so `505` splices a
+`checkcast <wrapper>` between the frame and the invoke whenever `bridge-input`
+is `Object` and the invoke takes a single non-`Object` reference argument. The
+cast runs *after* the frame, which still rightly declares `Object`, so `503` is
+unchanged. It reaches the first typed op directly after the (last) guard — the
+boxed()/mapToX-after-distinct/skip shape; a `filter`/`peek` wedged between the
+guard and the boxing tail opens its body with a `dup`, breaking the
+`frame → invokestatic` adjacency, so narrowing through that interleaving is a
+follow-up puzzle (see `stateful-object-tail.yml`).
 
 A method reference (`Integer::intValue`, `String::toUpperCase`, `X::keep`, …)
 is **desugared into a lambda** up front so the rest of the pipeline picks it
@@ -430,11 +436,14 @@ Limitations: the INPUT item is object-only (`512` loads it with a fixed
 `aload 1`); the OUTPUT may now be a primitive — when `451` fuses a trailing
 mapToX into the stateful distill, `512`'s closing dup / `XConsumer.accept`
 follow the output consumer exactly as `511` does, so a distinct/skip pipeline
-ending in a mapToX lowers to one `Stream.mapMultiToX`. Still future work: a
-primitive INPUT item; `503` reading the frame type off `bridge-input` (correct
-only while every operator before the distinct preserves the element type); and
-the `Object`-`bridge-input` boxed() case noted under "boxed() round-trips"
-(a pipeline that begins with distinct/skip).
+ending in a mapToX lowers to one `Stream.mapMultiToX`. The `Object`-`bridge-input`
+boxed() case (a pipeline that *begins* with distinct/skip) is now handled by
+`505-distill-state-item-cast`, which narrows the Object item with a `checkcast`
+before the boxing tail's first typed invoke (see "boxed() round-trips" above and
+#649). Still future work: a primitive INPUT item; `503` reading the frame type
+off `bridge-input` (correct only while every operator before the distinct
+preserves the element type); and narrowing through a `filter`/`peek` wedged
+between the guard and the boxing tail.
 
 ### Capturing operators (closures)
 

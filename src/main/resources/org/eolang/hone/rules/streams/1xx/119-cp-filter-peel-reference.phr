@@ -1,0 +1,92 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The reference-capture twin of 118, and the cp-filter mirror of 115. 113 admits
+# a SINGLE reference capture (factory descriptor "(L…;)L…Predicate;", e.g.
+# `filter(n -> base.contains(n))` over a captured Collection) and leaves the lone
+# `aload k` push inline in front of the cp-filter with two EMPTY accumulators;
+# this rule folds it into the operator's shared-List state, exactly as 115 does
+# for a Φ.hone.c-map — only the boxing and the unboxing drop out, because a
+# reference is already an Object.
+#
+# state-acc gains `dup; aload k; List.add; pop` (no Integer.valueOf — the captured
+# reference goes straight into the List; the append begins and ends at [list],
+# peak 3, identical to 118's int append, so it joins any number of fused
+# neighbours without growing the caller's stack). body-acc gains a single `fetch`
+# whose `type` is the captured object's class (521 turns the fetch into
+# List.get(counter++) and a checkcast to that class; no unbox follows). The class
+# is sed-extracted from the cp-filter's target.signature — the lambda$ descriptor
+# is "(Lcapture;Lelement;)Z", so its first L-type IS the capture type. This is
+# why only a SINGLE reference capture is supported: with one capture arg the first
+# L-type is unambiguous (a multi-reference run needs positional extraction).
+#
+# 314 then wraps body-acc into the auto emit-shape `dup; astore 1; <fetch>;
+# aload 1; invokestatic lambda$; ifne keep`, so the reloaded reference sits below
+# the parked item exactly as the (Lcapture;Lelement;)Z predicate signature wants.
+# The "c-filter" start label and the whole 502/512/521/601 stateful emit path are
+# reused verbatim. A lone reference-capture filter is not reverted (444 is closed
+# on the int single-capture park/reload body), so it is emitted as a standalone
+# mapMulti — like a lone multi-capture filter.
+name: cp-filter-peel-reference
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-al ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, 𝐵-alr ⟧,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      𝐵-cf-mid,
+      target ↦ ⟦ 𝐵-tgt-head, signature ↦ 𝑒-sig, 𝐵-tgt-tail ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cf ↦ ⟦
+      φ ↦ Φ.hone.cp-filter,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, 𝐵-alr ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-captype ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-cf-mid,
+      target ↦ ⟦ 𝐵-tgt-head, signature ↦ 𝑒-sig, 𝐵-tgt-tail ⟧,
+      𝐵-cf-tail
+    ⟧,
+    𝐵-t
+  ⟧
+where:
+  - meta: 𝑒-captype
+    function: sed
+    args:
+      - 𝑒-sig
+      - '"s/[(]L//"'
+      - '"s/;.*//"'
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau

@@ -66,14 +66,22 @@
 # 445-unfused-reference-capturing-map-to-invokedynamic, the reference-capture twin
 # of 443.
 #
-# @todo #657:45min Generalise the CAPTURE channel further: a MIXED multi-capture
+# The reference-capture FILTER is now done (issue #659): 113's interface guard also
+# admits a "(L…;)L…Predicate;" factory (a SINGLE reference capture), the new 119 peels
+# the lone aload into the shared List with no box/unbox (the cp-filter mirror of 115),
+# and 314 folds it into a stateful distill with the same N-ary park/reload body — so
+# `filter(n -> base.contains(n))` fuses exactly like the reference-capture map. A lone
+# reference-capture filter is not reverted (444 is closed on the int single-capture
+# body), so it is emitted as a standalone mapMulti, like a lone multi-capture filter.
+#
+# @todo #659:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
-#  because 115 reads the capture type out of target.signature's first L-type — a
-#  multi-reference run needs positional type extraction). Still native in the
-#  FILTER channel too: a category-2 (J/D) or reference capture (its 116/117/115
-#  peeler twins) and the lone-multi-capture-filter revert (444 is closed on the
-#  single-capture park/reload body, so a lone multi-capture filter is emitted as a
-#  standalone mapMulti). Each extends the same shared-List channel.
+#  in both the map (115) and the filter (119), because each reads the capture type
+#  out of target.signature's first L-type — a multi-reference run needs positional
+#  type extraction). Still native in the FILTER channel too: a category-2 (J/D)
+#  capture (its 116/117 peeler twins) and the lone-multi-capture-filter revert (444
+#  is closed on the single-capture park/reload body, so a lone multi-capture filter
+#  is emitted as a standalone mapMulti). Each extends the same shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

@@ -177,12 +177,14 @@ skip                             → 220 → 308 → state distill;
 capturing map (N prim OR 1 ref)  → 112 → 114 (int) / 116 (long) / 117 (double)
                                     / 115 (ref peeler) → 316 → c-map state
                                     distill; 443 reverts a lone single-int-capture
-                                    map if unfused (multi-capture, category-2 and
-                                    lone-ref stay mapMulti)
+                                    map and 446 a lone TWO-int-capture map if
+                                    unfused (3+-capture, category-2 and lone-ref
+                                    stay mapMulti)
 capturing filter (N prim)        → 113 → 118 (int) / 120 (long) / 122 (double)
                                     → 314 → c-filter state distill; 444
-                                    reverts a LONE single-int-capture filter
-                                    to invokedynamic if unfused (multi-capture,
+                                    reverts a LONE single-int-capture filter and
+                                    447 a lone TWO-int-capture filter to
+                                    invokedynamic if unfused (3+-capture,
                                     category-2 stay mapMulti)
 ```
 
@@ -552,10 +554,17 @@ captures over Integer):
   `Stream.{map,filter}`, replaying the push and marking the call
   `reverted ↦ Φ.true` so `112`/`113` cannot re-lift it (closed patterns plus
   the marker, the same loop-break `442` uses). `443`/`444` both match the
-  park/reload single-capture body. A LONE multi-capture map OR filter (two or
-  more appends) fails that closed pattern and is emitted as a standalone
-  `mapMulti` — correct, only marginally slower than native, and rarer than a lone
-  single-capture operator; reverting it (replaying N pushes, rebuilding the
+  park/reload single-capture body. `446`/`447` are their TWO-capture twins
+  (issue #663): a LONE two-int-capture map or filter (e.g. `map(n -> n + p + q)`,
+  `filter(n -> n > lo && n < hi)` with no neighbour to fuse) matches a CLOSED
+  state and body of EXACTLY two appends and two fetches, so it reverts to the
+  native `invokedynamic` + `Stream.{map,filter}` with the `(II)` factory
+  descriptor and both pushes replayed, while a fused operator (two
+  park/reload/call triples) cannot match and is left for `502`. A LONE map OR
+  filter with THREE OR MORE captures fails both the single- and two-capture
+  closed patterns and is still emitted as a standalone `mapMulti` — correct, only
+  marginally slower than native, and rarer than a lone one- or two-capture
+  operator; reverting it (an arity-agnostic replay of N pushes rebuilding the
   `(I^N)` descriptor) is a follow-up puzzle.
 
 Other type-preserving element types are **done** (issue #640): `112`'s
@@ -590,9 +599,22 @@ with the same N-ary park/reload body as a capturing map — the keep-frame stays
 `503`'s plain `Φ.hone.frame-item` because the body keeps the item at the bottom
 of the stack. So `filter(n -> n > lo && n < hi)` fuses with its trailing
 `mapToInt` into one `Stream.mapMultiToInt`; see the `multiFil` case in
-`streams/closures.yml`. A lone multi-capture filter is not reverted by `444`
-(closed on the single-capture body), so it is emitted as a standalone
-`mapMulti`.
+`streams/closures.yml`. A lone TWO-capture filter is reverted by `447` (the
+two-capture twin of `444`; see below); a lone filter with three or more captures
+is still emitted as a standalone `mapMulti`.
+
+The lone-TWO-capture revert is **done** (issue #663): `446`/`447` are the
+two-capture twins of `443`/`444`. A lone two-int-capture map or filter that never
+fused — e.g. `map(n -> n + p + q)` ending in a terminal `reduce`, or
+`filter(n -> n > lo && n < hi)` ending in `count` — is reverted to its native
+`invokedynamic` + `Stream.{map,filter}`, replaying BOTH `iload` pushes and the
+`(II)` factory descriptor and marking the call `reverted ↦ Φ.true` so `112`/`113`
+cannot re-lift it. Both rules match a CLOSED state and body of EXACTLY two appends
+and two fetches, so a FUSED operator (two park/reload/call triples) cannot match
+and is left for `502` — the never-touch-a-fused-distill guarantee `443`/`444` get,
+extended by one capture. See the `streams/closure-multi-lone.yml` end-to-end
+fixture. A lone map/filter with THREE OR MORE captures still stays a standalone
+`mapMulti` (a follow-up puzzle).
 
 The category-2 (`J`/`D`) capture FILTER is **done** (issue #661): `113`'s
 `\([IJD]+\)Ljava/util/function/Predicate;` guard admits long/double captures
@@ -602,12 +624,14 @@ and bumps the caller max-stack by 2 exactly as `112` does for the map,
 distill — see `streams/closure-long-filter.yml`.
 
 Deferred puzzles (each extends the same shared-List channel): the
-lone-multi-capture map/filter revert (above); a MULTI-reference /
-mixed-with-reference capture run (needs positional capture-type extraction);
-`this`-field captures; and capturing `peek`/`mapToX`. See the
-puzzle marker in `112`'s header. (The lone-reference-map revert is **done** via
-`445`; a category-2 or reference capture in a FILTER is **done** via `120`/`122`
-and `119`.)
+lone-THREE-OR-MORE-capture map/filter revert (an arity-agnostic revert that
+rebuilds the `(I^N)` descriptor for any N; `446`/`447` close only the
+two-capture case); a MULTI-reference / mixed-with-reference capture run (needs
+positional capture-type extraction); `this`-field captures; and capturing
+`peek`/`mapToX`. See the puzzle marker in `112`'s header. (The lone-reference-map
+revert is **done** via `445`; the lone-two-capture map/filter revert is **done**
+via `446`/`447`; a category-2 or reference capture in a FILTER is **done** via
+`120`/`122` and `119`.)
 
 ## phino: the only rewrite engine
 

@@ -85,14 +85,27 @@
 # shape), so it is emitted as a standalone mapMulti, like the lone-reference and
 # lone-multi-capture filters.
 #
-# @todo #661:45min Generalise the CAPTURE channel further: a MIXED multi-capture
+# The lone-TWO-capture revert is now done (issue #663): 446 / 447 are the
+# multi-capture twins of 443 / 444 — a lone two-int-capture map / filter (e.g.
+# `map(n -> n + p + q)` or `filter(n -> n > lo && n < hi)` with no neighbour to
+# fuse, ending in a terminal) is reverted to its native invokedynamic +
+# Stream.{map,filter}, replaying BOTH `iload` pushes and rebuilding the "(II)"
+# factory descriptor. Both rules match EXACTLY two boxing appends and two fetches
+# with a CLOSED state and body, so a FUSED capturing operator (which carries two
+# park/reload/call triples) cannot match and is left for 502 — the same
+# never-touch-a-fused-distill guarantee 443 / 444 get, extended by one capture. See
+# streams/closure-multi-lone.yml.
+#
+# @todo #663:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
 #  in both the map (115) and the filter (119), because each reads the capture type
 #  out of target.signature's first L-type — a multi-reference run needs positional
-#  type extraction). Also still deferred: the lone-multi-capture-MAP/FILTER revert
-#  (443/444 are closed on the single-capture park/reload body, so a lone multi-capture
-#  map or filter is emitted as a standalone mapMulti rather than reverted to its
-#  native invokedynamic). Each extends the same shared-List channel.
+#  type extraction). Also still deferred: the lone-THREE-OR-MORE-capture map/filter
+#  revert (446/447 are closed on exactly two appends/fetches, so a lone map or
+#  filter with three or more captures is still emitted as a standalone mapMulti
+#  rather than reverted to its native invokedynamic — extending it needs an
+#  arity-agnostic revert that rebuilds the "(I^N)" descriptor for any N). Each
+#  extends the same shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

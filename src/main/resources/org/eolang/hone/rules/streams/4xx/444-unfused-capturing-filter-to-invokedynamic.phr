@@ -15,11 +15,11 @@
 # capture lone filter (two or more appends / fetches, e.g. the issue's
 # `filter(n -> n > lo && n < hi)`) fails this single-append, single-fetch closed
 # pattern; the TWO-capture case is reverted by 447 (the multi-capture twin of this
-# rule), and only a lone filter with THREE OR MORE captures is still emitted as a
-# standalone mapMulti rather than reverted — correct, only marginally slower than
-# native, exactly as 443 leaves a lone three-or-more-capture map. Reverting that
-# (an arity-agnostic replay of N pushes rebuilding the "(I^N)" descriptor) is a
-# follow-up puzzle.
+# rule) and the THREE-capture case by 449, and only a lone filter with FOUR OR
+# MORE captures is still emitted as a standalone mapMulti rather than reverted —
+# correct, only marginally slower than native, exactly as 443 leaves a lone
+# four-or-more-capture map. Reverting that (an arity-agnostic replay of N pushes
+# rebuilding the "(I^N)" descriptor) is a follow-up puzzle.
 name: unfused-capturing-filter-to-invokedynamic
 pattern: |
   ⟦

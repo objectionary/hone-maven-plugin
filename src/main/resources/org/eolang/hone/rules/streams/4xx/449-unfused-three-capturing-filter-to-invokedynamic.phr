@@ -2,38 +2,33 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The multi-capture twin of 443. Reverts a TWO-int-capture map distill (folded by
-# 316) that never fused back to its native invokedynamic + Stream.map, replaying
-# both capture-pushes and rebuilding the "(II)" factory descriptor. 443 only
-# reverts a LONE single-capture map (its state and body are closed on ONE boxing
-# append and ONE fetch); a lone two-capture map — e.g. `map(n -> n + p + q)` with
-# no neighbour to fuse, as in `loneMultiMap` ending in a terminal `.count()` —
-# fails 443's single-append pattern and used to be emitted as a standalone
-# mapMulti, which is strictly slower than the native Stream.map the JVM already
-# has. This rule closes that gap for the two-capture case.
+# The filter twin of 448 (and the three-capture twin of 444 / 447). Reverts a
+# THREE-int-capture primitive-filter distill (folded by 314) that never fused
+# back to its native invokedynamic + Stream.filter, replaying all three
+# capture-pushes and rebuilding the "(III)" factory descriptor. 447 only reverts
+# a LONE two-capture filter (closed on EXACTLY two boxing appends and two
+# fetches); a lone three-capture filter — e.g. `filter(n -> n > a && n < b && n
+# != c)` with no neighbour to fuse (ending in a terminal such as `.count()`) —
+# fails 447's two-append pattern and used to be emitted as a standalone
+# mapMulti, strictly slower than the native Stream.filter. This rule closes that
+# gap for the three-capture case.
 #
-# Both the state and the body match are CLOSED (no 𝐵-rest), enumerating EXACTLY
-# two boxing appends and EXACTLY two fetches plus a single park/reload/call. The
-# exact binding count is what makes the revert safe: a FUSED capturing map (two
-# operators joined by 401) carries TWO park/reload/call triples and a longer
-# state, so it cannot match this fixed-length pattern and is left for 502 — the
-# same never-touch-a-fused-distill guarantee 443 gets from its closed pattern,
-# only extended by one capture. A lone map with THREE captures is reverted by its
-# three-capture twin 448; FOUR OR MORE captures fail every closed append pattern
-# and are still emitted as a standalone mapMulti (a follow-up puzzle; see 112's
-# header). Both captured pushes (𝑒-push-a, 𝑒-push-b) are
-# recovered from the state and replayed before the indy in left-to-right order
-# (slot 0 = first capture); the target handle is read from the body's
-# invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
-# the erased lambda-signature, the captured "(II)" interface) are constants for a
-# two-int-capture map over any reference element type, so they are reconstructed
-# literally; the SAM instantiated type "(LX;)LX;" is rebuilt from the distill's
-# bridge-input/bridge-output, matching 112's element-type-agnostic lift. The
-# reverted Stream.map carries `reverted ↦ Φ.true`: 112's invokeinterface pattern
-# is closed on the four-operand opcode jeo emits, so the fifth binding stops 112
-# re-lifting this map and the 112 → 316 → 446 cycle cannot spin (jeo ignores the
-# extra binding, exactly as for 443's single-capture map).
-name: unfused-multi-capturing-map-to-invokedynamic
+# Both the state and the body match are CLOSED, enumerating EXACTLY three boxing
+# appends and EXACTLY three fetches plus the single item-preserving dup,
+# park/reload and keep-guard 314 built (dup; astore 1; (fetch; intValue)×3;
+# aload 1; predicate; ifne; return; label; frame-item). The exact binding count
+# is what makes the revert safe: a FUSED filter (two operators joined by 401)
+# carries two park/reload/predicate triples and a longer state, so it cannot
+# match this fixed-length pattern and is left for 502 — the same
+# never-touch-a-fused-distill guarantee 444 / 447 get, extended by one more
+# capture. A lone filter with FOUR OR MORE captures fails this three-append
+# pattern and is still emitted as a standalone mapMulti (a follow-up puzzle; see
+# 112's header). All three pushes are replayed in left-to-right order; the
+# Predicate SAM constants are reconstructed literally for the three-int-capture
+# Stream<Integer> case, and the reverted Stream.filter carries
+# `reverted ↦ Φ.true` so 113 cannot re-lift it (its invokeinterface pattern is
+# closed, the loop-break 442 / 444 / 447 rely on).
+name: unfused-three-capturing-filter-to-invokedynamic
 pattern: |
   ⟦
     𝐵-before,
@@ -42,7 +37,7 @@ pattern: |
       class ↦ 𝑒-class,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ 𝑒-bridge-output,
-      start ↦ "c-map",
+      start ↦ "c-filter",
       accepted ↦ 𝑒-accepted,
       returned ↦ 𝑒-returned,
       static ↦ 𝑒-static,
@@ -81,9 +76,27 @@ pattern: |
           i5 ↦ Φ.true
         ⟧,
         𝜏-pop-b ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝜏-dup-c ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load-c ↦ 𝑒-push-c,
+        𝜏-box-c ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add-c ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop-c ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
         ρ ↦ ∅
       ⟧,
       body ↦ ⟦
+        𝜏-itemdup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
         𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
         𝜏-fetch-a ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
         𝜏-unbox-a ↦ ⟦
@@ -101,6 +114,14 @@ pattern: |
           i3 ↦ "()I",
           i4 ↦ Φ.false
         ⟧,
+        𝜏-fetch-c ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-unbox-c ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
         𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
         𝜏-call ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokestatic,
@@ -109,6 +130,13 @@ pattern: |
           i3 ↦ 𝑒-target-signature,
           i4 ↦ 𝑒-target-is-interface
         ⟧,
+        𝜏-ifne ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifne,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+        ⟧,
+        𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+        𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
         ρ ↦ ∅
       ⟧
     ⟧,
@@ -119,10 +147,11 @@ result: |
     𝐵-before,
     𝜏-push-back-a ↦ 𝑒-push-a,
     𝜏-push-back-b ↦ 𝑒-push-b,
+    𝜏-push-back-c ↦ 𝑒-push-c,
     𝜏-indy ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokedynamic,
-      v0 ↦ "apply",
-      v1 ↦ "(II)Ljava/util/function/Function;",
+      v0 ↦ "test",
+      v1 ↦ "(III)Ljava/util/function/Predicate;",
       h2 ↦ ⟦
         φ ↦ Φ.jeo.handle,
         v0 ↦ 6,
@@ -131,7 +160,7 @@ result: |
         v3 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
         v4 ↦ Φ.false
       ⟧,
-      t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;" ⟧,
+      t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)Z" ⟧,
       h4 ↦ ⟦
         φ ↦ Φ.jeo.handle,
         v0 ↦ 6,
@@ -142,11 +171,11 @@ result: |
       ⟧,
       t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ 𝑒-instantiated ⟧
     ⟧,
-    𝜏-map ↦ ⟦
+    𝜏-filter ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
       v0 ↦ "java/util/stream/Stream",
-      v1 ↦ "map",
-      v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      v1 ↦ "filter",
+      v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;",
       v3 ↦ Φ.true,
       reverted ↦ Φ.true
     ⟧,
@@ -158,13 +187,14 @@ where:
     args:
       - '"("'
       - 𝑒-bridge-input
-      - '")"'
-      - 𝑒-bridge-output
+      - '")Z"'
   - meta: 𝜏-push-back-a
     function: random-tau
   - meta: 𝜏-push-back-b
     function: random-tau
+  - meta: 𝜏-push-back-c
+    function: random-tau
   - meta: 𝜏-indy
     function: random-tau
-  - meta: 𝜏-map
+  - meta: 𝜏-filter
     function: random-tau

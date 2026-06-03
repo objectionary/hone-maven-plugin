@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that a LONE THREE-int-capture map AND a LONE three-int-capture
+# filter are never pessimised (issue #665, the three-capture twin of #663's
+# closure-multi-lone.yml). Neither operator has a neighbour to fuse with — the
+# map is followed only by a terminal reduce and the filter only by a terminal
+# count:
+#
+#   Stream.of(...).map(n -> n + p + q + r).reduce(0, (a, b) -> a + b)
+#   Stream.of(...).filter(n -> n > a && n < b && n != c).count()
+#
+# 112 / 113 lift each capturing operator (factory descriptor "(III)L…Function;" /
+# "(III)L…Predicate;") to a Φ.hone.{c-map,cp-filter}, 114 / 118 peel all three
+# `iload` pushes into the shared state, and 316 / 314 fold a lone stateful
+# distill. Because nothing fuses with them, lowering each to a mapMulti would add
+# an invokedynamic, a wrapper, an ArrayList and a List.get per element — strictly
+# slower than the native Stream.{map,filter}. 448 / 449 (the three-capture twins
+# of 446 / 447) revert each unfused three-capture distill back to its original
+# invokedynamic + Stream.{map,filter}, replaying ALL THREE captured pushes and
+# the "(III)" factory descriptor and marking the call reverted↦Φ.true so 112 /
+# 113 cannot re-lift it.
+#
+# invokedynamic: before = capturing map (1) + capturing filter (1) + the reduce
+# accumulator lambda (1) = 3; after = the reverted map indy + the reverted filter
+# indy + the untouched reduce lambda = 3. The count is UNCHANGED, proving both
+# lone capturing operators came out native rather than being lowered to a
+# (slower) mapMulti. The runtime line proves all three captures still reach their
+# lambdas: with p=10, q=20, r=5 the map sends {1..5} -> n+35 -> {36..40} summing
+# to 190; with a=2, b=6, c=4 the filter keeps {3,5} from {1..6}, a count of 2.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class C {
+    static int mapRun(int p, int q, int r) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + p + q + r)
+        .reduce(0, (a, b) -> a + b);
+    }
+    static long filterRun(int a, int b, int c) {
+      return Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(n -> n > a && n < b && n != c)
+        .count();
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d %d%n", mapRun(10, 20, 5), filterRun(2, 6, 4));
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 3
+log:
+  - "BUILD SUCCESS"
+  - "The result is 190 2"

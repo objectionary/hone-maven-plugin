@@ -19,9 +19,10 @@
 # revert safe: a FUSED filter (two operators joined by 401) carries two
 # park/reload/predicate triples and a longer state, so it cannot match this
 # fixed-length pattern and is left for 502 — the same never-touch-a-fused-distill
-# guarantee 444 gets, extended by one capture. A lone filter with THREE OR MORE
-# captures fails this two-append pattern and is still emitted as a standalone
-# mapMulti (a follow-up puzzle; see 112's header). Both pushes are replayed in
+# guarantee 444 gets, extended by one capture. A lone filter with THREE captures
+# is reverted by its three-capture twin 449; FOUR OR MORE captures fail every
+# closed append pattern and are still emitted as a standalone mapMulti (a
+# follow-up puzzle; see 112's header). Both pushes are replayed in
 # left-to-right order; the Predicate SAM constants are reconstructed literally for
 # the two-int-capture Stream<Integer> case, and the reverted Stream.filter carries
 # `reverted ↦ Φ.true` so 113 cannot re-lift it (its invokeinterface pattern is

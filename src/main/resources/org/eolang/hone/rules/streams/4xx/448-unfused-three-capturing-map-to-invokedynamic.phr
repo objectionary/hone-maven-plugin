@@ -2,38 +2,39 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The multi-capture twin of 443. Reverts a TWO-int-capture map distill (folded by
-# 316) that never fused back to its native invokedynamic + Stream.map, replaying
-# both capture-pushes and rebuilding the "(II)" factory descriptor. 443 only
-# reverts a LONE single-capture map (its state and body are closed on ONE boxing
-# append and ONE fetch); a lone two-capture map — e.g. `map(n -> n + p + q)` with
-# no neighbour to fuse, as in `loneMultiMap` ending in a terminal `.count()` —
-# fails 443's single-append pattern and used to be emitted as a standalone
-# mapMulti, which is strictly slower than the native Stream.map the JVM already
-# has. This rule closes that gap for the two-capture case.
+# The three-capture twin of 446 (and the multi-capture twin of 443). Reverts a
+# THREE-int-capture map distill (folded by 316) that never fused back to its
+# native invokedynamic + Stream.map, replaying all three capture-pushes and
+# rebuilding the "(III)" factory descriptor. 446 only reverts a LONE two-capture
+# map (its state and body are closed on EXACTLY two boxing appends and two
+# fetches); a lone three-capture map — e.g. `map(n -> n + p + q + r)` with no
+# neighbour to fuse, ending in a terminal `.reduce(...)` — fails 446's
+# two-append pattern and used to be emitted as a standalone mapMulti, which is
+# strictly slower than the native Stream.map the JVM already has. This rule
+# closes that gap for the three-capture case.
 #
 # Both the state and the body match are CLOSED (no 𝐵-rest), enumerating EXACTLY
-# two boxing appends and EXACTLY two fetches plus a single park/reload/call. The
-# exact binding count is what makes the revert safe: a FUSED capturing map (two
-# operators joined by 401) carries TWO park/reload/call triples and a longer
-# state, so it cannot match this fixed-length pattern and is left for 502 — the
-# same never-touch-a-fused-distill guarantee 443 gets from its closed pattern,
-# only extended by one capture. A lone map with THREE captures is reverted by its
-# three-capture twin 448; FOUR OR MORE captures fail every closed append pattern
-# and are still emitted as a standalone mapMulti (a follow-up puzzle; see 112's
-# header). Both captured pushes (𝑒-push-a, 𝑒-push-b) are
-# recovered from the state and replayed before the indy in left-to-right order
-# (slot 0 = first capture); the target handle is read from the body's
-# invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
-# the erased lambda-signature, the captured "(II)" interface) are constants for a
-# two-int-capture map over any reference element type, so they are reconstructed
-# literally; the SAM instantiated type "(LX;)LX;" is rebuilt from the distill's
-# bridge-input/bridge-output, matching 112's element-type-agnostic lift. The
-# reverted Stream.map carries `reverted ↦ Φ.true`: 112's invokeinterface pattern
-# is closed on the four-operand opcode jeo emits, so the fifth binding stops 112
-# re-lifting this map and the 112 → 316 → 446 cycle cannot spin (jeo ignores the
-# extra binding, exactly as for 443's single-capture map).
-name: unfused-multi-capturing-map-to-invokedynamic
+# three boxing appends and EXACTLY three fetches plus a single park/reload/call.
+# The exact binding count is what makes the revert safe: a FUSED capturing map
+# (two operators joined by 401) carries TWO park/reload/call triples and a
+# longer state, so it cannot match this fixed-length pattern and is left for 502
+# — the same never-touch-a-fused-distill guarantee 443 / 446 get from their
+# closed patterns, only extended by one more capture. A lone map with FOUR OR
+# MORE captures fails this three-append pattern and is still emitted as a
+# standalone mapMulti (a follow-up puzzle; see 112's header). All three captured
+# pushes (𝑒-push-a, 𝑒-push-b, 𝑒-push-c) are recovered from the state and
+# replayed before the indy in left-to-right order (slot 0 = first capture); the
+# target handle is read from the body's invokestatic. The 𝜑-calculus fields the
+# fold dropped (the Function SAM name, the erased lambda-signature, the captured
+# "(III)" interface) are constants for a three-int-capture map over any reference
+# element type, so they are reconstructed literally; the SAM instantiated type
+# "(LX;)LX;" is rebuilt from the distill's bridge-input/bridge-output, matching
+# 112's element-type-agnostic lift. The reverted Stream.map carries
+# `reverted ↦ Φ.true`: 112's invokeinterface pattern is closed on the
+# four-operand opcode jeo emits, so the fifth binding stops 112 re-lifting this
+# map and the 112 → 316 → 448 cycle cannot spin (jeo ignores the extra binding,
+# exactly as for 446's two-capture map).
+name: unfused-three-capturing-map-to-invokedynamic
 pattern: |
   ⟦
     𝐵-before,
@@ -81,6 +82,23 @@ pattern: |
           i5 ↦ Φ.true
         ⟧,
         𝜏-pop-b ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝜏-dup-c ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load-c ↦ 𝑒-push-c,
+        𝜏-box-c ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "java/lang/Integer",
+          i3 ↦ "valueOf",
+          i4 ↦ "(I)Ljava/lang/Integer;",
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-add-c ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop-c ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
         ρ ↦ ∅
       ⟧,
       body ↦ ⟦
@@ -95,6 +113,14 @@ pattern: |
         ⟧,
         𝜏-fetch-b ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
         𝜏-unbox-b ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i1 ↦ "java/lang/Integer",
+          i2 ↦ "intValue",
+          i3 ↦ "()I",
+          i4 ↦ Φ.false
+        ⟧,
+        𝜏-fetch-c ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+        𝜏-unbox-c ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokevirtual,
           i1 ↦ "java/lang/Integer",
           i2 ↦ "intValue",
@@ -119,10 +145,11 @@ result: |
     𝐵-before,
     𝜏-push-back-a ↦ 𝑒-push-a,
     𝜏-push-back-b ↦ 𝑒-push-b,
+    𝜏-push-back-c ↦ 𝑒-push-c,
     𝜏-indy ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokedynamic,
       v0 ↦ "apply",
-      v1 ↦ "(II)Ljava/util/function/Function;",
+      v1 ↦ "(III)Ljava/util/function/Function;",
       h2 ↦ ⟦
         φ ↦ Φ.jeo.handle,
         v0 ↦ 6,
@@ -163,6 +190,8 @@ where:
   - meta: 𝜏-push-back-a
     function: random-tau
   - meta: 𝜏-push-back-b
+    function: random-tau
+  - meta: 𝜏-push-back-c
     function: random-tau
   - meta: 𝜏-indy
     function: random-tau

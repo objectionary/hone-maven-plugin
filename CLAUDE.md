@@ -439,11 +439,11 @@ follow the output consumer exactly as `511` does, so a distinct/skip pipeline
 ending in a mapToX lowers to one `Stream.mapMultiToX`. The `Object`-`bridge-input`
 boxed() case (a pipeline that *begins* with distinct/skip) is now handled by
 `505-distill-state-item-cast`, which narrows the Object item with a `checkcast`
-before the boxing tail's first typed invoke (see "boxed() round-trips" above and
-#649). Still future work: a primitive INPUT item; `503` reading the frame type
-off `bridge-input` (correct only while every operator before the distinct
-preserves the element type); and narrowing through a `filter`/`peek` wedged
-between the guard and the boxing tail.
+before the boxing tail's first typed invoke (issue #649; see "boxed()
+round-trips" above). Still future work: a primitive INPUT item; `503` reading
+the frame type off `bridge-input` (correct only while every operator before the
+distinct preserves the element type); and narrowing through a `filter`/`peek`
+wedged between the guard and the boxing tail.
 
 ### Capturing operators (closures)
 

@@ -7,13 +7,18 @@
 # are asserted. The runtime result: the pipeline must never corrupt a
 # roundtrip nor pessimise a lone operator, so a correct printout proves every
 # path lowered to runnable bytecode. And the invokedynamic tally: it drops
-# from 41 to 32 as the capturing and non-capturing operators collapse into 10
-# Stream.mapMulti dispatches. The indys that remain are the string-concat
+# from 41 to 29 as the capturing and non-capturing operators collapse into 10
+# Stream.mapMulti dispatches — 3 stay an object mapMulti and 7 become a
+# mapMultiToInt, because a trailing mapToInt(Integer::intValue) now folds into
+# the distill in front of it whether that distill is empty-state OR
+# stateful/capturing (the generalized 451 preserves the predecessor's state,
+# so capLoc / multiCap / loneMulti each absorb their trailing mapToInt instead
+# of leaving it native). The indys that remain are the string-concat
 # (makeConcatWithConstants in decorate / the reduce) and the genuinely native
-# or reverted cases (capObj, capArr, capFld, lone, named, the trailing
-# mapToInt unboxes, …); the nine that disappear are the fusion win. Which indy
-# collapses into which mapMulti is proven per-rule by the src/test/phino/
-# packs — this fixture proves the rules COMPOSE on a real class.
+# or reverted cases (capObj, capArr, capFld, lone, named, multiFil, …); the
+# twelve that disappear are the fusion win. Which indy collapses into which
+# mapMulti is proven per-rule by the src/test/phino/ packs — this fixture
+# proves the rules COMPOSE on a real class.
 #
 # Native roundtrip shapes — must survive untouched:
 #   bound   : String::length             unbound-instance method ref
@@ -141,7 +146,7 @@ java: |
 before:
   invokedynamic: 41
 after:
-  invokedynamic: 32
+  invokedynamic: 29
 log:
   - "BUILD SUCCESS"
   - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24 387 5 54 12"

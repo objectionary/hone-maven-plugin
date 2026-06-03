@@ -13,10 +13,10 @@
 # 501/511 lower the whole chain to a SINGLE Stream.mapMultiToDouble dispatch.
 #
 # This is the case issue #570 reported as unfused for a pure pointwise pipeline:
-# every operator collapses to one mapMulti, dropping invokedynamic 5 -> 1. (A
-# stateful prefix — distinct/skip — keeps the boxing native, see
-# full-non-terminal.yml, because the object-only stateful emit cannot take a
-# type-changing intermediate.)
+# every operator collapses to one mapMulti, dropping invokedynamic 5 -> 1. A
+# stateful prefix — distinct/skip — now collapses its boxing tail into the same
+# single mapMulti too (the stateful emit became output-aware), see
+# full-non-terminal.yml.
 java: |
   package boxedroundtrip;
   import java.util.stream.Stream;

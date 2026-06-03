@@ -96,16 +96,24 @@
 # never-touch-a-fused-distill guarantee 443 / 444 get, extended by one capture. See
 # streams/closure-multi-lone.yml.
 #
-# @todo #663:45min Generalise the CAPTURE channel further: a MIXED multi-capture
+# @todo #665:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
 #  in both the map (115) and the filter (119), because each reads the capture type
 #  out of target.signature's first L-type — a multi-reference run needs positional
-#  type extraction). Also still deferred: the lone-THREE-OR-MORE-capture map/filter
-#  revert (446/447 are closed on exactly two appends/fetches, so a lone map or
-#  filter with three or more captures is still emitted as a standalone mapMulti
-#  rather than reverted to its native invokedynamic — extending it needs an
-#  arity-agnostic revert that rebuilds the "(I^N)" descriptor for any N). Each
-#  extends the same shared-List channel.
+#  type extraction). This part is independent of phino and still doable here.
+#
+# The lone-THREE-OR-MORE-capture map/filter revert, by contrast, is BLOCKED
+#  upstream and must NOT be chased by extending the 443/446 ladder one more rung.
+#  An arity-agnostic lone-vs-fused revert is not expressible with phino 0.0.0.73:
+#  a variadic 𝐵- group backtracks over every split (Matcher.hs:86), so a single
+#  pattern like ⟦ park, 𝐵-mid, reload, call, ρ↦∅ ⟧ matches a FUSED two-operator
+#  body as readily as a lone one — only enumerating the EXACT fetch count pins the
+#  reload position that tells them apart, which is precisely why the revert is one
+#  rule per arity. The real unblock is a phino counted-repetition matcher, filed
+#  as objectionary/phino#747. Until that lands, a lone map/filter with three or
+#  more captures stays a standalone mapMulti (correct, only marginally slower than
+#  the native invokedynamic) rather than growing the ladder. Both extend the same
+#  shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

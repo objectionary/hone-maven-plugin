@@ -8,7 +8,7 @@
 # IntStream / LongStream / DoubleStream (it converts a primitive stream back to
 # Stream<Wrapper>), so 102's hardcoded `Stream` owner leaves the boxed anchor in
 # place. That surviving label wedges between the recognised Φ.hone.unbox (the
-# preceding mapToX) and Φ.hone.box (the boxed), breaking the adjacency 310 needs
+# preceding mapToX) and Φ.hone.box (the boxed), breaking the adjacency 209 needs
 # to fold the round-trip into a distill.
 #
 # The safety argument is 102's, unchanged: the label removed here is the one

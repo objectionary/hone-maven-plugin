@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that capturing-lambda fusion is no longer pinned to
+# Stream<Integer> (issue #640). The stream element type here is String, and the
+# captured value is still a category-1 int:
+#
+#   Stream.of(...).map(s -> s.repeat(k)).map(s -> s.toUpperCase())...
+#
+# The first map captures the effectively-final int `k`, so javac compiles its
+# factory descriptor as "(I)L…Function;" and its SAM instantiated type as
+# "(Ljava/lang/String;)Ljava/lang/String;". 112's element-type-agnostic
+# "(LX;)LX;" backreference guard now admits this type-preserving String map (it
+# used to be declined because the instantiated type was not the literal
+# Integer→Integer), sed-extracts the element type into the four bridge fields,
+# and lifts it to a Φ.hone.c-map. 114 peels the single int push, 316 folds a
+# stateful distill, and 401 fuses it with the following NON-capturing
+# String→String map (s -> s.toUpperCase(), empty state). 502/512/521/601 emit one
+# Stream.mapMulti whose wrapper reads the captured int back from the List — the
+# whole machinery is reused verbatim, only the bridge type string differs.
+#
+# invokedynamic: before = map(repeat,capturing) + map(toUpperCase) = 2;
+# after = the single fused mapMulti = 1. The dropped indy is the proof the two
+# String maps collapsed into one dispatch. The runtime line proves the capture
+# reaches the lambda correctly: {"a","bb","ccc"} -> repeat(2) ->
+# {"aa","bbbb","cccccc"} -> toUpperCase -> {"AA","BBBB","CCCCCC"} -> joined.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class T {
+    static String fused(int k) {
+      return Stream.of("a", "bb", "ccc")
+        .map(s -> s.repeat(k))
+        .map(s -> s.toUpperCase())
+        .collect(Collectors.joining());
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %s%n", fused(2));
+    }
+  }
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 1
+log:
+  - "BUILD SUCCESS"
+  - "The result is AABBBBCCCCCC"

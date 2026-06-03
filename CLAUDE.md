@@ -426,7 +426,8 @@ edits to any existing rule**. They ride a parallel set of pragma names
 `"c-filter"`) so no existing recogniser, fold, dup-inserter or revert ever
 touches them.
 
-The path (object streams, int captures; map handles any number, filter one):
+The path (object streams, int captures; map handles any number of captures over
+any type-preserving reference element type, filter one capture over Integer):
 
 - `112` / `113` lift a capturing map / primitive-filter indy to
   `Φ.hone.c-map` / `Φ.hone.cp-filter`. `113` (single capture) still **grabs the
@@ -436,10 +437,12 @@ The path (object streams, int captures; map handles any number, filter one):
   c-map and seeds two EMPTY accumulators (`state-acc`, `body-acc`). They
   partition the indy space with `111`: `\(\)` matches zero captures, `\(I…\)`
   matches int captures, a handle-6 static `lambda$` target, and a
-  `Stream<Integer>` instantiated type (the SAM type is capture-independent, so
-  it is unchanged by arity). A reference capture (push is `aload`), category-2
-  (`J`/`D`), `this`-capture (handle 5), type-transforming map, computed/field
-  push — all stay native.
+  **type-preserving** instantiated type — matched as `(LX;)LX;` for any
+  reference `X` via a backreference guard (Integer, String, …), with `X`
+  sed-extracted into the four bridge fields. A reference capture (push is
+  `aload`), category-2 (`J`/`D`), `this`-capture (handle 5), a
+  **type-transforming** map (`(LX;)LY;`, declined by the backreference and left
+  to the unbox/box machinery), computed/field push — all stay native.
 - `114` gathers `112`'s inline pushes into the c-map, one per firing,
   re-applying at fixpoint (the same self-iteration `521` uses). It matches the
   single `iload` **directly in front of** the c-map; phino's leading group is
@@ -484,11 +487,15 @@ The path (object streams, int captures; map handles any number, filter one):
   reverting it (replaying N pushes, rebuilding the `(I^N)` descriptor) is a
   follow-up puzzle.
 
+Other type-preserving element types are **done** (issue #640): `112`'s
+`(LX;)LX;` backreference guard admits a capturing map over any reference element
+type (`Stream<String>`, …), and `443` rebuilds the reverted SAM type from the
+distill's bridge fields so a lone such map still comes out native — see the
+`streams/closure-string.yml` end-to-end fixture.
+
 Deferred puzzles (each extends the same shared-List channel): a multi-capture
 FILTER and the lone-multi-capture-map revert (both above); reference captures
-(drop the box/unbox); other type-preserving element types (relax the literal
-`Stream<Integer>` instantiated type to a `bridge-input == bridge-output`
-guard); category-2 captures; `this`-field captures; and capturing
+(drop the box/unbox); category-2 captures; `this`-field captures; and capturing
 `peek`/`mapToX`. See the puzzle marker in `112`'s header.
 
 ## phino: the only rewrite engine

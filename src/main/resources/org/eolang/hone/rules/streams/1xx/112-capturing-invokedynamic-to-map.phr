@@ -23,17 +23,24 @@
 # state List" is what lets N captures (and any number of fused capturing
 # operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
 #
-# v1.1 scope (issue #636): one OR MORE category-1 INT captures, a type-preserving
-# Stream<Integer> map (instantiated type "(Ljava/lang/Integer;)Ljava/lang/Integer;"),
-# a handle-6 static lambda$ target, every push a constant-index iload. Reference
-# captures, other element types, type-transforming maps and category-2 captures
-# are declined here (left native) and tracked as follow-up puzzles.
+# v1.2 scope (issues #636, #640): one OR MORE category-1 INT captures, a
+# type-PRESERVING map over ANY reference element type — the SAM instantiated type
+# is matched as "(LX;)LX;" for any reference X (Integer, String, …) via a
+# backreference guard, and the element type X is sed-extracted into 𝑒-bridge and
+# threaded into all four bridge fields. A handle-6 static lambda$ target, every
+# push a constant-index iload. So `map(s -> s.repeat(k))` on a Stream<String>
+# (int capture k) now fuses exactly like the original Stream<Integer> case.
 #
-# @todo #636:60min Generalise the capture beyond ints on a Stream<Integer> map:
-#  a reference capture (drop the box/unbox), other type-preserving element types
-#  (relax the literal instantiated-type guard to a bridge-input==bridge-output
-#  guard), and category-2 (J/D) captures. Each extends the same shared-List
-#  channel; a multi-capture FILTER (113/314) is the nearest unfinished twin.
+# Type-TRANSFORMING maps stay native: the "(LX;)LX;" backreference declines an
+# instantiated type whose input and output differ (e.g. "(LString;)LInteger;"),
+# so those keep flowing through the unbox/box machinery untouched.
+#
+# @todo #640:60min Generalise the CAPTURE type beyond category-1 ints: a reference
+#  capture (push is `aload`, drop the box/unbox in 114/316 — needs a reference
+#  branch in the peeler), and category-2 (J/D) captures (push is `lload`/`dload`,
+#  box via Long/Double.valueOf, unbox via longValue/doubleValue). Each extends the
+#  same shared-List channel; a multi-capture FILTER (113/314) is the nearest
+#  unfinished twin. The element-type half (Stream<X>) is already done here.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦
@@ -91,7 +98,7 @@ pattern: |
           ⟧,
           𝜏19 ↦ ⟦
             φ ↦ Φ.jeo.type,
-            𝜏21 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
+            𝜏21 ↦ 𝑒-instantiated,
             ρ ↦ ∅
           ⟧,
           ρ ↦ ∅
@@ -144,10 +151,10 @@ result: |
           state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           class ↦ 𝑒-class,
-          bridge-input ↦ "Ljava/lang/Integer;",
-          bridge-output ↦ "Ljava/lang/Integer;",
-          accepted ↦ "Ljava/lang/Integer;",
-          returned ↦ "Ljava/lang/Integer;",
+          bridge-input ↦ 𝑒-bridge,
+          bridge-output ↦ 𝑒-bridge,
+          accepted ↦ 𝑒-bridge,
+          returned ↦ 𝑒-bridge,
           static ↦ "true",
           target ↦ ⟦
             handle ↦ 6,
@@ -173,6 +180,15 @@ when:
     - matches:
         - '\(I+\)Ljava/util/function/Function;'
         - 𝑒-interface
+    - matches:
+        - '\((L[^;]+;)\)\1'
+        - 𝑒-instantiated
 where:
+  - meta: 𝑒-bridge
+    function: sed
+    args:
+      - 𝑒-instantiated
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
   - meta: 𝜏-c-map
     function: random-tau

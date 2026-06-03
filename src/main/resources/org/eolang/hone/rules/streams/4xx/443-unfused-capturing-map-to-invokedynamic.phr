@@ -23,7 +23,10 @@
 # recovered from the state and replayed before the indy; the target handle is
 # read from the body's invokestatic. The 𝜑-calculus fields the fold dropped (the Function SAM name,
 # the erased lambda-signature, the captured "(I)" interface) are constants for an
-# int-capture Stream<Integer> map, so they are reconstructed literally. The
+# int-capture map over any reference element type, so they are reconstructed
+# literally; the SAM instantiated type "(LX;)LX;" is rebuilt from the distill's
+# bridge-input/bridge-output (Integer for a Stream<Integer>, String for a
+# Stream<String>, …), matching 112's element-type-agnostic lift. The
 # reverted Stream.map carries `reverted ↦ Φ.true`: 112's invokeinterface pattern
 # is closed on the four-operand opcode jeo emits, so the fifth binding stops 112
 # re-lifting this map and the 112 → 316 → 443 cycle cannot spin (jeo ignores the
@@ -109,7 +112,7 @@ result: |
         v3 ↦ 𝑒-target-signature,
         v4 ↦ 𝑒-target-is-interface
       ⟧,
-      t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;" ⟧
+      t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ 𝑒-instantiated ⟧
     ⟧,
     𝜏-map ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
@@ -122,6 +125,13 @@ result: |
     𝐵-after
   ⟧
 where:
+  - meta: 𝑒-instantiated
+    function: concat
+    args:
+      - '"("'
+      - 𝑒-bridge-input
+      - '")"'
+      - 𝑒-bridge-output
   - meta: 𝜏-push-back
     function: random-tau
   - meta: 𝜏-indy

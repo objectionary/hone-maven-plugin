@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Sibling of 102, for the one operator 102 cannot reach. 102 strips the
+# line-number-anchor label javac -g wedges before a bare `invokeinterface
+# java/util/stream/Stream` call, but `.boxed()` is an `invokeinterface` on
+# IntStream / LongStream / DoubleStream (it converts a primitive stream back to
+# Stream<Wrapper>), so 102's hardcoded `Stream` owner leaves the boxed anchor in
+# place. That surviving label wedges between the recognised Φ.hone.unbox (the
+# preceding mapToX) and Φ.hone.box (the boxed), breaking the adjacency 310 needs
+# to fold the round-trip into a distill.
+#
+# The safety argument is 102's, unchanged: the label removed here is the one
+# whose ONLY reference is the line-number entry that immediately follows it (the
+# shared `𝑒-label-value` forces that pairing), sitting right before the call. A
+# jump target carries a stackmap frame, not a bare line-number, so this never
+# matches a branch target, and no statement boundary, try-region edge or
+# variable scope falls between a mapToX and its boxed. The gate is tighter than
+# 102's: the call must be `boxed` specifically, so a primitive-stream
+# `filter`/`map`/`sum` anchor is left untouched. Run before 151 so the
+# line-number is still present to witness the pairing.
+name: remove-boxed-label
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-label ↦ ⟦
+      φ ↦ Φ.jeo.label,
+      𝜏-label-value ↦ 𝑒-label-value,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-line-number ↦ ⟦
+      φ ↦ Φ.jeo.line-number,
+      number ↦ 𝑒-line-number,
+      𝜏-ln-label ↦ ⟦
+        φ ↦ Φ.jeo.label,
+        𝜏-ln-label-value ↦ 𝑒-label-value,
+        ρ ↦ ∅
+      ⟧,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ 𝑒-owner,
+      𝜏2 ↦ "boxed",
+      𝜏3 ↦ "()Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ 𝑒-owner,
+      𝜏2 ↦ "boxed",
+      𝜏3 ↦ "()Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - eq: [𝑒-owner, '"java/util/stream/IntStream"']
+    - eq: [𝑒-owner, '"java/util/stream/LongStream"']
+    - eq: [𝑒-owner, '"java/util/stream/DoubleStream"']

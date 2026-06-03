@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 211 splits a primitive IntStream.filter/map chain into box + boxed-func +
+# unbox; where two split ops meet, the tail unbox of one and the head box of
+# the next are redundant and 221 collapses them back to a single object map.
+# This pack exercises that collapse on a 211-style longValue pair. A user
+# mapToX(...).boxed() round-trip would look identical here, but by the time 221
+# runs every such pair has already been folded into a distill by 209 (which
+# runs before 211), so 221 only ever meets 211's own synthetic pairs.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/221-unbox-box-to-map.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokevirtual",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Long;)J",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 5,
+          class ↦ "java/lang/Long",
+          method ↦ "longValue",
+          signature ↦ "()J",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.box,
+        stream-class ↦ "java/util/stream/LongStream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.map, 𝐵-b ⟧

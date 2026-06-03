@@ -94,7 +94,8 @@ that same order. The `NNN-` prefix is *the* mechanism that defines the
 pipeline stages:
 
 ```text
-1xx  prep         strip line-numbers, desugar method refs to lambdas
+1xx  prep         strip line-numbers (102 before a Stream op, 106 before a
+                  primitive-stream .boxed()), desugar method refs to lambdas
                   (103 unbound, 104 static, 105 peek/return-drop), lower
                   invokedynamic to Φ.hone.lambda; lift a capturing map/filter
                   indy to Φ.hone.{c-map,cp-filter} (112, 113), peel a
@@ -155,6 +156,9 @@ filter, map (object + primitive) → 201..204 → Φ.hone.{filter,map}
 peek                             → 207 → 309 → Φ.hone.peek → distill
 boxed/unbox, box                 → 205, 206  → Φ.hone.{unbox,box}
 box/unbox cleanup + collapse     → 211, 221, 231, 232 → fold back to map/filter
+user mapToX().boxed() roundtrip  → 106 (anchor) → 205,206 → 209 → 2-opcode
+                                    object→wrapper distill (fuses + emits one
+                                    mapMulti); see "boxed() round-trips" below
 type / transform adjustments     → 241..243, 251..261, 271, 272
 dup insertion (for filter)       → 281, 282, 283 (after distinct/skip)
 dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)
@@ -208,6 +212,41 @@ method name (`mapMulti` vs `mapMultiToInt`/`…Long`/`…Double`) follow the
 OUTPUT. `501`/`511`/`601` thread two extra pragma fields — `stream-method`
 and `result-stream-class` — to carry that split (a symmetric distill sets
 them to its input-side values, so nothing changes there).
+
+### boxed() round-trips (mapToX().boxed())
+
+A user `mapToInt/Long/Double(...).boxed()` is the dual of a trailing mapToX:
+the element is unboxed to a primitive and immediately re-boxed to its wrapper,
+a net object→object pointwise step (e.g. `Integer → long → Long`). `205`
+recognises the mapToX as a `Φ.hone.unbox` and `206` the boxed() as a
+`Φ.hone.box`; `106-remove-boxed-label` first strips the line-number anchor
+javac -g wedges before boxed (sibling of `102`, which only reaches a `Stream`
+op — boxed is an invokeinterface on `Int/Long/DoubleStream`), leaving the pair
+adjacent. `209-unbox-box-to-distill` then folds that pair into a single
+empty-state distill whose body is **two** opcodes — the mapper invocation that
+yields the primitive and the `Wrapper.valueOf` that re-boxes it — with
+`bridge-output` the wrapper type. Because it is an ordinary empty-state
+object→object distill, `401` fuses it with adjacent pointwise distills and
+`501`/`511` lower the run to one `Stream.mapMulti`, exactly as for a map.
+
+The subtle part is **ordering, not gating**. `209` MUST run before `211`. An
+`unbox(lambda$), box` adjacency is a genuine user round-trip ONLY before `211`
+splits a primitive `IntStream.filter/map` into `box + boxed-primitive-func +
+unbox`: after that split, a user `mapToInt(ref)` that feeds a primitive op
+(e.g. `mapToInt(Integer::intValue).filter(p)`) shows the SAME adjacency — but
+its box is `211`'s compensating head-box for the next primitive op, and folding
+it as a boxed() splices a stray `Integer.valueOf` into the primitive chain and
+fails verification. Running `209` before `211` guarantees every box it sees is
+a real `206` boxed(); `221-unbox-box-to-map` (after `211`, unchanged) then
+collapses `211`'s synthetic pairs as before. (`209`'s `lambda$` target guard is
+belt-and-suspenders — every `205` unbox targets a lambda$ anyway.)
+
+This fuses a *pointwise* boxed() chain to one mapMulti (see
+`boxed-roundtrip.yml`). A type-changing boxed() distill is NOT fused into a
+stateful (distinct/skip) distill — the object-only stateful emit cannot take a
+primitive/wrapper intermediate — so a stateful pipeline with a boxed() tail
+collapses to TWO mapMultis, not one (see `full-non-terminal.yml`). Lifting that
+to a single mapMulti is the remaining work tracked by #570.
 
 A method reference (`Integer::intValue`, `String::toUpperCase`, `X::keep`, …)
 is **desugared into a lambda** up front so the rest of the pipeline picks it

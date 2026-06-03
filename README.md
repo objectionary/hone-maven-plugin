@@ -357,24 +357,24 @@ files is computed by comparing MD5 checksums before and after.
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [apache/commons-cli](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | 247 | 11243 | 56 | 12s | 54 | 16s | 6s |
-| [jhy/jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2290 | 39031 | 317 | 21s | 317 | 35s | 14s |
-| [FasterXML/jackson-core](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | 888 | 86966 | 176 | 37s | 165 | 29s | 29s |
-| [apache/commons-codec](https://github.com/apache/commons-codec/commit/77fcf89711a0e20393105a1247c41968f6eb58d4) | 268 | 27186 | 150 | 31s | 143 | 21s | 22s |
-| [apache/commons-csv](https://github.com/apache/commons-csv/commit/6f93c7edfa0f758f757227b1d30588411fdbf669) | 297 | 10092 | 20 | 16s | 19 | 14s | 9s |
-| [apache/commons-text](https://github.com/apache/commons-text/commit/283eaf49586331a7adc0b28fdfa5e8f09df87123) | 284 | 28298 | 168 | 50s | 160 | 26s | 36s |
-| [stleary/JSON-java](https://github.com/stleary/JSON-java/commit/d749ee16abd084ae94785c7afe954de25d921a5d) | 2594 | 16352 | 31 | 7s | 31 | 17s | 4s |
-| [HdrHistogram/HdrHistogram](https://github.com/HdrHistogram/HdrHistogram/commit/de84b0a7de2378abfc405da503bf4898e84ea98e) | 269 | 13086 | 97 | 53s | 96 | 20s | 50s |
-| [vavr-io/vavr](https://github.com/vavr-io/vavr/commit/1c9b7af87949df5232c81253a7fc59fde3598aec) | 664 | 74130 | 435 | 78s | 431 | 108s | 44s |
-| [junit-team/junit4](https://github.com/junit-team/junit4/commit/300468b1efd48d76fac2f7bd6d576846dcbbf5ed) | 3270 | 31232 | 349 | 15s | 349 | 28s | 9s |
-| [apache/commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 1966 | 104400 | 433 | 384s | 415 | 60s | 388s |
-| [apache/commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 517 | 73500 | 614 | 40s | 594 | 61s | 26s |
-| [apache/commons-pool](https://github.com/apache/commons-pool/commit/772089fa7b441b61fbbb1663cdbcab2158dbc9a5) | 301 | 16596 | 87 | 394s | 84 | 21s | 389s |
-| [apache/commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 147 | 52534 | 400 | 41s | 382 | 43s | 32s |
-| [apache/commons-validator](https://github.com/apache/commons-validator/commit/2747da8d0ff7d3aa971369543239160f7d723da9) | 176 | 17086 | 88 | 14s | 84 | 35s | 8s |
+| [apache/commons-cli](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | 247 | 11243 | 56 | 12s | 0 | 16s | 7s |
+| [jhy/jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2289 | 39031 | 317 | 23s | 0 | 30s | 14s |
+| [FasterXML/jackson-core](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | 888 | 86966 | 176 | 37s | 0 | 30s | 29s |
+| [apache/commons-codec](https://github.com/apache/commons-codec/commit/77fcf89711a0e20393105a1247c41968f6eb58d4) | 268 | 27186 | 150 | 33s | 0 | 22s | 23s |
+| [apache/commons-csv](https://github.com/apache/commons-csv/commit/6f93c7edfa0f758f757227b1d30588411fdbf669) | 297 | 10092 | 20 | 15s | 0 | 13s | 10s |
+| [apache/commons-text](https://github.com/apache/commons-text/commit/283eaf49586331a7adc0b28fdfa5e8f09df87123) | 284 | 28298 | 168 | 52s | 0 | 21s | 37s |
+| [stleary/JSON-java](https://github.com/stleary/JSON-java/commit/d749ee16abd084ae94785c7afe954de25d921a5d) | 2593 | 16352 | 31 | 8s | 0 | 16s | 5s |
+| [HdrHistogram/HdrHistogram](https://github.com/HdrHistogram/HdrHistogram/commit/de84b0a7de2378abfc405da503bf4898e84ea98e) | 269 | 13086 | 97 | 54s | 0 | 19s | 51s |
+| [vavr-io/vavr](https://github.com/vavr-io/vavr/commit/1c9b7af87949df5232c81253a7fc59fde3598aec) | 664 | 74130 | 435 | 81s | 0 | 43s | 41s |
+| [junit-team/junit4](https://github.com/junit-team/junit4/commit/300468b1efd48d76fac2f7bd6d576846dcbbf5ed) | 3270 | 31232 | 349 | 15s | 0 | 28s | 8s |
+| [apache/commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 1966 | 104400 | 433 | 372s | 0 | 37s | 368s |
+| [apache/commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 518 | 73500 | 614 | 38s | 0 | 40s | 26s |
+| [apache/commons-pool](https://github.com/apache/commons-pool/commit/772089fa7b441b61fbbb1663cdbcab2158dbc9a5) | 301 | 16596 | 87 | 394s | 0 | 17s | 386s |
+| [apache/commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 147 | 52534 | 400 | 40s | 0 | 32s | 32s |
+| [apache/commons-validator](https://github.com/apache/commons-validator/commit/2747da8d0ff7d3aa971369543239160f7d723da9) | 176 | 17086 | 88 | 14s | 0 | 16s | 8s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-06-03 at 07:34,
+on 2026-06-03 at 10:44,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -398,7 +398,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26078355752
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26867648731
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/26876549291
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

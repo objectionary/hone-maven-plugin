@@ -179,8 +179,10 @@ capturing map (N prim OR 1 ref)  → 112 → 114 (int) / 116 (long) / 117 (doubl
                                     distill; 443 reverts a lone single-int-capture
                                     map if unfused (multi-capture, category-2 and
                                     lone-ref stay mapMulti)
-capturing filter (one int)       → 113 → 314 → c-filter state distill;
-                                    444 reverts it to invokedynamic if unfused
+capturing filter (N int)         → 113 → 118 → 314 → c-filter state distill;
+                                    444 reverts a LONE single-int-capture filter
+                                    to invokedynamic if unfused (multi-capture
+                                    stays mapMulti)
 ```
 
 `401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
@@ -470,13 +472,15 @@ edits to any existing rule**. They ride a parallel set of pragma names
 touches them.
 
 The path (object streams; map handles any number of category-1/2 primitive
-captures over any type-preserving reference element type, filter one int capture
-over Integer):
+captures over any type-preserving reference element type, filter one OR MORE int
+captures over Integer):
 
 - `112` / `113` lift a capturing map / primitive-filter indy to
-  `Φ.hone.c-map` / `Φ.hone.cp-filter`. `113` (single capture) still **grabs the
-  one `iload k` push** and carries it as `capture-push`. `112` is now arity-
-  agnostic: its guard is `\([IJD]+\)L…Function;` (one OR MORE category-1/2
+  `Φ.hone.c-map` / `Φ.hone.cp-filter`. Both are now arity-agnostic and grab **no**
+  push: `113`'s guard is `\(I+\)L…Predicate;` (one OR MORE int captures) and it
+  seeds two EMPTY accumulators exactly as `112` does, leaving the run of `iload`s
+  inline for `118` to peel. `112` is arity-agnostic too: its guard is
+  `\([IJD]+\)L…Function;` (one OR MORE category-1/2
   primitives) OR `\(L…;\)L…Function;` (a SINGLE reference), and it grabs **no**
   push — it leaves the whole run of `iload`/`lload`/`dload`s / the lone `aload`
   inline in front of the c-map and seeds two EMPTY accumulators (`state-acc`,
@@ -494,7 +498,9 @@ over Integer):
   to the unbox/box machinery), computed/field push — all stay native.
 - `114` (int) / `116` (long) / `117` (double) / `115` (reference) gather `112`'s
   inline pushes into the c-map, one per firing, re-applying at fixpoint (the same
-  self-iteration `521` uses). Each matches its own push opcode **directly in front
+  self-iteration `521` uses); `118` is `114`'s twin for the `cp-filter`, peeling
+  the filter's int pushes into its accumulators byte-for-byte the same way. Each
+  matches its own push opcode **directly in front
   of** the c-map; phino's leading group is greedy, so the bound push is always the
   LAST one and the rule peels right-to-left — a mixed int/long/double run is
   gathered by the three primitive peelers interleaving. `114` PREPENDS one boxing
@@ -519,11 +525,16 @@ over Integer):
   park/reload **replaces v1's single-capture `swap`**, unifying one and many
   captures (omit the reload and the operands silently invert — the verifier
   accepts it, so the e2e asserts the numeric runtime result, not just opcode
-  counts). `314`'s single-capture FILTER still uses the `swap` body plus its
-  own opening `dup` and a `Φ.hone.frame-item` keep-label (the `"c-filter"`
-  start label keeps `431`/`281` away); a multi-capture filter stays native
-  (113's `\(I\)` guard declines it) — its park/reload twin, which must also
-  defer the keep-frame, is a follow-up puzzle.
+  counts). `314` is now the FILTER twin of `316`: it folds an N-int-capture
+  `cp-filter` with the same N-ary park/reload body, opened by a `dup` that keeps
+  the item at the BOTTOM of the stack so the predicate (whose captures + a
+  reloaded item copy ride above it) can run and the keep label still sees a lone
+  `[item]` — the standard `Φ.hone.frame-item` `503` fills, no separate empty-stack
+  keep-frame needed. The `"c-filter"` start label keeps `431`/`281` away. `444`
+  reverts a LONE single-capture filter (closed on the single-capture park/reload
+  body); a lone multi-capture filter is emitted as a standalone mapMulti, exactly
+  as `443` leaves a lone multi-capture map. A category-2/reference capture in a
+  filter stays native (its `116`/`117`/`115` peeler twins are a follow-up puzzle).
 - `401` fuses two capturing distills exactly like two `distinct`s: `join`
   concatenates the boxed appends into the List (slots in body order) and the
   two bodies in order, so guard *k*'s fetch reads slot *k*. `502`/`512`/`521`
@@ -537,12 +548,12 @@ over Integer):
   `map(i -> i + x)` — is put back as the native `invokedynamic` +
   `Stream.{map,filter}`, replaying the push and marking the call
   `reverted ↦ Φ.true` so `112`/`113` cannot re-lift it (closed patterns plus
-  the marker, the same loop-break `442` uses). `443` matches the park/reload
-  single-capture body. A LONE multi-capture map (two or more appends) fails
-  that closed pattern and is emitted as a standalone `mapMulti` — correct, only
-  marginally slower than native, and rarer than a lone single-capture map;
-  reverting it (replaying N pushes, rebuilding the `(I^N)` descriptor) is a
-  follow-up puzzle.
+  the marker, the same loop-break `442` uses). `443`/`444` both match the
+  park/reload single-capture body. A LONE multi-capture map OR filter (two or
+  more appends) fails that closed pattern and is emitted as a standalone
+  `mapMulti` — correct, only marginally slower than native, and rarer than a lone
+  single-capture operator; reverting it (replaying N pushes, rebuilding the
+  `(I^N)` descriptor) is a follow-up puzzle.
 
 Other type-preserving element types are **done** (issue #640): `112`'s
 `(LX;)LX;` backreference guard admits a capturing map over any reference element
@@ -566,11 +577,21 @@ guard admits one or more long/double captures (and mixed int/long/double runs),
 map is not reverted by `443` (closed on the int box/unbox shape), so it is emitted
 as a standalone `mapMulti`, like the lone-reference and lone-multi-capture maps.
 
-Deferred puzzles (each extends the same shared-List channel): a multi-capture
-FILTER and the lone-multi-capture-map revert (both above); a MULTI-reference /
+The multi-capture FILTER is **done** (issue #655): `113`'s `\(I+\)` guard admits
+one or more int captures, `118` peels them into the shared List, and `314` folds
+them with the same N-ary park/reload body as a capturing map — the keep-frame
+stays `503`'s plain `Φ.hone.frame-item` because the body keeps the item at the
+bottom of the stack. So `filter(n -> n > lo && n < hi)` fuses with its trailing
+`mapToInt` into one `Stream.mapMultiToInt`; see the `multiFil` case in
+`streams/closures.yml`. A lone multi-capture filter is not reverted by `444`
+(closed on the single-capture body), so it is emitted as a standalone `mapMulti`.
+
+Deferred puzzles (each extends the same shared-List channel): the
+lone-multi-capture map/filter revert (above); a MULTI-reference /
 mixed-with-reference capture run (needs positional capture-type extraction) and
-a lone-reference-map revert; `this`-field captures; and capturing `peek`/`mapToX`.
-See the puzzle marker in `112`'s header.
+a lone-reference-map revert; a category-2 (`J`/`D`) or reference capture in a
+FILTER (its `116`/`117`/`115` peeler twins); `this`-field captures; and capturing
+`peek`/`mapToX`. See the puzzle marker in `112`'s header.
 
 ## phino: the only rewrite engine
 

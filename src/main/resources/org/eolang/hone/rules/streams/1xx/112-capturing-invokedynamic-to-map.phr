@@ -52,12 +52,24 @@
 # instantiated type whose input and output differ (e.g. "(LString;)LInteger;"),
 # so those keep flowing through the unbox/box machinery untouched.
 #
-# @todo #652:45min Generalise the CAPTURE channel further: a MIXED multi-capture
+# The multi-capture FILTER is now done (issue #655): 113 lifts a "(I+)L…Predicate;"
+# factory (one OR MORE int captures), the new 118 peels each push into the shared
+# List, and 314 folds it into a stateful distill with the same N-ary park/reload
+# body this rule's 316 gives a capturing map — the keep-frame stays 503's plain
+# Φ.hone.frame-item because the body preserves the item at the BOTTOM of the stack
+# (dup; astore 1; <captures>; aload 1; predicate) so the keep label still sees a
+# lone [item]. So `filter(n -> n > lo && n < hi)` fuses exactly like the int
+# multi-capture map; see the multiFil case in streams/closures.yml.
+#
+# @todo #655:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
 #  because 115 reads the capture type out of target.signature's first L-type — a
-#  multi-reference run needs positional type extraction), and a multi-capture
-#  FILTER (113/314), the nearest unfinished twin (its park/reload body must also
-#  defer the keep-frame). Each extends the same shared-List channel.
+#  multi-reference run needs positional type extraction) and a lone-reference-map
+#  revert. Still native in the FILTER channel too: a category-2 (J/D) or reference
+#  capture (its 116/117/115 peeler twins) and the lone-multi-capture-filter revert
+#  (444 is closed on the single-capture park/reload body, so a lone multi-capture
+#  filter is emitted as a standalone mapMulti). Each extends the same shared-List
+#  channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

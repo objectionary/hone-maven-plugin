@@ -2,38 +2,52 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# A capturing primitive-filter pragma (113's output) folds into a stateful
-# Φ.hone.distill: same boxed-capture append as 316, plus a guard body that opens
-# with an item-preserving `dup` (the predicate consumes the item) then fetch; intValue;
-# swap; predicate; ifne keep; return drop. The keep label carries a
-# Φ.hone.frame-item marker that 503 fills once 502 has set captured=List.
+# A capturing primitive-filter pragma (113's output, gathered by 118) folds into
+# a stateful Φ.hone.distill — the filter twin of 316. The input is a two-capture
+# cp-filter: state-acc already holds two boxing appends (capture lo at v0=0 then
+# hi at v0=1) and body-acc two `fetch; intValue` pairs. 314 copies state-acc into
+# the distill `state` verbatim and wraps body-acc into a filter guard whose item
+# is preserved at the bottom of the stack: `dup; astore 1; <fetches>; aload 1;
+# invokestatic lambda$; ifne keep; return drop; keep: frame-item`. The keep label
+# leaves a lone [item], so the Φ.hone.frame-item marker is exactly the one 503
+# fills for distinct/skip — no separate empty-stack keep-frame is needed. start is
+# "c-filter" so 401 fuses it and 444 can find a lone single-capture filter.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/3xx/314-cp-filter-to-distill.phr
 input: |
   {⟦
-    body ↦ ⟦
-      op ↦ ⟦
-        φ ↦ Φ.hone.cp-filter,
-        class ↦ "Foo",
-        bridge-input ↦ "Ljava/lang/Integer;",
-        bridge-output ↦ "Ljava/lang/Integer;",
-        accepted ↦ "Ljava/lang/Integer;",
-        returned ↦ "Ljava/lang/Integer;",
-        static ↦ "true",
-        captured ↦ "I",
-        capture-push ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 3 ⟧,
-        interface ↦ "(I)Ljava/util/function/Predicate;",
-        method ↦ "test",
-        lambda-signature ↦ "(Ljava/lang/Object;)Z",
-        bridge-signature ↦ "(Ljava/lang/Integer;)Z",
-        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(ILjava/lang/Integer;)Z", is-interface ↦ Φ.false ⟧
-      ⟧,
+    φ ↦ Φ.hone.cp-filter,
+    state-acc ↦ ⟦
+      s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧,
+      s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
+      s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+      s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      s6 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧,
+      s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
+      s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+      s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       ρ ↦ ∅
-    ⟧
+    ⟧,
+    body-acc ↦ ⟦
+      b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+      b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+      b3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+      b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
+      ρ ↦ ∅
+    ⟧,
+    class ↦ "Foo",
+    bridge-input ↦ "Ljava/lang/Integer;",
+    bridge-output ↦ "Ljava/lang/Integer;",
+    accepted ↦ "Ljava/lang/Integer;",
+    returned ↦ "Ljava/lang/Integer;",
+    static ↦ "true",
+    target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(IILjava/lang/Integer;)Z", is-interface ↦ Φ.false ⟧
   ⟧}
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "c-filter", 𝐵-b ⟧
-  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.swap ⟧
+  - ⟦ 𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝐵-br ⟧
+  - ⟦ 𝐵-e, 𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$0", i3 ↦ "(IILjava/lang/Integer;)Z", i4 ↦ Φ.false ⟧, 𝐵-f ⟧
   - ⟦ φ ↦ Φ.hone.frame-item ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-c, i2 ↦ "lambda$run$0", i3 ↦ "(ILjava/lang/Integer;)Z", 𝐵-d ⟧
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-g, state ↦ ⟦ 𝜏-d1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-h ⟧

@@ -180,10 +180,10 @@ capturing map (N prim OR 1 ref)  → 112 → 114 (int) / 116 (long) / 117 (doubl
                                     map if unfused (multi-capture, category-2 and
                                     lone-ref stay mapMulti)
 capturing filter (N prim)        → 113 → 118 (int) / 120 (long) / 122 (double)
-                                    → 314 → c-filter state distill; 444 reverts a
-                                    LONE single-int-capture filter to invokedynamic
-                                    if unfused (multi-capture, category-2 stay
-                                    mapMulti)
+                                    → 314 → c-filter state distill; 444
+                                    reverts a LONE single-int-capture filter
+                                    to invokedynamic if unfused (multi-capture,
+                                    category-2 stay mapMulti)
 ```
 
 `401-fuse` is the only fuser: it matches two adjacent `Φ.hone.distill`
@@ -583,22 +583,23 @@ guard admits one or more long/double captures (and mixed int/long/double runs),
 map is not reverted by `443` (closed on the int box/unbox shape), so it is emitted
 as a standalone `mapMulti`, like the lone-reference and lone-multi-capture maps.
 
-The multi-capture FILTER is **done** (issue #655): `113`'s `\([IJD]+\)` guard admits
-one or more primitive captures, `118` peels the int pushes (`120`/`122` the long /
-double ones, issue #661) into the shared List, and `314` folds them with the same
-N-ary park/reload body as a capturing map — the keep-frame stays `503`'s plain
-`Φ.hone.frame-item` because the body keeps the item at the bottom of the stack. So
-`filter(n -> n > lo && n < hi)` fuses with its trailing `mapToInt` into one
-`Stream.mapMultiToInt`; see the `multiFil` case in `streams/closures.yml`. A lone
-multi-capture filter is not reverted by `444` (closed on the single-capture body),
-so it is emitted as a standalone `mapMulti`.
+The multi-capture FILTER is **done** (issue #655): `113`'s `\([IJD]+\)` guard
+admits one or more primitive captures, `118` peels the int pushes (`120`/`122`
+the long / double ones, issue #661) into the shared List, and `314` folds them
+with the same N-ary park/reload body as a capturing map — the keep-frame stays
+`503`'s plain `Φ.hone.frame-item` because the body keeps the item at the bottom
+of the stack. So `filter(n -> n > lo && n < hi)` fuses with its trailing
+`mapToInt` into one `Stream.mapMultiToInt`; see the `multiFil` case in
+`streams/closures.yml`. A lone multi-capture filter is not reverted by `444`
+(closed on the single-capture body), so it is emitted as a standalone
+`mapMulti`.
 
 The category-2 (`J`/`D`) capture FILTER is **done** (issue #661): `113`'s
-`\([IJD]+\)Ljava/util/function/Predicate;` guard admits long/double captures and
-bumps the caller max-stack by 2 exactly as `112` does for the map, `120`/`122` peel
-the `lload`/`dload` pushes with `Long`/`Double` box/unbox (the `cp-filter` mirrors of
-`116`/`117`), and `314` folds them into a stateful distill — see
-`streams/closure-long-filter.yml`.
+`\([IJD]+\)Ljava/util/function/Predicate;` guard admits long/double captures
+and bumps the caller max-stack by 2 exactly as `112` does for the map,
+`120`/`122` peel the `lload`/`dload` pushes with `Long`/`Double` box/unbox (the
+`cp-filter` mirrors of `116`/`117`), and `314` folds them into a stateful
+distill — see `streams/closure-long-filter.yml`.
 
 Deferred puzzles (each extends the same shared-List channel): the
 lone-multi-capture map/filter revert (above); a MULTI-reference /

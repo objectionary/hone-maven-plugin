@@ -500,11 +500,12 @@ over Integer):
   gathered by the three primitive peelers interleaving. `114` PREPENDS one boxing
   append (`dup; iload k; Integer.valueOf; List.add; pop`) to `state-acc` and one
   `fetch; intValue` to `body-acc`, so the captures end up appended in
-  left-to-right (x, y, z) order — slot 0 = x, guard *k* reads capture *k*. `116` /
-  `117` are byte-for-byte twins that box via `Long`/`Double.valueOf` and unbox via
-  `longValue`/`doubleValue` (their two-slot append is why `112` bumps max-stack).
-  `115` is the same shape minus the box/unbox: a reference is already an Object, so
-  it appends `dup; aload k; List.add; pop` and a bare `fetch` typed with the
+  left-to-right (x, y, z) order — slot 0 = x, guard *k* reads capture *k*.
+  `116` / `117` are byte-for-byte twins that box via `Long`/`Double.valueOf`
+  and unbox via `longValue`/`doubleValue` (their two-slot append is why `112`
+  bumps max-stack). `115` is the same shape minus the box/unbox: a reference is
+  already an Object, so it appends `dup; aload k; List.add; pop` and a bare
+  `fetch` typed with the
   capture's class (sed-extracted from `target.signature`'s first L-type, which
   is why only a SINGLE reference capture is admitted). The run is bounded on the
   left by the previous operator's invokeinterface, never another push, so
@@ -567,8 +568,8 @@ as a standalone `mapMulti`, like the lone-reference and lone-multi-capture maps.
 
 Deferred puzzles (each extends the same shared-List channel): a multi-capture
 FILTER and the lone-multi-capture-map revert (both above); a MULTI-reference /
-mixed-with-reference capture run (needs positional capture-type extraction) and a
-lone-reference-map revert; `this`-field captures; and capturing `peek`/`mapToX`.
+mixed-with-reference capture run (needs positional capture-type extraction) and
+a lone-reference-map revert; `this`-field captures; and capturing `peek`/`mapToX`.
 See the puzzle marker in `112`'s header.
 
 ## phino: the only rewrite engine

@@ -34,9 +34,9 @@ loc=$(cloc --quiet --csv --include-lang=Java "${dir}" 2>/dev/null | awk -F',' '$
 loc=${loc:-0}
 echo "Java LoC in ${repo}: ${loc}"
 
-snapshot_classes() {
-  local base=$1 out=$2
-  (cd "${base}" && find . -type f -path '*/target/classes/*.class' -exec md5sum {} + | sort > "${out}")
+count_classes() {
+  local base=$1
+  find "${base}" -type f -path '*/target/classes/*.class' | wc -l | tr -d ' '
 }
 
 apply_hone() {
@@ -53,10 +53,16 @@ apply_hone() {
 }
 
 count_modified() {
-  local before=$1 after=$2
-  { diff "${before}" "${after}" || true; } \
-    | awk '/^[<>]/ {print $NF}' \
-    | sort -u | wc -l | tr -d ' '
+  local base=$1
+  local -a stats=()
+  while IFS= read -r -d '' f; do
+    stats+=("${f}")
+  done < <(find "${base}" -type f -path '*/target/hone-statistics.csv' -print0)
+  if [ "${#stats[@]}" -eq 0 ]; then
+    echo 0
+    return
+  fi
+  awk -F',' 'FNR == 1 { next } $(NF-1) + 0 > 0 { modified += 1 } END { print modified + 0 }' "${stats[@]}"
 }
 
 build_outcome() {
@@ -90,14 +96,11 @@ if [ "${outcome}" != "pass" ]; then
   exit 1
 fi
 
-snap="${dir}/.snap"
-snapshot_classes "${dir}" "${snap}.before"
-total=$(wc -l < "${snap}.before" | tr -d ' ')
+total=$(count_classes "${dir}")
 hstart=$(date +%s)
 apply_hone "${dir}"
 hone_seconds=$(( $(date +%s) - hstart ))
-snapshot_classes "${dir}" "${snap}.after"
-count=$(count_modified "${snap}.before" "${snap}.after")
+count=$(count_modified "${dir}")
 row="${row},${total},${count},${hone_seconds}"
 start=$(date +%s)
 rc=0

@@ -19,9 +19,17 @@
 # the distill's output to the primitive the unbox produces, turning the
 # distill into a type-transition distill: object item in, primitive out.
 # 401 already joins on bridge types blindly, so any further object distill
-# in front fuses in too. The emit pass (501/511/601) reads the now-distinct
-# bridge-input (object) and bridge-output (primitive) and lowers the whole
-# chain to one Stream.mapMultiToX call.
+# in front fuses in too.
+#
+# The preceding distill's `state` block is captured and preserved verbatim
+# (𝐵-state), so this fires for an empty-state pointwise distill AND for a
+# stateful one (distinct / skip, possibly with a boxed() round-trip already
+# fused in). A trailing mapToX that ends a distinct/skip pipeline therefore
+# folds into the same stateful distill rather than staying native, and the
+# whole chain lowers to ONE Stream.mapMultiToX. The emit pass is output-aware
+# in both flavours: 501/511 for empty state, 502/512 for stateful state, each
+# reading the now-distinct bridge-input (object) and bridge-output (primitive)
+# while 601 threads result-stream-class / stream-method.
 #
 # A mapToX with no distill in front of it never matches here, so it keeps
 # its native form via 603 — exactly the "do not pessimise a lone mapToX"
@@ -39,7 +47,7 @@ pattern: |
       accepted ↦ 𝑒-accepted,
       returned ↦ 𝑒-returned,
       static ↦ 𝑒-distill-static,
-      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      state ↦ ⟦ 𝐵-state, ρ ↦ ∅ ⟧,
       body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
     ⟧,
     𝜏-unbox ↦ ⟦
@@ -70,7 +78,7 @@ result: |
       accepted ↦ 𝑒-accepted,
       returned ↦ 𝑒-unbox-output,
       static ↦ 𝑒-result-static,
-      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      state ↦ ⟦ 𝐵-state, ρ ↦ ∅ ⟧,
       body ↦ ⟦
         𝐵-body,
         𝜏-unbox-op ↦ ⟦

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A stateful pipeline (distinct + skip) followed by a boxed() round-trip and a
+# trailing mapToX must collapse into a SINGLE Stream.mapMultiToX — the case
+# #570 left open for the stateful path. The leading map fixes the element type
+# at Integer (a chain that began with distinct would expose the separate
+# Object-bridge-input limitation, out of scope here). distinct and skip fold to
+# one stateful distill (two state vars in one captured List); the
+# mapToLong(Integer::longValue).boxed() round-trip folds via 209 and 401 fuses
+# it into that same stateful distill (still object -> Long, a wrapper); finally
+# the trailing mapToDouble(Long::doubleValue) is a type-transition mapToX that
+# 451 — now preserving the predecessor's state block — fuses in too, widening
+# the one stateful distill to object -> double. The output-aware stateful emit
+# (502/512, twins of 501/511) lowers the whole method to one
+# Stream.mapMultiToDouble, dropping invokedynamic 3 -> 1. Were the trailing
+# mapToX left native (the old empty-state-only 451) this would be 2.
+#
+# of(5,3,8,5,2,7).map(+1) = 6,4,9,6,3,8; distinct = 6,4,9,3,8; skip(1) =
+# 4,9,3,8; sum as double = 24.
+java: |
+  package statefulboxedtail;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      double r = Stream.of(5, 3, 8, 5, 2, 7)
+        .map(n -> n + 1)
+        .distinct()
+        .skip(1L)
+        .mapToLong(Integer::longValue)
+        .boxed()
+        .mapToDouble(Long::doubleValue)
+        .sum();
+      System.out.printf("The result is %d\n", (int) r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 24"
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 1

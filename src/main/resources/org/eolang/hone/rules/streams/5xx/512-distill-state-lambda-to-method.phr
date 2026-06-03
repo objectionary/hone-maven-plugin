@@ -13,9 +13,12 @@
 # each fetch marker into List.get(counter); iinc so the N fetches walk the
 # List in body order — guard k reads state var k.
 #
-# v1 handles the object-stream shape only (distinct is Stream<T>); the
-# item is a reference, hence aload / dup_x1 / Consumer.accept. Primitive
-# stateful operators would generalise this the way 511 does.
+# The INPUT item is always a reference (v1 stateful operators are object
+# streams — distinct is Stream<T>), so the leading load is a fixed aload 1.
+# The OUTPUT may differ: when 451 fuses a trailing mapToX into this stateful
+# distill the body ends on a primitive, so the closing dup / Consumer.accept
+# follow the consumer type (Int/Long/DoubleConsumer), exactly as 511 does for
+# a stateless type-transition distill. A primitive INPUT item is future work.
 name: distill-state-lambda-to-method
 pattern: |
   ⟦
@@ -51,13 +54,13 @@ result: |
       i-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
       𝐵-body,
       i-load-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
-      i-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      i-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x ⟧,
       i-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       i-invoke ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokeinterface,
         i2 ↦ 𝑒-consumer-class,
         i3 ↦ "accept",
-        i4 ↦ "(Ljava/lang/Object;)V",
+        i4 ↦ 𝑒-invokeinterface-signature,
         i5 ↦ Φ.true
       ⟧,
       i-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
@@ -79,3 +82,32 @@ where:
     args:
       - 𝑒-consumer
       - '"s/L(.+);/$1/g"'
+  # The value the body leaves on the stack before the emit is the OUTPUT type,
+  # so (exactly as 511) the stack-arrangement dup and the consumer.accept
+  # argument follow the consumer: an Int/Long/DoubleConsumer for a stateful
+  # type-transition distill (object in, primitive out, produced when 451 fuses
+  # a trailing mapToX into a stateful distill), or the object Consumer for a
+  # symmetric distinct/skip. The item is always an object (v1 stateful limit),
+  # so the leading aload 1 is unchanged.
+  - meta: 𝑒-dup-x
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/^Ljava\\/util\\/function\\/DoubleConsumer;$/dup_x2/g"'
+      - '"s/^Ljava\\/util\\/function\\/LongConsumer;$/dup_x2/g"'
+      - '"s/^Ljava\\/util\\/function\\/IntConsumer;$/dup_x1/g"'
+      - '"s/^Ljava\\/util\\/function\\/Consumer;$/dup_x1/g"'
+  - meta: 𝜏-dup-x
+    function: tau
+    args: [𝑒-dup-x]
+  - meta: 𝑒-invokeinterface-input
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/^Ljava\\/util\\/function\\/Consumer;$/Ljava\\/lang\\/Object;/g"'
+      - '"s/^Ljava\\/util\\/function\\/IntConsumer;$/I/g"'
+      - '"s/^Ljava\\/util\\/function\\/LongConsumer;$/J/g"'
+      - '"s/^Ljava\\/util\\/function\\/DoubleConsumer;$/D/g"'
+  - meta: 𝑒-invokeinterface-signature
+    function: concat
+    args: ['"("', 𝑒-invokeinterface-input, '")V"']

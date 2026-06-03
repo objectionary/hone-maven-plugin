@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Sibling of 451-fuse-distill-unbox: a boundary mapToX (a Φ.hone.unbox, object
+# in / primitive out) sitting right after a STATEFUL distill (one whose `state`
+# block is non-empty — here a distinct that appends a java/util/HashSet) must
+# fuse into it just like into an empty-state distill. 451 captures and PRESERVES
+# the predecessor's state block (𝐵-state), splices the unbox's target invocation
+# onto the tail of the body, and widens bridge-output / returned from the object
+# wrapper to the primitive "D". The result is a stateful type-transition distill
+# that 502/512/601 lower to one Stream.mapMultiToDouble. This is the fusion that
+# closes #570 for the stateful path: without state preservation the trailing
+# mapToX stayed native (a second invokedynamic).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/451-fuse-distill-unbox.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "A",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Double;",
+        start ↦ "distinct",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Double;",
+        static ↦ "true",
+        state ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body ↦ ⟦
+          g1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          g2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i2 ↦ "A",
+            i3 ↦ "lambda$f$0",
+            i4 ↦ "(Ljava/lang/Double;)Ljava/lang/Double;",
+            i5 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokestatic",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Double;)D",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "A",
+          method ↦ "lambda$f$1",
+          signature ↦ "(Ljava/lang/Double;)D",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, bridge-output ↦ "D", 𝐵-c, state ↦ ⟦ 𝐵-s1, 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧, 𝐵-s2 ⟧, 𝐵-d ⟧
+  - ⟦ 𝐵-p, 𝜏-g ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$f$0", 𝐵-y ⟧, 𝜏-u ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i3 ↦ "lambda$f$1", 𝐵-w ⟧, 𝐵-q ⟧

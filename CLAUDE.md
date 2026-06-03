@@ -165,6 +165,7 @@ dup, transform, type, filter, map → 301..306 → Φ.hone.distill (auto body)
 load `this` into a pre-distill   → 311 → flips Φ.hone.pre-distill to distill
 box-distill-unbox collapse       → 411 → primitive-typed distill
 trailing mapToX into a distill   → 451 → type-transition distill
+                                    (empty-state OR stateful; preserves state)
 transform-distill normalisation  → 421, 422
 dup before a filter distill      → 431
 distinct                         → 216 → 307 → state distill;
@@ -195,12 +196,17 @@ unbox only ever folded when a following `.boxed()` paired with it (`221`,
 `411`); a boundary mapToX just sat idle and `603` lowered it back to a
 native call. `451-fuse-distill-unbox` closes that gap: it runs after the
 `4xx` fuse pass and splices the unbox's target invocation onto the tail of
-the single *pointwise* distill in front of it, widening that distill into a
+the single distill in front of it, widening that distill into a
 **type-transition** distill — `bridge-input` stays the object element type
-but `bridge-output` becomes the primitive (`I`/`J`/`D`). It deliberately
-matches only empty-state distills, so a stateful predecessor
-(distinct/skip) keeps its native mapToX, and a mapToX with no distill in
-front of it never matches and stays native via `603` — the same
+but `bridge-output` becomes the primitive (`I`/`J`/`D`). It captures and
+**preserves the predecessor's `state` block** (`𝐵-state`), so it fires for
+an empty-state pointwise distill AND for a stateful one (distinct/skip,
+possibly with a `boxed()` round-trip already fused in): a trailing mapToX
+that ends a distinct/skip pipeline folds into the same stateful distill
+rather than staying native, collapsing the whole pipeline to ONE
+`Stream.mapMultiToX` (this is #570 reaching the stateful path; see
+`stateful-boxed-tail.yml` and `full-non-terminal.yml`). A mapToX with no
+distill in front of it never matches and stays native via `603` — the same
 "do not pessimise a lone operator" stance as the `441`/`442` reverts.
 
 Because a transition distill has `bridge-input ≠ bridge-output`, the emit
@@ -209,9 +215,15 @@ pass is **output-aware**: `Stream.mapMultiToX` takes a plain
 samMethodType still follow the INPUT (exactly as an ordinary mapMulti),
 while the `consumer` the body drives, the resulting stream class and the
 method name (`mapMulti` vs `mapMultiToInt`/`…Long`/`…Double`) follow the
-OUTPUT. `501`/`511`/`601` thread two extra pragma fields — `stream-method`
-and `result-stream-class` — to carry that split (a symmetric distill sets
-them to its input-side values, so nothing changes there).
+OUTPUT. Both emit flavours thread two extra pragma fields — `stream-method`
+and `result-stream-class` — to carry that split: `501`/`511`/`601` for an
+empty-state distill, and their stateful twins `502`/`512` (which compute
+the same input/output split and drive the closing dup / `XConsumer.accept`
+off the OUTPUT consumer, exactly as `511` does). A symmetric distill sets
+both fields to its input-side values, so nothing changes there. `503`/`504`
+still fill the guard keep-frame off `bridge-input` (the item there is the
+object element, before the trailing transition runs), so they need no
+change.
 
 ### boxed() round-trips (mapToX().boxed())
 
@@ -242,11 +254,26 @@ collapses `211`'s synthetic pairs as before. (`209`'s `lambda$` target guard is
 belt-and-suspenders — every `205` unbox targets a lambda$ anyway.)
 
 This fuses a *pointwise* boxed() chain to one mapMulti (see
-`boxed-roundtrip.yml`). A type-changing boxed() distill is NOT fused into a
-stateful (distinct/skip) distill — the object-only stateful emit cannot take a
-primitive/wrapper intermediate — so a stateful pipeline with a boxed() tail
-collapses to TWO mapMultis, not one (see `full-non-terminal.yml`). Lifting that
-to a single mapMulti is the remaining work tracked by #570.
+`boxed-roundtrip.yml`). A type-changing boxed() distill that re-boxes to a
+wrapper stays object→object and `401` already fuses it into a stateful
+(distinct/skip) distill — that part always worked. What used to break the run
+into TWO mapMultis was the *trailing* mapToX (object→primitive) at the end of
+the boxing tail: the old empty-state-only `451` left it native. `451` now
+preserves the predecessor's `state` block and `502`/`512` are output-aware, so
+the trailing mapToX folds into the stateful distill too and the whole stateful
+pipeline collapses to ONE `Stream.mapMultiToX` (see `stateful-boxed-tail.yml`
+and `full-non-terminal.yml`, now 9 → 1) — closing #570 for the stateful path.
+
+One stateful boxed() shape is still unsupported and is a separate puzzle: a
+pipeline that *begins* with `distinct()`/`skip()` (before any typed
+`map`/`filter`) has `bridge-input ↦ Ljava/lang/Object;`, because distinct/skip
+erase the element type. A boxing tail whose desugared `lambda$` expects a
+specific wrapper (e.g. `Integer::doubleValue`, an `(Ljava/lang/Integer;)D`
+handle) then VerifyErrors — the object item is not assignable to `Integer`
+without a `checkcast`. This is pre-existing (it predates and is independent of
+the trailing-mapToX fusion) and is dodged by every fixture by leading with a
+typed operator; lifting it (insert a `checkcast` when `bridge-input` is
+`Object` and the body's first invoke wants a narrower type) is future work.
 
 A method reference (`Integer::intValue`, `String::toUpperCase`, `X::keep`, …)
 is **desugared into a lambda** up front so the rest of the pipeline picks it
@@ -399,10 +426,15 @@ no special gating. A filter that follows a `distinct`/`skip` needs its own
 predecessor, so `283-insert-dup-before-filter-after-stateful` covers the
 stateful-predecessor case.
 
-Limitations (v1): object streams only (`512` hardcodes the `Object` item
-shape); and `503` reads the frame type off `bridge-input`, correct while
-every operator before the distinct preserves the element type. Lifting
-these is future work.
+Limitations: the INPUT item is object-only (`512` loads it with a fixed
+`aload 1`); the OUTPUT may now be a primitive — when `451` fuses a trailing
+mapToX into the stateful distill, `512`'s closing dup / `XConsumer.accept`
+follow the output consumer exactly as `511` does, so a distinct/skip pipeline
+ending in a mapToX lowers to one `Stream.mapMultiToX`. Still future work: a
+primitive INPUT item; `503` reading the frame type off `bridge-input` (correct
+only while every operator before the distinct preserves the element type); and
+the `Object`-`bridge-input` boxed() case noted under "boxed() round-trips"
+(a pipeline that begins with distinct/skip).
 
 ### Capturing operators (closures)
 

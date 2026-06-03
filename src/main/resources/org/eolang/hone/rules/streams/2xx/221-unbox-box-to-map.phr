@@ -2,6 +2,16 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# Collapses an unbox immediately followed by a box back into a single object
+# map. This is the cleanup for the box/unbox pair 211 synthesises when it
+# splits a primitive IntStream.filter/map chain (box + boxed-primitive-func +
+# unbox): where two split ops meet, the tail unbox of one and the head box of
+# the next cancel, and so does the head box 211 wedges right after a user
+# `mapToInt(ref)` that feeds a primitive op. By the time this rule runs every
+# genuine user `mapToX(...).boxed()` round-trip has already been folded into a
+# distill by 209 (which runs before 211 precisely so it never confuses a real
+# boxed() with 211's compensating box), so the only unbox/box adjacencies left
+# here are 211's synthetic ones — safe to collapse to a plain one-opcode map.
 name: unbox-box-to-map
 pattern: |
   ⟦

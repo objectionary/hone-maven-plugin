@@ -1,0 +1,138 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A user `mapToInt/Long/Double(...).boxed()` round-trip — an object element
+# unboxed to a primitive and immediately re-boxed to its wrapper — is a
+# pointwise object->object operation (e.g. Integer -> long -> Long). 205
+# recognises the mapToX as a Φ.hone.unbox and 206 the boxed() as a Φ.hone.box,
+# leaving them adjacent (106 strips the line-number anchor javac -g wedges
+# before boxed). This rule folds that pair into a single empty-state distill
+# whose body is TWO opcodes — the mapper invocation that produces the primitive
+# and the `Wrapper.valueOf` that re-boxes it — so 401 can fuse it with any
+# adjacent pointwise distill and 501/511 lower the whole chain to one
+# Stream.mapMulti dispatch. (A distill folded here in the 2xx phase is inert to
+# the 3xx folders, which only touch map/filter/lambda pragmas, and 401 fuses it
+# in the 4xx phase like any other.)
+#
+# ORDER MATTERS: this rule MUST run before 211. An unbox/box adjacency is a
+# user round-trip ONLY before 211 splits the primitive IntStream.filter/map
+# operators into box + boxed-primitive-func + unbox. After that split, a user
+# `mapToInt(ref)` feeding a primitive op (e.g. `mapToInt(Integer::intValue)
+# .filter(p)`) ALSO shows an `unbox(lambda$), box` adjacency — but that box is
+# 211's compensating head-box for the next primitive op, not a real boxed(),
+# and folding it here would splice a stray `Integer.valueOf` into the primitive
+# chain and fail verification. Running before 211 guarantees every box present
+# is a genuine 206 boxed(); 221 (which runs after 211, ungated) then collapses
+# the synthetic 211 pairs as before. The `lambda$` target gate is belt-and-
+# suspenders: every 205 unbox targets a lambda$ anyway, but the gate makes the
+# "user pair only" intent explicit and survives any future reordering.
+name: unbox-box-to-distill
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-opcode,
+      class ↦ 𝑒-class,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ 𝑒-stream-class
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.𝜏-distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-wrapper,
+      start ↦ "map",
+      accepted ↦ 𝑒-bridge-input,
+      returned ↦ 𝑒-wrapper,
+      static ↦ 𝑒-static,
+      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      body ↦ ⟦
+        b1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.𝜏-opcode,
+          i2 ↦ 𝑒-target-class,
+          i3 ↦ 𝑒-target-method,
+          i4 ↦ 𝑒-target-signature,
+          i5 ↦ 𝑒-target-is-interface
+        ⟧,
+        b2 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-wrapper-class,
+          i3 ↦ "valueOf",
+          i4 ↦ 𝑒-value-of-signature,
+          i5 ↦ Φ.false
+        ⟧
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - or:
+        - and:
+            - matches: ['\(.*\)I', 𝑒-bridge-signature]
+            - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - and:
+            - matches: ['\(.*\)J', 𝑒-bridge-signature]
+            - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - and:
+            - matches: ['\(.*\)D', 𝑒-bridge-signature]
+            - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+where:
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]
+  - meta: 𝑒-distill
+    function: sed
+    args:
+      - 𝑒-static
+      - '"s/true/distill/g"'
+      - '"s/false/pre-distill/g"'
+  - meta: 𝜏-distill
+    function: tau
+    args: [𝑒-distill]
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\).*/$1/g"'
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'
+  - meta: 𝑒-wrapper
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/I/Ljava\\/lang\\/Integer;/g"'
+      - '"s/J/Ljava\\/lang\\/Long;/g"'
+      - '"s/D/Ljava\\/lang\\/Double;/g"'
+  - meta: 𝑒-wrapper-class
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/I/java\\/lang\\/Integer/g"'
+      - '"s/J/java\\/lang\\/Long/g"'
+      - '"s/D/java\\/lang\\/Double/g"'
+  - meta: 𝑒-value-of-signature
+    function: concat
+    args: ['"("', 𝑒-primitive, '")"', 𝑒-wrapper]

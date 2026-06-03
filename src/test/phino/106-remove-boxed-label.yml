@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# javac -g wedges a line-number-anchor label before a `.boxed()` written on its
+# own source line. 102 only strips that anchor for a `Stream` op; boxed is an
+# invokeinterface on LongStream (here), so 102 leaves it and it wedges between
+# the mapToLong and the boxed. This rule drops the dead label and its
+# line-number, leaving the two stream calls adjacent so 205/206 recognise an
+# adjacent unbox/box pair for 209 to fold.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/106-remove-boxed-label.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      prev ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "mapToLong", v2 ↦ "(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;", v3 ↦ Φ.true ⟧,
+      lbl ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L7" ⟧,
+      ln ↦ ⟦
+        φ ↦ Φ.jeo.line-number,
+        number ↦ 7,
+        l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L7" ⟧
+      ⟧,
+      call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/LongStream", v1 ↦ "boxed", v2 ↦ "()Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ body ↦ ⟦ 𝜏-prev ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "mapToLong", 𝐵-p ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/LongStream", v1 ↦ "boxed", 𝐵-c ⟧, ρ ↦ ∅ ⟧ ⟧

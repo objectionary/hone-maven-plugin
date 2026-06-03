@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A pointwise mapToX(...).boxed() round-trip — an object element unboxed to a
+# primitive and immediately re-boxed to its wrapper — must fuse into the
+# operators around it rather than survive as a native mapToX + boxed pair. 205
+# recognises each mapToX as a Φ.hone.unbox and 206 each boxed() as a Φ.hone.box
+# (106 strips the line-number anchor javac -g wedges before boxed); 209 then
+# folds each adjacent unbox/box pair into one empty-state object->object distill
+# whose body is two opcodes (the mapper invocation producing the primitive and
+# the Wrapper.valueOf re-boxing it). 401 fuses those boxing distills with the
+# leading filter+map distill, the trailing mapToDouble folds in via 451, and
+# 501/511 lower the whole chain to a SINGLE Stream.mapMultiToDouble dispatch.
+#
+# This is the case issue #570 reported as unfused for a pure pointwise pipeline:
+# every operator collapses to one mapMulti, dropping invokedynamic 5 -> 1. (A
+# stateful prefix — distinct/skip — keeps the boxing native, see
+# full-non-terminal.yml, because the object-only stateful emit cannot take a
+# type-changing intermediate.)
+java: |
+  package boxedroundtrip;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      double r = Stream.of(5, 3, 8, 2, 7)
+        .filter(n -> n > 0)
+        .map(n -> n + 1)
+        .mapToLong(Integer::longValue)
+        .boxed()
+        .mapToDouble(Long::doubleValue)
+        .boxed()
+        .mapToDouble(Double::doubleValue)
+        .sum();
+      System.out.printf("The result is %d\n", (int) r);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 30"
+before:
+  invokedynamic: 5
+after:
+  invokedynamic: 1

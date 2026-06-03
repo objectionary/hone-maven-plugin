@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A user mapToLong(...).boxed() round-trip is recognised as an adjacent
+# Φ.hone.unbox (object in, primitive out, target a synthetic lambda$) and
+# Φ.hone.box. This rule folds the pair into one empty-state object->object
+# distill (Integer -> Long) whose body is two opcodes: the mapper invocation
+# producing the primitive and the Wrapper.valueOf re-boxing it. It runs before
+# 211, so every unbox/box adjacency it sees is a genuine boxed() round-trip and
+# never 211's compensating box around a primitive operator.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/209-unbox-box-to-distill.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokestatic",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Integer;)J",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "A",
+          method ↦ "lambda$main$0",
+          signature ↦ "(Ljava/lang/Integer;)J",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.box,
+        stream-class ↦ "java/util/stream/LongStream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, bridge-input ↦ "Ljava/lang/Integer;", 𝐵-c, bridge-output ↦ "Ljava/lang/Long;", 𝐵-d ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, accepted ↦ "Ljava/lang/Integer;", 𝐵-c, returned ↦ "Ljava/lang/Long;", 𝐵-d, state ↦ ⟦ ρ ↦ ∅ ⟧, 𝐵-e ⟧
+  - ⟦ 𝐵-p, 𝜏-mapper ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$main$0", 𝐵-y ⟧, 𝜏-valueof ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i2 ↦ "java/lang/Long", i3 ↦ "valueOf", i4 ↦ "(J)Ljava/lang/Long;", 𝐵-w ⟧, 𝐵-q ⟧

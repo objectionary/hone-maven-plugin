@@ -177,9 +177,9 @@ skip                             → 220 → 308 → state distill;
 capturing map (N prim OR 1 ref)  → 112 → 114 (int) / 116 (long) / 117 (double)
                                     / 115 (ref peeler) → 316 → c-map state
                                     distill; 443 reverts a lone single-int-capture
-                                    map, 446 a lone TWO-int-capture map and 448 a
-                                    lone THREE-int-capture map if
-                                    unfused (4+-capture, category-2 and lone-ref
+                                    map, 446 a lone TWO-int-capture map and
+                                    448 a lone THREE-int-capture map if unfused
+                                    (4+-capture, category-2 and lone-ref
                                     stay mapMulti)
 capturing filter (N prim)        → 113 → 118 (int) / 120 (long) / 122 (double)
                                     → 314 → c-filter state distill; 444

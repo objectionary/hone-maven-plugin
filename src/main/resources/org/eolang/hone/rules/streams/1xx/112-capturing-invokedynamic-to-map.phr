@@ -44,9 +44,11 @@
 # peaks one slot higher than the int append. jeo never recomputes maxs, so this
 # rule BUMPS the enclosing method's max-stack by 2 (a safe over-allocation) whenever
 # the factory descriptor carries a J or D primitive capture; an int-only or a
-# reference capture leaves max-stack untouched. The two maxs values ride generated
-# binding names (jeo emits e.g. "v295 ↦ 5"), so they are matched positionally with
-# 𝜏-max-stack / 𝜏-max-locals (max-stack first, then max-locals).
+# reference capture leaves max-stack untouched. jeo names the two maxs bindings
+# "m1" (max-stack) and "m2" (max-locals), so they are matched by those literal
+# names; phino 0.0.0.73 no longer binds a 𝜏- metavariable used as a binding NAME
+# to a scalar value, so the earlier 𝜏-max-stack / 𝜏-max-locals form silently
+# stopped matching and the whole capturing lift went dead.
 #
 # Type-TRANSFORMING maps stay native: the "(LX;)LX;" backreference declines an
 # instantiated type whose input and output differ (e.g. "(LString;)LInteger;"),
@@ -139,8 +141,8 @@ pattern: |
       exceptions ↦ 𝑒-method-exceptions,
       maxs ↦ ⟦
         φ ↦ Φ.jeo.maxs,
-        𝜏-max-stack ↦ 𝑒-max-stack,
-        𝜏-max-locals ↦ 𝑒-max-locals
+        m1 ↦ 𝑒-max-stack,
+        m2 ↦ 𝑒-max-locals
       ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,
@@ -220,8 +222,8 @@ result: |
       exceptions ↦ 𝑒-method-exceptions,
       maxs ↦ ⟦
         φ ↦ Φ.jeo.maxs,
-        𝜏-max-stack ↦ 𝑒-bumped-stack,
-        𝜏-max-locals ↦ 𝑒-max-locals
+        m1 ↦ 𝑒-bumped-stack,
+        m2 ↦ 𝑒-max-locals
       ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,

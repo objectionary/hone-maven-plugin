@@ -127,6 +127,12 @@ final class OptimizeMojoTest {
                     .goals("build", "optimize")
                     .configuration()
                     .set("rules", "streams/*")
+                    .set(
+                        "grepIn",
+                        pack.containsKey("grep-in")
+                            ? (String) pack.get("grep-in")
+                            : OptimizeMojo.DEFAULT_GREP_IN
+                    )
                     .set("image", image);
                 f.build()
                     .plugins()

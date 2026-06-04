@@ -57,8 +57,8 @@ pattern: |
       exceptions ↦ 𝑒-method-exceptions,
       maxs ↦ ⟦
         φ ↦ Φ.jeo.maxs,
-        𝜏-max-stack ↦ 𝑒-max-stack,
-        𝜏-max-locals ↦ 𝑒-max-locals
+        m1 ↦ 𝑒-max-stack,
+        m2 ↦ 𝑒-max-locals
       ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,
@@ -138,8 +138,8 @@ result: |
       exceptions ↦ 𝑒-method-exceptions,
       maxs ↦ ⟦
         φ ↦ Φ.jeo.maxs,
-        𝜏-max-stack ↦ 𝑒-bumped-stack,
-        𝜏-max-locals ↦ 𝑒-max-locals
+        m1 ↦ 𝑒-bumped-stack,
+        m2 ↦ 𝑒-max-locals
       ⟧,
       params ↦ 𝑒-method-params,
       annotations ↦ 𝑒-annotations,

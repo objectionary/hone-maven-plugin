@@ -7,27 +7,36 @@
 # are asserted. The runtime result: the pipeline must never corrupt a
 # roundtrip nor pessimise a lone operator, so a correct printout proves every
 # path lowered to runnable bytecode. And the invokedynamic tally: it drops
-# from 41 to 28 as the capturing and non-capturing operators collapse into 11
-# Stream.mapMulti dispatches — 3 stay an object mapMulti and 8 become a
-# mapMultiToInt, because a trailing mapToInt(Integer::intValue) now folds into
-# the distill in front of it whether that distill is empty-state OR
-# stateful/capturing (the generalized 451 preserves the predecessor's state,
-# so capLoc / multiCap / loneMulti / multiFil each absorb their trailing
-# mapToInt instead of leaving it native). The indys that remain are the
-# string-concat (makeConcatWithConstants in decorate / the reduce) and the
-# genuinely native or reverted cases (capObj, capArr, capFld, lone, named, …);
-# the thirteen that disappear are the fusion win. Which indy collapses into which
-# mapMulti is proven per-rule by the src/test/phino/ packs — this fixture
-# proves the rules COMPOSE on a real class.
+# from 41 to 29 as the capturing and non-capturing operators collapse into
+# Stream.mapMulti dispatches. A trailing mapToInt(Integer::intValue) folds into
+# the distill in front of it (the generalized 451 preserves the predecessor's
+# state, so it folds whether that distill is empty-state OR stateful/capturing)
+# — but only into a distill that SURVIVES the 4xx fuse pass. capLoc and multiCap
+# fuse a map/filter neighbour at 401, so they are no longer lone and their
+# trailing mapToInt folds into the resulting mapMultiToInt. loneMulti and multiFil
+# have no such neighbour: 401 leaves them lone, the lone-capture reverts 446/447
+# fire (they run before 451) and put them back to a native invokedynamic, so their
+# trailing mapToInt is left native too — two native indys apiece, the
+# never-pessimise choice, rather than one mapMultiToInt carrying the capture-List
+# overhead. The indys that remain are the string-concat (makeConcatWithConstants
+# in decorate / the reduce) and the genuinely native or reverted cases (capObj,
+# capArr, capFld, lone, loneMulti, multiFil, named, …); the twelve that disappear
+# are the fusion win. Which indy collapses into which mapMulti is proven per-rule
+# by the src/test/phino/ packs — this fixture proves the rules COMPOSE on a real
+# class.
 #
-# Update (issue #655): the multi-int-capture filter is no longer deferred. 113
+# Update (issue #655): the multi-int-capture filter is lifted and folded. 113
 # now lifts a "(I+)L…Predicate;" factory (one OR MORE int captures), 118 peels
 # every push into the shared List, and 314 folds it into a stateful distill with
-# the same N-ary park/reload body 316 gives a capturing map. So multiFil
-# (filter(n>lo && n<hi), two int captures) fuses with its trailing mapToInt into
-# ONE Stream.mapMultiToInt instead of staying native — the indy tally drops 41 →
-# 28 (11 mapMulti dispatches: 3 object + 8 mapMultiToInt), and multiFil leaves
-# the "genuinely native or reverted" set.
+# the same N-ary park/reload body 316 gives a capturing map. multiFil
+# (filter(n>lo && n<hi), two int captures) therefore lifts and folds exactly like
+# a capturing map; but having no map/filter neighbour to fuse with at 401, it is
+# reverted by the lone-filter revert 447 (which runs before 451) and stays in the
+# "native or reverted" set, its trailing mapToInt left native — two indys. Folding
+# the trailing mapToInt of a LONE capturing operator into a single mapMultiToInt
+# would require 451 to run before 446/447; that is a follow-up optimisation, not
+# done here, and would trade two native indys for one mapMultiToInt that pays the
+# capture-List overhead per element.
 #
 # Native roundtrip shapes — must survive untouched:
 #   bound   : String::length             unbound-instance method ref
@@ -155,7 +164,7 @@ java: |
 before:
   invokedynamic: 41
 after:
-  invokedynamic: 28
+  invokedynamic: 29
 log:
   - "BUILD SUCCESS"
   - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24 387 5 54 12"

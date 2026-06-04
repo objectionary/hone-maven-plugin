@@ -1287,47 +1287,72 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void matchesStandaloneMapByteSequenceInDefaultGrepIn() {
+    void matchesStandaloneMapByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'map' byte sequence",
-            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
-                "<o as=\"α0\">6D-61-70</o>"
-            ).find(),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70</o>"),
             Matchers.is(true)
         );
     }
 
     @Test
-    void matchesStandaloneFilterByteSequenceInDefaultGrepIn() {
+    void matchesStandaloneFilterByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'filter' byte sequence",
-            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
-                "<o as=\"α0\">66-69-6C-74-65-72</o>"
-            ).find(),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">66-69-6C-74-65-72</o>"),
             Matchers.is(true)
         );
     }
 
     @Test
-    void ignoresMapBytesEmbeddedInLongerStringInDefaultGrepIn() {
+    void ignoresMapBytesEmbeddedInLongerStringInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must not match 'map' bytes embedded in 'mapped/X' (see #449)",
-            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
-                "<o as=\"α0\">6D-61-70-70-65-64-2F-58</o>"
-            ).find(),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70-70-65-64-2F-58</o>"),
             Matchers.is(false)
         );
     }
 
     @Test
-    void ignoresFilterBytesEmbeddedInLongerStringInDefaultGrepIn() {
+    void ignoresFilterBytesEmbeddedInLongerStringInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must not match 'filter' bytes embedded in 'filtered'",
-            Pattern.compile(OptimizeMojo.DEFAULT_GREP_IN).matcher(
-                "<o as=\"α0\">66-69-6C-74-65-72-65-64</o>"
-            ).find(),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">66-69-6C-74-65-72-65-64</o>"),
             Matchers.is(false)
         );
+    }
+
+    @Test
+    void rejectsMapToIntByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "default grep-in must not match the 'mapToInt' byte sequence (see #671)",
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70-54-6F-49-6E-74</o>"),
+            Matchers.is(false)
+        );
+    }
+
+    /**
+     * Runs the default {@code grep-in} pattern through the very tool that
+     * consumes it in {@code rewrite.sh} ({@code grep -E}), so the pattern's
+     * dialect is validated against its real consumer rather than against
+     * {@link java.util.regex.Pattern} (see #671).
+     * @param dir Temporary directory to hold the sample file
+     * @param content The line of XMIR to grep through
+     * @return TRUE if {@code grep -E} finds a match
+     * @throws IOException If the sample file cannot be written
+     */
+    private static boolean grepInMatches(final Path dir, final String content)
+        throws IOException {
+        final Path file = dir.resolve("sample.xmir");
+        Files.write(file, content.getBytes(StandardCharsets.UTF_8));
+        return new Jaxec(
+            "grep", "-qE", OptimizeMojo.DEFAULT_GREP_IN, file.toString()
+        ).withCheck(false).execUnsafe().code() == 0;
     }
 
     @Test

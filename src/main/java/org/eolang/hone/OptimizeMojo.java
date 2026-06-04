@@ -77,12 +77,19 @@ public final class OptimizeMojo extends AbstractMojo {
      * happen to appear as a prefix or suffix of a longer byte sequence
      * (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>). See issue #449.</p>
      *
-     * <p>Uses negative lookbehind/lookahead to match complete hex-encoded method names
-     * only (not substrings like "6M-61-70" inside "6M-61-70-70-65-64-2F-58").</p>
+     * <p>The bytes are anchored between the closing <tt>&gt;</tt> of the
+     * opening tag and the opening <tt>&lt;</tt> of the closing tag, so the
+     * alternatives match only complete hex-encoded method names (not
+     * substrings like <tt>6D-61-70</tt> inside <tt>6D-61-70-70-65-64-2F-58</tt>).
+     * This keeps the pattern within POSIX ERE (the dialect understood by
+     * {@code grep -E} in {@code rewrite.sh}), unlike PCRE lookaround, which
+     * {@code grep -E} cannot parse — a mismatch that previously made
+     * {@code grep} reject every class and skip optimization entirely
+     * (see #671).</p>
      *
      * @since 0.19.0
      */
-    static final String DEFAULT_GREP_IN = "(?<!-)(66-69-6C-74-65-72|6D-61-70)(?!-)";
+    static final String DEFAULT_GREP_IN = ">(66-69-6C-74-65-72|6D-61-70)<";
 
     /**
      * Splitter for comma-separated values (with optional whitespace).

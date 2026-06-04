@@ -93,6 +93,7 @@ declare -a opts=(
   '--strict-checksums'
   '--errors'
   '--batch-mode'
+  '--no-transfer-progress'
   '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
   "-Djeo.version=${JEO_VERSION}"

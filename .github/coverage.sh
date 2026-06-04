@@ -31,6 +31,7 @@ table=$(
   printf '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n'
   while IFS=',' read -r repo sha; do
     test -n "${repo}" || continue
+    name="${repo##*/}"
     forks=$(gh api "repos/${repo}" --jq '.forks_count' 2>/dev/null || echo '?')
     row=$(grep -F "${repo},${sha}," "${csv}" || true)
     if [ -n "${row}" ]; then
@@ -40,10 +41,10 @@ table=$(
       [ "${bbuild}" = "pass" ] || bmark=" ⚠️"
       [ "${abuild}" = "pass" ] || amark=" ⚠️"
       printf '| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %ss%s | %s/%s | %ss | %ss%s |\n' \
-        "${repo}" "${repo}" "${sha}" "${forks}" "${loc}" "${total}" "${btime}" "${bmark}" "${modified}" "${streams}" "${htime}" "${atime}" "${amark}"
+        "${name}" "${repo}" "${sha}" "${forks}" "${loc}" "${total}" "${btime}" "${bmark}" "${modified}" "${streams}" "${htime}" "${atime}" "${amark}"
     else
       printf '| [%s](https://github.com/%s/commit/%s) | %s | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |\n' \
-        "${repo}" "${repo}" "${sha}" "${forks}"
+        "${name}" "${repo}" "${sha}" "${forks}"
     fi
   done < <(tail -n +2 "${repos}")
 )

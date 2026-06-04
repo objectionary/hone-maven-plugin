@@ -566,10 +566,10 @@ captures over Integer):
   marginally slower than native, and rarer than a lone one- or two-capture
   operator. Reverting it is **not** a matter of writing the next ladder rung: an
   arity-agnostic lone-vs-fused revert is not expressible with phino 0.0.0.73,
-  because a variadic `𝐵-` group backtracks over every split (`Matcher.hs:86`), so
-  one pattern matches a fused two-operator body as readily as a lone one — only
-  enumerating the EXACT capture count pins the `reload` position that tells them
-  apart. The real unblock is a phino counted-repetition matcher (filed as
+  because a variadic `𝐵-` group backtracks over every split (`Matcher.hs:86`),
+  so one pattern matches a fused two-operator body as readily as a lone one —
+  only enumerating the EXACT capture count pins the `reload` position that tells
+  them apart. The real unblock is a phino counted-repetition matcher (filed as
   `objectionary/phino#747`); until it lands, a lone three-or-more-capture
   operator stays a `mapMulti`.
 
@@ -629,8 +629,8 @@ and bumps the caller max-stack by 2 exactly as `112` does for the map,
 `cp-filter` mirrors of `116`/`117`), and `314` folds them into a stateful
 distill — see `streams/closure-long-filter.yml`.
 
-Deferred puzzles (each extends the same shared-List channel): a MULTI-reference /
-mixed-with-reference capture run (needs positional capture-type extraction);
+Deferred puzzles (each extends the same shared-List channel): a MULTI-reference
+/ mixed-with-reference capture run (needs positional capture-type extraction);
 `this`-field captures; and capturing `peek`/`mapToX`. The lone-THREE-OR-MORE-capture
 map/filter revert is **blocked upstream**, not deferred work to do here: an
 arity-agnostic lone-vs-fused revert is not expressible with phino 0.0.0.73 (a

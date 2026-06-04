@@ -34,13 +34,16 @@ loc=$(cloc --quiet --csv --include-lang=Java "${dir}" 2>/dev/null | awk -F',' '$
 loc=${loc:-0}
 echo "Java LoC in ${repo}: ${loc}"
 
-streams=$( { grep -rhE '^[[:space:]]*import[[:space:]]+java\.util\.stream\.' --include='*.java' "${dir}" 2>/dev/null || true; } | wc -l | tr -d ' ')
-streams=${streams:-0}
-echo "import-Stream statements in ${repo}: ${streams}"
-
 count_classes() {
   local base=$1
   find "${base}" -type f -path '*/target/classes/*.class' | wc -l | tr -d ' '
+}
+
+count_streams() {
+  local base=$1
+  find "${base}" -type f -path '*/target/classes/*.class' \
+    -exec grep -lE 'java/util/stream/(Int|Long|Double)?Stream' {} + 2>/dev/null \
+    | wc -l | tr -d ' '
 }
 
 apply_hone() {
@@ -93,6 +96,9 @@ timeout "${budget}" mvn "${flags[@]}" -f "${dir}" clean test || rc=$?
 outcome=$(build_outcome "${rc}")
 seconds=$(( $(date +%s) - start ))
 row="${row},${outcome},${seconds}"
+streams=$(count_streams "${dir}" || true)
+streams=${streams:-0}
+echo "classes referencing java.util.stream in ${repo}: ${streams}"
 
 if [ "${outcome}" != "pass" ]; then
   printf '%s,0,0,0,skipped,0,%s,%s\n' "${row}" "${loc}" "${streams}" >> "${csv}"

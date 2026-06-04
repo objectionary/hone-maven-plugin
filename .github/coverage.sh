@@ -27,8 +27,8 @@ echo "Final CSV:"
 cat "${csv}"
 
 table=$(
-  printf '| Repository | Forks | LoC | Streams | Classes | Before | Edits | Hone | After |\n'
-  printf '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n'
+  printf '| Repository | Forks | LoC | Classes | Before | Edits | Hone | After |\n'
+  printf '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n'
   while IFS=',' read -r repo sha; do
     test -n "${repo}" || continue
     forks=$(gh api "repos/${repo}" --jq '.forks_count' 2>/dev/null || echo '?')
@@ -39,10 +39,10 @@ table=$(
       amark=""
       [ "${bbuild}" = "pass" ] || bmark=" ⚠️"
       [ "${abuild}" = "pass" ] || amark=" ⚠️"
-      printf '| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %s | %ss%s | %s | %ss | %ss%s |\n' \
-        "${repo}" "${repo}" "${sha}" "${forks}" "${loc}" "${streams}" "${total}" "${btime}" "${bmark}" "${modified}" "${htime}" "${atime}" "${amark}"
+      printf '| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %ss%s | %s/%s | %ss | %ss%s |\n' \
+        "${repo}" "${repo}" "${sha}" "${forks}" "${loc}" "${total}" "${btime}" "${bmark}" "${modified}" "${streams}" "${htime}" "${atime}" "${amark}"
     else
-      printf '| [%s](https://github.com/%s/commit/%s) | %s | ? | ? | ? | ? ⚠️ | ? | ? | ? ⚠️ |\n' \
+      printf '| [%s](https://github.com/%s/commit/%s) | %s | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |\n' \
         "${repo}" "${repo}" "${sha}" "${forks}"
     fi
   done < <(tail -n +2 "${repos}")

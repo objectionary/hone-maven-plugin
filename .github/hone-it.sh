@@ -20,6 +20,21 @@ mkdir -p "${work}"
 version=$(mvn -ntp -B -q -DforceStdout help:evaluate -Dexpression=project.version --batch-mode 2>/dev/null | tail -n 1)
 test -n "${version}" || { echo "Failed to read project version from pom.xml" >&2; exit 1; }
 
+phino=$(xargs < "${root}/src/main/resources/org/eolang/hone/default-phino-version.txt")
+if [ -z "${phino}" ]; then
+  echo "Failed to read the default phino version from default-phino-version.txt" >&2
+  exit 1
+fi
+installed=""
+if command -v phino >/dev/null 2>&1; then
+  installed=$(phino --version)
+fi
+if [ "${installed}" != "${phino}" ]; then
+  echo "Local 'phino' is '${installed}', expected '${phino}'; install the right version to avoid the Docker fallback" >&2
+  exit 1
+fi
+echo "pinning hone to locally installed phino ${phino}"
+
 name=$(basename "${repo}")
 dir="${work}/${name}"
 rm -rf "${dir}"
@@ -55,7 +70,8 @@ apply_hone() {
     mvn -ntp -B -q --batch-mode -f "${module}" \
       "org.eolang:hone-maven-plugin:${version}:build" \
       "org.eolang:hone-maven-plugin:${version}:optimize" \
-      -Dhone.rules='streams/*'
+      -Dhone.rules='streams/*' \
+      -Dhone.phino-version="${phino}"
   done < <(find "${base}" -type d -path '*/target/classes' -print0)
 }
 

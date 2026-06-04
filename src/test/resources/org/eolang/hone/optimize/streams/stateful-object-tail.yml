@@ -33,6 +33,12 @@ java: |
       System.out.printf("The result is %d\n", (int) r);
     }
   }
+# This pipeline carries no plain `map`/`filter` token (only distinct, boxed and
+# mapToDouble), so the production default grep-in — which selects only classes
+# containing a standalone `map`/`filter`, see #449/#671 — skips it. The pack
+# exists to prove 505 narrows the Object item of a distinct-first boxing tail
+# (#649), so it opts the pre-filter off with `.*` to reach the rules under test.
+grep-in: ".*"
 log:
   - "Modified 1/1 X.phi"
   - "Finished rewriting 1 file"

@@ -54,5 +54,5 @@ input: |
 expected:
   - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(JLjava/lang/Integer;)Ljava/lang/Integer;", 𝐵-i ⟧, 𝐵-j ⟧
-  - ⟦ φ ↦ Φ.jeo.maxs, 𝜏-ms ↦ 8, 𝜏-ml ↦ 3 ⟧
+  - ⟦ φ ↦ Φ.jeo.maxs, m1 ↦ 8, m2 ↦ 3 ⟧
   - ⟦ 𝐵-k, 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 0 ⟧, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-l ⟧, 𝐵-m ⟧

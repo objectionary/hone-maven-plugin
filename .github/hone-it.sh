@@ -88,17 +88,24 @@ budget=1200
 flags=(-ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
 
 row="${repo},${sha}"
-echo "warming up Maven dependency cache for ${repo}"
-timeout "${budget}" mvn "${flags[@]}" -f "${dir}" test || true
-start=$(date +%s)
+echo "warming up and building ${repo}"
 rc=0
-timeout "${budget}" mvn "${flags[@]}" -f "${dir}" clean test || rc=$?
-outcome=$(build_outcome "${rc}")
-seconds=$(( $(date +%s) - start ))
-row="${row},${outcome},${seconds}"
+timeout "${budget}" mvn "${flags[@]}" -f "${dir}" test || rc=$?
 streams=$(count_streams "${dir}" || true)
 streams=${streams:-0}
 echo "classes referencing java.util.stream in ${repo}: ${streams}"
+outcome=$(build_outcome "${rc}")
+if [ "${outcome}" != "pass" ]; then
+  printf '%s,%s,0,0,0,0,skipped,0,%s,%s\n' "${row}" "${outcome}" "${loc}" "${streams}" >> "${csv}"
+  rm -rf "${dir}"
+  exit 1
+fi
+start=$(date +%s)
+rc=0
+timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || rc=$?
+outcome=$(build_outcome "${rc}")
+seconds=$(( $(date +%s) - start ))
+row="${row},${outcome},${seconds}"
 
 if [ "${outcome}" != "pass" ]; then
   printf '%s,0,0,0,skipped,0,%s,%s\n' "${row}" "${loc}" "${streams}" >> "${csv}"
@@ -112,6 +119,8 @@ apply_hone "${dir}"
 hone_seconds=$(( $(date +%s) - hstart ))
 count=$(count_modified "${dir}")
 row="${row},${total},${count},${hone_seconds}"
+echo "warming up the test runner for honed ${repo}"
+timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || true
 start=$(date +%s)
 rc=0
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || rc=$?

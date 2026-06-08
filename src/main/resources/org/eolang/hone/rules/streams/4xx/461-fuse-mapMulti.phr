@@ -111,7 +111,7 @@ result: |
             method ↦ 𝑒-fused-name,
             signature ↦ 𝑒-fused-signature,
             is-interface ↦ 𝑒-first-is-interface
-          ⟧
+          ⟧,
           stream ↦ ⟦
             class ↦ "java/util/stream/Stream",
             method ↦ "mapMulti",
@@ -158,7 +158,7 @@ result: |
             i3 ↦ 𝑒-wrap-name,
             i4 ↦ 𝑒-wrap-signature,
             i5 ↦ 𝑒-first-is-interface
-          ⟧
+          ⟧,
           i7 ↦ ⟦ φ ↦ Φ.jeo.type, i1 ↦ 𝑒-wrap-instantiated ⟧
         ⟧,
         call-first ↦ ⟦
@@ -202,10 +202,11 @@ result: |
     ⟧,
     ρ ↦ ∅
   ⟧
-# Fire only on user-written mapMultis (javac names their bodies `lambda$…`) and
-# on this rule's own fusion products (`fused_…`), so a chain of three or more
-# folds left-to-right. A pipeline-generated mapMulti — the lowering form 501/502
-# emit for a fused map/filter/distinct chain — targets a `distill_…` method, so
+# Fire only on user-written mapMultis (javac names their bodies `lambda$…`), on
+# flatMaps that 455 converted into mapMultis (`flatadapt_…`), and on this rule's
+# own fusion products (`fused_…`), so a chain of three or more folds
+# left-to-right. A pipeline-generated mapMulti — the lowering form 501/502 emit
+# for a fused map/filter/distinct chain — targets a `distill_…` method, so
 # excluding every other prefix keeps 461 off the already-optimal distill output
 # (re-fusing it via the adapter would only relocate an indy and break its pinned
 # opcode counts, e.g. closure-long-filter).
@@ -214,10 +215,10 @@ when:
     - eq: [𝑒-first-class, 𝑒-class]
     - eq: [𝑒-second-class, 𝑒-class]
     - matches:
-        - '(lambda\$|fused_).+'
+        - '(lambda\$|fused_|flatadapt_).+'
         - 𝑒-first-method
     - matches:
-        - '(lambda\$|fused_).+'
+        - '(lambda\$|fused_|flatadapt_).+'
         - 𝑒-second-method
 where:
   - meta: 𝜏-fused-method

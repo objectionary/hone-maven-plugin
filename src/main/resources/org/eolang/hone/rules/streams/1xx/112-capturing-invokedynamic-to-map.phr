@@ -63,18 +63,11 @@
 # lone [item]. So `filter(n -> n > lo && n < hi)` fuses exactly like the int
 # multi-capture map; see the multiFil case in streams/closures.yml.
 #
-# The lone-reference-map revert is now done (issue #657): a single-reference-capture
-# map that never fuses is reverted to its native invokedynamic + Stream.map by
-# 445-unfused-reference-capturing-map-to-invokedynamic, the reference-capture twin
-# of 443.
-#
 # The reference-capture FILTER is now done (issue #659): 113's interface guard also
 # admits a "(L…;)L…Predicate;" factory (a SINGLE reference capture), the new 119 peels
 # the lone aload into the shared List with no box/unbox (the cp-filter mirror of 115),
 # and 314 folds it into a stateful distill with the same N-ary park/reload body — so
-# `filter(n -> base.contains(n))` fuses exactly like the reference-capture map. A lone
-# reference-capture filter is not reverted (444 is closed on the int single-capture
-# body), so it is emitted as a standalone mapMulti, like a lone multi-capture filter.
+# `filter(n -> base.contains(n))` fuses exactly like the reference-capture map.
 #
 # The category-2 (J/D) capture FILTER is now done (issue #661): 113's relaxed
 # "([IJD]+)L…Predicate;" interface guard admits one or more long/double captures and
@@ -82,40 +75,24 @@
 # / 122 peel the lload/dload pushes with Long/Double box/unbox (the cp-filter mirrors
 # of 116/117), and 314 folds them into a stateful distill with the same N-ary
 # park/reload body — so `filter(n -> n > x)` over a captured long fuses exactly like
-# the category-2 map; see streams/closure-long-filter.yml. A lone single
-# long/double-capture filter is not reverted by 444 (closed on the int box/unbox
-# shape), so it is emitted as a standalone mapMulti, like the lone-reference and
-# lone-multi-capture filters.
+# the category-2 map; see streams/closure-long-filter.yml.
 #
-# The lone-TWO-capture revert is now done (issue #663): 446 / 447 are the
-# multi-capture twins of 443 / 444 — a lone two-int-capture map / filter (e.g.
-# `map(n -> n + p + q)` or `filter(n -> n > lo && n < hi)` with no neighbour to
-# fuse, ending in a terminal) is reverted to its native invokedynamic +
-# Stream.{map,filter}, replaying BOTH `iload` pushes and rebuilding the "(II)"
-# factory descriptor. Both rules match EXACTLY two boxing appends and two fetches
-# with a CLOSED state and body, so a FUSED capturing operator (which carries two
-# park/reload/call triples) cannot match and is left for 502 — the same
-# never-touch-a-fused-distill guarantee 443 / 444 get, extended by one capture. See
-# streams/closure-multi-lone.yml.
+# A LONE capturing operator — one that finds no neighbour to fuse with at 401 and so
+# survives the 4xx pass as a stand-alone stateful distill — is uniformly lowered to a
+# standalone Stream.mapMulti by 502/512/521/601, for ANY capture count N and for
+# int/long/double/reference captures alike. There is NO per-arity revert back to the
+# native invokedynamic: the lone operator pays the small mapMulti overhead (an extra
+# invokedynamic, a wrapper, a List.get per element) rather than being put back to
+# native. This is the same path every FUSED capturing operator already takes, so it
+# needs no special casing — and it sidesteps the phino lone-vs-fused discrimination
+# problem (objectionary/phino#747) entirely, since we never need to tell a lone
+# distill from a fused one.
 #
 # @todo #665:45min Generalise the CAPTURE channel further: a MIXED multi-capture
 #  run that contains a reference (only a SINGLE lone reference is admitted today,
 #  in both the map (115) and the filter (119), because each reads the capture type
 #  out of target.signature's first L-type — a multi-reference run needs positional
 #  type extraction). This part is independent of phino and still doable here.
-#
-# The lone-THREE-OR-MORE-capture map/filter revert, by contrast, is BLOCKED
-#  upstream and must NOT be chased by extending the 443/446 ladder one more rung.
-#  An arity-agnostic lone-vs-fused revert is not expressible with phino 0.0.0.73:
-#  a variadic 𝐵- group backtracks over every split (Matcher.hs:86), so a single
-#  pattern like ⟦ park, 𝐵-mid, reload, call, ρ↦∅ ⟧ matches a FUSED two-operator
-#  body as readily as a lone one — only enumerating the EXACT fetch count pins the
-#  reload position that tells them apart, which is precisely why the revert is one
-#  rule per arity. The real unblock is a phino counted-repetition matcher, filed
-#  as objectionary/phino#747. Until that lands, a lone map/filter with three or
-#  more captures stays a standalone mapMulti (correct, only marginally slower than
-#  the native invokedynamic) rather than growing the ladder. Both extend the same
-#  shared-List channel.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦

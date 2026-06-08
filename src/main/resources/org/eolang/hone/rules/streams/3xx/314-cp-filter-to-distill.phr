@@ -31,8 +31,8 @@
 # extra local, so 512's max-locals is untouched. This N-ary park/reload replaces
 # v1's single-capture `swap`, so one capture and many captures share one shape —
 # the filter twin of 316's map park/reload. The start label "c-filter" (not
-# "filter") keeps 431/281 off this body and lets 444 find an unfused single-capture
-# filter to revert.
+# "filter") keeps 431/281 off this body; an unfused capturing filter is lowered to a
+# standalone mapMulti by 502, like every lone capturing operator.
 name: cp-filter-to-distill
 pattern: |
   ⟦

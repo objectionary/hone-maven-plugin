@@ -23,6 +23,7 @@ input: |
         φ ↦ Φ.hone.cp-filter,
         state-acc ↦ ⟦⟧,
         body-acc ↦ ⟦⟧,
+        remaining ↦ "II",
         class ↦ "Foo",
         bridge-input ↦ "Ljava/lang/Integer;",
         bridge-output ↦ "Ljava/lang/Integer;",

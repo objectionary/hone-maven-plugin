@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 115 peels MORE THAN ONE reference capture, typing each POSITIONALLY (issue #665).
+# The input mimics 112's output for `map(n -> n + a.size() + b.length())` capturing
+# a List `a` (slot 0) and a String `b` (slot 1): a Φ.hone.c-map with two EMPTY
+# accumulators, the two `aload` pushes inline, and `remaining` seeded with the
+# parens-free factory params "Ljava/util/List;Ljava/lang/String;". 115 peels
+# right-to-left, so it reads `b` first — the RIGHTMOST code of `remaining`, i.e.
+# java/lang/String — strips that code, then reads `a` as java/util/List. Because
+# body-acc PREPENDS, the finished body-acc fetches read java/util/List THEN
+# java/lang/String (left-to-right, slot 0 first). A "first L-type" reader would type
+# BOTH as java/util/List; the distinct types here are the positional-extraction
+# proof. After fixpoint `remaining` is drained to "".
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/115-c-map-peel-reference.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
+      a ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+      b ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
+      cm ↦ ⟦
+        φ ↦ Φ.hone.c-map,
+        state-acc ↦ ⟦⟧,
+        body-acc ↦ ⟦⟧,
+        remaining ↦ "Ljava/util/List;Ljava/lang/String;",
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-a, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/List" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/String" ⟧, 𝐵-br ⟧, 𝐵-c ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦ 𝜏-d1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-x, remaining ↦ "", 𝐵-y ⟧
+  - ⟦ 𝐵-z, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-cr ⟧, ρ ↦ ∅ ⟧

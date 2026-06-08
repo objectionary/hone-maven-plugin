@@ -37,6 +37,7 @@ input: |
       b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
       ρ ↦ ∅
     ⟧,
+    remaining ↦ "",
     class ↦ "Foo",
     bridge-input ↦ "Ljava/lang/Integer;",
     bridge-output ↦ "Ljava/lang/Integer;",

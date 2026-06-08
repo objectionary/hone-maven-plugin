@@ -157,8 +157,8 @@ result: |
             i2 ↦ 𝑒-class,
             i3 ↦ 𝑒-wrap-name,
             i4 ↦ 𝑒-wrap-signature,
-            i5 ↦ Φ.false
-          ⟧,
+            i5 ↦ 𝑒-first-is-interface
+          ⟧
           i7 ↦ ⟦ φ ↦ Φ.jeo.type, i1 ↦ 𝑒-wrap-instantiated ⟧
         ⟧,
         call-first ↦ ⟦

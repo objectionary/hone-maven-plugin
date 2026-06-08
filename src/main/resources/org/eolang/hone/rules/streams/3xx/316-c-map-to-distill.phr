@@ -25,8 +25,9 @@
 # Parking in local 1 (which 512's wrapper only reads once, at entry) needs no
 # extra local, so 512's max-locals is untouched. The N-ary park/reload replaces
 # v1's single-capture `swap`, so one capture and many captures share one shape.
-# The start label "c-map" (not "map") keeps 431/281 off this body and lets 443
-# find an unfused single-capture map to revert.
+# The start label "c-map" (not "map") keeps 431/281 off this body; an unfused
+# capturing map is lowered to a standalone mapMulti by 502, like every lone
+# capturing operator.
 name: c-map-to-distill
 pattern: |
   ⟦

@@ -11,7 +11,7 @@
 # invokestatic lambda$; ifne keep; return drop; keep: frame-item`. The keep label
 # leaves a lone [item], so the Φ.hone.frame-item marker is exactly the one 503
 # fills for distinct/skip — no separate empty-stack keep-frame is needed. start is
-# "c-filter" so 401 fuses it and 444 can find a lone single-capture filter.
+# "c-filter" so 401 fuses it; a lone one is lowered to a standalone mapMulti by 502.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/3xx/314-cp-filter-to-distill.phr
 input: |

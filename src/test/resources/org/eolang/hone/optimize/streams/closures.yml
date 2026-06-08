@@ -7,21 +7,21 @@
 # are asserted. The runtime result: the pipeline must never corrupt a
 # roundtrip nor pessimise a lone operator, so a correct printout proves every
 # path lowered to runnable bytecode. And the invokedynamic tally: it drops
-# from 41 to 29 as the capturing and non-capturing operators collapse into
+# from 41 to 27 as the capturing and non-capturing operators collapse into
 # Stream.mapMulti dispatches. A trailing mapToInt(Integer::intValue) folds into
 # the distill in front of it (the generalized 451 preserves the predecessor's
 # state, so it folds whether that distill is empty-state OR stateful/capturing)
 # — but only into a distill that SURVIVES the 4xx fuse pass. capLoc and multiCap
 # fuse a map/filter neighbour at 401, so they are no longer lone and their
 # trailing mapToInt folds into the resulting mapMultiToInt. loneMulti and multiFil
-# have no such neighbour: 401 leaves them lone, the lone-capture reverts 446/447
-# fire (they run before 451) and put them back to a native invokedynamic, so their
-# trailing mapToInt is left native too — two native indys apiece, the
-# never-pessimise choice, rather than one mapMultiToInt carrying the capture-List
-# overhead. The indys that remain are the string-concat (makeConcatWithConstants
-# in decorate / the reduce) and the genuinely native or reverted cases (capObj,
-# capArr, capFld, lone, loneMulti, multiFil, named, …); the twelve that disappear
-# are the fusion win. Which indy collapses into which mapMulti is proven per-rule
+# have no such neighbour and stay lone, but a lone capturing operator is no longer
+# reverted to native — it is lowered to a standalone mapMulti like every other
+# lone capturing operator, so its trailing mapToInt folds into a single
+# mapMultiToInt exactly like the fused cases. The indys that remain are the
+# string-concat (makeConcatWithConstants in decorate / the reduce), the genuinely
+# native roundtrip cases that must not be touched (capObj, capArr, capFld, named,
+# …), and one mapMulti dispatch per capturing chain; the fourteen that disappear
+# are the fusion-and-lowering win. Which indy collapses into which mapMulti is proven per-rule
 # by the src/test/phino/ packs — this fixture proves the rules COMPOSE on a real
 # class.
 #
@@ -30,13 +30,10 @@
 # every push into the shared List, and 314 folds it into a stateful distill with
 # the same N-ary park/reload body 316 gives a capturing map. multiFil
 # (filter(n>lo && n<hi), two int captures) therefore lifts and folds exactly like
-# a capturing map; but having no map/filter neighbour to fuse with at 401, it is
-# reverted by the lone-filter revert 447 (which runs before 451) and stays in the
-# "native or reverted" set, its trailing mapToInt left native — two indys. Folding
-# the trailing mapToInt of a LONE capturing operator into a single mapMultiToInt
-# would require 451 to run before 446/447; that is a follow-up optimisation, not
-# done here, and would trade two native indys for one mapMultiToInt that pays the
-# capture-List overhead per element.
+# a capturing map; having no map/filter neighbour to fuse with at 401 it stays
+# lone, and a lone capturing operator is lowered to a standalone mapMulti, so its
+# trailing mapToInt folds into a single mapMultiToInt via 451 — one indy, the same
+# win the fused cases get.
 #
 # Native roundtrip shapes — must survive untouched:
 #   bound   : String::length             unbound-instance method ref
@@ -50,12 +47,12 @@
 #   sHelp   : isPrime / square helpers    lambda delegates to a static helper
 #   named   : new Good() / new Doubler()  Predicate / Function as named classes
 #
-# Capturing fusion shapes (issue #636) — must fuse, revert, or stay native:
+# Capturing fusion shapes (issue #636) — must fuse or lower to mapMulti:
 #   capLoc    : filter(n>t).map(n+off)    single-int-capture filter+map FUSE
 #   multiCap  : map(+1).map(+x+y+z)       three-int-capture map fuses (v1.1)
-#   lone      : map(n+off)                lone single-capture map REVERTS to native
-#   loneMulti : map(n+p+q)                lone multi-capture map -> standalone mapMulti
-#   multiFil  : filter(n>lo && n<hi)      multi-int-capture filter FUSES (issue #655)
+#   lone      : map(n+off)                lone single-capture map -> standalone mapMulti
+#   loneMulti : map(n+p+q)                lone multi-capture map -> mapMultiToInt
+#   multiFil  : filter(n>lo && n<hi)      lone multi-int-capture filter -> mapMultiToInt
 java: |
   package closures;
   import java.util.*;
@@ -164,7 +161,7 @@ java: |
 before:
   invokedynamic: 41
 after:
-  invokedynamic: 29
+  invokedynamic: 27
 log:
   - "BUILD SUCCESS"
   - "The result is 14 200 14 84 315 >2>3>4 36 27 3006 87 24 387 5 54 12"

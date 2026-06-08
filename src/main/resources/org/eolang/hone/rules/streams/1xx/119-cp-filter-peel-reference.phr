@@ -25,9 +25,8 @@
 # aload 1; invokestatic lambda$; ifne keep`, so the reloaded reference sits below
 # the parked item exactly as the (Lcapture;Lelement;)Z predicate signature wants.
 # The "c-filter" start label and the whole 502/512/521/601 stateful emit path are
-# reused verbatim. A lone reference-capture filter is not reverted (444 is closed
-# on the int single-capture park/reload body), so it is emitted as a standalone
-# mapMulti — like a lone multi-capture filter.
+# reused verbatim. A lone reference-capture filter is lowered to a standalone
+# mapMulti by 502, like every lone capturing operator.
 name: cp-filter-peel-reference
 pattern: |
   ⟦

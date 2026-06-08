@@ -9,7 +9,7 @@
 # the auto emit-shape `astore 1; <fetches>; aload 1; invokestatic lambda$` — the
 # item parked in its own dead local-1 slot, the unboxed captures left below it
 # exactly as the static lambda$ (int, int, Integer) signature wants. start is
-# "c-map" so 401 fuses it and 443 can find a lone single-capture map.
+# "c-map" so 401 fuses it; a lone one is lowered to a standalone mapMulti by 502.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/3xx/316-c-map-to-distill.phr
 input: |

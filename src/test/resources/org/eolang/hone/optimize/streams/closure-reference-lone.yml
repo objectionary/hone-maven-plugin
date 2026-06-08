@@ -1,27 +1,24 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
-# End-to-end proof that a LONE single-reference-capture map is never pessimised
-# (issue #657). Unlike closure-reference.yml — where two maps fuse into one
-# mapMulti — here the capturing map has no neighbour to fuse with:
+# End-to-end proof that a LONE single-reference-capture map lowers correctly to a
+# standalone Stream.mapMulti (issue #657). Unlike closure-reference.yml — where two
+# maps fuse into one mapMulti — here the capturing map has no neighbour to fuse
+# with:
 #
 #   Stream.of(...).map(n -> n + base.size()).reduce(0, ...)
 #
 # 112's "(L…;)" branch lifts the capturing map to a Φ.hone.c-map, 115 peels the
 # captured `aload` (the List) into the shared state, and 316 folds a lone stateful
-# distill. Because nothing fuses with it, turning it into a mapMulti would add an
-# invokedynamic, a wrapper, an ArrayList and a List.get per element — strictly
-# slower than the native Stream.map. 445 (the reference-capture twin of 443)
-# reverts the unfused c-map distill back to its original invokedynamic +
-# Stream.map, replaying the captured push and marking the call reverted↦Φ.true so
-# 112 cannot re-lift it.
+# distill. With no neighbour to fuse with, the distill is lowered to a standalone
+# mapMulti by 502/512/521/601 — there is no per-arity revert back to the native
+# invokedynamic.
 #
 # invokedynamic: before = map(capturing) + reduce-accumulator lambda = 2; after =
-# the reverted map indy + the untouched reduce lambda = 2. The count is UNCHANGED,
-# proving the lone capturing map came out native rather than being lowered to a
-# (slower) mapMulti. The runtime line proves the captured List still reaches the
-# lambda correctly: base.size() == 3, so {1,2,3,4,5} -> n+3 -> {4,5,6,7,8} -> sum
-# == 30.
+# the map's mapMulti dispatch indy + the untouched reduce lambda = 2. The count is
+# UNCHANGED because a mapMulti dispatch carries exactly one invokedynamic, like the
+# native map it replaces. The runtime line is the behaviour oracle: base.size() ==
+# 3, so {1,2,3,4,5} -> n+3 -> {4,5,6,7,8} -> sum == 30.
 java: |
   package fusion;
   import java.util.*;

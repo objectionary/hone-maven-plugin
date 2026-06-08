@@ -211,6 +211,8 @@ result: |
 # opcode counts, e.g. closure-long-filter).
 when:
   and:
+    - eq: [𝑒-first-class, 𝑒-class]
+    - eq: [𝑒-second-class, 𝑒-class]
     - matches:
         - '(lambda\$|fused_).+'
         - 𝑒-first-method

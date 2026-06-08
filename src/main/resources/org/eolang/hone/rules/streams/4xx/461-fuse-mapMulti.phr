@@ -110,8 +110,8 @@ result: |
             class ↦ 𝑒-class,
             method ↦ 𝑒-fused-name,
             signature ↦ 𝑒-fused-signature,
-            is-interface ↦ Φ.false
-          ⟧,
+            is-interface ↦ 𝑒-first-is-interface
+          ⟧
           stream ↦ ⟦
             class ↦ "java/util/stream/Stream",
             method ↦ "mapMulti",

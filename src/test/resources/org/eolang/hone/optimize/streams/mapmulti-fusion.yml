@@ -15,14 +15,31 @@
 # The chain below stacks FIVE mapMulti operations to make the iteration
 # obvious: 461 folds them left-to-right within a single max-cycles=1 pass —
 # (a,b) -> ab, then (ab,c) -> abc, … — until exactly ONE Stream.mapMulti
-# survives. Each stage emits one element, so count() = 3 either way; the value
-# of count is not what this proves. What it proves is that the deeply-nested
-# fused BiConsumer and its chain of wrapper indys are well-formed: the
-# optimized class still loads, verifies and runs, and four of the five
-# Stream.mapMulti call sites are gone. invokeinterface drops from 11
-# (mapMulti x5 + count + Consumer.accept x5) to 7 (four mapMultis removed).
-# invokedynamic stays at 5 — the adapter relocates each fused-away call-site
-# indy into a `fused` method as a wrapper builder rather than eliminating it;
+# survives, with four synthesised `fused`/`wrap` method pairs (one per fold)
+# nested inside it.
+#
+# Each lambda body is a real piece of code rather than a one-liner, precisely
+# so this fixture confirms the fusion preserves behaviour and does not just
+# happen to type-check: the first fans one element out to two, the second is a
+# conditional that emits one or two depending on parity, the third emits a
+# value-dependent number of elements from a bounded loop, the fourth branches
+# on a local and may emit twice, and the fifth is a guarded emit that can drop
+# the element entirely. So every emit count along the chain is data-dependent,
+# and the elements interleave through the nested `fused`/`wrap` consumers in a
+# specific order. The terminal is an order- AND value-sensitive 31-fold
+# (reduce), so the printed result is a signature that changes if fusion
+# corrupts the emitted multiset, its values, or its order. The optimized class
+# reproduces it exactly (-1189132447), which is the real proof — bytecode that
+# merely verifies but miswires the wrapper consumers would print a different
+# number.
+#
+# Counts: invokeinterface drops from 15 to 11 — four of the five
+# Stream.mapMulti call sites are gone (the five Consumer.accept-bearing lambda
+# bodies, the surviving mapMulti and reduce stay). invokedynamic stays at 6
+# (five mapMulti lambdas + the reduce lambda before; one surviving mapMulti
+# call site + four relocated wrapper-builder indys + the reduce lambda after) —
+# the adapter relocates each fused-away call-site indy into a `fused` method as
+# a wrapper builder rather than eliminating it, so the count is conserved;
 # collapsing those wrapper allocations is a separate inlining step left for
 # later.
 java: |
@@ -30,13 +47,39 @@ java: |
   import java.util.stream.Stream;
   public class X {
     public static void main(String[] a) {
-      long n = Stream.of(1, 2, 3)
-        .<Integer>mapMulti((x, s) -> s.accept(x + 1))
-        .<Integer>mapMulti((x, s) -> s.accept(x + 2))
-        .<Integer>mapMulti((x, s) -> s.accept(x + 3))
-        .<Integer>mapMulti((x, s) -> s.accept(x + 4))
-        .<Integer>mapMulti((x, s) -> s.accept(x + 5))
-        .count();
+      int n = Stream.of(7, 12, 3, 20, 5, 14, 9)
+        .<Integer>mapMulti((x, s) -> {
+          s.accept(x);
+          s.accept(x + 100);
+        })
+        .<Integer>mapMulti((y, s) -> {
+          if (y % 2 == 0) {
+            s.accept(y * 2);
+          } else {
+            s.accept(y);
+            s.accept(y + 1);
+          }
+        })
+        .<Integer>mapMulti((z, s) -> {
+          int reps = z % 3;
+          for (int i = 0; i <= reps; i++) {
+            s.accept(z - i);
+          }
+        })
+        .<Integer>mapMulti((w, s) -> {
+          int half = w / 2;
+          if (half > 30) {
+            s.accept(half);
+          }
+          s.accept(w);
+        })
+        .<Integer>mapMulti((u, s) -> {
+          long acc = ((long) u * u) % 1000L;
+          if (acc % 2L == 1L) {
+            s.accept((int) acc);
+          }
+        })
+        .reduce(0, (p, q) -> p * 31 + q);
       System.out.printf("The result is %d\n", n);
     }
   }
@@ -44,10 +87,10 @@ log:
   - "Modified 1/1 X.phi"
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
-  - "The result is 3"
+  - "The result is -1189132447"
 before:
-  invokedynamic: 5
-  invokeinterface: 11
+  invokedynamic: 6
+  invokeinterface: 15
 after:
-  invokedynamic: 5
-  invokeinterface: 7
+  invokedynamic: 6
+  invokeinterface: 11

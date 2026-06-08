@@ -1,0 +1,156 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Converts a user-written Stream.flatMap into an equivalent Stream.mapMulti so
+# that it can be fused with adjacent mapMultis by 461. A flatMap takes a
+# Function<T, Stream<R>> and flattens the returned streams; the same fan-out is
+# expressed by mapMulti((x, c) -> mapper(x).forEach(c)), where c is the
+# downstream Consumer. 111 lifts the flatMap invokedynamic into a Φ.hone.lambda
+# carrying stream.method = "flatMap" and a handle-6 target to a non-capturing
+# lambda$ body of signature (L<elem>;)Ljava/util/stream/Stream;. This rule
+# rewrites that pragma into the very shape 111 produces for a user mapMulti — a
+# Φ.hone.lambda with interface BiConsumer, stream.method = "mapMulti", and a
+# handle-6 target — whose target is a freshly synthesised BiConsumer `flatadapt`:
+#
+#   flatadapt(x, c):  invokestatic lambda$(x) -> Stream ; mapper applied to item
+#                     invokeinterface Stream.forEach(c) ; drains it into c
+#
+# The original mapper body (lambda$…) is kept untouched — the rule only wires the
+# adapter around it, so it is agnostic to what the mapper does. Because the
+# product is exactly the user-mapMulti Φ.hone.lambda form, a flatMap adjacent to
+# a mapMulti (or to another converted flatMap) folds into one stage on the next
+# cycle via 461, and a lone flatMap lowers to one Stream.mapMulti via 701 — still
+# a win, since mapMulti pushes straight into the downstream Consumer instead of
+# allocating an intermediate Stream per element.
+#
+# Scope: reference Stream.flatMap only (mapper returns java/util/stream/Stream).
+# The primitive flatMapToInt/Long/Double variants carry different SAM and result
+# types and are left for a follow-up. Like the JDK's own mapMulti-via-flatMap
+# bridge, this assumes the mapper returns a non-null, non-resource stream — the
+# null-skip and auto-close of flatMap are not reproduced.
+name: flatMap-to-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-flatmap ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "apply",
+          interface ↦ "()Ljava/util/function/Function;",
+          lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+          bridge-signature ↦ 𝑒-bridge-signature,
+          static ↦ "true",
+          opcode ↦ 𝑒-opcode,
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "flatMap",
+            signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-method-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-flatmap ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-adapter-signature,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class,
+            method ↦ 𝑒-adapter-name,
+            signature ↦ 𝑒-adapter-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-method-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-adapter-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-adapter-signature,
+      signature ↦ "",
+      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 2, max-locals ↦ 2 ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-flatmap-input ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        call-mapper ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-target-class,
+          i3 ↦ 𝑒-target-method,
+          i4 ↦ 𝑒-target-signature,
+          i5 ↦ 𝑒-target-is-interface
+        ⟧,
+        ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        call-foreach ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/Stream",
+          i3 ↦ "forEach",
+          i4 ↦ "(Ljava/util/function/Consumer;)V",
+          i5 ↦ Φ.true
+        ⟧,
+        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-adapter-name
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-adapter-method
+    function: random-tau
+  - meta: 𝑒-adapter-name
+    function: random-string
+    args: [ '"flatadapt_%d"' ]
+  - meta: 𝑒-flatmap-input
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/^[(](L[^;]*;).*/$1/"'
+  - meta: 𝑒-adapter-signature
+    function: concat
+    args: [ '"("', 𝑒-flatmap-input, '"Ljava/util/function/Consumer;)V"' ]

@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Conversion of Stream.flatMap into Stream.mapMulti and its fusion into an
+# adjacent mapMulti chain (issue #679). A flatMap and a mapMulti are two ways to
+# spell the same one-to-many fan-out: flatMap(f) flattens the streams f returns,
+# mapMulti(b) pushes straight into the downstream Consumer. 111 lifts the flatMap
+# invokedynamic into a Φ.hone.lambda carrying stream.method = "flatMap", and
+# 455-flatMap-to-mapMulti rewrites that pragma into the user-mapMulti
+# Φ.hone.lambda form — stream.method = "mapMulti" backed by a synthesised
+# BiConsumer `flatadapt` that applies the original mapper and drains the returned
+# stream into the consumer, i.e. flatMap(f) becomes
+# mapMulti((x, c) -> f(x).forEach(c)). Because the product is exactly the shape
+# 461-fuse-mapMulti folds, the leading flatMap collapses left-to-right into the
+# two user mapMultis that follow it, leaving ONE Stream.mapMulti.
+#
+# The chain fans every element out a data-dependent number of times: the flatMap
+# doubles it, the first mapMulti emits one or two by parity, and the second emits
+# a value-dependent count from a bounded loop, so the elements interleave through
+# the nested fused/wrap consumers in a specific order. The terminal is an order-
+# AND value-sensitive 31-fold (reduce), so the printed signature changes if the
+# fusion corrupts the emitted multiset, its values, or its order. The optimized
+# class reproduces it exactly (1535632236), which is the real proof — bytecode
+# that merely verifies but miswires the consumers would print a different number.
+#
+# Counts: invokeinterface drops from 7 to 6. The three fan-out call sites
+# (Stream.flatMap + two Stream.mapMulti) collapse to the single surviving
+# Stream.mapMulti, and the converted flatMap contributes one Stream.forEach in
+# its `flatadapt` body; the three Consumer.accept calls in the two mapMulti
+# bodies and the terminal reduce are untouched (1 mapMulti + 1 forEach + 3 accept
+# + 1 reduce = 6, down from 1 flatMap + 2 mapMulti + 3 accept + 1 reduce = 7).
+# invokedynamic stays at 4 (flatMap + two mapMulti + reduce lambdas before; one
+# surviving mapMulti call site + two relocated wrapper-builder indys + the reduce
+# lambda after) — like 461, the adapter relocates each fused-away call-site indy
+# into a `fused` method as a wrapper builder rather than eliminating it, so the
+# count is conserved; collapsing those wrapper allocations is a separate step.
+java: |
+  package flatmapfusion;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int n = Stream.of(1, 2, 3, 4, 5, 6)
+        .flatMap(x -> Stream.of(x, x * 10))
+        .<Integer>mapMulti((y, c) -> {
+          c.accept(y + 1);
+          if (y % 2 == 0) {
+            c.accept(y - 1);
+          }
+        })
+        .<Integer>mapMulti((z, c) -> {
+          int reps = Math.floorMod(z, 3);
+          for (int i = 0; i <= reps; i++) {
+            c.accept(z - i);
+          }
+        })
+        .reduce(0, (p, q) -> p * 31 + q);
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 1535632236"
+before:
+  invokedynamic: 4
+  invokeinterface: 7
+after:
+  invokedynamic: 4
+  invokeinterface: 6

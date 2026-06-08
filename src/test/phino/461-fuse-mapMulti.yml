@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 461 fuses adjacent Φ.hone.lambda mapMulti pragmas (the form 111 lifts a
+# user-written Stream.mapMulti into) into one. The input is a class whose `main`
+# body chains FOUR such pragmas, targeting non-capturing lambda$main$0..3 — a
+# deliberately long chain so the fusion is plainly iterative, not a one-shot
+# pair merge. phino runs the rule to a fixpoint: it folds the first pair into a
+# `fused`/`wrap` method pair, then folds that fused pragma with the third, then
+# with the fourth, collapsing the whole chain to a single mapMulti pragma backed
+# by three `fused` + three `wrap` synthesised static methods.
+#
+# Each `wrap` forwards into one original lambda (invokestatic lambda$main$N) and
+# each `fused` drives the previous stage with a wrapper Consumer built by an
+# inner invokedynamic over its `wrap`. In the UNFUSED input every lambda$main$N
+# appears only as a target inside a Φ.hone.lambda pragma — never as an
+# invokestatic opcode — so matching an invokestatic to each of the four proves
+# all four were wired into synthesised bodies, i.e. the entire chain fused.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/461-fuse-mapMulti.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of4,
+        op0 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        op2 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$2", signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        op3 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$3", signature ↦ "(Ljava/lang/Integer;Ljava/util/function/Consumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$1", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$2", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$3", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokedynamic, i2 ↦ "accept", i3 ↦ "(Ljava/util/function/Consumer;)Ljava/util/function/Consumer;", 𝐵-rest ⟧

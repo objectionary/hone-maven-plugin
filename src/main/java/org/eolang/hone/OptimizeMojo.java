@@ -87,9 +87,16 @@ public final class OptimizeMojo extends AbstractMojo {
      * {@code grep} reject every class and skip optimization entirely
      * (see #671).</p>
      *
+     * <p>The third alternative <tt>6D-61-70-4D-75-6C-74-69</tt> is the
+     * <tt>"mapMulti"</tt> method name; because <tt>"map"</tt> is anchored it
+     * does not cover <tt>"mapMulti"</tt> on its own, so a class that uses only
+     * {@code mapMulti()} (the input that {@code 461-fuse-mapMulti} fuses, see
+     * issue #678) would otherwise be skipped entirely.</p>
+     *
      * @since 0.19.0
      */
-    static final String DEFAULT_GREP_IN = ">(66-69-6C-74-65-72|6D-61-70)<";
+    static final String DEFAULT_GREP_IN =
+        ">(66-69-6C-74-65-72|6D-61-70|6D-61-70-4D-75-6C-74-69)<";
 
     /**
      * Splitter for comma-separated values (with optional whitespace).

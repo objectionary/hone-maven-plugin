@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Fusion of two adjacent user-written Stream.mapMulti operations (issue #678).
+# Unlike map/filter/etc., a mapMulti is NOT folded into a distill (distill is
+# single-emit; mapMulti is one-to-many). Instead 111 lifts each mapMulti
+# invokedynamic into a Φ.hone.lambda pragma carrying stream.method = "mapMulti",
+# the two land adjacent, and 461-fuse-mapMulti replaces the pair with one
+# Φ.hone.lambda whose target is a synthesised BiConsumer `fused` that drives the
+# first lambda with a wrapper consumer feeding the second — s.mapMulti(a)
+# .mapMulti(b) becomes s.mapMulti((x,c) -> a(x, y -> b(y,c))). 701 lowers the
+# single fused pragma back to one invokedynamic + one Stream.mapMulti.
+#
+# The chain emits one element per stage, so count() = 3 either way; the value
+# of count is not what this proves. What it proves is that the optimized class
+# still loads, verifies and runs (the fused BiConsumer and its inner wrapper
+# indy are well-formed) and that exactly one Stream.mapMulti call survives:
+# invokeinterface drops from 5 (mapMulti x2 + count + Consumer.accept x2) to 4
+# (one mapMulti removed). invokedynamic stays at 2 — the adapter relocates the
+# second call-site indy into `fused` as the wrapper builder rather than
+# eliminating it; collapsing that wrapper allocation is a separate inlining
+# step left for later.
+java: |
+  package mapmultifusion;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long n = Stream.of(1, 2, 3)
+        .<Integer>mapMulti((x, s) -> s.accept(x + 1))
+        .<Integer>mapMulti((x, s) -> s.accept(x + 2))
+        .count();
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3"
+before:
+  invokedynamic: 2
+  invokeinterface: 5
+after:
+  invokedynamic: 2
+  invokeinterface: 4

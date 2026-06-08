@@ -1,0 +1,249 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fuses two adjacent standalone mapMulti operations into one. A user-written
+# `s.mapMulti(a).mapMulti(b)` is lifted by 111 into two adjacent Φ.hone.lambda
+# pragmas, each carrying stream.method = "mapMulti" and a handle-6 target to a
+# non-capturing lambda$ body. This rule replaces the pair with ONE Φ.hone.lambda
+# (still a mapMulti, lowered back to a single invokedynamic + Stream.mapMulti by
+# 701) whose target is a freshly synthesised BiConsumer `fused`. Following the
+# composition s.mapMulti((x,c) -> a(x, y -> b(y,c))):
+#
+#   fused(x, c):  invokestatic a$impl(x, W)        ; W = (Consumer) y -> b$impl(y,c)
+#   wrap (c, y):  invokestatic b$impl(y, c)        ; the W body, capturing c
+#
+# `fused` builds W with an inner invokedynamic over `wrap` capturing the
+# downstream consumer c, then drives the first lambda with W as its sink; every
+# value the first lambda emits flows through wrap into the second lambda and on
+# to c. Both original lambda bodies (a$impl, b$impl) are kept untouched — the
+# rule never inlines them, it only wires the call graph, so it is agnostic to
+# what either body does (any number of emits). The fused result is itself a
+# Φ.hone.lambda mapMulti, so a third adjacent mapMulti fuses into it on the next
+# cycle, collapsing a whole chain to one stage.
+#
+# Scope: reference Stream.mapMulti only (BiConsumer/Consumer, object element).
+# The primitive mapMultiToInt/Long/Double variants and capturing lambdas are
+# left for a follow-up — they never reach this Φ.hone.lambda form today (111
+# declines capturing indy; the primitive consumers carry different SAM types).
+name: fuse-mapMulti
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-first ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-first-bridge,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-first-class,
+            method ↦ 𝑒-first-method,
+            signature ↦ 𝑒-first-signature,
+            is-interface ↦ 𝑒-first-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝜏-second ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-second-bridge,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-second-class,
+            method ↦ 𝑒-second-method,
+            signature ↦ 𝑒-second-signature,
+            is-interface ↦ 𝑒-second-is-interface
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-method-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head,
+    𝜏-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-method-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-first ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ 𝑒-class,
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ 𝑒-fused-signature,
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-class,
+            method ↦ 𝑒-fused-name,
+            signature ↦ 𝑒-fused-signature,
+            is-interface ↦ Φ.false
+          ⟧,
+          stream ↦ ⟦
+            class ↦ "java/util/stream/Stream",
+            method ↦ "mapMulti",
+            signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;"
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-method-tail
+    ⟧,
+    𝐵-class-tail,
+    𝜏-fused-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-fused-signature,
+      signature ↦ "",
+      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 6, max-locals ↦ 2 ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-first-input ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        mk-wrap ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          i2 ↦ "accept",
+          i3 ↦ "(Ljava/util/function/Consumer;)Ljava/util/function/Consumer;",
+          i4 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            i1 ↦ 6,
+            i2 ↦ "java/lang/invoke/LambdaMetafactory",
+            i3 ↦ "metafactory",
+            i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            i5 ↦ Φ.false
+          ⟧,
+          i5 ↦ ⟦ φ ↦ Φ.jeo.type, i1 ↦ "(Ljava/lang/Object;)V" ⟧,
+          i6 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            i1 ↦ 6,
+            i2 ↦ 𝑒-class,
+            i3 ↦ 𝑒-wrap-name,
+            i4 ↦ 𝑒-wrap-signature,
+            i5 ↦ Φ.false
+          ⟧,
+          i7 ↦ ⟦ φ ↦ Φ.jeo.type, i1 ↦ 𝑒-wrap-instantiated ⟧
+        ⟧,
+        call-first ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-first-class,
+          i3 ↦ 𝑒-first-method,
+          i4 ↦ 𝑒-first-signature,
+          i5 ↦ 𝑒-first-is-interface
+        ⟧,
+        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-fused-name
+    ⟧,
+    𝜏-wrap-method ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 4106,
+      descriptor ↦ 𝑒-wrap-signature,
+      signature ↦ "",
+      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 6, max-locals ↦ 2 ⟧,
+      params ↦ ⟦
+        φ ↦ Φ.jeo.params,
+        i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-second-input ⟧
+      ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        call-second ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-second-class,
+          i3 ↦ 𝑒-second-method,
+          i4 ↦ 𝑒-second-signature,
+          i5 ↦ 𝑒-second-is-interface
+        ⟧,
+        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        ρ ↦ ∅
+      ⟧,
+      name ↦ 𝑒-wrap-name
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+# Fire only on user-written mapMultis (javac names their bodies `lambda$…`) and
+# on this rule's own fusion products (`fused_…`), so a chain of three or more
+# folds left-to-right. A pipeline-generated mapMulti — the lowering form 501/502
+# emit for a fused map/filter/distinct chain — targets a `distill_…` method, so
+# excluding every other prefix keeps 461 off the already-optimal distill output
+# (re-fusing it via the adapter would only relocate an indy and break its pinned
+# opcode counts, e.g. closure-long-filter).
+when:
+  and:
+    - matches:
+        - '(lambda\$|fused_).+'
+        - 𝑒-first-method
+    - matches:
+        - '(lambda\$|fused_).+'
+        - 𝑒-second-method
+where:
+  - meta: 𝜏-fused-method
+    function: random-tau
+  - meta: 𝜏-wrap-method
+    function: random-tau
+  - meta: 𝑒-fused-name
+    function: random-string
+    args: [ '"fused_%d"' ]
+  - meta: 𝑒-wrap-name
+    function: random-string
+    args: [ '"wrap_%d"' ]
+  - meta: 𝑒-first-input
+    function: sed
+    args:
+      - 𝑒-first-signature
+      - '"s/^[(](L[^;]*;).*/$1/"'
+  - meta: 𝑒-second-input
+    function: sed
+    args:
+      - 𝑒-second-signature
+      - '"s/^[(](L[^;]*;).*/$1/"'
+  - meta: 𝑒-fused-signature
+    function: concat
+    args: [ '"("', 𝑒-first-input, '"Ljava/util/function/Consumer;)V"' ]
+  - meta: 𝑒-wrap-signature
+    function: concat
+    args: [ '"(Ljava/util/function/Consumer;"', 𝑒-second-input, '")V"' ]
+  - meta: 𝑒-wrap-instantiated
+    function: concat
+    args: [ '"("', 𝑒-second-input, '")V"' ]

@@ -81,8 +81,8 @@
 # survives the 4xx pass as a stand-alone stateful distill — is uniformly lowered to a
 # standalone Stream.mapMulti by 502/512/521/601, for ANY capture count N and for
 # int/long/double/reference captures alike. There is NO per-arity revert back to the
-# native invokedynamic: the lone operator pays the small mapMulti overhead (an extra
-# invokedynamic, a wrapper, a List.get per element) rather than being put back to
+# native invokedynamic: the lone operator pays the small mapMulti overhead (a wrapper
+# and a List.get per element) rather than being put back to
 # native. This is the same path every FUSED capturing operator already takes, so it
 # needs no special casing — and it sidesteps the phino lone-vs-fused discrimination
 # problem (objectionary/phino#747) entirely, since we never need to tell a lone

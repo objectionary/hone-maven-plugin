@@ -22,6 +22,7 @@ input: |
         φ ↦ Φ.hone.c-map,
         state-acc ↦ ⟦⟧,
         body-acc ↦ ⟦⟧,
+        remaining ↦ "II",
         class ↦ "Foo",
         bridge-input ↦ "Ljava/lang/Integer;",
         bridge-output ↦ "Ljava/lang/Integer;",

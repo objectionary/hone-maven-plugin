@@ -20,7 +20,11 @@
 # pop` (begins and ends at [list], peak 3, so any number of them — across this
 # operator and any fused neighbours — join without growing the caller's stack).
 # body-acc gains one `fetch; intValue` (521 turns the fetch into List.get(counter++)
-# at emit, the intValue unboxes it). 316 wraps the finished body-acc as
+# at emit, the intValue unboxes it). It also strips the rightmost code from the
+# c-map's `remaining` field (the parens-free factory params 112 seeded), keeping it
+# in lock-step with the push run so the reference peel 115 reads each capture's type
+# positionally (issue #665); 116/117 and the cp-filter twins 118/120/122 do the same.
+# 316 wraps the finished body-acc as
 # `astore 1; <fetches>; aload 1; invokestatic lambda$`, so the unboxed captures
 # sit below the parked item exactly as the lambda$ (int…, Integer) signature wants.
 #
@@ -36,6 +40,7 @@ pattern: |
       φ ↦ Φ.hone.c-map,
       state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
       body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      remaining ↦ 𝑒-rem,
       𝐵-cm-tail
     ⟧,
     𝐵-t
@@ -78,11 +83,17 @@ result: |
         𝐵-bacc,
         ρ ↦ ∅
       ⟧,
+      remaining ↦ 𝑒-rem-out,
       𝐵-cm-tail
     ⟧,
     𝐵-t
   ⟧
 where:
+  - meta: 𝑒-rem-out
+    function: sed
+    args:
+      - 𝑒-rem
+      - '"s/[IJD]$//"'
   - meta: 𝜏-dup
     function: random-tau
   - meta: 𝜏-load

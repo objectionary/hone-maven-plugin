@@ -23,14 +23,16 @@
 # state List" is what lets N captures (and any number of fused capturing
 # operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
 #
-# v1.4 scope (issues #636, #640, #647, #652): the captures admitted are either
-# one OR MORE category-1/2 PRIMITIVE captures (factory descriptor "([IJD]+)L…Function;",
-# every push a constant-index iload/lload/dload, gathered by 114 for int and by
-# its category-2 twins 116/117 for long/double) OR a SINGLE reference capture
-# (factory descriptor "(L…;)L…Function;", push an aload, gathered by the reference
-# branch 115) — the two are partitioned by the `or` in the interface guard, and a
-# mixed int/long/double run is gathered by 114/116/117 interleaving on their own
-# opcode. In both cases the map is type-PRESERVING over ANY reference element type:
+# v1.5 scope (issues #636, #640, #647, #652, #665): the captures admitted are ANY
+# non-empty run of category-1/2 PRIMITIVE captures (iload/lload/dload, gathered by
+# 114/116/117) and/or REFERENCE captures (aload, gathered by 115), in any mix and
+# any count — the single interface guard "\(([IJD]|L[^;]+;)+\)L…Function;" admits the
+# whole "(III)", "(L…;)", "(L…;L…;)", "(IL…;)" … space. 112 seeds the c-map's
+# `remaining` field with the factory's parens-free parameter codes; each peel strips
+# the rightmost code as it consumes the rightmost push (right-to-left), so when 115
+# fires the rightmost remaining code is exactly the element type of the reference it
+# is peeling — POSITIONAL extraction that types more than one reference, and mixed
+# primitive/reference runs, correctly. The map is type-PRESERVING over ANY reference element type:
 # the SAM instantiated type is matched as "(LX;)LX;" for any reference X (Integer,
 # String, …) via a backreference guard, and the element type X is sed-extracted
 # into 𝑒-bridge and threaded into all four bridge fields. The lambda$ target is a
@@ -88,11 +90,11 @@
 # problem (objectionary/phino#747) entirely, since we never need to tell a lone
 # distill from a fused one.
 #
-# @todo #665:45min Generalise the CAPTURE channel further: a MIXED multi-capture
-#  run that contains a reference (only a SINGLE lone reference is admitted today,
-#  in both the map (115) and the filter (119), because each reads the capture type
-#  out of target.signature's first L-type — a multi-reference run needs positional
-#  type extraction). This part is independent of phino and still doable here.
+# Multi-reference and mixed primitive/reference runs are done (issue #665): 115/119
+# read each reference's element type POSITIONALLY from the rightmost code of the
+# c-map's `remaining` field (seeded by 112/113, stripped one code per peel), so a run
+# carrying more than one reference — or a reference mixed with primitives — types
+# every capture correctly. See streams/closure-multi-reference.yml.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦
@@ -210,6 +212,7 @@ result: |
           φ ↦ Φ.hone.c-map,
           state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          remaining ↦ 𝑒-remaining,
           class ↦ 𝑒-class,
           bridge-input ↦ 𝑒-bridge,
           bridge-output ↦ 𝑒-bridge,
@@ -237,13 +240,9 @@ when:
     - matches:
         - 'lambda\$.+'
         - 𝑒-target-method
-    - or:
-        - matches:
-            - '\([IJD]+\)Ljava/util/function/Function;'
-            - 𝑒-interface
-        - matches:
-            - '\(L[^;]+;\)Ljava/util/function/Function;'
-            - 𝑒-interface
+    - matches:
+        - '\(([IJD]|L[^;]+;)+\)Ljava/util/function/Function;'
+        - 𝑒-interface
     - matches:
         - '\((L[^;]+;)\)\1'
         - 𝑒-instantiated
@@ -252,6 +251,17 @@ where:
     function: sed
     args:
       - 𝑒-instantiated
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
+  # The capture run's factory descriptor parameter codes, parens-free, e.g.
+  # "Ljava/util/List;Ljava/lang/String;" or "ILjava/util/List;". 114-122 strip the
+  # rightmost code per peel (right-to-left), so when the reference peel 115 fires the
+  # rightmost remaining code IS the element type of the reference it is peeling —
+  # positional extraction that admits more than one reference and mixed runs (#665).
+  - meta: 𝑒-remaining
+    function: sed
+    args:
+      - 𝑒-interface
       - '"s/[(]//"'
       - '"s/[)].*//"'
   # Bump the caller max-stack by 2 when a category-2 (J/D) primitive capture is

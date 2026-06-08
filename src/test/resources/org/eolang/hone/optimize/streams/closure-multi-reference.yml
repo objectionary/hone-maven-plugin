@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that capturing-lambda fusion admits MORE THAN ONE reference
+# capture, with each reference typed POSITIONALLY (issue #665). The first map
+# captures two effectively-final references of DIFFERENT types — a List and a
+# String — read inside the lambda:
+#
+#   Stream.of(...).map(n -> n + a.size() + b.length()).map(n -> n * 2).reduce(0, ...)
+#
+# javac compiles the factory descriptor as "(Ljava/util/List;Ljava/lang/String;)L…Function;"
+# and the lambda$ as "(Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;)Ljava/lang/Integer;".
+# 112's relaxed interface guard admits the two-reference run and seeds the c-map's
+# `remaining` field with the parens-free factory params; 115 peels the two `aload`
+# pushes right-to-left, reading EACH reference's element type from the rightmost
+# code of `remaining` (so `b` is typed java/lang/String and `a` java/util/List, not
+# both java/util/List) and stripping that code per peel. 316 folds a stateful
+# distill and 401 fuses it with the following NON-capturing map (n -> n * 2).
+# 502/512/521/601 emit one Stream.mapMulti whose wrapper reads the two captures back
+# with the right checkcasts and calls List.size() and String.length() per element.
+#
+# This is the case a "first L-type" reader would miscompile: a wrong type on the
+# String capture would checkcast it to List and blow up at runtime, so the correct
+# printout is the positional-extraction oracle. With a.size() == 3 and
+# b.length() == 2 the map sends {1,2,3,4,5} -> n+5 -> {6,7,8,9,10} -> *2 ->
+# {12,14,16,18,20} -> sum == 80.
+#
+# invokedynamic: before = map(capturing two refs) + map + reduce-accumulator lambda
+# = 3; after = the single fused mapMulti + the untouched reduce lambda = 2.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class C {
+    static int run(List<Integer> a, String b) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + a.size() + b.length())
+        .map(n -> n * 2)
+        .reduce(0, (x, y) -> x + y);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run(Arrays.asList(7, 8, 9), "pq"));
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 80"

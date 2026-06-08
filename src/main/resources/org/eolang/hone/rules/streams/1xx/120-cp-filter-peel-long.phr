@@ -28,6 +28,7 @@ pattern: |
       φ ↦ Φ.hone.cp-filter,
       state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
       body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      remaining ↦ 𝑒-rem,
       𝐵-cf-tail
     ⟧,
     𝐵-t
@@ -70,11 +71,17 @@ result: |
         𝐵-bacc,
         ρ ↦ ∅
       ⟧,
+      remaining ↦ 𝑒-rem-out,
       𝐵-cf-tail
     ⟧,
     𝐵-t
   ⟧
 where:
+  - meta: 𝑒-rem-out
+    function: sed
+    args:
+      - 𝑒-rem
+      - '"s/[IJD]$//"'
   - meta: 𝜏-dup
     function: random-tau
   - meta: 𝜏-load

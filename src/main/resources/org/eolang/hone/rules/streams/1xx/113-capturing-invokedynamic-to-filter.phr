@@ -17,11 +17,11 @@
 # the static lambda$ (int…, Integer) signature wants — the same N-ary shape 316
 # gives a capturing map.
 #
-# Scope: one OR MORE category-1/2 PRIMITIVE captures (factory descriptor
+# Scope: ANY non-empty run of category-1/2 PRIMITIVE captures (factory descriptor
 # "([IJD]+)L…Predicate;", every push a constant-index iload/lload/dload, gathered by
-# 118 for int and by its category-2 twins 120/122 for long/double) OR a SINGLE
-# reference capture (factory descriptor "(L…;)L…Predicate;", push an aload, gathered
-# by the reference branch 119), over a Stream<Integer> predicate (instantiated type
+# 118 for int and by its category-2 twins 120/122 for long/double) and/or REFERENCE
+# captures (push an aload, gathered by 119, each typed POSITIONALLY from the seeded
+# `remaining` field — issue #665), in any mix, over a Stream<Integer> predicate (instantiated type
 # "(Ljava/lang/Integer;)Z"), a handle-6 static lambda$ target. So `filter(n -> n > t)`
 # (one int capture), `filter(n -> n > lo && n < hi)` (two int captures),
 # `filter(n -> n > x)` over a captured long (one J capture) and
@@ -149,6 +149,7 @@ result: |
           φ ↦ Φ.hone.cp-filter,
           state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          remaining ↦ 𝑒-remaining,
           class ↦ 𝑒-class,
           bridge-input ↦ "Ljava/lang/Integer;",
           bridge-output ↦ "Ljava/lang/Integer;",
@@ -176,14 +177,19 @@ when:
     - matches:
         - 'lambda\$.+'
         - 𝑒-target-method
-    - or:
-        - matches:
-            - '\([IJD]+\)Ljava/util/function/Predicate;'
-            - 𝑒-interface
-        - matches:
-            - '\(L[^;]+;\)Ljava/util/function/Predicate;'
-            - 𝑒-interface
+    - matches:
+        - '\(([IJD]|L[^;]+;)+\)Ljava/util/function/Predicate;'
+        - 𝑒-interface
 where:
+  # The capture run's factory descriptor parameter codes, parens-free; 118-122
+  # strip the rightmost code per peel so 119 reads each reference's element type
+  # positionally — the filter mirror of 112's 𝑒-remaining (#665).
+  - meta: 𝑒-remaining
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
   # Bump the caller max-stack by 2 when a category-2 (J/D) primitive capture is
   # present (its relocated 2-slot boxing append, 120/122, peaks one slot higher
   # than an int append); an int-only or reference capture bumps by 0. The same

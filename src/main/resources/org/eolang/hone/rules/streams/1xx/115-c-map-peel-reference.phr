@@ -2,23 +2,26 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The reference-capture twin of 114. 112 admits a SINGLE reference capture
-# (factory descriptor "(L…;)L…Function;", e.g. `map(n -> n + base.size())` over a
-# captured List) and leaves the lone `aload k` push inline in front of the c-map
-# with two EMPTY accumulators; this rule folds it into the operator's shared-List
-# state, exactly as 114 does for an `iload` int push — only the boxing and the
-# unboxing drop out, because a reference is already an Object.
+# The reference-capture twin of 114. 112 admits one or more reference captures
+# (factory descriptor "(L…;)L…Function;", "(L…;L…;)L…Function;", or mixed with
+# primitives, e.g. `map(n -> n + a.size() + b.length())` over a captured List and
+# String) and leaves the `aload k` pushes inline in front of the c-map with two
+# EMPTY accumulators; this rule peels them one at a time (right-to-left, greedy-left)
+# into the operator's shared-List state, exactly as 114 does for an `iload` int push
+# — only the boxing and the unboxing drop out, because a reference is already an Object.
 #
 # state-acc gains `dup; aload k; List.add; pop` (no Integer.valueOf — the captured
 # reference goes straight into the List; the append begins and ends at [list],
 # peak 3, identical to 114's int append, so it joins any number of fused
 # neighbours without growing the caller's stack). body-acc gains a single
 # `fetch` whose `type` is the captured object's class (521 turns the fetch into
-# List.get(counter++) and a checkcast to that class; no unbox follows). The class
-# is sed-extracted from the c-map's target.signature — the lambda$ descriptor is
-# "(Lcapture;Lelement;)Lelement;", so its first L-type IS the capture type. This
-# is why only a SINGLE reference capture is supported: with one capture arg the
-# first L-type is unambiguous.
+# List.get(counter++) and a checkcast to that class; no unbox follows). The class is
+# read POSITIONALLY from the c-map's `remaining` field — the parens-free factory
+# parameter codes 112 seeded — via a tokenizing sed that returns its RIGHTMOST
+# reference code; this rule then strips that code so the next peel sees the next
+# capture. Because peeling is right-to-left, the rightmost remaining code is always
+# the capture being peeled, so more than one reference (and references mixed with
+# primitives) each get the right type (issue #665).
 #
 # 316 then wraps body-acc into the auto emit-shape `astore 1; <fetch>; aload 1;
 # invokestatic lambda$`, so the reloaded reference sits below the parked item
@@ -33,8 +36,7 @@ pattern: |
       φ ↦ Φ.hone.c-map,
       state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
       body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
-      𝐵-cm-mid,
-      target ↦ ⟦ 𝐵-tgt-head, signature ↦ 𝑒-sig, 𝐵-tgt-tail ⟧,
+      remaining ↦ 𝑒-rem,
       𝐵-cm-tail
     ⟧,
     𝐵-t
@@ -63,8 +65,7 @@ result: |
         𝐵-bacc,
         ρ ↦ ∅
       ⟧,
-      𝐵-cm-mid,
-      target ↦ ⟦ 𝐵-tgt-head, signature ↦ 𝑒-sig, 𝐵-tgt-tail ⟧,
+      remaining ↦ 𝑒-rem-out,
       𝐵-cm-tail
     ⟧,
     𝐵-t
@@ -73,9 +74,13 @@ where:
   - meta: 𝑒-captype
     function: sed
     args:
-      - 𝑒-sig
-      - '"s/[(]L//"'
-      - '"s/;.*//"'
+      - 𝑒-rem
+      - '"s/^([IJD]|L[^;]*;)*L([^;]*);$/$2/"'
+  - meta: 𝑒-rem-out
+    function: sed
+    args:
+      - 𝑒-rem
+      - '"s/L[^;]*;$//"'
   - meta: 𝜏-dup
     function: random-tau
   - meta: 𝜏-load

@@ -28,7 +28,7 @@ java: |
   package fusion;
   import java.util.*;
   import java.util.stream.*;
-  public class C {
+  public class CReference {
     static int run(List<Integer> base) {
       return Stream.of(1, 2, 3, 4, 5)
         .map(n -> n + base.size())

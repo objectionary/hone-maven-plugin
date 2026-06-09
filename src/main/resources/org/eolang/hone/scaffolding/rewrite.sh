@@ -135,14 +135,17 @@ function rewrite_with_timeout {
   xi=${4}
   xo=${5}
   start=$(date '+%s.%N')
-  if ! timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@"; then
+  code=0
+  timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@" || code=$?
+  if [ "${code}" -ne 0 ]; then
     sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
-    if [ "${sec}" -eq 0 ]; then
-      echo "Failure in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1))"
-      exit 1
+    if [ "${code}" -eq 124 ] || [ "${code}" -eq 137 ]; then
+      echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
+      cp "${xi}" "${xo}"
+    else
+      echo "Failure (exit code ${code}) in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds; refusing to copy it through unoptimized" >&2
+      exit "${code}"
     fi
-    echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
-    cp "${xi}" "${xo}"
   fi
 }
 

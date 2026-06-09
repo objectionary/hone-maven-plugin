@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A point-wise pipeline must fuse the same way whether it lives in a static
+# method or in an instance method. The six front-door 1xx rules (103, 104,
+# 105, 111, 112, 113) lift a raw pipeline body out of its enclosing method;
+# they once pinned the enclosing method as static (static -> Phi.true), so the
+# identical body inside an instance method was never lifted and nothing
+# downstream fired. See issue #689. Here the pipeline sits in the instance
+# method sum() and main() drives it through a fresh X instance. The chain
+# .map(+1).map(+2).mapToInt(Integer::intValue).sum() collapses from three
+# invokedynamic factories (two maps and the method-ref mapToInt) to a single
+# mapMultiToInt dispatch, exactly as it does for a static method.
+java: |
+  package instance;
+  import java.util.stream.Stream;
+  public class X {
+    int sum() {
+      return Stream.of(1, 2, 3)
+        .map(n -> n + 1)
+        .map(n -> n + 2)
+        .mapToInt(Integer::intValue)
+        .sum();
+    }
+    public static void main(String[] a) {
+      System.out.printf("The result is %d%n", new X().sum());
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 15"
+before:
+  invokedynamic: 3
+  invokeinterface: 4
+after:
+  invokedynamic: 1
+  invokeinterface: 3

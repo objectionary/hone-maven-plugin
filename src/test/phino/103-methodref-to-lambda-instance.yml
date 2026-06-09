@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The instance-method counterpart of 103-methodref-to-lambda. The body is
+# identical to the static pack; only the enclosing method is non-static
+# (access without the ACC_STATIC bit, static -> Phi.false). 103 once pinned the
+# enclosing method as static, so a method-ref mapToInt inside an instance method
+# was left native and the whole pipeline stayed unfused (issue #689). The rule
+# must now desugar it exactly as for a static method: a fresh private-static
+# lambda$hone$N wrapper appears (the only Integer.intValue invokevirtual) and
+# the invokedynamic target handle is repointed at THIS class "T".
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/103-methodref-to-lambda.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 68,
+    access ↦ 33,
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, public ↦ Φ.true ⟧,
+    name ↦ "T",
+    supername ↦ "java/lang/Object",
+    interfaces ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+    m ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 1,
+      modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, static ↦ Φ.false ⟧,
+      name ↦ "m",
+      descriptor ↦ "()V",
+      signature ↦ "",
+      exceptions ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 2, max-locals ↦ 1 ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.params ⟧,
+      annotations ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
+        d ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          v0 ↦ "applyAsInt",
+          v1 ↦ "()Ljava/util/function/ToIntFunction;",
+          h2 ↦ ⟦ φ ↦ Φ.jeo.handle, v0 ↦ 6, v1 ↦ "java/lang/invoke/LambdaMetafactory", v2 ↦ "metafactory", v3 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", v4 ↦ Φ.false ⟧,
+          t3 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Object;)I" ⟧,
+          h4 ↦ ⟦ φ ↦ Φ.jeo.handle, v0 ↦ 5, v1 ↦ "java/lang/Integer", v2 ↦ "intValue", v3 ↦ "()I", v4 ↦ Φ.false ⟧,
+          t5 ↦ ⟦ φ ↦ Φ.jeo.type, v0 ↦ "(Ljava/lang/Integer;)I" ⟧
+        ⟧,
+        i ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "mapToInt", v2 ↦ "(Ljava/util/function/ToIntFunction;)Ljava/util/stream/IntStream;", v3 ↦ Φ.true ⟧
+      ⟧,
+      trycatchblocks ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+      local-variable-table ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-x, φ ↦ Φ.jeo.opcode.invokevirtual, 𝐵-y, 𝜏-m ↦ "intValue", 𝐵-z ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.jeo.handle, 𝐵-b, 𝜏-c ↦ "T", 𝐵-d ⟧

@@ -20,7 +20,7 @@ final class AbstractMojoTest {
         MatcherAssert.assertThat(
             "the default phino version must be returned from resource file",
             new AbstractMojoTest.FakeAbstractMojo().phino(),
-            Matchers.matchesPattern("\\d+\\.\\d+\\.\\d+\\.\\d+")
+            Matchers.matchesPattern("\\d+\\.\\d+\\.\\d+")
         );
     }
 

@@ -30,7 +30,7 @@ java: |
   package fusion;
   import java.util.*;
   import java.util.stream.*;
-  public class C {
+  public class CLongFilter {
     static int run(long x) {
       return Stream.of(1, 2, 3, 4, 5)
         .filter(n -> n > x)

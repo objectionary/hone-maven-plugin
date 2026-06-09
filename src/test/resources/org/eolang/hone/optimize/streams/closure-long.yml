@@ -29,7 +29,7 @@ java: |
   package fusion;
   import java.util.*;
   import java.util.stream.*;
-  public class C {
+  public class CLong {
     static int run(long x) {
       return Stream.of(1, 2, 3, 4, 5)
         .map(n -> (int) (n + x))

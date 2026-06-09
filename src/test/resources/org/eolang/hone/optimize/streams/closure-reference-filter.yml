@@ -28,7 +28,7 @@ java: |
   package fusion;
   import java.util.*;
   import java.util.stream.*;
-  public class CF {
+  public class CReferenceFilter {
     static int run(List<Integer> base) {
       return Stream.of(1, 2, 3, 4, 5)
         .filter(n -> base.contains(n))

@@ -25,7 +25,7 @@
 java: |
   package fusion;
   import java.util.stream.*;
-  public class C {
+  public class CMultiLone {
     static int mapRun(int p, int q) {
       return Stream.of(1, 2, 3, 4, 5)
         .map(n -> n + p + q)

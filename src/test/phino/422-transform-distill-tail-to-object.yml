@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A distill that accepts an object (Ljava/lang/Long;), works on the primitive
+# (J) internally, and must hand an object (Ljava/lang/Long;) back needs BOTH
+# transforms: 421 unboxes the incoming Long at the head (invokevirtual
+# longValue) and 422 boxes the outgoing long at the tail (invokestatic
+# valueOf). Before #699 both rules appended a binding called `i-transform`, so
+# firing 421 and then 422 on the same body produced a duplicate `i-transform`
+# attribute and `phino rewrite` aborted the whole class. 422 now names its tail
+# binding `o-transform`, so the two transforms coexist and the rewrite
+# succeeds.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/421-transform-distill-head-to-object.phr
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/422-transform-distill-tail-to-object.phr
+input: |
+  {⟦
+    foo ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Long;",
+      bridge-output ↦ "Ljava/lang/Long;",
+      start ↦ "map",
+      accepted ↦ "J",
+      returned ↦ "J",
+      static ↦ "true",
+      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      body ↦ ⟦
+        i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.ladd ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧}
+expected:
+  # The head Long is unboxed (accepted now carries the object type) ...
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, accepted ↦ "Ljava/lang/Long;", 𝐵-b ⟧
+  # ... and the tail long is boxed (returned now carries the object type).
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-c, returned ↦ "Ljava/lang/Long;", 𝐵-d ⟧
+  # The body keeps the head unbox (invokevirtual longValue) ...
+  - ⟦ 𝐵-x, 𝜏-head ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, 𝐵-h ⟧, 𝐵-y ⟧
+  # ... and, under a distinct name, the tail box (invokestatic valueOf).
+  - ⟦ 𝐵-p, 𝜏-tail ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-t ⟧, 𝐵-q ⟧

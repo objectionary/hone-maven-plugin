@@ -29,7 +29,7 @@ result: |
     state ↦ 𝑒-state,
     body ↦ ⟦
       𝐵-body,
-      i-transform ↦ ⟦
+      o-transform ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokestatic,
         i2 ↦ 𝑒-transform-class,
         i3 ↦ "valueOf",

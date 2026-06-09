@@ -98,4 +98,26 @@ final class CSVTest {
             Matchers.is(0)
         );
     }
+
+    @Test
+    void parsesCompletelyEmptyCsv(@Mktmp final Path temp) throws Exception {
+        final Path path = temp.resolve("empty.csv");
+        Files.write(path, new byte[0]);
+        MatcherAssert.assertThat(
+            "empty CSV has zero data rows without throwing IndexOutOfBoundsException",
+            new CSV(path).size(),
+            Matchers.is(0)
+        );
+    }
+
+    @Test
+    void countsZeroOnCompletelyEmptyCsv(@Mktmp final Path temp) throws Exception {
+        final Path path = temp.resolve("empty.csv");
+        Files.write(path, new byte[0]);
+        MatcherAssert.assertThat(
+            "empty CSV reports zero matches without throwing IndexOutOfBoundsException",
+            new CSV(path).count("Changed", v -> Integer.parseInt(v) > 0),
+            Matchers.is(0)
+        );
+    }
 }

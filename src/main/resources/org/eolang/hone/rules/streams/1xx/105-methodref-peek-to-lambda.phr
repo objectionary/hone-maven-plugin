@@ -47,7 +47,7 @@ pattern: |
       access ↦ 𝑒-method-access,
       modifiers ↦ ⟦
         𝐵-modifiers-before,
-        static ↦ Φ.true,
+        static ↦ 𝑒-static,
         𝐵-modifiers-after
       ⟧,
       name ↦ 𝑒-function,
@@ -132,7 +132,7 @@ result: |
       access ↦ 𝑒-method-access,
       modifiers ↦ ⟦
         𝐵-modifiers-before,
-        static ↦ Φ.true,
+        static ↦ 𝑒-static,
         𝐵-modifiers-after
       ⟧,
       name ↦ 𝑒-function,

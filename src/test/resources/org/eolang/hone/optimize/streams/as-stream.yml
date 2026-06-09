@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# The primitive widening conversions IntStream.asDoubleStream(),
+# IntStream.asLongStream() and LongStream.asDoubleStream() change the
+# element type of the stream (int -> double, int -> long, long -> double).
+# Such a conversion can never collapse into a single fused mapMulti: the
+# primitive streams expose only the self-typed mapMulti (IntStream.mapMulti
+# returns IntStream, DoubleStream.mapMulti returns DoubleStream), and only
+# the reference Stream<T> carries the typed mapMultiToInt / mapMultiToLong /
+# mapMultiToDouble variants that the mapToX / boxed() / non-terminal fusions
+# rely on. So a primitive-to-primitive transition has no single-mapMulti
+# expression in the JDK and the conversion call must survive untouched.
+#
+# What the pipeline can do, and what this pack locks in, is fuse every run
+# of same-typed operations on each side of the conversion independently. The
+# first pipeline holds two operations on the int side (filter + map) and two
+# on the double side (map + filter); each run collapses into one mapMulti,
+# while asDoubleStream() stays between them. The second pipeline pairs one
+# int-side operation (filter) with one long-side operation (map) across an
+# asLongStream(). Across both pipelines the optimizer drops invokedynamic
+# 6 -> 4 (the two two-operation runs on the first pipeline each fuse 2 -> 1),
+# the four lambda factories become four mapMulti dispatches, and both
+# conversion calls are preserved, so the result is byte-for-byte equivalent.
+java: |
+  package asstream;
+  import java.util.stream.IntStream;
+  public class X {
+    public static void main(String[] a) {
+      double d = IntStream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        .filter(n -> n % 2 == 0)
+        .map(n -> n + 1)
+        .asDoubleStream()
+        .map(x -> x + 0.5)
+        .filter(x -> x > 0.0)
+        .sum();
+      long l = IntStream.of(1, 2, 3, 4, 5)
+        .filter(n -> n > 1)
+        .asLongStream()
+        .map(x -> x * 2L)
+        .sum();
+      System.out.printf("Results: %.1f %d\n", d, l);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "Results: 37.5 28"
+before:
+  invokedynamic: 6
+  invokeinterface: 10
+after:
+  invokedynamic: 4
+  invokeinterface: 12

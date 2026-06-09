@@ -101,7 +101,7 @@ final class CSVTest {
 
     @Test
     void parsesCompletelyEmptyCsv(@Mktmp final Path temp) throws Exception {
-        final Path path = temp.resolve("test.csv");
+        final Path path = temp.resolve("empty.csv");
         Files.write(path, new byte[0]);
         MatcherAssert.assertThat(
             "empty CSV has zero data rows without throwing IndexOutOfBoundsException",
@@ -112,7 +112,7 @@ final class CSVTest {
 
     @Test
     void countsZeroOnCompletelyEmptyCsv(@Mktmp final Path temp) throws Exception {
-        final Path path = temp.resolve("test.csv");
+        final Path path = temp.resolve("empty.csv");
         Files.write(path, new byte[0]);
         MatcherAssert.assertThat(
             "empty CSV reports zero matches without throwing IndexOutOfBoundsException",

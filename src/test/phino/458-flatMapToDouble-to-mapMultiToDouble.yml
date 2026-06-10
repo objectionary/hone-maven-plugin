@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 458 converts a user-written Stream.flatMapToDouble into an equivalent
+# Stream.mapMultiToDouble — the DoubleStream sibling of 455. The input is the
+# Φ.hone.lambda form 111 lifts a flatMapToDouble into: interface Function,
+# stream.method = "flatMapToDouble", and a handle-6 target to a non-capturing
+# lambda$main$0 of signature (L<elem>;)Ljava/util/stream/DoubleStream;. The rule
+# rewrites that pragma into the user-mapMultiToDouble Φ.hone.lambda form (interface
+# BiConsumer, stream.method = "mapMultiToDouble", handle-6 target) whose target is
+# a freshly synthesised BiConsumer `flatadapt`, and appends that adapter method to
+# the class. The adapter applies the original mapper to the item
+# (invokestatic lambda$main$0) and drains the returned DoubleStream into the
+# downstream DoubleConsumer (invokeinterface DoubleStream.forEach). Matching all
+# three — the surviving mapMultiToDouble stream block, the invokestatic into the
+# untouched mapper body, and the DoubleStream.forEach — proves the flatMapToDouble
+# was rewired into a mapMultiToDouble rather than dropped.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/458-flatMapToDouble-to-mapMultiToDouble.phr
+input: |
+  {⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        op0 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "apply",
+          interface ↦ "()Ljava/util/function/Function;",
+          lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+          bridge-signature ↦ "(Ljava/lang/Integer;)Ljava/util/stream/DoubleStream;",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/Integer;)Ljava/util/stream/DoubleStream;", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "flatMapToDouble", signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/DoubleStream;" ⟧
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧}
+expected:
+  - ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMultiToDouble", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/DoubleStream;" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/stream/DoubleStream", i3 ↦ "forEach", 𝐵-rest ⟧

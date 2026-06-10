@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Conversion of the primitive-result Stream.flatMapToInt/ToLong/ToDouble into
+# Stream.mapMultiToInt/ToLong/ToDouble (issue #711). These are the typed siblings
+# of the reference flatMap -> mapMulti conversion (456/457/458 next to 455). Each
+# flatMapToX(f) flattens the IntStream/LongStream/DoubleStream that f returns; the
+# same fan-out is expressed by mapMultiToX((x, c) -> f(x).forEach(c)), where c is
+# the downstream IntConsumer/LongConsumer/DoubleConsumer that XStream.forEach
+# takes precisely. 111 lifts each flatMapToX invokedynamic into a Φ.hone.lambda
+# carrying stream.method = "flatMapToX", and 456/457/458 rewrite that pragma into
+# the user-mapMultiToX Φ.hone.lambda form backed by a synthesised BiConsumer
+# `flatadapt` that applies the original mapper and drains the returned stream into
+# the consumer. A lone flatMapToX lowers to one Stream.mapMultiToX via 701.
+#
+# Each pipeline fans every element out a fixed number of times (3 for int, 2 for
+# long and double) and folds the fan-out with an order- AND value-sensitive
+# polynomial reduce, so the printed numbers change if the conversion corrupts the
+# emitted multiset, its values, or its order. The optimized class reproduces all
+# three exactly (-2017196980 5869572705746538085 1839030), which is the real
+# proof — bytecode that merely verifies but miswires the consumer would print a
+# different number.
+#
+# Counts: each of the three flatMapToX call sites stays a single invokeinterface
+# on Stream (now mapMultiToX rather than flatMapToX), and each converted call adds
+# its `flatadapt` body — one invokestatic into the untouched mapper, one
+# XStream.forEach invokeinterface, and one return. So invokestatic rises by 3
+# (23 -> 26), invokeinterface by 3 (6 -> 9, the three forEach calls), and return
+# by 3 (2 -> 5, the three adapter returns). invokedynamic stays at 6: 456/457/458
+# relocate each Function call-site indy into the BiConsumer adapter's indy rather
+# than adding one, and the three mapper lambda$ bodies plus the three reduce
+# lambdas are untouched.
+java: |
+  package flatmaptox;
+  import java.util.stream.Stream;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  import java.util.stream.DoubleStream;
+  public class X {
+    public static void main(String[] a) {
+      int i = Stream.of(1, 2, 3, 4, 5)
+        .flatMapToInt(x -> IntStream.of(x, x * 10, x + 100))
+        .reduce(0, (p, q) -> p * 31 + q);
+      long l = Stream.of(1, 2, 3, 4, 5)
+        .flatMapToLong(x -> LongStream.of(x, x * 1000L))
+        .reduce(0L, (p, q) -> p * 131 + q);
+      long d = (long) Stream.of(2, 4, 6, 8)
+        .flatMapToDouble(x -> DoubleStream.of(x, x / 2.0))
+        .reduce(0.0, (p, q) -> p * 7 + q);
+      System.out.printf("The result is %d %d %d\n", i, l, d);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is -2017196980 5869572705746538085 1839030"
+before:
+  invokedynamic: 6
+  invokeinterface: 6
+  invokestatic: 23
+  return: 2
+after:
+  invokedynamic: 6
+  invokeinterface: 9
+  invokestatic: 26
+  return: 5

@@ -1333,11 +1333,55 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void rejectsMapToIntByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+    void matchesMapToIntByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
         throws IOException {
         MatcherAssert.assertThat(
-            "default grep-in must not match the 'mapToInt' byte sequence (see #671)",
+            "default grep-in must match a standalone 'mapToInt' byte sequence (see #705)",
             OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70-54-6F-49-6E-74</o>"),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void matchesStandaloneSkipByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "default grep-in must match a standalone 'skip' byte sequence (see #705)",
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">73-6B-69-70</o>"),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void matchesStandaloneFlatMapByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "default grep-in must match a standalone 'flatMap' byte sequence (see #705)",
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">66-6C-61-74-4D-61-70</o>"),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void matchesStandaloneDistinctByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "default grep-in must match a standalone 'distinct' byte sequence (see #705)",
+            OptimizeMojoTest.grepInMatches(
+                dir, "<o as=\"α0\">64-69-73-74-69-6E-63-74</o>"
+            ),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void ignoresMapToIntBytesEmbeddedInLongerStringInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "default grep-in must not match 'mapToInt' bytes embedded in a longer sequence",
+            OptimizeMojoTest.grepInMatches(
+                dir, "<o as=\"α0\">6D-61-70-54-6F-49-6E-74-65-72</o>"
+            ),
             Matchers.is(false)
         );
     }

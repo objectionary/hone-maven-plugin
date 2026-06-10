@@ -69,34 +69,44 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Default value for {@link #grepIn}.
      *
-     * <p>Anchors the hex-byte alternatives between <tt>&gt;</tt> and
-     * <tt>&lt;</tt> (the XML tag boundaries that delimit a single PHI bytes
-     * literal inside a {@code .xmir} file) so that the bytes of
-     * <tt>"map"</tt> or <tt>"filter"</tt> only match when they are the
-     * <em>entire</em> content of an {@code <o>} element — not when they
-     * happen to appear as a prefix or suffix of a longer byte sequence
-     * (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>). See issue #449.</p>
+     * <p>This is a POSIX ERE pattern (the dialect understood by
+     * {@code grep -E} in {@code rewrite.sh}) that selects every class whose
+     * bytecode mentions at least one of the {@code java.util.stream} methods
+     * that the {@code streams/} pipeline knows how to fuse. The pattern is
+     * assembled by {@link Greppable} from the method names below; each name is
+     * turned into its hex-byte form (for example <tt>"map"</tt> becomes
+     * <tt>6D-61-70</tt>, exactly the way jeo encodes a string literal inside a
+     * {@code .xmir} file) and the alternatives are anchored between the closing
+     * <tt>&gt;</tt> of an opening tag and the opening <tt>&lt;</tt> of a closing
+     * tag.</p>
      *
-     * <p>The bytes are anchored between the closing <tt>&gt;</tt> of the
-     * opening tag and the opening <tt>&lt;</tt> of the closing tag, so the
-     * alternatives match only complete hex-encoded method names (not
-     * substrings like <tt>6D-61-70</tt> inside <tt>6D-61-70-70-65-64-2F-58</tt>).
-     * This keeps the pattern within POSIX ERE (the dialect understood by
-     * {@code grep -E} in {@code rewrite.sh}), unlike PCRE lookaround, which
-     * {@code grep -E} cannot parse — a mismatch that previously made
-     * {@code grep} reject every class and skip optimization entirely
-     * (see #671).</p>
-     *
-     * <p>The third alternative <tt>6D-61-70-4D-75-6C-74-69</tt> is the
-     * <tt>"mapMulti"</tt> method name; because <tt>"map"</tt> is anchored it
-     * does not cover <tt>"mapMulti"</tt> on its own, so a class that uses only
-     * {@code mapMulti()} (the input that {@code 461-fuse-mapMulti} fuses, see
-     * issue #678) would otherwise be skipped entirely.</p>
+     * <p>Anchoring between those XML tag boundaries means an alternative
+     * matches only when the hex bytes are the <em>entire</em> content of an
+     * {@code <o>} element, not when they happen to be a prefix or suffix of a
+     * longer sequence (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>, see
+     * issue #449). Because of this each method needs its own alternative:
+     * <tt>"map"</tt> does not cover <tt>"mapMulti"</tt> or <tt>"mapToInt"</tt>,
+     * so a class that uses only one of those would otherwise be skipped
+     * entirely (see issues #678 and #705). Anchoring also keeps the pattern
+     * free of PCRE lookaround, which {@code grep -E} cannot parse — a mismatch
+     * that previously made {@code grep} reject every class and skip
+     * optimization (see #671).</p>
      *
      * @since 0.19.0
      */
-    static final String DEFAULT_GREP_IN =
-        ">(66-69-6C-74-65-72|6D-61-70|6D-61-70-4D-75-6C-74-69)<";
+    static final String DEFAULT_GREP_IN = new Greppable(
+        "filter",
+        "map",
+        "mapToInt",
+        "mapToLong",
+        "mapToDouble",
+        "boxed",
+        "peek",
+        "distinct",
+        "skip",
+        "flatMap",
+        "mapMulti"
+    ).toString();
 
     /**
      * Splitter for comma-separated values (with optional whitespace).
@@ -168,8 +178,9 @@ public final class OptimizeMojo extends AbstractMojo {
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
-    @Parameter(property = "hone.grep-in", defaultValue = OptimizeMojo.DEFAULT_GREP_IN)
-    private String grepIn;
+    @Parameter(property = "hone.grep-in")
+    @SuppressWarnings("PMD.ImmutableField")
+    private String grepIn = OptimizeMojo.DEFAULT_GREP_IN;
 
     /**
      * Skip phino entirely.

@@ -94,20 +94,20 @@ final class OptimizeMojoTest {
     @DisabledWithoutDocker
     @ClasspathSource(value = "org/eolang/hone/optimize", glob = "**.yml")
     @SuppressWarnings("unchecked")
-    void optimizesAsSpecifiedInYamlPack(final String yaml, @Mktmp final Path dir,
-        @RandomImage final String image) throws Exception {
+    void optimizesAsSpecifiedInYamlPack(final String yaml, final String name,
+        @Mktmp final Path dir, @RandomImage final String image) throws Exception {
         final Map<String, Object> pack = new Yaml().load(yaml);
         final String code = (String) pack.get("java");
         final Matcher pkg = Pattern.compile("package\\s+([\\w.]+)\\s*;").matcher(code);
         if (!pkg.find()) {
             throw new IllegalStateException(
-                String.format("YAML pack lacks 'package' declaration in 'java' field: %s", yaml)
+                String.format("YAML pack '%s' lacks 'package' declaration in 'java' field", name)
             );
         }
         final Matcher cls = Pattern.compile("class\\s+(\\w+)").matcher(code);
         if (!cls.find()) {
             throw new IllegalStateException(
-                String.format("YAML pack lacks 'class' declaration in 'java' field: %s", yaml)
+                String.format("YAML pack '%s' lacks 'class' declaration in 'java' field", name)
             );
         }
         final String slashed = pkg.group(1).replace('.', '/');

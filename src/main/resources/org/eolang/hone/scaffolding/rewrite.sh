@@ -197,7 +197,7 @@ if [ -n "${HONE_GREP_IN}" ]; then
   echo "Grep-in: ${HONE_GREP_IN}"
 fi
 
-files=$(find "$("${RP}" "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec "${RP}" --relative-to="${HONE_XMIR_IN}" {} \; | sort)
+files=$(find "$("${RP}" "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec "${RP}" --relative-to="${HONE_XMIR_IN}" {} \; | LC_ALL=C sort)
 total=$(echo "${files}" | wc -l | xargs)
 tasks=${TARGET}/hone-tasks.txt
 mkdir -p "$(dirname "${tasks}")"

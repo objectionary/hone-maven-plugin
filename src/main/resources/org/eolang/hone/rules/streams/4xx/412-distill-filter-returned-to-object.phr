@@ -27,6 +27,23 @@
 # predicate; only `returned` is promoted to the bridge-output wrapper so 422
 # sees a type-preserving distill and adds nothing. Runs after 411 and before
 # 421/422.
+#
+# The promotion is correct only when the survivor the filter keeps is itself
+# the wrapper — i.e. the element enters the filter boxed and is unboxed only
+# transiently for the predicate (a lone boxed filter, the #704 shape, whose
+# `accepted` is the primitive predicate shape J). Once an object-to-primitive
+# map fuses in AHEAD of the filter (issue #713,
+# e.g. `mapToLong(Long::longValue).filter(...)`), that head map has already
+# moved the element permanently into the primitive domain: 401 carries the
+# head map's wrapper `accepted` onto the fused distill, the dup before the
+# predicate is a two-slot `dup2`, and the kept survivor is the primitive, not
+# the wrapper. Promoting `returned` there would make 422 skip its valueOf
+# re-box while 451 still appends the bridge longValue — a Long.longValue()
+# applied to a primitive long that is not a Long, failing verification. So the
+# guard also requires `accepted` to be primitive: a fused head map leaves it a
+# wrapper, which keeps this rule (and the re-box skip) off the #713 shape and
+# lets 422 box the primitive survivor exactly as it does for a filterless
+# distill.
 name: distill-filter-returned-to-object
 pattern: |
   ⟦
@@ -72,3 +89,6 @@ when:
     - matches:
         - '^L.+;$'
         - 𝑒-bridge-output
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-accepted

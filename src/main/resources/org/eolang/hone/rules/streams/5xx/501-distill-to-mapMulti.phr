@@ -76,6 +76,7 @@ result: |
       φ ↦ Φ.hone.distill-lambda,
       static ↦ 𝑒-static,
       bridge-input ↦ 𝑒-bridge-input,
+      returned ↦ 𝑒-returned,
       consumer ↦ 𝑒-consumer,
       target-method ↦ 𝑒-target-method,
       body ↦ 𝑒-body

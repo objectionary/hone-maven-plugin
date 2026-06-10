@@ -105,6 +105,9 @@ public final class OptimizeMojo extends AbstractMojo {
         "distinct",
         "skip",
         "flatMap",
+        "flatMapToInt",
+        "flatMapToLong",
+        "flatMapToDouble",
         "mapMulti"
     ).toString();
 

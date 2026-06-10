@@ -75,17 +75,17 @@ apply_hone() {
   done < <(find "${base}" -type d -path '*/target/classes' -print0)
 }
 
-count_modified() {
+count_optimized() {
   local base=$1
-  local -a stats=()
-  while IFS= read -r -d '' f; do
-    stats+=("${f}")
-  done < <(find "${base}" -type f -path '*/target/hone-statistics.csv' -print0)
-  if [ "${#stats[@]}" -eq 0 ]; then
-    echo 0
-    return
-  fi
-  awk -F',' 'FNR == 1 { next } $(NF-1) + 0 > 0 { modified += 1 } END { print modified + 0 }' "${stats[@]}"
+  local total=0 after before a b
+  while IFS= read -r -d '' after; do
+    before=${after/\/target\/classes\//\/target\/classes-before-hone\/}
+    test -f "${before}" || continue
+    a=$(javap -c -p "${after}"  2>/dev/null | grep -cE 'java/util/stream/(Int|Long|Double)?Stream' || true)
+    b=$(javap -c -p "${before}" 2>/dev/null | grep -cE 'java/util/stream/(Int|Long|Double)?Stream' || true)
+    test "${a}" -lt "${b}" && total=$(( total + 1 ))
+  done < <(find "${base}" -type f -path '*/target/classes/*.class' -print0)
+  echo "${total}"
 }
 
 build_outcome() {
@@ -133,7 +133,7 @@ total=$(count_classes "${dir}")
 hstart=$(date +%s)
 apply_hone "${dir}"
 hone_seconds=$(( $(date +%s) - hstart ))
-count=$(count_modified "${dir}")
+count=$(count_optimized "${dir}")
 row="${row},${total},${count},${hone_seconds}"
 echo "warming up the test runner for honed ${repo}"
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || true

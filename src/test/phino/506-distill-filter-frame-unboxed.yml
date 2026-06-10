@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The #713 shape, claimed by 506 (the PRIMITIVE-predicate specific rule): an
+# object-to-primitive map (mapToLong(Long::longValue)) has fused in AHEAD of the
+# filter, so the synthesized method still receives the wrapper (bridge-input =
+# Ljava/lang/Long;) but the head map has already unboxed the element, the dup
+# before the predicate is a two-slot dup2, and the survivor kept at the
+# keep-label is a two-slot `long`. The predicate is PRIMITIVE (J)Z and
+# bridge-input is a WRAPPER, so 506 fires and resolves the frame-item from the
+# primitive `returned` (J -> long) — 412 left it primitive because this shape's
+# `accepted` is a wrapper. Deriving from bridge-input (507's fallback, also
+# listed but never reached here) would wrongly declare a one-slot java/lang/Long
+# and fail JVM verification with "Inconsistent stackmap frames".
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
+input: |
+  {⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/Long;",
+    returned ↦ "J",
+    consumer ↦ "Ljava/util/function/LongConsumer;",
+    target-method ↦ "distill_1",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$hone$0", i4 ↦ "(Ljava/lang/Long;)J", i5 ↦ Φ.false ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(J)Z", i5 ↦ Φ.false ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 4, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ "long" ⟧

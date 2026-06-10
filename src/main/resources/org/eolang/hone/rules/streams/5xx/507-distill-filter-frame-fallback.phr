@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# General fallback for the Φ.hone.frame-item marker that 304 leaves at a
+# STATELESS filter guard's keep-label: resolves it to a same-locals-1 stackmap
+# frame whose single stack item is the distill's `bridge-input`. This is the
+# right type for every filter whose survivor IS the element it received — the
+# common case — including a pure-primitive LongStream.filter (bridge-input J ->
+# `long`) and an OBJECT-predicate filter whose `(Ljava/lang/Integer;)Z` keeps a
+# wrapper survivor even when trailing maps drive the distill's `returned` to a
+# different (re-boxed or primitive) type (the boxed-roundtrip shape).
+#
+# Runs AFTER 506, which has already claimed the two PRIMITIVE-predicate shapes
+# whose survivor is not bridge-input (#704 boxed filter, #713 head-fused
+# unboxing map) and resolved their markers from `returned`. Whatever marker 506
+# left untouched lands here, so this rule needs no guard. By 507 the distill is
+# a Φ.hone.distill-lambda (501) whose bridge-input is final and 511 has not yet
+# wrapped it into a method, so the marker never reaches jeo. Scoped to a
+# distill-lambda WITHOUT `captured`, so stateful keep-labels stay with 503/504.
+name: distill-filter-frame-fallback
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-returned,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-returned,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 4,
+        nlocal ↦ 0,
+        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+        nstack ↦ 1,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ 𝑒-frame-item ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-frame-item
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^B$/byte/g"'
+      - '"s/^C$/char/g"'
+      - '"s/^D$/double/g"'
+      - '"s/^F$/float/g"'
+      - '"s/^I$/integer/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^S$/short/g"'
+      - '"s/^Z$/boolean/g"'
+      - '"s/^L(.+);$/$1/g"'

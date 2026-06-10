@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Reproduction of issue #713: a boxed-stream pipeline led by an UNBOXING map
+# (mapToLong(Long::longValue)) and followed by a filter — the `collection`
+# benchmark shape from objectionary/sabj25. The head mapToLong fuses in AHEAD
+# of the filter and moves the element permanently into the primitive domain:
+# the synthesized distill method still receives the wrapper
+# (distill_N(java.lang.Long, java.util.function.LongConsumer)), but the head
+# `lambda$hone$N:(Ljava/lang/Long;)J` has already unboxed it, the dup before
+# the (J)Z predicate is a two-slot dup2, and the survivor kept at the filter's
+# keep-label is a two-slot primitive `long`.
+#
+# Before the fix the keep-frame (506, derived from the distill's wrapper
+# bridge-input) declared a one-slot java/lang/Long while the stack held a
+# `long`, and 412 promoted the distill's `returned` to that wrapper so 422
+# skipped its Long.valueOf(J) re-box while 451 still appended the
+# Long.longValue() bridge unbox — a longValue applied to a primitive long.
+# The class failed JVM verification with "java.lang.VerifyError: Inconsistent
+# stackmap frames at branch target 12". The fix derives the keep-frame from
+# the distill's `returned` (kept primitive, J -> long) and keeps 412 off this
+# shape (its `accepted` is the wrapper, so 422 boxes the survivor exactly as
+# for a filterless distill), so frame, returned and tail agree again.
+#
+# {1..6} kept to multiples of 3 = {3, 6}, summed as long = 9. The mapToLong +
+# filter collapse to a single Stream.mapMultiToLong, so invokedynamic 2 -> 1.
+java: |
+  package maptolongfilter;
+  import java.util.List;
+  public class X {
+    public static void main(String[] a) {
+      List<Long> list = List.of(1L, 2L, 3L, 4L, 5L, 6L);
+      long sum = list.stream()
+        .mapToLong(Long::longValue)
+        .filter(n -> n % 3L == 0L)
+        .sum();
+      System.out.printf("The result is %d%n", sum);
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 9"
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 1

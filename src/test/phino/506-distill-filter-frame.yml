@@ -2,22 +2,25 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# 506 resolves the Φ.hone.frame-item marker that 304 leaves at a stateless
-# filter guard's keep-label into a same-locals-1 stackmap frame whose single
-# stack item is the distill's final bridge-input. For a boxed-primitive filter
-# that stayed in the boxed domain (the #704 defect) bridge-input is the wrapper
-# Ljava/lang/Long;, so the frame must declare a one-slot java/lang/Long
-# reference — not the two-slot primitive `long` the predicate shape would
-# suggest. Scoped to a Φ.hone.distill-lambda WITHOUT `captured`, so stateful
-# keep-labels stay with 503/504. Here the lambda's bridge-input is the wrapper,
-# so the resolved frame's stack item is java/lang/Long.
+# 506 (the PRIMITIVE-predicate specific rule) resolves the Φ.hone.frame-item
+# marker that 304 leaves at a stateless filter guard's keep-label into a
+# same-locals-1 stackmap frame whose single stack item is the distill's
+# `returned`. This #704 case — a boxed-primitive LongStream.filter(...).boxed()
+# that stayed boxed — has a PRIMITIVE predicate (J)Z and a WRAPPER bridge-input
+# Ljava/lang/Long;, so 506 claims it; 412 has promoted `returned` to that same
+# wrapper, so the survivor (the wrapper the dup kept) is declared as a one-slot
+# java/lang/Long. 507 (the fallback) is also listed but sees no marker left.
+# Scoped to a Φ.hone.distill-lambda WITHOUT `captured`, so stateful keep-labels
+# stay with 503/504.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
 input: |
   {⟦
     φ ↦ Φ.hone.distill-lambda,
     static ↦ "true",
     bridge-input ↦ "Ljava/lang/Long;",
+    returned ↦ "Ljava/lang/Long;",
     consumer ↦ "Ljava/util/function/Consumer;",
     target-method ↦ "distill_1",
     body ↦ ⟦

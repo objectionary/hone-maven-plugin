@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The boxed-roundtrip shape, left to 507 (the fallback) by 506: a filter at the
+# head of the pipeline whose predicate takes an OBJECT, (Ljava/lang/Integer;)Z.
+# 232 still classifies an `(...)Z` target as a p-filter, so 304 leaves a
+# frame-item marker, but the survivor the dup keeps is the wrapper element
+# (java/lang/Integer) — NOT the distill's `returned`, which trailing
+# mapToLong/mapToDouble stages have driven to a primitive D. 506 declines this
+# marker because the predicate parameter (Ljava/lang/Integer;) is not a
+# primitive, so 507 resolves it from bridge-input (Ljava/lang/Integer; ->
+# java/lang/Integer). Deriving from `returned` here would wrongly declare
+# `double` over a one-slot Integer and fail JVM verification.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
+input: |
+  {⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/Integer;",
+    returned ↦ "D",
+    consumer ↦ "Ljava/util/function/DoubleConsumer;",
+    target-method ↦ "distill_1",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/Integer;)Z", i5 ↦ Φ.false ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 4, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ "java/lang/Integer" ⟧

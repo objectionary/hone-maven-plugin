@@ -18,7 +18,8 @@
 # they will allocate a boolean[1] guard and these counts will change.
 #
 # The .map(n -> n) before each operator also keeps the class inside the
-# default grep-in scope (which targets bodies containing `map`/`filter`).
+# default grep-in scope (which targets bodies containing any fusable Stream
+# method, `map` among them, see #705).
 java: |
   package stateful;
   import java.util.stream.*;

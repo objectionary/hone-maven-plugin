@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Reproduction of issue #704: a primitive LongStream.filter(...).boxed() chain
+# whose boxed() is consumed by a reference-stream terminal (here collect), so
+# the filter stays in the boxed domain. 203 lifts the filter to a
+# primitive-filter, 211 splits it into box + boxed-primitive-filter + unbox,
+# and 232 promotes the boxed-primitive filter into a p-filter whose bridge-input
+# is the wrapper Ljava/lang/Long; while accepted/returned stay the primitive J.
+# Because the trailing .boxed() keeps the boxing alive, 411 never unwinds the
+# filter distill back to a primitive one, so the distill stays in the boxed
+# domain (bridge-input = Ljava/lang/Long;). The keep-frame and the survivor the
+# filter passes to its Consumer must therefore describe a one-slot
+# java/lang/Long reference, not a two-slot primitive long. Before the fix the
+# distill emitted a `long` keep-frame and re-boxed the survivor with a stray
+# Long.valueOf(J), so the optimized class failed JVM verification with
+# "Inconsistent stackmap frames at branch target 12 ... stack size doesn't
+# match" (the kept value is a one-slot Ljava/lang/Long; while the frame and the
+# valueOf assume a two-slot long). The deferred Φ.hone.frame-item marker (304,
+# resolved by 506 from the final bridge-input) and 412 (which realigns a
+# boxed filter distill's `returned` to its wrapper bridge-output so 422 adds no
+# valueOf) fix it.
+#
+# {1..10} filtered to multiples of 3 = {3, 6, 9}, summed back as long = 18. The
+# lone filter lowers to a single Stream.mapMulti, so invokedynamic stays at 1.
+java: |
+  package longfilterboxed;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      List<Long> kept = LongStream.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
+        .filter(n -> n % 3L == 0L)
+        .boxed()
+        .collect(Collectors.toList());
+      long sum = 0L;
+      for (final Long v : kept) {
+        sum += v;
+      }
+      System.out.printf("The result is %d\n", sum);
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 18"
+before:
+  invokedynamic: 1
+after:
+  invokedynamic: 1

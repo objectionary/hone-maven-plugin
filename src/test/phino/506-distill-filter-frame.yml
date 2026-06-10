@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 506 resolves the Φ.hone.frame-item marker that 304 leaves at a stateless
+# filter guard's keep-label into a same-locals-1 stackmap frame whose single
+# stack item is the distill's final bridge-input. For a boxed-primitive filter
+# that stayed in the boxed domain (the #704 defect) bridge-input is the wrapper
+# Ljava/lang/Long;, so the frame must declare a one-slot java/lang/Long
+# reference — not the two-slot primitive `long` the predicate shape would
+# suggest. Scoped to a Φ.hone.distill-lambda WITHOUT `captured`, so stateful
+# keep-labels stay with 503/504. Here the lambda's bridge-input is the wrapper,
+# so the resolved frame's stack item is java/lang/Long.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
+input: |
+  {⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/Long;",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    target-method ↦ "distill_1",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Long", i2 ↦ "longValue", i3 ↦ "()J", i4 ↦ Φ.false ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(J)Z", i5 ↦ Φ.false ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 4, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ "java/lang/Long" ⟧

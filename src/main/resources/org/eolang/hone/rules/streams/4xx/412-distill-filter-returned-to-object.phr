@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Corrects the `returned` of a boxed-primitive FILTER distill that 411 could
+# not unwind back to a primitive (the #704 defect: a
+# LongStream.filter(...).boxed() whose trailing unbox was consumed by the
+# boxed(), so 411 never fires and the distill stays in the boxed domain with
+# bridge-input/bridge-output = Ljava/lang/Long;).
+#
+# 232 represents a boxed-primitive filter with a PRIMITIVE `returned` (the
+# predicate shape, e.g. J) even though, being a filter, it preserves its
+# element and actually leaves its bridge-output (the wrapper) on the stack.
+# That primitive `returned` is the right view while the box/unbox wrapping is
+# still removable — 411 keys off `accepted == returned` to unwind a genuinely
+# primitive pipeline — but once 411 has run and the distill is still boxed
+# (bridge-output is a wrapper), the primitive `returned` is a lie: 422 would
+# then append a Wrapper.valueOf to "re-box" a survivor that is already the
+# wrapper, and the keep-frame's one-slot reference would meet a two-slot
+# primitive re-box, failing verification.
+#
+# A filter is identified structurally by the Φ.hone.frame-item marker 304
+# leaves at its keep-label (a map distill has none), so this rule only
+# realigns filter distills, leaving boxed-primitive MAP distills — which DO
+# compute a fresh primitive and legitimately need 422's valueOf — untouched.
+# `accepted` stays primitive so 421 still unboxes the wrapper for the (J)Z
+# predicate; only `returned` is promoted to the bridge-output wrapper so 422
+# sees a type-preserving distill and adds nothing. Runs after 411 and before
+# 421/422.
+name: distill-filter-returned-to-object
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-bridge-output,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-returned
+    - matches:
+        - '^L.+;$'
+        - 𝑒-bridge-output

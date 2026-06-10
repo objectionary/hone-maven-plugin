@@ -54,17 +54,7 @@ result: |
         φ ↦ Φ.jeo.label,
         i1 ↦ 𝑒-label
       ⟧,
-      i6 ↦ ⟦
-        φ ↦ Φ.jeo.frame,
-        type ↦ 4,
-        nlocal ↦ 0,
-        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
-        nstack ↦ 1,
-        stack ↦ ⟦
-          φ ↦ Φ.jeo.seq.of1,
-          item ↦ 𝑒-stack-item
-        ⟧
-      ⟧
+      i6 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
     ⟧
   ⟧
 where:
@@ -74,19 +64,6 @@ where:
   - meta: 𝜏-opcode
     function: tau
     args: [𝑒-opcode]
-  - meta: 𝑒-stack-item
-    function: sed
-    args:
-      - 𝑒-returned
-      - '"s/^B$/byte/g"'
-      - '"s/^C$/char/g"'
-      - '"s/^D$/double/g"'
-      - '"s/^F$/float/g"'
-      - '"s/^I$/integer/g"'
-      - '"s/^J$/long/g"'
-      - '"s/^S$/short/g"'
-      - '"s/^Z$/boolean/g"'
-      - '"s/^L(.+);$/$1/g"'
   - meta: 𝑒-distill
     function: sed
     args:

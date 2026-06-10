@@ -15,7 +15,7 @@
 # boxing tail first needs it — closing #649.
 #
 # distinct + the boxed() round-trip + the trailing mapToDouble all fold into ONE
-# stateful distill (one HashSet in the captured List) and lower to a single
+# stateful distill (one newKeySet() seen-set in the captured List) and lower to a single
 # Stream.mapMultiToDouble: the two method-ref invokedynamics javac emits collapse
 # to one. of(5,3,8,5,2,7).distinct() = 5,3,8,2,7; doubleValue/boxed/doubleValue
 # is the identity on the values; sum = 25.

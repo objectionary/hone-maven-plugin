@@ -7,8 +7,8 @@
 # into its body; one that sat next to a barrier (sorted, limit, peek …)
 # still carries ONLY the bare distinct guard 307 produced. Turning such a
 # lone distinct into a mapMulti would cost an extra invokedynamic, a
-# wrapper and a HashSet for no fusion benefit, so we put it back as a
-# plain Stream.distinct() call.
+# wrapper and a concurrent seen-set for no fusion benefit, so we put it
+# back as a plain Stream.distinct() call.
 #
 # The reverted opcode carries a `reverted ↦ Φ.true` marker. 216 matches
 # the four-operand distinct opcode jeo emits; the marker gives this one a
@@ -37,7 +37,7 @@ pattern: |
       𝜏-dupx ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       𝜏-add ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokevirtual,
-        i1 ↦ "java/util/HashSet",
+        i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView",
         i2 ↦ "add",
         i3 ↦ "(Ljava/lang/Object;)Z",
         i4 ↦ Φ.false

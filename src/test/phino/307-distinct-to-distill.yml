@@ -17,5 +17,5 @@ input: |
   ⟧}
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "distinct", 𝐵-b ⟧
-  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧
+  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-a, i3 ↦ "newKeySet", 𝐵-b ⟧

@@ -3,16 +3,24 @@
 ---
 # yamllint disable rule:line-length
 # Folds Φ.hone.distinct (produced by 216) into a Φ.hone.distill, exactly
-# like 305 folds a filter — distinct is "a filter that owns a HashSet".
+# like 305 folds a filter — distinct is "a filter that owns a seen-set".
 #
-# The per-element state, a java/util/HashSet seen-set, is carried as the
-# `state` binding: a block of bytecode that APPENDS a fresh HashSet to the
-# captured java/util/List that 502 builds in front of the dispatch. The
-# block assumes the List is already on the stack, pushes a new HashSet,
-# calls List.add and pops the boolean — so it begins and ends at [list],
-# leaving the stack peak bounded (4) no matter how many state blocks
-# 401-fuse joins ahead of it. That bounded peak is the whole point: N
-# fused stateful operators append N elements to ONE list rather than
+# The per-element state, a thread-safe seen-set built by
+# java.util.concurrent.ConcurrentHashMap.newKeySet(), is carried as the
+# `state` binding: a block of bytecode that APPENDS a fresh set to the
+# captured java/util/List that 502 builds in front of the dispatch. A
+# concurrent set (rather than a plain java/util/HashSet) is mandatory
+# because 502 captures this single set into the ONE BiConsumer that backs
+# the fused Stream.mapMulti dispatch; on a parallel stream several
+# ForkJoin workers invoke that BiConsumer — and therefore Set.add —
+# concurrently, and a non-thread-safe HashSet races (two threads both see
+# an element as "unseen" and let the duplicate through), yielding wrong,
+# non-deterministic results (see #715). The block assumes the List is
+# already on the stack, pushes a fresh set via the static newKeySet
+# factory, calls List.add and pops the boolean — so it begins and ends at
+# [list], leaving the stack peak bounded (3) no matter how many state
+# blocks 401-fuse joins ahead of it. That bounded peak is the whole point:
+# N fused stateful operators append N elements to ONE list rather than
 # stacking N arrays, so the caller's max-stack never overflows. The opcode
 # names are random so two distinct() calls in one method do not collide
 # when their blocks land in the same body.
@@ -21,7 +29,7 @@
 # guard): it opens with a Φ.hone.fetch marker meaning "push my seen-set
 # onto the stack", which 521 turns into List.get(counter++) at emit. The
 # wrapper's leading item-load (512) leaves [item]; the fetch leaves
-# [item, set]; HashSet.add returns true on a previously-unseen element,
+# [item, set]; Set.add returns true on a previously-unseen element,
 # so the item survives to the wrapper's appended consumer.accept; a
 # duplicate is popped and the wrapper returns early, emitting nothing.
 name: distinct-to-distill
@@ -43,13 +51,11 @@ result: |
     static ↦ "true",
     state ↦ ⟦
       𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝜏-new-set ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
-      𝜏-dup-set ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝜏-init ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokespecial,
-        i2 ↦ "java/util/HashSet",
-        i3 ↦ "<init>",
-        i4 ↦ "()V",
+      𝜏-new-set ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ "java/util/concurrent/ConcurrentHashMap",
+        i3 ↦ "newKeySet",
+        i4 ↦ "()Ljava/util/concurrent/ConcurrentHashMap$KeySetView;",
         i5 ↦ Φ.false
       ⟧,
       𝜏-add ↦ ⟦
@@ -63,12 +69,12 @@ result: |
       ρ ↦ ∅
     ⟧,
     body ↦ ⟦
-      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
       i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       i4 ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokevirtual,
-        i1 ↦ "java/util/HashSet",
+        i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView",
         i2 ↦ "add",
         i3 ↦ "(Ljava/lang/Object;)Z",
         i4 ↦ Φ.false
@@ -90,10 +96,6 @@ where:
   - meta: 𝜏-dup-list
     function: random-tau
   - meta: 𝜏-new-set
-    function: random-tau
-  - meta: 𝜏-dup-set
-    function: random-tau
-  - meta: 𝜏-init
     function: random-tau
   - meta: 𝜏-add
     function: random-tau

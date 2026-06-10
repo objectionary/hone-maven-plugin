@@ -20,7 +20,7 @@
 # typed invokestatic. This rule anchors on the Φ.jeo.frame → invokestatic
 # adjacency and splices a `checkcast <wrapper>` between them, so the item is
 # narrowed exactly where it is first needed — the guard above ran on the Object
-# item through HashSet.add(Object) / the skip counter, neither of which needs a
+# item through Set.add(Object) / the skip counter, neither of which needs a
 # narrower type. Because the cast runs AFTER the frame, the frame still rightly
 # declares Object, so 503 is left unchanged.
 #

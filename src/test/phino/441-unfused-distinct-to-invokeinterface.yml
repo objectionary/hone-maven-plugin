@@ -20,14 +20,14 @@ input: |
         accepted ↦ "Ljava/lang/Object;",
         returned ↦ "Ljava/lang/Object;",
         static ↦ "true",
-        state ↦ ⟦ s ↦ ⟦ new ↦ "java/util/HashSet", init ↦ "()V" ⟧, ρ ↦ ∅ ⟧,
+        state ↦ ⟦ s ↦ ⟦ set ↦ "newKeySet" ⟧, ρ ↦ ∅ ⟧,
         body ↦ ⟦
-          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
           b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
           b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
           b4 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokevirtual,
-            i1 ↦ "java/util/HashSet",
+            i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView",
             i2 ↦ "add",
             i3 ↦ "(Ljava/lang/Object;)Z",
             i4 ↦ Φ.false

@@ -6,7 +6,7 @@
 # operator between them. Every distinct folds into a stateful distill and
 # ALL FIVE fuse — together with the stateless maps — into a SINGLE
 # Stream.mapMulti dispatch backed by ONE captured java/util/List that holds
-# all FIVE java/util/HashSet seen-sets. This exercises both fusion shapes
+# all FIVE ConcurrentHashMap.newKeySet() seen-sets. This exercises both fusion shapes
 # at once: stateful-next-to-stateless (map.distinct) AND stateful-next-to-
 # stateful (the three back-to-back distincts), proving 401-fuse merges
 # adjacent stateful distills directly. 502 builds one ArrayList and appends
@@ -20,12 +20,14 @@
 #                   --distinct--> [4,6,8,10]  --count()--> 4
 #
 # The `after` counts assert the fully fused shape: everything collapses to
-# one dispatch (invokedynamic == 1); six allocations appear (new == 6: one
-# ArrayList for the captured state plus the five HashSets); the two maps and
-# five distincts share one mapMulti, so invokeinterface == 13 (one mapMulti +
-# count + the wrapper's consumer.accept + five List.add appends + five
-# List.get fetches) and invokevirtual == 8 (five HashSet.add plus the three
-# already present). Boxing rises to invokestatic == 13 as the lambda bodies
+# one dispatch (invokedynamic == 1); a single allocation appears (new == 1:
+# just the ArrayList for the captured state — each of the five seen-sets is
+# built by the static ConcurrentHashMap.newKeySet() factory, so they no longer
+# show up as `new`); the two maps and five distincts share one mapMulti, so
+# invokeinterface == 13 (one mapMulti + count + the wrapper's consumer.accept +
+# five List.add appends + five List.get fetches) and invokevirtual == 8 (five
+# KeySetView.add plus the three already present). Boxing plus the five
+# newKeySet() factory calls lift invokestatic to == 18 as the lambda bodies
 # move into the single synthesised wrapper.
 java: |
   package distinct;
@@ -54,6 +56,6 @@ before:
 after:
   invokedynamic: 1
   invokeinterface: 13
-  invokestatic: 13
+  invokestatic: 18
   invokevirtual: 8
-  new: 6
+  new: 1

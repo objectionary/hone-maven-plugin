@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for #715: a fused distinct() on a PARALLEL stream must stay
+# correct. The pipeline below maps 1,000,000 longs into 200,000 buckets and
+# deduplicates them with .distinct(); the distinct collapses (via 307 → 502)
+# into a single Stream.mapMulti dispatch whose seen-set is captured into ONE
+# BiConsumer. Because the source is a parallel stream, several ForkJoin
+# workers drive that BiConsumer — and therefore the seen-set's add() —
+# concurrently. With the old java/util/HashSet this raced: two threads both
+# saw an element as "unseen", duplicates leaked, and the sum came out wrong
+# and non-deterministic (observed 2350048338543, 2346109911864, … instead of
+# the correct 19999900000). With the thread-safe ConcurrentHashMap.newKeySet()
+# seen-set the dedup is exact, so the sum is deterministically 19999900000.
+#
+# `before`/`after` opcode counts are intentionally omitted: this pack guards
+# the RUNTIME result of the optimised, parallel pipeline (the real symptom of
+# the bug), not a particular opcode shape.
+java: |
+  package parallel;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      final List<Long> list = LongStream.range(0, 1_000_000L)
+        .boxed()
+        .collect(Collectors.toList());
+      final long n = list.parallelStream()
+        .unordered()
+        .map(x -> x % 200_000L)
+        .distinct()
+        .mapToLong(Long::longValue)
+        .sum();
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 19999900000"

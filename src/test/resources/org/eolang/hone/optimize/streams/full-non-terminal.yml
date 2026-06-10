@@ -36,7 +36,7 @@
 # sit adjacent (distinct().skip()), so this is the case that proves stateful
 # distills fuse: all nine fold-able operators (peek included) collapse into a
 # single stateful distill backed by one captured java/util/List holding the
-# two HashSets and two long[1] counters. The primitive-conversion tail
+# two newKeySet() seen-sets and two long[1] counters. The primitive-conversion tail
 # (mapToInt().boxed().mapToLong().boxed().mapToDouble().boxed()) is a run of
 # user boxed() round-trips, which 209 folds and 401 fuses into that SAME
 # stateful distill (it stays object -> Double, since each boxed() re-boxes to

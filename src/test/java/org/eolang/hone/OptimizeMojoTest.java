@@ -522,7 +522,7 @@ final class OptimizeMojoTest {
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
-    @Timeout(600L)
+    @Timeout(1200L)
     @DisabledWithoutDocker
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {

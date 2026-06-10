@@ -289,6 +289,41 @@ The [hone paper][hone-paper] discusses this property,
   along with the cases (mixing primitives and wrappers across a fuse)
   where an explicit boxing `distill` must be inserted to keep the JVM happy.
 
+## Why Short-Circuiting Operations Are Not Fused
+
+The pipeline deliberately fuses only non-short-circuiting operations
+  (`filter`, `map`, `peek`, `distinct`, `skip`, `flatMap`,
+  the primitive conversions, and `mapMulti` itself);
+  the two short-circuiting intermediate operations of the JDK,
+  `limit()` and `takeWhile()`, are left untouched.
+The reason is structural:
+  everything the fusion produces is one `Stream.mapMulti(BiConsumer)` stage,
+  and a `mapMulti` body may keep, drop, or transform an element,
+  but it has no access to the `Sink.cancellationRequested()` channel —
+  there is no way for the fused body to ask upstream to stop traversal.
+A stateful guard inside the body
+  (a countdown for `limit`, exactly like the one `308-skip-to-distill`
+  builds for `skip` but with the branch inverted,
+  or a sticky latch for `takeWhile`)
+  would reproduce the values of the original pipeline
+  but not its traversal contract:
+  the source keeps being pulled after the cut-off.
+On an unbounded source such as `Stream.iterate(1, n -> n + 2).limit(5)`
+  the rewritten program would simply never terminate,
+  and on a bounded one it would traverse the entire source —
+  `list.stream().limit(3)` would visit every element of the list —
+  pessimizing the very behavior `limit` exists to provide.
+A semantics-preserving variant
+  (keep the native `Stream.limit(n)` right after the fused `mapMulti`
+  so that upstream cancellation still happens)
+  is only exact when no element-dropping operation is fused after the guard,
+  and would save a single `invokedynamic` in that narrow shape —
+  not worth the rule complexity.
+Instead, `limit` and `takeWhile` act as barriers:
+  the chains of operations on either side of them
+  fuse into their own `mapMulti` calls independently,
+  while the native short-circuiting call stays in place.
+
 ## How to Use in Gradle
 
 You can use this plugin with [Gradle] too, but it requires

@@ -4,14 +4,13 @@
  */
 package org.eolang.hone;
 
+import com.yegor256.Jaxec;
 import com.yegor256.MayBeSlow;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;
-import org.cactoos.io.InputOf;
-import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
@@ -104,20 +103,15 @@ final class BuildMojoTest {
                 );
             }
         );
-        final ProcessBuilder bldr = new ProcessBuilder(
-            "docker", "run", "--rm",
-            "--env", "TARGET=/tmp",
-            "--entrypoint", "/bin/bash",
-            image,
-            "-c", "tree /hone"
-        );
-        bldr.redirectErrorStream(true);
-        bldr.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        final Process process = bldr.start();
-        process.waitFor();
         MatcherAssert.assertThat(
             "docker tree command must execute successfully",
-            new TextOf(new InputOf(process.getInputStream())).asString(),
+            new Jaxec(
+                "docker", "run", "--rm",
+                "--env", "TARGET=/tmp",
+                "--entrypoint", "/bin/bash",
+                image,
+                "-c", "tree /hone"
+            ).withCheck(false).execUnsafe().stdout(),
             Matchers.allOf(
                 Matchers.containsString("entry.sh"),
                 Matchers.containsString("rewrite.sh"),

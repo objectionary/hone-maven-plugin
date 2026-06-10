@@ -135,3 +135,9 @@ every `@Tag("deep")` test runs against the real `phino` binary on the host.
   `jeo:assemble` cannot translate back to bytecode. It is easy to invent
   𝜑-calculus that jeo cannot lower; verify roundtripping by running the
   end-to-end optimize goal, not just phino in isolation.
+- Do not fuse the short-circuiting operations `limit()` and `takeWhile()`
+  into a distill. A `mapMulti` body cannot cancel upstream traversal, so a
+  counter or latch guard reproduces the values but not the traversal
+  contract: it hangs on infinite sources (`Stream.iterate(...).limit(n)` in
+  `sources.yml`) and fully traverses finite ones. They must stay as fusion
+  barriers between independently fused runs; README explains the decision.

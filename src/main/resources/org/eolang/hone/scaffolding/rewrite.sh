@@ -236,7 +236,7 @@ else
   export PARALLEL_HOME=${TARGET}/parallel
   mkdir -p "${PARALLEL_HOME}"
   parallel --record-env
-  parallel --retries=0 "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
+  parallel "--joblog=${PARALLEL_HOME}/tasks.log" --will-cite \
     "--max-procs=${threads}" \
     --env _ \
     --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"

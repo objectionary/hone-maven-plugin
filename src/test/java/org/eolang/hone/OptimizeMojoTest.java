@@ -1434,6 +1434,19 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void doesNotRetryFailingJobsInfinitely() throws Exception {
+        MatcherAssert.assertThat(
+            "rewrite.sh must not pass --retries=0 to parallel, since in GNU parallel that means infinite retries, so a deterministically failing phino job loops forever instead of failing fast via --halt=now,fail=1 (see #720)",
+            new IoCheckedText(
+                new TextOf(
+                    new ResourceOf("org/eolang/hone/scaffolding/rewrite.sh")
+                )
+            ).asString(),
+            Matchers.not(Matchers.containsString("--retries=0"))
+        );
+    }
+
+    @Test
     void formatsWhoamiAsUidColonGid() {
         MatcherAssert.assertThat(
             "whoami must format the Docker --user value as 'uid:gid', not 'uid:euid' (see #492)",

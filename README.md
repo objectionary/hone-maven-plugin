@@ -336,9 +336,9 @@ On a parallel stream several `ForkJoin` workers drive that `BiConsumer`
 This is the same race class that `distinct` had (see [#715][715]),
   but for `skip` thread-safety alone cannot fix it:
   `Stream.skip(n)` on an ordered stream must drop the first `n` elements
-  in *encounter* order,
+  in _encounter_ order,
   while any per-item counter — even an atomic one —
-  drops the first `n` in *arrival* order,
+  drops the first `n` in _arrival_ order,
   a non-deterministic subset.
 The fix (see [#717][717]) is therefore a guard, not a stronger counter:
   rules `213`–`215` taint a `skip()` that shares its method

@@ -16,14 +16,17 @@
 #   inline : the same pipeline written on one line — same fused result (4),
 #            proving the own-line and same-line layouts converge.
 #
-# NOTE (unverified counts): the `before` counts below are read off javac with
-# `javap`; the `after` counts are ESTIMATES by analogy to skip.yml and must be
-# re-pinned against a real phino run. This fixture was authored in an
-# environment without the phino binary (no Haskell toolchain, no Docker
-# daemon), so the @Tag("deep") `-Pdeep` suite could not be executed here. The
-# shape of the expectation (idyn collapses as each pipeline fuses to one
-# dispatch; one int[1] latch and one captured ArrayList per fused dropWhile)
-# follows skip.yml; the exact integers are the part to confirm.
+# The `after` counts assert the fusion: each pipeline drops invokedynamic 6 -> 2
+# (the two maps and the dropWhile predicate of each pipeline collapse into one
+# Stream.mapMulti dispatch — verified: two `distill_*` methods and two mapMulti
+# calls are emitted), exactly two int[1] latches are allocated (newarray 0 -> 2,
+# one per fused dropWhile) each wrapped in its own captured java/util/ArrayList
+# (new 0 -> 2); invokeinterface climbs 8 -> 10 as each fused dropWhile gains a
+# List.add (latch build) and a List.get (fetch) while map/dropWhile/map collapse
+# to one mapMulti; invokestatic climbs 20 -> 26 as boxing relocates into the two
+# synthesised wrappers. Primitive-stream dropWhile (IntStream/LongStream/
+# DoubleStream) is out of scope for v1 — only java/util/stream/Stream.dropWhile
+# is recognised — exactly as for skip.
 java: |
   package dropwhile;
   import java.util.stream.*;
@@ -54,7 +57,7 @@ before:
 after:
   invokedynamic: 2
   invokeinterface: 10
-  invokestatic: 24
+  invokestatic: 26
   invokevirtual: 7
   newarray: 2
   new: 2

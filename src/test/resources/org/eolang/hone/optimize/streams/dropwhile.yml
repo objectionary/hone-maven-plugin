@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# `.dropWhile(p)` is "a filter that owns a one-shot sticky latch" (#718): 208
+# recognises it (mirroring 201's filter recognition), 310 folds it into a
+# stateful distill seeded with a captured int[1] latch, and from there it rides
+# the same fusion / mapMulti machinery distinct() and skip() do.
+#
+# Two scenarios, one class:
+#
+#   multi  : map(+1) / dropWhile(<4) / map(*2) with each op on its OWN line. The
+#            1xx prep normalises the layout and the three operations fuse to one
+#            Stream.mapMulti backed by a captured int[1] latch.
+#            [1..6] -> +1 -> [2..7] -> dropWhile(<4) keeps from the first >=4 ->
+#            [4,5,6,7] -> *2 -> [8,10,12,14] -> count 4.
+#   inline : the same pipeline written on one line — same fused result (4),
+#            proving the own-line and same-line layouts converge.
+#
+# NOTE (unverified counts): the `before` counts below are read off javac with
+# `javap`; the `after` counts are ESTIMATES by analogy to skip.yml and must be
+# re-pinned against a real phino run. This fixture was authored in an
+# environment without the phino binary (no Haskell toolchain, no Docker
+# daemon), so the @Tag("deep") `-Pdeep` suite could not be executed here. The
+# shape of the expectation (idyn collapses as each pipeline fuses to one
+# dispatch; one int[1] latch and one captured ArrayList per fused dropWhile)
+# follows skip.yml; the exact integers are the part to confirm.
+java: |
+  package dropwhile;
+  import java.util.stream.*;
+  public class X {
+    public static void main(String[] a) {
+      long multi = Stream.of(1, 2, 3, 4, 5, 6)
+        .map(x -> x + 1)
+        .dropWhile(x -> x < 4)
+        .map(x -> x * 2)
+        .count();
+      long inline = Stream.of(1, 2, 3, 4, 5, 6)
+        .map(x -> x + 1).dropWhile(x -> x < 4).map(x -> x * 2).count();
+      System.out.printf("The result is %d %d%n", multi, inline);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 4 4"
+before:
+  invokedynamic: 6
+  invokeinterface: 8
+  invokestatic: 20
+  invokevirtual: 7
+  newarray: 0
+  new: 0
+after:
+  invokedynamic: 2
+  invokeinterface: 10
+  invokestatic: 24
+  invokevirtual: 7
+  newarray: 2
+  new: 2

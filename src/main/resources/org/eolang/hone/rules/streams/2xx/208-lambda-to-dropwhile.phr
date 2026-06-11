@@ -1,0 +1,103 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognises a stream `.dropWhile(p)` call — a Φ.hone.lambda whose SAM is a
+# Predicate immediately consumed by `Stream.dropWhile` — and abstracts it into
+# a single Φ.hone.dropWhile pragma. The shape is exactly the one 201 matches for
+# `filter` (a Predicate-returning lambda followed by the stream call); only the
+# `stream.method` differs, so this rule mirrors 201 line for line and 310 folds
+# the result into a stateful distill the same way 308 folds skip.
+#
+# dropWhile is the last sink-free Stream operation with no lifting rule (#718).
+# Like filter it carries a predicate, so — unlike distinct/skip — recognition
+# reads the element type and the target handle straight off the lambda; the only
+# extra ingredient at 310 is a one-shot sticky latch, the dropWhile analogue of
+# skip's countdown counter.
+#
+# v1 scope (mirrors skip's narrow v1): only the object `java/util/stream/Stream`
+# is handled, the predicate must be `static` (the normalised lambda shape 121
+# leaves), and its target must return a primitive `Z`. A `static ↦ "true"` match
+# and a `\)Z$` guard on the target signature keep the three other shapes —
+# primitive streams, captured (non-static) predicates, and method references to
+# `Boolean`-returning methods (the o-filter case 305 handles for filter) — as
+# plain bytecode, so no Φ.hone.dropWhile pragma is ever produced that 310 cannot
+# fold back to assemblable code.
+name: lambda-to-dropwhile
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "test",
+    interface ↦ "()Ljava/util/function/Predicate;",
+    lambda-signature ↦ "(Ljava/lang/Object;)Z",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "dropWhile",
+      signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.dropWhile,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-bridge-input,
+    static ↦ "true",
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+when:
+  matches: ['\)Z$', 𝑒-target-signature]
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    # "(Ljava/lang/Integer;)Z" -> "Ljava/lang/Integer;"
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\)Z/$1/g"'
+  - meta: 𝑒-target-class-pattern
+    function: sed
+    # java\\/lang\\/String
+    args:
+      - 𝑒-target-class
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-virtual-accepted-pattern
+    function: concat
+    # s/\\(\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(\\).+/L"', 𝑒-target-class-pattern, '";/g"']
+  - meta: 𝑒-bridge-input-pattern
+    function: sed
+    # Ljava\\/lang\\/String;
+    args:
+      - 𝑒-bridge-input
+      - '"s/\\//\\\\\\//g"'
+  - meta: 𝑒-java-object-pattern
+    function: concat
+    # s/\\(Ljava\\/lang\\/Object;\\).+/Ljava\\/lang\\/String;/g
+    args: ['"s/\\(Ljava\\/lang\\/Object;\\).+/"', 𝑒-bridge-input-pattern, '"/g"']
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - 𝑒-virtual-accepted-pattern
+      - 𝑒-java-object-pattern
+      - '"s/\\((.+)\\).+/$1/g"'

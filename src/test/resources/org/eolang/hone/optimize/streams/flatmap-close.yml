@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for issue #726: the flatMap -> mapMulti adapter must close the stream
+# the mapper returns. The JDK's ReferencePipeline.flatMap drains every element
+# inside `try (Stream r = mapper.apply(u)) { if (r != null) r.sequential().forEach(...); }`
+# — the try-with-resources closes r after its elements are consumed, which is what
+# releases the file handle or connection behind an I/O-backed sub-stream
+# (Files.lines, BufferedReader.lines, Files.walk, JDBC). Before #726 the `flatadapt`
+# body 455 synthesised drained the sub-stream with a bare forEach and returned
+# without ever calling close(), so the fused pipeline leaked one resource per
+# element — a regression the original flatMap does not have. The fix wraps the
+# drain in a synthesised try-with-resources (its own exception-table entries, a
+# finally that calls BaseStream.close(), and the addSuppressed/athrow dance), so
+# close() runs once per returned stream, on the normal and the exceptional path.
+#
+# Each of the three source elements maps to a fresh two-element Stream carrying an
+# onClose handler that bumps a counter; the terminal is an order- AND
+# value-sensitive 31-fold (reduce) over 1, 10, 2, 20, 3, 30, which the JDK
+# evaluates to 37943286. The optimized class reproduces that value AND reports
+# `closed 3` — proof that every sub-stream was both fully drained and closed.
+# Before the fix the optimized run prints `closed 0`: the elements still flow but
+# the streams are never closed.
+#
+# Counts: a lone flatMap (no adjacent mapMulti to fuse with) is converted to one
+# Stream.mapMulti and lowered back by 701, and its `flatadapt` body is appended:
+# one invokestatic into the untouched mapper (10 -> 11), and on the drain path one
+# BaseStream.sequential, one Stream.forEach and — new for #726 — two Stream.close
+# invokeinterface calls (the normal-close and the handler-close), so invokeinterface
+# rises by 4 (3 -> 7). The body returns once (4 -> 5; the null-skip now branches to
+# the close path rather than returning early). invokedynamic stays at 3: 455
+# relocates the Function call-site indy into the BiConsumer adapter's indy, and the
+# mapper lambda$ (with its onClose Runnable) and the reduce lambda are untouched.
+java: |
+  package flatmapclose;
+  import java.util.stream.Stream;
+  import java.util.concurrent.atomic.AtomicInteger;
+  public class X {
+    private static final AtomicInteger CLOSED = new AtomicInteger();
+    public static void main(String[] a) {
+      int n = Stream.of(1, 2, 3)
+        .flatMap(x -> Stream.of(x, x * 10).onClose(() -> CLOSED.incrementAndGet()))
+        .reduce(0, (p, q) -> p * 31 + q);
+      System.out.printf("The result is %d closed %d\n", n, CLOSED.get());
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 37943286 closed 3"
+before:
+  invokedynamic: 3
+  invokeinterface: 3
+  invokestatic: 10
+  return: 4
+after:
+  invokedynamic: 3
+  invokeinterface: 7
+  invokestatic: 11
+  return: 5

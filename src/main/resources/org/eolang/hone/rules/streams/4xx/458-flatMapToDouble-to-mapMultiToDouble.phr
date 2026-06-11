@@ -3,33 +3,30 @@
 ---
 # yamllint disable rule:line-length
 # The DoubleStream sibling of 455-flatMap-to-mapMulti. Converts a user-written
-# Stream.flatMapToDouble into an equivalent Stream.mapMultiToDouble.
-# flatMapToDouble takes a Function<T, DoubleStream> and flattens the returned
-# DoubleStreams; the same fan-out is expressed by
-# mapMultiToDouble((x, c) -> mapper(x).forEach(c)), where c is the downstream
-# DoubleConsumer. 111 lifts the flatMapToDouble invokedynamic into a Φ.hone.lambda
-# carrying stream.method = "flatMapToDouble" and a handle-6 target to a
-# non-capturing lambda$ body of signature
-# (L<elem>;)Ljava/util/stream/DoubleStream;. This rule rewrites that pragma into
-# the shape 111 produces for a user mapMultiToDouble — a Φ.hone.lambda with
-# interface BiConsumer, stream.method = "mapMultiToDouble", and a handle-6 target —
-# whose target is a freshly synthesised BiConsumer `flatadapt`:
+# Stream.flatMapToDouble into an equivalent Stream.mapMultiToDouble. flatMapToDouble takes a
+# Function<T, DoubleStream> and flattens the returned DoubleStreams; the same fan-out
+# is expressed by mapMultiToDouble((x, c) -> { try (var r = mapper(x)) { if (r != null)
+# r.sequential().forEach(c); } }), where c is the downstream DoubleConsumer. 111 lifts
+# the flatMapToDouble invokedynamic into a Φ.hone.lambda carrying stream.method =
+# "flatMapToDouble" and a handle-6 target to a non-capturing lambda$ body of signature
+# (L<elem>;)Ljava/util/stream/DoubleStream;. This rule rewrites that pragma into the
+# shape 111 produces for a user mapMultiToDouble — a Φ.hone.lambda with interface
+# BiConsumer, stream.method = "mapMultiToDouble", and a handle-6 target — whose target is a
+# freshly synthesised BiConsumer `flatadapt` that applies the original mapper to the
+# item, then drains the returned DoubleStream into the downstream DoubleConsumer inside a
+# synthesised try-with-resources. DoubleStream.forEach takes precisely the DoubleConsumer
+# that mapMultiToDouble hands down, so the same adapter shape 455 synthesises works
+# unchanged here. 501/502 already emit mapMultiToDouble dispatches, so the jeo roundtrip of
+# these calls is proven.
 #
-#   flatadapt(x, c):  invokestatic lambda$(x) -> DoubleStream ; mapper applied to item
-#                     dup; ifnonnull L; pop; return    ; flatMapToDouble's null-skip
-#                     L: invokeinterface BaseStream.sequential() ; force sequential
-#                     invokeinterface DoubleStream.forEach(c) ; drains it into c
-#
-# The mapper body is kept untouched. DoubleStream.forEach takes precisely the
-# DoubleConsumer that mapMultiToDouble hands down, so the same adapter shape 455
-# synthesises works unchanged here. 501/502 already emit mapMultiToDouble
-# dispatches, so the jeo roundtrip of these calls is proven.
+# The mapper body is kept untouched. Like 455, the adapter reproduces flatMapToDouble's
+# null-skip, its `result.sequential()` drain, and — wrapping the drain in a
+# try-with-resources with its own exception-table entries, finally close() and
+# addSuppressed dance — the auto-close of the returned stream that the JDK performs,
+# so an I/O-backed sub-stream no longer leaks a descriptor per element (#726).
 #
 # Scope: reference Stream.flatMapToDouble only (mapper returns
-# java/util/stream/DoubleStream). Like 455, the adapter reproduces
-# flatMapToDouble's null-skip and its `result.sequential()` drain; the auto-close
-# of the returned stream still needs try-finally synthesis and is tracked
-# separately.
+# java/util/stream/DoubleStream).
 name: flatMapToDouble-to-mapMultiToDouble
 pattern: |
   ⟦
@@ -110,7 +107,7 @@ result: |
       access ↦ 4106,
       descriptor ↦ 𝑒-adapter-signature,
       signature ↦ "",
-      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 2, max-locals ↦ 2 ⟧,
+      maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 2, max-locals ↦ 5 ⟧,
       params ↦ ⟦
         φ ↦ Φ.jeo.params,
         i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ 𝑒-flatmap-input ⟧,
@@ -118,47 +115,141 @@ result: |
       ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of,
-        ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+        ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
         call-mapper ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokestatic,
-          i2 ↦ 𝑒-target-class,
-          i3 ↦ 𝑒-target-method,
-          i4 ↦ 𝑒-target-signature,
-          i5 ↦ 𝑒-target-is-interface
+          v0 ↦ 𝑒-target-class,
+          v1 ↦ 𝑒-target-method,
+          v2 ↦ 𝑒-target-signature,
+          v3 ↦ 𝑒-target-is-interface
         ⟧,
-        dup-stream ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        store-stream ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v0 ↦ 2 ⟧,
+        try-start ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-try ⟧,
+        ld-check ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 2 ⟧,
         guard ↦ ⟦
-          φ ↦ Φ.jeo.opcode.ifnonnull,
-          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+          φ ↦ Φ.jeo.opcode.ifnull,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-end ⟧
         ⟧,
-        drop-null ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-        ret-null ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-        keep ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
-        keep-frame ↦ ⟦
-          φ ↦ Φ.jeo.frame,
-          type ↦ 4,
-          nlocal ↦ 0,
-          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
-          nstack ↦ 1,
-          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ "java/util/stream/DoubleStream" ⟧
-        ⟧,
+        ld-stream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 2 ⟧,
         force-seq ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
-          i2 ↦ "java/util/stream/BaseStream",
-          i3 ↦ "sequential",
-          i4 ↦ "()Ljava/util/stream/BaseStream;",
-          i5 ↦ Φ.true
+          v0 ↦ "java/util/stream/BaseStream",
+          v1 ↦ "sequential",
+          v2 ↦ "()Ljava/util/stream/BaseStream;",
+          v3 ↦ Φ.true
         ⟧,
-        ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, v0 ↦ "java/util/stream/DoubleStream" ⟧,
+        ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 1 ⟧,
         call-foreach ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
-          i2 ↦ "java/util/stream/DoubleStream",
-          i3 ↦ "forEach",
-          i4 ↦ "(Ljava/util/function/DoubleConsumer;)V",
-          i5 ↦ Φ.true
+          v0 ↦ "java/util/stream/DoubleStream",
+          v1 ↦ "forEach",
+          v2 ↦ "(Ljava/util/function/DoubleConsumer;)V",
+          v3 ↦ Φ.true
+        ⟧,
+        try-end ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-end ⟧,
+        frame-drained ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of3, x0 ↦ 𝑒-frame-input, x1 ↦ "java/util/function/DoubleConsumer", x2 ↦ "java/util/stream/DoubleStream" ⟧,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+        ⟧,
+        ld-close ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 2 ⟧,
+        guard-close ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifnull,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-done ⟧
+        ⟧,
+        ld-close-stream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 2 ⟧,
+        call-close ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          v0 ↦ "java/util/stream/DoubleStream",
+          v1 ↦ "close",
+          v2 ↦ "()V",
+          v3 ↦ Φ.true
+        ⟧,
+        goto-done ↦ ⟦
+          φ ↦ Φ.jeo.opcode.goto,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-done ⟧
+        ⟧,
+        handler ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-handler ⟧,
+        frame-handler ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of3, x0 ↦ 𝑒-frame-input, x1 ↦ "java/util/function/DoubleConsumer", x2 ↦ "java/util/stream/DoubleStream" ⟧,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Throwable" ⟧
+        ⟧,
+        store-primary ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v0 ↦ 3 ⟧,
+        ld-check2 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 2 ⟧,
+        guard-handler ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifnull,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-rethrow ⟧
+        ⟧,
+        close2-start ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-close2 ⟧,
+        ld-close2 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 2 ⟧,
+        call-close2 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          v0 ↦ "java/util/stream/DoubleStream",
+          v1 ↦ "close",
+          v2 ↦ "()V",
+          v3 ↦ Φ.true
+        ⟧,
+        close2-end ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-close2end ⟧,
+        goto-rethrow ↦ ⟦
+          φ ↦ Φ.jeo.opcode.goto,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-rethrow ⟧
+        ⟧,
+        handler2 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-handler2 ⟧,
+        frame-handler2 ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ 𝑒-frame-input, x1 ↦ "java/util/function/DoubleConsumer", x2 ↦ "java/util/stream/DoubleStream", x3 ↦ "java/lang/Throwable" ⟧,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Throwable" ⟧
+        ⟧,
+        store-suppressed ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v0 ↦ 4 ⟧,
+        ld-primary ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 3 ⟧,
+        ld-suppressed ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 4 ⟧,
+        call-addsup ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          v0 ↦ "java/lang/Throwable",
+          v1 ↦ "addSuppressed",
+          v2 ↦ "(Ljava/lang/Throwable;)V",
+          v3 ↦ Φ.false
+        ⟧,
+        rethrow-label ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-rethrow ⟧,
+        frame-rethrow ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ 𝑒-frame-input, x1 ↦ "java/util/function/DoubleConsumer", x2 ↦ "java/util/stream/DoubleStream", x3 ↦ "java/lang/Throwable" ⟧,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
+        ⟧,
+        ld-primary2 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 3 ⟧,
+        do-throw ↦ ⟦ φ ↦ Φ.jeo.opcode.athrow ⟧,
+        done-label ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-done ⟧,
+        frame-done ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of2, x0 ↦ 𝑒-frame-input, x1 ↦ "java/util/function/DoubleConsumer" ⟧,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
         ⟧,
         ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
         ρ ↦ ∅
+      ⟧,
+      trycatchblocks ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        t0 ↦ ⟦
+          φ ↦ Φ.jeo.trycatch,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-try ⟧,
+          l1 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-end ⟧,
+          l2 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-handler ⟧,
+          v3 ↦ "java/lang/Throwable"
+        ⟧,
+        t1 ↦ ⟦
+          φ ↦ Φ.jeo.trycatch,
+          l0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-close2 ⟧,
+          l1 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-close2end ⟧,
+          l2 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ 𝑒-l-handler2 ⟧,
+          v3 ↦ "java/lang/Throwable"
+        ⟧
       ⟧,
       name ↦ 𝑒-adapter-name
     ⟧,
@@ -167,7 +258,28 @@ result: |
 where:
   - meta: 𝜏-adapter-method
     function: random-tau
-  - meta: 𝑒-label
+  - meta: 𝑒-l-try
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-end
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-handler
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-close2
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-close2end
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-handler2
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-rethrow
+    function: random-string
+    args: [ '"L%d"' ]
+  - meta: 𝑒-l-done
     function: random-string
     args: [ '"L%d"' ]
   - meta: 𝑒-adapter-name
@@ -178,6 +290,11 @@ where:
     args:
       - 𝑒-target-signature
       - '"s/^[(](L[^;]*;).*/$1/"'
+  - meta: 𝑒-frame-input
+    function: sed
+    args:
+      - 𝑒-flatmap-input
+      - '"s/^L(.*);$/$1/"'
   - meta: 𝑒-adapter-signature
     function: concat
     args: [ '"("', 𝑒-flatmap-input, '"Ljava/util/function/DoubleConsumer;)V"' ]

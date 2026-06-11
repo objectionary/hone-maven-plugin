@@ -8,8 +8,9 @@
 # flatMap into a mapMulti whose `flatadapt` body applies the mapper and drains the
 # returned stream into the downstream Consumer; before #725 it called forEach
 # unconditionally, so a null mapper result threw NullPointerException instead of
-# being skipped. The fix wraps the drain in `dup; ifnonnull L; pop; return` so the
-# null case returns without touching the consumer, exactly like the JDK.
+# being skipped. The fix stores the mapper result in a local and guards the drain
+# with `aload r; ifnull L_end`, so the null case skips straight to the close path
+# without touching the consumer, exactly like the JDK.
 #
 # The mapper here returns null for every odd element and a two-element Stream for
 # every even one, so half the elements feed a null into the adapter. The terminal
@@ -20,13 +21,15 @@
 #
 # Counts: a lone flatMap (no adjacent mapMulti to fuse with) is converted to one
 # Stream.mapMulti and lowered back by 701, and its `flatadapt` body is appended:
-# one invokestatic into the untouched mapper, the null-skip guard
-# (dup; ifnonnull L; pop; return), one BaseStream.sequential invokeinterface, one
-# Stream.forEach invokeinterface, and the final return. So invokestatic rises by 1
-# (12 -> 13), invokeinterface by 2 (2 -> 4, the sequential + forEach), and return
-# by 2 (2 -> 4, the null-branch return plus the final return). invokedynamic stays
-# at 2: 455 relocates the Function call-site indy into the BiConsumer adapter's
-# indy rather than adding one, and the mapper lambda$ and reduce lambda bodies are
+# one invokestatic into the untouched mapper, the null-skip guard (aload; ifnull),
+# one BaseStream.sequential invokeinterface, one Stream.forEach invokeinterface,
+# and — new for #726 — two Stream.close invokeinterface calls (the normal-close and
+# the handler-close of the synthesised try-with-resources). So invokestatic rises
+# by 1 (12 -> 13), invokeinterface by 4 (2 -> 6, the sequential + forEach + two
+# closes), and return rises by 1 (2 -> 3, the single final return; the null branch
+# now jumps to the close path rather than returning early). invokedynamic stays at
+# 2: 455 relocates the Function call-site indy into the BiConsumer adapter's indy
+# rather than adding one, and the mapper lambda$ and reduce lambda bodies are
 # untouched.
 java: |
   package flatmapnull;
@@ -51,6 +54,6 @@ before:
   return: 2
 after:
   invokedynamic: 2
-  invokeinterface: 4
+  invokeinterface: 6
   invokestatic: 13
-  return: 4
+  return: 3

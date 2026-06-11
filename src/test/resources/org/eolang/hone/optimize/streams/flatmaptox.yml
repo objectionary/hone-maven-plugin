@@ -24,13 +24,15 @@
 # Counts: each of the three flatMapToX call sites stays a single invokeinterface
 # on Stream (now mapMultiToX rather than flatMapToX), and each converted call adds
 # its `flatadapt` body — one invokestatic into the untouched mapper, the null-skip
-# guard (dup; ifnonnull L; pop; return), one BaseStream.sequential invokeinterface,
-# one XStream.forEach invokeinterface, and the final return. So invokestatic rises
-# by 3 (23 -> 26), invokeinterface by 6 (6 -> 12, three sequential + three forEach
-# calls), and return by 6 (2 -> 8, the three null-branch returns plus the three
-# final returns). invokedynamic stays at 6: 456/457/458 relocate each Function
-# call-site indy into the BiConsumer adapter's indy rather than adding one, and the
-# three mapper lambda$ bodies plus the three reduce lambdas are untouched.
+# guard (aload; ifnull), one BaseStream.sequential invokeinterface, one
+# XStream.forEach invokeinterface, two XStream.close invokeinterface calls (the
+# normal-close and the handler-close of the synthesised try-with-resources), and
+# the final return. So invokestatic rises by 3 (23 -> 26), invokeinterface by 12
+# (6 -> 18, three sequential + three forEach + six close calls), and return by 3
+# (2 -> 5, the three final returns; each null branch now jumps to the close path
+# rather than returning early). invokedynamic stays at 6: 456/457/458 relocate each
+# Function call-site indy into the BiConsumer adapter's indy rather than adding one,
+# and the three mapper lambda$ bodies plus the three reduce lambdas are untouched.
 java: |
   package flatmaptox;
   import java.util.stream.Stream;
@@ -63,6 +65,6 @@ before:
   return: 2
 after:
   invokedynamic: 6
-  invokeinterface: 12
+  invokeinterface: 18
   invokestatic: 26
-  return: 8
+  return: 5

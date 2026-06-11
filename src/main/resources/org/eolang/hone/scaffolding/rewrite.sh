@@ -128,6 +128,20 @@ function rewrite {
   fi
 }
 
+# Kill a process together with its whole descendant tree, escalating from a
+# given signal towards the leader. Children are signalled before their parents
+# so that nothing is reparented to init and left running. Used so that a
+# timed-out rewrite does not orphan the phino process it spawned (see #727).
+function kill_tree {
+  local sig="${1}"
+  local root="${2}"
+  local child
+  for child in $(pgrep -P "${root}" 2>/dev/null || true); do
+    kill_tree "${sig}" "${child}"
+  done
+  kill "-${sig}" "${root}" 2>/dev/null || true
+}
+
 function rewrite_with_timeout {
   idx=${1}
   phi=${2}
@@ -136,16 +150,51 @@ function rewrite_with_timeout {
   xo=${5}
   start=$(date '+%s.%N')
   code=0
-  timeout "${HONE_TIMEOUT}" "${0}" rewrite "$@" || code=$?
-  if [ "${code}" -ne 0 ]; then
-    sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
-    if [ "${code}" -eq 124 ] || [ "${code}" -eq 137 ]; then
-      echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
-      cp "${xi}" "${xo}"
-    else
-      echo "Failure (exit code ${code}) in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds; refusing to copy it through unoptimized" >&2
-      exit "${code}"
+  # GNU "timeout" sends its signal only to its direct child (the bash
+  # re-invocation of this script), not to the phino process that the "rewrite"
+  # function launches in the foreground. On timeout that phino is reparented to
+  # init and keeps burning CPU, and across a large run these orphans accumulate
+  # until the optimize never converges (#727). To avoid that we run the worker
+  # in its own session via "setsid" and, when the deadline passes, terminate the
+  # whole process group (and any stragglers in its tree) so phino dies too.
+  flag=$(mktemp)
+  rm -f "${flag}"
+  setsid --wait "${0}" rewrite "$@" &
+  sid=$!
+  leader=""
+  for _ in $(seq 1 100); do
+    leader=$(pgrep -P "${sid}" 2>/dev/null | head -n 1) || true
+    [ -n "${leader}" ] && break
+    kill -0 "${sid}" 2>/dev/null || break
+    sleep 0.05
+  done
+  (
+    sleep "${HONE_TIMEOUT}"
+    : > "${flag}"
+    if [ -n "${leader}" ]; then
+      kill_tree TERM "${leader}"
+      kill -TERM "-${leader}" 2>/dev/null || true
+      sleep "${HONE_KILL_GRACE:-10}"
+      kill_tree KILL "${leader}"
+      kill -KILL "-${leader}" 2>/dev/null || true
     fi
+  ) &
+  watchdog=$!
+  wait "${sid}" || code=$?
+  kill "${watchdog}" 2>/dev/null || true
+  wait "${watchdog}" 2>/dev/null || true
+  if [ -f "${flag}" ]; then
+    rm -f "${flag}"
+    sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
+    echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
+    cp "${xi}" "${xo}"
+  elif [ "${code}" -ne 0 ]; then
+    rm -f "${flag}"
+    sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
+    echo "Failure (exit code ${code}) in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds; refusing to copy it through unoptimized" >&2
+    exit "${code}"
+  else
+    rm -f "${flag}"
   fi
 }
 
@@ -190,6 +239,13 @@ if [ "${HONE_TIMEOUT}" -lt 5 ]; then
   exit 1
 fi
 echo "Timeout: ${HONE_TIMEOUT} seconds"
+
+for tool in setsid pgrep; do
+  if ! command -v "${tool}" >/dev/null 2>&1; then
+    echo "The '${tool}' utility is required to enforce the per-file timeout, can't rewrite"
+    exit 1
+  fi
+done
 
 echo "Using ${#rules[@]} rewriting rule(s)"
 

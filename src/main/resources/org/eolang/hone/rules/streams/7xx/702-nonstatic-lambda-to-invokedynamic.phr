@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# The trailing 𝐵-lowered wildcard tolerates the `lowered ↦ Φ.true` marker that
+# 6xx/603-unbox-to-lambda appends to its output (see #733); it stays optional so
+# lambdas from every other producer keep matching too.
 name: nonstatic-lambda-to-invokedynamic
 pattern: |
   ⟦
@@ -26,7 +29,8 @@ pattern: |
         class ↦ 𝑒-stream-class,
         method ↦ 𝑒-stream-method,
         signature ↦ 𝑒-stream-signature
-      ⟧
+      ⟧,
+      𝐵-lowered
     ⟧,
     𝐵-after
   ⟧

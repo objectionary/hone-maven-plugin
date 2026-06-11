@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Guards the stateful skip lifting against parallel pipelines (#719, #717).
+#
+# `220-recognize-skip` lifts every `.skip(n)` into a Φ.hone.skip pragma, which
+# `308` then folds into a stateful distill that fuses (`401`) into one
+# `Stream.mapMulti` driven by a captured `long[1]` countdown counter. That
+# rewrite is sound only when arrival order equals encounter order — i.e. when
+# the stream provably stays sequential. On a parallel stream several ForkJoin
+# workers drive the fused BiConsumer concurrently, so the shared counter both
+# races and counts in ARRIVAL order rather than ENCOUNTER order: the wrong
+# elements are dropped and the result is non-deterministic. The native
+# `Stream.skip(n)` the JVM already has honours the parallel/ordered contract,
+# so on a parallel pipeline the skip must stay native and unfused.
+#
+# phino patterns cannot test a binding group for the ABSENCE of a parallel
+# call, so instead of stamping a "sequential" marker and gating `220`/`308` on
+# it, this rule takes the dual, positive route used by `442`: once `220` has
+# produced a Φ.hone.skip, if the SAME method body also contains a
+# `parallel()` / `parallelStream()` invoke, the skip pragma is reverted back to
+# a plain `invokeinterface java/util/stream/Stream.skip:(J)…` before `308`
+# (3xx) ever folds it. The recovered count rides in the pragma's `push`. The
+# reverted opcode carries `reverted ↦ Φ.true`, the same fifth-operand guard
+# `442` uses, so `220` (closed on the four-operand opcode jeo emits) cannot
+# re-recognise it and the 220 → 222 cycle cannot spin.
+#
+# Detection is intentionally over-broad: any `parallel`/`parallelStream` call
+# anywhere in the method reverts every Φ.hone.skip in it, even one on an
+# unrelated, locally-consumed stream. Over-reverting only forfeits the skip
+# optimisation on that method (the native call stays correct), so erring this
+# way keeps the pass sound. This rule covers a parallel call that appears
+# BEFORE the skip in the body (`source.parallel().…skip(n)`,
+# `coll.parallelStream().…skip(n)`); its sibling `223` covers the call after
+# the skip (`source.skip(n).parallel()`). Binding groups are order-preserving,
+# so both layouts need their own rule.
+#
+# When a future `dropWhile` lifting lands, the same revert-on-parallel guard
+# applies to its pragma verbatim.
+name: parallel-reverts-skip
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
+      push ↦ 𝑒-push
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-push-back ↦ 𝑒-push,
+    𝜏-skip-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+where:
+  - meta: 𝜏-push-back
+    function: random-tau
+  - meta: 𝜏-skip-call
+    function: random-tau

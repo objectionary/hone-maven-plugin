@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Positional sibling of `222`. `222` reverts a Φ.hone.skip back to a native
+# `Stream.skip` when a `parallel()` / `parallelStream()` call sits BEFORE it in
+# the method body; this rule covers the mirror layout where the parallel call
+# comes AFTER the skip, e.g. `source.skip(n).parallel().…`. phino binding
+# groups are order-preserving (the same property `281` relies on to stay
+# idempotent), so a single pattern cannot match the call on either side of the
+# skip — the two orderings need two rules. Everything else — the soundness
+# rationale, the recovered count from the pragma's `push`, and the
+# `reverted ↦ Φ.true` guard that stops `220` re-recognising the result — is
+# exactly as documented in `222`.
+name: parallel-reverts-skip-after
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
+      push ↦ 𝑒-push
+    ⟧,
+    𝐵-between,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back ↦ 𝑒-push,
+    𝜏-skip-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - or:
+        - eq: [𝑒-pmethod, 'parallel']
+        - eq: [𝑒-pmethod, 'parallelStream']
+where:
+  - meta: 𝜏-push-back
+    function: random-tau
+  - meta: 𝜏-skip-call
+    function: random-tau

@@ -324,6 +324,26 @@ Instead, `limit` and `takeWhile` act as barriers:
   fuse into their own `mapMulti` calls independently,
   while the native short-circuiting call stays in place.
 
+## Why `skip` Is Only Fused on Sequential Pipelines
+
+`skip(n)` is fused (it lowers to a countdown counter inside the
+  `mapMulti` body, see `308-skip-to-distill`), but only when the pipeline
+  provably stays sequential.
+The fused counter is correct only if arrival order equals encounter order:
+  on a parallel stream several `ForkJoin` workers drive the one captured
+  counter concurrently, so it both races and counts in arrival order rather
+  than encounter order, dropping the wrong elements
+  (this is the order-dependent analogue of the parallel `distinct` race
+  fixed in #715, except that no thread-safe data structure can recover
+  encounter order once it is lost).
+The JDK's native `Stream.skip(n)` honours the ordered/parallel contract,
+  so when a method contains a `parallel()` or `parallelStream()` call the
+  rules `222-parallel-reverts-skip` and `223-parallel-reverts-skip-after`
+  revert the recognised `skip` back to the native call before `308` can fold
+  it (#719, #717).
+The same revert-on-parallel guard applies verbatim to a future `dropWhile`
+  lifting, which is order-dependent for the same reason.
+
 ## How to Use in Gradle
 
 You can use this plugin with [Gradle] too, but it requires

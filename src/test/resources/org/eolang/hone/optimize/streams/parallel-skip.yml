@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for #719 (and #717): a `.skip(n)` on a PARALLEL stream must stay
+# correct. Lifted and fused (220 → 308 → 401 → 502) a skip becomes a single
+# Stream.mapMulti whose countdown counter is a captured long[1]. On a parallel
+# stream several ForkJoin workers drive that one BiConsumer concurrently, so
+# the counter both races and counts in ARRIVAL order rather than ENCOUNTER
+# order — the wrong elements are dropped and the sum comes out wrong and
+# non-deterministic. The guard (222 / 223) detects the `.parallel()` call in
+# the method and reverts the skip to a native Stream.skip before 308 can fold
+# it, so the JVM's own ordered-parallel skip runs and the result is exact.
+#
+# The pipeline maps the ordered range 1..1_000_000 through an identity map (a
+# stateless neighbour that would otherwise fuse the skip), skips the first 10
+# in encounter order, and sums the rest: 500000500000 - (1+..+10) =
+# 500000499945. With the buggy fused skip this sum was wrong and varied run to
+# run; with the native skip it is deterministically 500000499945.
+#
+# `before`/`after` opcode counts are intentionally omitted (as in
+# parallel-distinct): this pack guards the RUNTIME result of the optimised,
+# parallel pipeline, not a particular opcode shape.
+java: |
+  package skipparallel;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      long n = LongStream.rangeClosed(1, 1_000_000L)
+        .boxed()
+        .parallel()
+        .map(x -> x)
+        .skip(10L)
+        .mapToLong(Long::longValue)
+        .sum();
+      System.out.printf("The result is %d%n", n);
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 500000499945"

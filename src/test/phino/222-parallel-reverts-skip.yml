@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A Φ.hone.skip in a method that also calls `.parallel()` BEFORE it must be
+# put back to a native `Stream.skip` (carrying the `reverted` guard) so 308
+# never folds it into a parallel-unsound countdown distill (#719, #717).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/222-parallel-reverts-skip.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "parallel",
+        v2 ↦ "()Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.skip,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream",
+        push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, i3 ↦ "skip", 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, reverted ↦ Φ.true, 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, v1 ↦ "parallel", 𝐵-t ⟧

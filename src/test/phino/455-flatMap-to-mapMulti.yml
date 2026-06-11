@@ -11,11 +11,13 @@
 # freshly synthesised BiConsumer `flatadapt`, and appends that adapter method to
 # the class. The adapter applies the original mapper to the item
 # (invokestatic lambda$main$0) and drains the returned stream into the downstream
-# Consumer (invokeinterface Stream.forEach). Matching all of them — the surviving
-# mapMulti stream block, the invokestatic into the untouched mapper body, the
-# ifnonnull null-skip guard, the BaseStream.sequential drain, and the forEach —
-# proves the flatMap was rewired into a mapMulti that also reproduces flatMap's
-# null-skip and sequential().
+# Consumer (invokeinterface Stream.forEach) inside a synthesised
+# try-with-resources that also closes the stream. Matching all of them — the
+# surviving mapMulti stream block, the invokestatic into the untouched mapper
+# body, the ifnull null-skip guard, the BaseStream.sequential drain, the forEach,
+# the Stream.close, the Throwable.addSuppressed dance, the athrow rethrow and a
+# trycatch entry — proves the flatMap was rewired into a mapMulti that reproduces
+# flatMap's null-skip, sequential() and the auto-close of the returned stream.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/4xx/455-flatMap-to-mapMulti.phr
 input: |
@@ -46,8 +48,11 @@ input: |
   ⟧}
 expected:
   - ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.ifnonnull, 𝐵-rest ⟧
-  - ⟦ φ ↦ Φ.jeo.frame, 𝐵-rest ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/stream/BaseStream", i3 ↦ "sequential", 𝐵-rest ⟧
-  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/stream/Stream", i3 ↦ "forEach", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, v0 ↦ "Foo", v1 ↦ "lambda$main$0", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.ifnull, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/BaseStream", v1 ↦ "sequential", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "forEach", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "close", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, v0 ↦ "java/lang/Throwable", v1 ↦ "addSuppressed", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.athrow ⟧
+  - ⟦ φ ↦ Φ.jeo.trycatch, 𝐵-rest ⟧

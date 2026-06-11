@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# The result tags the freshly lowered Φ.hone.lambda with a `lowered ↦ Φ.true`
+# marker (kept last so 7xx's trailing binding-set wildcards still capture it).
+# This rule is the exact inverse of 2xx/205-lambda-to-unbox: 205 rewrites this
+# very lambda shape back into a Φ.hone.unbox, so without the marker the two
+# ping-pong forever inside the single fixpoint `phino rewrite` invocation and
+# the `optimize` goal crashes (see #733). 205 matches a formation by its exact
+# binding set, so the extra marker keeps it from recognizing what we produce
+# here, turning the inverse pair into a one-way lowering.
 name: unbox-to-lambda
 pattern: |
   ⟦
@@ -27,7 +35,8 @@ result: |
       class ↦ "java/util/stream/Stream",
       method ↦ 𝑒-stream-method,
       signature ↦ 𝑒-stream-signature
-    ⟧
+    ⟧,
+    lowered ↦ Φ.true
   ⟧
 where:
   - meta: 𝑒-bridge-output

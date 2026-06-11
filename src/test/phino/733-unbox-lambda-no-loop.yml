@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Regression for #733: 6xx/603-unbox-to-lambda and 2xx/205-lambda-to-unbox are
+# exact inverses. A bare Φ.hone.unbox that survives unfused into the 6xx phase
+# is lowered to a Φ.hone.lambda by 603, which 205 then rewrites straight back
+# into a Φ.hone.unbox. Because the whole streams/* selection runs to fixpoint in
+# a single `phino rewrite` invocation, the pair ping-ponged forever and phino
+# aborted with a non-zero exit code ("it seems rewriting is looping"), crashing
+# the optimize goal. 603 now tags its lambda with a `lowered ↦ Φ.true` marker so
+# 205 (which matches by exact binding set) no longer recognizes it; rewriting
+# settles on the lowered lambda instead of oscillating.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/205-lambda-to-unbox.phr
+  - src/main/resources/org/eolang/hone/rules/streams/6xx/603-unbox-to-lambda.phr
+input: |
+  {⟦
+    foo ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ "invokestatic",
+      class ↦ "Foo",
+      bridge-signature ↦ "(Ljava/lang/String;)I",
+      static ↦ "true",
+      target ↦ ⟦
+        handle ↦ 6,
+        class ↦ "Foo",
+        method ↦ "lambda$bar$0",
+        signature ↦ "(Ljava/lang/String;)I",
+        is-interface ↦ Φ.false
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, lowered ↦ Φ.true, 𝐵-c ⟧

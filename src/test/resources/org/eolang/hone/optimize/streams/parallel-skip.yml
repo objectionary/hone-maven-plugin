@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for #717: a skip() on a PARALLEL stream must stay correct. The
+# pipeline below builds an ordered Stream<Long> from a List, maps, skips the
+# first 500,000 elements in encounter order, maps again and sums. Because a
+# fused skip() carries its countdown as a single captured long[] cell decreased
+# per item by the ONE BiConsumer that backs the fused Stream.mapMulti dispatch,
+# a parallel source drives it from several ForkJoin workers at once: the
+# read-decrement-write races (lost updates), and — fatally — a per-item counter
+# drops the first n elements in ARRIVAL order, not the encounter order
+# Stream.skip(n) promises on an ordered stream. Both defects make the dropped
+# subset, and therefore the sum, wrong and non-deterministic.
+#
+# Unlike #715's distinct() (whose contract is order-free, so a thread-safe set
+# repairs it), skip() cannot be made sound by a stronger counter, so the 213/
+# 214/215 guards keep it as a native Stream.skip(n) whenever a
+# parallel/parallelStream call shares its method. Native skip drops the first n
+# in encounter order on a parallel stream too, so the dedup-free dropped subset
+# is [500001..1000000], mapped *2, summing deterministically to
+# 2 * (500001 + ... + 1000000) = 750000500000.
+#
+# `before`/`after` opcode counts are intentionally omitted (as in
+# parallel-distinct.yml): this pack guards the RUNTIME result of the optimised
+# parallel pipeline, not a particular opcode shape.
+java: |
+  package skip;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      final List<Long> list = LongStream.range(0, 1_000_000L)
+        .boxed()
+        .collect(Collectors.toList());
+      final long n = list.parallelStream()
+        .map(x -> x + 1L)
+        .skip(500_000L)
+        .map(x -> x * 2L)
+        .mapToLong(Long::longValue)
+        .sum();
+      System.out.printf("The result is %d%n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 750000500000"

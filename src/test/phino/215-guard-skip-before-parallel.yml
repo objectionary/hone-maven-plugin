@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A skip() UPSTREAM of a later .parallel() call (#717) is just as unsound —
+# .parallel() toggles the whole pipeline — so it too is tainted with the
+# `parallel-unsafe` marker that keeps 220 from folding it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/215-guard-skip-before-parallel.phr
+input: |
+  {⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v4 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧,
+          op1 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            v9 ↦ "java/util/stream/Stream",
+            v10 ↦ "skip",
+            v11 ↦ "(J)Ljava/util/stream/Stream;",
+            v12 ↦ Φ.true
+          ⟧,
+          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "parallel", v2 ↦ "()Ljava/util/stream/BaseStream;", v3 ↦ Φ.true ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-a, v10 ↦ "skip", 𝐵-b, parallel-unsafe ↦ Φ.true, 𝐵-c ⟧

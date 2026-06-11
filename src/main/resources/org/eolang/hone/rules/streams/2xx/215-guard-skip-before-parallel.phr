@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Parallel-safety guard for skip() (#717), the `.parallel()`-AFTER-skip case.
+# See 213 for the full rationale. `.parallel()` toggles a flag on the whole
+# pipeline regardless of where it sits in the chain, so `stream.skip(n)
+# .parallel()…` runs the skip in parallel mode and is just as unsound as the
+# `…parallel().skip(n)…` order 214 catches. This rule taints the skip with a
+# `parallel-unsafe` marker so 220 leaves it as a native Stream.skip(n).
+#
+# Mirror of 214 with the two anchors swapped: the skip comes first, the
+# `.parallel()` call (pinned by name and its `()Ljava/util/stream/BaseStream;`
+# descriptor) comes later in the same body.
+name: guard-skip-before-parallel
+pattern: |
+  ⟦
+    𝐵-head,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏k1 ↦ "java/util/stream/Stream",
+      𝜏k2 ↦ "skip",
+      𝜏k3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏k4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-mid,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏po ↦ 𝑒-parallel-owner,
+      𝜏pn ↦ "parallel",
+      𝜏pd ↦ "()Ljava/util/stream/BaseStream;",
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-tail
+  ⟧
+result: |
+  ⟦
+    𝐵-head,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏k1 ↦ "java/util/stream/Stream",
+      𝜏k2 ↦ "skip",
+      𝜏k3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏k4 ↦ Φ.true,
+      parallel-unsafe ↦ Φ.true
+    ⟧,
+    𝐵-mid,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏po ↦ 𝑒-parallel-owner,
+      𝜏pn ↦ "parallel",
+      𝜏pd ↦ "()Ljava/util/stream/BaseStream;",
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-tail
+  ⟧

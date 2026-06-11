@@ -324,6 +324,35 @@ Instead, `limit` and `takeWhile` act as barriers:
   fuse into their own `mapMulti` calls independently,
   while the native short-circuiting call stays in place.
 
+## Why `skip` Is Not Fused on Parallel Streams
+
+`skip` is fused only when the pipeline provably stays sequential.
+The fused `skip` carries its countdown as a single `long[]` cell,
+  decremented once per element by the one `BiConsumer`
+  that backs the fused `Stream.mapMulti` dispatch.
+On a parallel stream several `ForkJoin` workers drive that `BiConsumer`
+  at once, so the read-decrement-write of the counter races
+  and the wrong number of elements is dropped.
+This is the same race class that `distinct` had (see [#715][715]),
+  but for `skip` thread-safety alone cannot fix it:
+  `Stream.skip(n)` on an ordered stream must drop the first `n` elements
+  in *encounter* order,
+  while any per-item counter — even an atomic one —
+  drops the first `n` in *arrival* order,
+  a non-deterministic subset.
+The fix (see [#717][717]) is therefore a guard, not a stronger counter:
+  rules `213`–`215` taint a `skip()` that shares its method
+  with a `parallel()` or `parallelStream()` call,
+  and the recognition rule `220` then leaves it
+  as a native `Stream.skip(n)` —
+  correct on sequential and parallel streams alike —
+  acting as a fusion barrier just like `limit`.
+The guard is a same-method analysis:
+  a stream handed in as a parameter and made parallel by the caller
+  is invisible to it,
+  so this remains a `v1` best-effort guard
+  rather than a whole-program proof of sequentiality.
+
 ## How to Use in Gradle
 
 You can use this plugin with [Gradle] too, but it requires
@@ -449,3 +478,5 @@ that we use, are defined in the `pom.xml` file.
 [𝜑-calculus]: https://arxiv.org/abs/2111.13384
 [XMIR]: https://news.eolang.org/2022-11-25-xmir-guide.html
 [hone-paper]: https://github.com/objectionary/hone-paper
+[715]: https://github.com/objectionary/hone-maven-plugin/issues/715
+[717]: https://github.com/objectionary/hone-maven-plugin/issues/717

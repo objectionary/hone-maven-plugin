@@ -26,6 +26,13 @@
 # v1 assumes the count is a compile-time constant (a single opcode pushes the
 # whole value). A computed argument would miscapture only the last opcode of
 # its expression; such streams are left unoptimised.
+#
+# A skip() that shares its method with a parallel/parallelStream call has
+# already been tainted with a `parallel-unsafe` marker by 213/214/215 (#717):
+# the pattern below is closed on the four-operand opcode (ρ ↦ ∅), so the extra
+# operand makes it skip such a skip, which stays a native Stream.skip(n). A
+# fused skip is unsound on a parallel stream — the captured countdown races and
+# drops elements in arrival rather than encounter order — so it must not lift.
 name: recognize-skip
 pattern: |
   ⟦

@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A skip() downstream of a parallelStream() source (#717) is tainted with a
+# `parallel-unsafe` marker so 220 leaves it as a native Stream.skip(n) instead
+# of folding it into an order-unsound fused distill.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/213-guard-skip-after-parallel-stream.phr
+input: |
+  {⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/List", v1 ↦ "parallelStream", v2 ↦ "()Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
+          op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v4 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧,
+          op2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            v9 ↦ "java/util/stream/Stream",
+            v10 ↦ "skip",
+            v11 ↦ "(J)Ljava/util/stream/Stream;",
+            v12 ↦ Φ.true
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-a, v10 ↦ "skip", 𝐵-b, parallel-unsafe ↦ Φ.true, 𝐵-c ⟧

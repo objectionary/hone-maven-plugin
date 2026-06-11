@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Parallel-safety guard for skip() (#717). The fused skip() that 220 → 308 →
+# 502 produce carries the countdown state — a one-cell long[] decremented per
+# item — captured into the SINGLE BiConsumer that backs the fused
+# Stream.mapMulti dispatch. On a parallel stream several ForkJoin workers
+# invoke that BiConsumer concurrently, so the counter is read-decremented-
+# written from many threads at once: updates are lost and the wrong number of
+# elements is dropped. Worse than the #715 distinct() race, thread-safety
+# alone cannot save it: Stream.skip(n) on an ordered stream must drop the
+# first n elements in ENCOUNTER order, while any per-item counter — even an
+# atomic one — drops n elements in ARRIVAL order, a non-deterministic subset.
+# So a fused skip() is simply unsound on a parallel pipeline.
+#
+# The sound fix is a guard, not a stronger counter: do NOT lift a skip() that
+# shares its method with a parallel/parallelStream call. This rule taints such
+# a skip with a `parallel-unsafe` marker; 220's recognition pattern is closed
+# on the four-operand opcode jeo emits (ρ ↦ ∅), so the extra operand stops it
+# folding the skip into a distill. The skip therefore stays a plain native
+# Stream.skip(n) — correct on sequential AND parallel streams — and acts as a
+# fusion barrier (exactly like limit/takeWhile), with the neighbouring
+# map/filter/distinct chains fusing independently around it. jeo ignores the
+# extra operand on assemble (same trick 442 uses with its `reverted` marker).
+#
+# This rule covers a `parallelStream()` source (always upstream of the skip):
+# `coll.parallelStream()…skip(n)…`. 214 covers an explicit `.parallel()`
+# placed before the skip and 215 the rarer `.parallel()` placed after it.
+# `.parallel()`/`.sequential()` toggle a flag on the WHOLE pipeline, so the
+# guard is deliberately conservative — any such call anywhere in the method
+# keeps skip native. (Limitation: a stream handed in as a parameter and made
+# parallel by the caller is invisible here; this guard, like skip recognition
+# itself, is a same-method, v1 analysis.)
+name: guard-skip-after-parallel-stream
+pattern: |
+  ⟦
+    𝐵-head,
+    𝜏-source ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏so ↦ 𝑒-source-owner,
+      𝜏sn ↦ "parallelStream",
+      𝐵-source-rest
+    ⟧,
+    𝐵-mid,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏k1 ↦ "java/util/stream/Stream",
+      𝜏k2 ↦ "skip",
+      𝜏k3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏k4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-tail
+  ⟧
+result: |
+  ⟦
+    𝐵-head,
+    𝜏-source ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏so ↦ 𝑒-source-owner,
+      𝜏sn ↦ "parallelStream",
+      𝐵-source-rest
+    ⟧,
+    𝐵-mid,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏k1 ↦ "java/util/stream/Stream",
+      𝜏k2 ↦ "skip",
+      𝜏k3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏k4 ↦ Φ.true,
+      parallel-unsafe ↦ Φ.true
+    ⟧,
+    𝐵-tail
+  ⟧

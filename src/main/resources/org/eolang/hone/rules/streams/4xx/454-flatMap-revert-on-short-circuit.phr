@@ -1,0 +1,144 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Guards 455/456/457/458 against downstream short-circuiting (#736).
+#
+# 455 (and its primitive siblings 456/457/458) rewrite a user `Stream.flatMap`
+# into a `Stream.mapMulti` whose synthesised adapter drains every inner stream
+# with an unconditional `result.sequential().forEach(c)`. That reproduces
+# flatMap's per-element fan-out, null-skip and auto-close — but NOT its
+# downstream short-circuiting. The JDK's `ReferencePipeline.flatMap` forwards
+# `cancellationRequested()` and, once a short-circuiting stage has fired,
+# switches from `forEach` to a `tryAdvance` loop that stops part-way through an
+# inner stream. `mapMulti` hands its lambda a plain `Consumer`, so `forEach`
+# always runs to completion for every source element: with a finite inner
+# stream this merely wastes work, but with an unbounded one feeding a
+# short-circuit it never stops —
+# `Stream.of(1L).flatMap(x -> Stream.iterate(x, i -> i + 1)).limit(5)` yields
+# five elements natively but hangs forever after fusion.
+#
+# A `mapMulti` cannot honour cancellation, so — exactly as `222` keeps a skip
+# native on a parallel pipeline rather than patching the adapter — this rule
+# leaves the flatMap native whenever the same method body can reach a
+# short-circuiting operator (`limit`, `takeWhile`, `findFirst`, `findAny`,
+# `anyMatch`, `allMatch`, `noneMatch`) downstream of it. phino patterns cannot
+# test a binding group for the ABSENCE of such a call, so instead of gating
+# 455-458 on a marker this rule takes the dual, positive route used by `442`
+# and `222`: once `111` has lifted the flatMap into a Φ.hone.lambda, if a
+# short-circuit invoke sits AFTER it in the body, the lambda is reverted
+# straight back to the native `invokedynamic` + `invokeinterface` pair `701`
+# would otherwise emit — before `455` (later in the 4xx pass) ever converts it.
+# Because the lambda is gone, 455/456/457/458 simply never match it.
+#
+# The reverted `invokeinterface` carries `reverted ↦ Φ.true` as a fifth
+# operand, the same guard `442`/`222` use: `111`'s lift pattern is closed on
+# the four-operand opcode jeo emits, so the extra binding stops it
+# re-recognising this flatMap and the 111 → 454 → 701 cycle cannot spin. jeo
+# ignores the extra binding when assembling, so the bytecode is an ordinary
+# flatMap call.
+#
+# Detection is intentionally over-broad: any matching short-circuit anywhere
+# after the flatMap in the method reverts it, even one on an unrelated,
+# locally-consumed stream. Over-reverting only forfeits the mapMulti fusion on
+# that method (the native flatMap stays correct), so erring this way keeps the
+# pass sound. Binding groups are order-preserving, and a short-circuit BEFORE
+# the flatMap is upstream of it — not reachable downstream — so a single
+# pattern with the flatMap ahead of the call is exactly the case to guard; the
+# mirror layout needs no sibling.
+name: flatMap-revert-on-short-circuit
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-flatmap ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ "true",
+      opcode ↦ 𝑒-opcode,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧
+    ⟧,
+    𝐵-between,
+    𝜏-short ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-sclass ↦ 𝑒-sclass,
+      𝜏-smethod ↦ 𝑒-smethod,
+      𝐵-short-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-invokedynamic ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      i2 ↦ 𝑒-method,
+      i3 ↦ 𝑒-interface,
+      i4 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        i1 ↦ 6,
+        i2 ↦ "java/lang/invoke/LambdaMetafactory",
+        i3 ↦ "metafactory",
+        i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+        i5 ↦ Φ.false
+      ⟧,
+      i5 ↦ ⟦
+        φ ↦ Φ.jeo.type,
+        i1 ↦ 𝑒-lambda-signature
+      ⟧,
+      i6 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        i1 ↦ 𝑒-target-handle,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      i7 ↦ ⟦
+        φ ↦ Φ.jeo.type,
+        i1 ↦ 𝑒-bridge-signature
+      ⟧
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ 𝑒-stream-method,
+      i4 ↦ 𝑒-stream-signature,
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-short ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-sclass ↦ 𝑒-sclass,
+      𝜏-smethod ↦ 𝑒-smethod,
+      𝐵-short-rest
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^flatMap(ToInt|ToLong|ToDouble)?$', 𝑒-stream-method]
+    - matches: ['^(limit|takeWhile|findFirst|findAny|anyMatch|allMatch|noneMatch)$', 𝑒-smethod]
+where:
+  - meta: 𝜏-invokedynamic
+    function: random-tau
+  - meta: 𝜏-invokeinterface
+    function: random-tau

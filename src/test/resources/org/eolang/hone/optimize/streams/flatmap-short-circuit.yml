@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A flatMap whose inner stream is unbounded, feeding a downstream short-circuit
+# (issue #736). Native ReferencePipeline.flatMap forwards cancellation: once
+# limit(5) has taken its five elements it stops pulling, so
+# Stream.of(1L).flatMap(x -> Stream.iterate(x, i -> i + 1)).limit(5) yields
+# exactly 1+2+3+4+5 = 15 and terminates. A mapMulti adapter cannot honour that
+# cancellation — its `result.sequential().forEach(c)` drains the whole inner
+# stream — so fusing this flatMap into a mapMulti (455) would loop forever on
+# the unbounded Stream.iterate. 454-flatMap-revert-on-short-circuit detects the
+# downstream limit and reverts the lifted flatMap straight back to its native
+# invokedynamic + invokeinterface pair, leaving it unfused. The build therefore
+# finishes and prints 15; before the guard it hung.
+#
+# Counts: the guard reverts the flatMap to byte-identical native form and
+# nothing else in the chain fuses (limit and reduce are not fusable, and
+# Stream.iterate's i -> i + 1 lambda is an argument to a static factory, not a
+# pipeline stage), so both opcode tallies are unchanged. invokedynamic stays at
+# 3 (the flatMap mapper, the iterate UnaryOperator, and the Long::sum reduce
+# accumulator). invokeinterface stays at 3 (Stream.flatMap, Stream.limit,
+# Stream.reduce); Stream.of and Stream.iterate are static. Crucially there is no
+# Stream.mapMulti call site — the flatMap was left native rather than converted.
+java: |
+  package flatmapshortcircuit;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long n = Stream.of(1L)
+        .flatMap(x -> Stream.iterate(x, i -> i + 1))
+        .limit(5)
+        .reduce(0L, Long::sum);
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 15"
+before:
+  invokedynamic: 3
+  invokeinterface: 3
+after:
+  invokedynamic: 3
+  invokeinterface: 3

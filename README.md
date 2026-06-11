@@ -324,6 +324,24 @@ Instead, `limit` and `takeWhile` act as barriers:
   fuse into their own `mapMulti` calls independently,
   while the native short-circuiting call stays in place.
 
+The same blind spot reaches `flatMap` from the other direction (#736).
+A `flatMap` is fusable — `455-flatMap-to-mapMulti` and its primitive siblings
+  rewrite it into a `mapMulti` whose adapter drains each inner stream with
+  `result.sequential().forEach(c)` — but that adapter, being just a `mapMulti`
+  body, cannot see `cancellationRequested()` either.
+The JDK's `ReferencePipeline.flatMap` does forward cancellation:
+  once a downstream short-circuit has fired it stops part-way through an inner
+  stream, so `Stream.of(1L).flatMap(x -> Stream.iterate(x, i -> i + 1)).limit(5)`
+  yields five elements and terminates; the fused `forEach` adapter, by contrast,
+  runs to completion for every source element and hangs forever on the
+  unbounded inner stream.
+Because a `mapMulti` cannot honour cancellation, the cure mirrors the
+  revert-on-parallel guard above rather than patching the adapter:
+  `454-flatMap-revert-on-short-circuit` reverts the lifted `flatMap` back to its
+  native call whenever the same method body reaches a `limit`, `takeWhile`,
+  `findFirst`, `findAny`, `anyMatch`, `allMatch`, or `noneMatch` downstream of
+  it, so those `flatMap`s stay unfused.
+
 ## Why `skip` Is Only Fused on Sequential Pipelines
 
 `skip(n)` is fused (it lowers to a countdown counter inside the

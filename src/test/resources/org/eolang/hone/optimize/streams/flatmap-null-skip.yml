@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for issue #725: the flatMap -> mapMulti adapter must reproduce
+# flatMap's null-skip. The JDK's ReferencePipeline.flatMap does, per element,
+# `try (Stream r = mapper.apply(u)) { if (r != null) r.sequential().forEach(...); }`
+# — when the mapper returns null that element is silently skipped. 455 lowers the
+# flatMap into a mapMulti whose `flatadapt` body applies the mapper and drains the
+# returned stream into the downstream Consumer; before #725 it called forEach
+# unconditionally, so a null mapper result threw NullPointerException instead of
+# being skipped. The fix wraps the drain in `dup; ifnonnull L; pop; return` so the
+# null case returns without touching the consumer, exactly like the JDK.
+#
+# The mapper here returns null for every odd element and a two-element Stream for
+# every even one, so half the elements feed a null into the adapter. The terminal
+# is an order- AND value-sensitive 31-fold (reduce) over the surviving 2, 20, 4,
+# 40, 6, 60, which the JDK evaluates to 75886572. The optimized class reproduces
+# it exactly — proof that the nulls are skipped rather than dereferenced. Without
+# the null guard the optimized run throws NPE and never prints the line.
+#
+# Counts: a lone flatMap (no adjacent mapMulti to fuse with) is converted to one
+# Stream.mapMulti and lowered back by 701, and its `flatadapt` body is appended:
+# one invokestatic into the untouched mapper, the null-skip guard
+# (dup; ifnonnull L; pop; return), one BaseStream.sequential invokeinterface, one
+# Stream.forEach invokeinterface, and the final return. So invokestatic rises by 1
+# (12 -> 13), invokeinterface by 2 (2 -> 4, the sequential + forEach), and return
+# by 2 (2 -> 4, the null-branch return plus the final return). invokedynamic stays
+# at 2: 455 relocates the Function call-site indy into the BiConsumer adapter's
+# indy rather than adding one, and the mapper lambda$ and reduce lambda bodies are
+# untouched.
+java: |
+  package flatmapnull;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      int n = Stream.of(1, 2, 3, 4, 5, 6)
+        .<Integer>flatMap(x -> x % 2 == 0 ? Stream.of(x, x * 10) : null)
+        .reduce(0, (p, q) -> p * 31 + q);
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 75886572"
+before:
+  invokedynamic: 2
+  invokeinterface: 2
+  invokestatic: 12
+  return: 2
+after:
+  invokedynamic: 2
+  invokeinterface: 4
+  invokestatic: 13
+  return: 4

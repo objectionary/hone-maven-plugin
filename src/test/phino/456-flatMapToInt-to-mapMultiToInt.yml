@@ -12,10 +12,11 @@
 # freshly synthesised BiConsumer `flatadapt`, and appends that adapter method to
 # the class. The adapter applies the original mapper to the item
 # (invokestatic lambda$main$0) and drains the returned IntStream into the
-# downstream IntConsumer (invokeinterface IntStream.forEach). Matching all three —
+# downstream IntConsumer (invokeinterface IntStream.forEach). Matching all of them —
 # the surviving mapMultiToInt stream block, the invokestatic into the untouched
-# mapper body, and the IntStream.forEach — proves the flatMapToInt was rewired
-# into a mapMultiToInt rather than dropped.
+# mapper body, the ifnonnull null-skip guard, the BaseStream.sequential drain, and
+# the IntStream.forEach — proves the flatMapToInt was rewired into a mapMultiToInt
+# that also reproduces flatMapToInt's null-skip and sequential().
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/4xx/456-flatMapToInt-to-mapMultiToInt.phr
 input: |
@@ -47,4 +48,7 @@ input: |
 expected:
   - ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMultiToInt", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;" ⟧
   - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.ifnonnull, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.frame, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/stream/BaseStream", i3 ↦ "sequential", 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/stream/IntStream", i3 ↦ "forEach", 𝐵-rest ⟧

@@ -14,6 +14,8 @@
 # handle-6 target — whose target is a freshly synthesised BiConsumer `flatadapt`:
 #
 #   flatadapt(x, c):  invokestatic lambda$(x) -> Stream ; mapper applied to item
+#                     dup; ifnonnull L; pop; return    ; flatMap's null-skip
+#                     L: invokeinterface BaseStream.sequential() ; force sequential
 #                     invokeinterface Stream.forEach(c) ; drains it into c
 #
 # The original mapper body (lambda$…) is kept untouched — the rule only wires the
@@ -26,9 +28,11 @@
 #
 # Scope: reference Stream.flatMap only (mapper returns java/util/stream/Stream).
 # The primitive flatMapToInt/Long/Double variants carry different SAM and result
-# types and are left for a follow-up. Like the JDK's own mapMulti-via-flatMap
-# bridge, this assumes the mapper returns a non-null, non-resource stream — the
-# null-skip and auto-close of flatMap are not reproduced.
+# types and are left for a follow-up. The adapter reproduces flatMap's null-skip
+# (a null mapper result is dropped rather than dereferenced) and its
+# `result.sequential()` drain (a parallel sub-stream is forced sequential before
+# its elements reach the downstream Consumer); the auto-close of the returned
+# stream still needs try-finally synthesis and is tracked separately.
 name: flatMap-to-mapMulti
 pattern: |
   ⟦
@@ -125,6 +129,29 @@ result: |
           i4 ↦ 𝑒-target-signature,
           i5 ↦ 𝑒-target-is-interface
         ⟧,
+        dup-stream ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        guard ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifnonnull,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+        ⟧,
+        drop-null ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        ret-null ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        keep ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+        keep-frame ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 4,
+          nlocal ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+          nstack ↦ 1,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ "java/util/stream/Stream" ⟧
+        ⟧,
+        force-seq ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/BaseStream",
+          i3 ↦ "sequential",
+          i4 ↦ "()Ljava/util/stream/BaseStream;",
+          i5 ↦ Φ.true
+        ⟧,
         ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
         call-foreach ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
@@ -143,6 +170,9 @@ result: |
 where:
   - meta: 𝜏-adapter-method
     function: random-tau
+  - meta: 𝑒-label
+    function: random-string
+    args: [ '"L%d"' ]
   - meta: 𝑒-adapter-name
     function: random-string
     args: [ '"flatadapt_%d"' ]

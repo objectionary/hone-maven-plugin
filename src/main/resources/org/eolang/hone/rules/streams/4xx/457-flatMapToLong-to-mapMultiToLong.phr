@@ -15,6 +15,8 @@
 # target is a freshly synthesised BiConsumer `flatadapt`:
 #
 #   flatadapt(x, c):  invokestatic lambda$(x) -> LongStream ; mapper applied to item
+#                     dup; ifnonnull L; pop; return    ; flatMapToLong's null-skip
+#                     L: invokeinterface BaseStream.sequential() ; force sequential
 #                     invokeinterface LongStream.forEach(c) ; drains it into c
 #
 # The mapper body is kept untouched. LongStream.forEach takes precisely the
@@ -23,9 +25,9 @@
 # dispatches, so the jeo roundtrip of these calls is proven.
 #
 # Scope: reference Stream.flatMapToLong only (mapper returns
-# java/util/stream/LongStream). Like 455, this assumes the mapper returns a
-# non-null, non-resource stream — the null-skip and auto-close of flatMapToLong
-# are not reproduced.
+# java/util/stream/LongStream). Like 455, the adapter reproduces flatMapToLong's
+# null-skip and its `result.sequential()` drain; the auto-close of the returned
+# stream still needs try-finally synthesis and is tracked separately.
 name: flatMapToLong-to-mapMultiToLong
 pattern: |
   ⟦
@@ -122,6 +124,29 @@ result: |
           i4 ↦ 𝑒-target-signature,
           i5 ↦ 𝑒-target-is-interface
         ⟧,
+        dup-stream ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        guard ↦ ⟦
+          φ ↦ Φ.jeo.opcode.ifnonnull,
+          i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+        ⟧,
+        drop-null ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        ret-null ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        keep ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+        keep-frame ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 4,
+          nlocal ↦ 0,
+          locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+          nstack ↦ 1,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ "java/util/stream/LongStream" ⟧
+        ⟧,
+        force-seq ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/BaseStream",
+          i3 ↦ "sequential",
+          i4 ↦ "()Ljava/util/stream/BaseStream;",
+          i5 ↦ Φ.true
+        ⟧,
         ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
         call-foreach ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
@@ -140,6 +165,9 @@ result: |
 where:
   - meta: 𝜏-adapter-method
     function: random-tau
+  - meta: 𝑒-label
+    function: random-string
+    args: [ '"L%d"' ]
   - meta: 𝑒-adapter-name
     function: random-string
     args: [ '"flatadapt_%d"' ]

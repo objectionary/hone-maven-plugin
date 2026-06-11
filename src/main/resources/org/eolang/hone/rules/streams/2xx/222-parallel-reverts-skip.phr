@@ -83,9 +83,7 @@ when:
     - or:
         - eq: [𝜏-op, 'invokeinterface']
         - eq: [𝜏-op, 'invokevirtual']
-    - or:
-        - eq: [𝑒-pmethod, 'parallel']
-        - eq: [𝑒-pmethod, 'parallelStream']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
 where:
   - meta: 𝜏-push-back
     function: random-tau

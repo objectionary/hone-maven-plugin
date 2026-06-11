@@ -7,11 +7,12 @@
 # Φ.hone.dup when the filter follows a map or another filter, but its
 # pattern is shaped for the map/filter pragma (opcode + target bindings)
 # and so never matches a stateful predecessor. A filter that follows a
-# distinct or skip — whose pragma carries class / stream-class (/ push)
-# instead — would therefore be left without its dup, its predicate would
-# eat the only item, and the keep-label frame would find an empty stack.
-# This rule plugs that gap: when 𝜏-first is distinct or skip and 𝜏-second
-# is a filter, it splices the same Φ.hone.dup between them. After
+# distinct, skip or dropWhile — a stateful guard that leaves a single
+# (un-duplicated) item — would therefore be left without its dup, its
+# predicate would eat the only item, and the keep-label frame would find an
+# empty stack. This rule plugs that gap: when 𝜏-first is one of those
+# stateful guards and 𝜏-second is a filter, it splices the same Φ.hone.dup
+# between them. After
 # insertion the two are no longer adjacent, so it fires once per site.
 name: insert-dup-before-filter-after-stateful
 pattern: |
@@ -66,6 +67,7 @@ when:
     - or:
         - eq: [𝜏-one, 'distinct']
         - eq: [𝜏-one, 'skip']
+        - eq: [𝜏-one, 'dropWhile']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

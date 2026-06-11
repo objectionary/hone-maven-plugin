@@ -292,7 +292,7 @@ The [hone paper][hone-paper] discusses this property,
 ## Why Short-Circuiting Operations Are Not Fused
 
 The pipeline deliberately fuses only non-short-circuiting operations
-  (`filter`, `map`, `peek`, `distinct`, `skip`, `flatMap`,
+  (`filter`, `map`, `peek`, `distinct`, `skip`, `dropWhile`, `flatMap`,
   the primitive conversions, and `mapMulti` itself);
   the two short-circuiting intermediate operations of the JDK,
   `limit()` and `takeWhile()`, are left untouched.

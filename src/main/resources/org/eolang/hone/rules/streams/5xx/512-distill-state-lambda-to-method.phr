@@ -11,7 +11,12 @@
 # consumer-load is `aload 2` (511's are 0 and 1). The body opens by
 # zeroing a per-call counter at local 3 (`iconst_0; istore 3`); 521 turns
 # each fetch marker into List.get(counter); iinc so the N fetches walk the
-# List in body order — guard k reads state var k.
+# List in body order — guard k reads state var k. max-locals is 6 (not 4):
+# slots 0-3 are the args plus the counter above, and 310's dropWhile latch
+# guard borrows slots 4-5 as scratch (the latch array and the negated
+# predicate result), dead by its keep-label so 503's four-local frame still
+# holds. The two extra slots are unused by stateless distinct/skip guards and
+# cost nothing there.
 #
 # The INPUT item is always a reference (v1 stateful operators are object
 # streams — distinct is Stream<T>), so the leading load is a fixed aload 1.
@@ -39,7 +44,7 @@ result: |
     maxs ↦ ⟦
       φ ↦ Φ.jeo.maxs,
       max-stack ↦ 10,
-      max-locals ↦ 4
+      max-locals ↦ 6
     ⟧,
     params ↦ ⟦
       φ ↦ Φ.jeo.params,

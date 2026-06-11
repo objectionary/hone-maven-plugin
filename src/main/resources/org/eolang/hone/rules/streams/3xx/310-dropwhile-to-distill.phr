@@ -1,0 +1,139 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds Φ.hone.dropWhile (produced by 208) into a Φ.hone.distill — dropWhile is
+# "a filter that owns a one-shot sticky latch" (#718). The body is 304's filter
+# guard wrapped in that latch: while the latch is unset, evaluate the predicate
+# and drop on true; on the first false, set the latch; afterwards pass every item
+# through WITHOUT evaluating the predicate again (the dropWhile contract — a
+# re-evaluated predicate would wrongly drop a later element it returns true for).
+#
+# State, mirroring 308/307, is a one-cell java int[1] latch (0 = still dropping,
+# 1 = latched) APPENDED to the captured java/util/List that 502 builds in front
+# of the dispatch: dup the list, build a zero-initialised int[1] (newarray needs
+# no seeding store, unlike skip's counted long[1]), List.add it, pop the boolean.
+# The block begins and ends at [list] with peak 3, so N fused stateful operators
+# append N cells to ONE list rather than stacking arrays. Opcode names are random
+# so two dropWhile() calls in one method never collide.
+#
+# The body is auto emit-shape, like 304's filter guard, and reaches its single
+# keep-label (a Φ.hone.frame-item that 503 fills, exactly as 307/308) from two
+# branches so only ONE stackmap frame is needed:
+#
+#   fetch [I; astore 4            ; stash the latch array in a scratch local
+#   aload 4; iconst_0; iaload     ; latch = array[0]
+#   ifne KEEP                     ; latched -> keep, predicate never runs
+#   dup; <predicate>              ; not latched: test a copy of the item -> Z
+#   iconst_1; ixor; istore 5      ; notZ = !Z  (1 iff predicate returned false)
+#   aload 4; iconst_0; iload 5; iastore   ; array[0] = notZ  (sticks the latch)
+#   iload 5; ifne KEEP            ; predicate false -> keep (latch now set)
+#   return                        ; predicate true  -> drop
+#   KEEP: <frame-item>            ; [item] survives to the appended consumer.accept
+#
+# Because the latched branch leaves the predicate copy un-duplicated, both
+# branches reach KEEP with a single [item] on the stack, so the one frame-item
+# 503 emits suffices — no per-branch frame helper is needed. The two scratch
+# locals (4 = latch array, 5 = notZ) are dead at KEEP, so 503's four-local frame
+# is still correct; 512's max-locals is widened to 6 to make room for them.
+#
+# v1 scope (see 208): object java/util/stream/Stream, a static predicate whose
+# target returns Z, the element type preserved across any fused neighbours. A
+# lone dropWhile is NOT reverted to a native Stream.dropWhile the way 442 reverts
+# a lone skip — rebuilding the predicate lambda is left as a follow-up — so it
+# simply lowers to its own mapMulti (correct, just not faster than native).
+name: dropwhile-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.dropWhile,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    start ↦ "dropWhile",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ "true",
+    state ↦ ⟦
+      𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-alen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-new-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 10 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
+      i6 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      i8 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.𝜏-opcode,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
+      i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
+      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      i15 ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
+      i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      i17 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      i18 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i19 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      i20 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L%d"']
+  - meta: 𝜏-opcode
+    function: tau
+    args: [𝑒-opcode]
+  - meta: 𝜏-dup-list
+    function: random-tau
+  - meta: 𝜏-alen
+    function: random-tau
+  - meta: 𝜏-new-latch
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau

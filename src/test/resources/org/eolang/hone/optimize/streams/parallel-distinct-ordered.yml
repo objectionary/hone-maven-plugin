@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for #738: a `.distinct()` on an ORDERED PARALLEL stream must keep
+# the encounter-order-FIRST element among equals. Lifted and fused
+# (216 -> 307 -> 401 -> 502) a distinct becomes a single Stream.mapMulti whose
+# seen-set is a captured ConcurrentHashMap.newKeySet(). #715 made that set
+# thread-safe, but a concurrent set only fixes the data race — it keeps
+# whichever equal element wins the race to add(), i.e. ARRIVAL-order-first,
+# which on an ordered parallel stream is neither encounter-order-first nor
+# deterministic across runs. The JDK's native distinct() is documented STABLE
+# on an ordered stream, so it keeps the FIRST element in encounter order.
+#
+# The Tag class below has equals/hashCode keyed only on `key`, but carries a
+# distinguishing `seq` payload. The source builds 1,000,000 Tags where Tag i
+# has key = i % 1000 and seq = i, so the encounter-order-FIRST Tag for key k is
+# the one with seq = k (k = 0..999). A stable distinct therefore keeps exactly
+# the Tags with seq 0..999, and summing their seq fields gives
+# 0+1+...+999 = 499500 deterministically. The identity `.map(t -> t)` is a
+# stateless neighbour the distinct would otherwise fuse with, so without the
+# 224 guard the distinct collapses into the arrival-order seen-set and the sum
+# comes out wrong and varies run to run. With the guard the native ordered
+# distinct runs and the sum is deterministically 499500.
+#
+# `before`/`after` opcode counts are intentionally omitted (as in
+# parallel-distinct and parallel-skip): this pack guards the RUNTIME result of
+# the optimised, parallel pipeline, not a particular opcode shape.
+java: |
+  package distinctparallel;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.IntStream;
+  public class X {
+    static final class Tag {
+      private final int key;
+      private final int seq;
+      Tag(final int k, final int s) {
+        this.key = k;
+        this.seq = s;
+      }
+      @Override
+      public boolean equals(final Object o) {
+        return o instanceof Tag && ((Tag) o).key == this.key;
+      }
+      @Override
+      public int hashCode() {
+        return this.key;
+      }
+    }
+    public static void main(String[] a) {
+      final List<Tag> list = IntStream.range(0, 1_000_000)
+        .mapToObj(i -> new Tag(i % 1000, i))
+        .collect(Collectors.toList());
+      final long n = list.parallelStream()
+        .map(t -> t)
+        .distinct()
+        .mapToLong(t -> t.seq)
+        .sum();
+      System.out.printf("The result is %d%n", n);
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 499500"

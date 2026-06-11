@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A Φ.hone.distinct in a method that also calls `.parallel()` BEFORE it must be
+# put back to a native `Stream.distinct` (carrying the `reverted` guard) so 307
+# never folds it into an arrival-order, encounter-order-unstable seen-set
+# distill (#738).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/224-parallel-reverts-distinct.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "parallel",
+        v2 ↦ "()Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, i3 ↦ "distinct", 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, reverted ↦ Φ.true, 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, v1 ↦ "parallel", 𝐵-t ⟧

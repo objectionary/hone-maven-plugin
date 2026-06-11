@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Mirror of 224 for the layout where `.parallel()` is called AFTER the distinct
+# (`source.distinct().parallel()`): the distinct is still reverted to a native
+# `Stream.distinct` so it is never folded into an encounter-order-unstable
+# distill (#738).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/225-parallel-reverts-distinct-after.phr
+input: |
+  {⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "parallel",
+        v2 ↦ "()Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧}
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, i3 ↦ "distinct", 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, reverted ↦ Φ.true, 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, v1 ↦ "parallel", 𝐵-t ⟧

@@ -344,6 +344,30 @@ The JDK's native `Stream.skip(n)` honours the ordered/parallel contract,
 The same revert-on-parallel guard applies verbatim to a future `dropWhile`
   lifting, which is order-dependent for the same reason.
 
+## Why `distinct` Is Only Fused on Sequential Pipelines
+
+`distinct()` is fused (it lowers to a seen-set check inside the `mapMulti`
+  body, see `307-distinct-to-distill`), but only when the pipeline provably
+  stays sequential.
+The fused seen-set is a thread-safe `ConcurrentHashMap.newKeySet()`, which
+  #715 introduced to close the data race on parallel streams; making `add()`
+  atomic, however, only fixes *whether* duplicates leak, not *which* element
+  survives among equals.
+The JDK's `distinct()` is documented *stable* on an ordered stream: among
+  equal elements it keeps the one first in encounter order.
+A single shared set populated by several `ForkJoin` workers instead keeps
+  whichever equal element wins the race to `add()` — arrival-order-first,
+  which is neither encounter-order-first nor deterministic across runs.
+For primitives and substitutable-`equals` values this is unobservable, but
+  for equal-but-distinguishable objects (an `equals`/`hashCode` that collapses
+  instances differing in a payload field) the surviving object changes from
+  run to run, silently violating the stability contract.
+The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
+  so — exactly as for `skip` — when a method contains a `parallel()` or
+  `parallelStream()` call the rules `224-parallel-reverts-distinct` and
+  `225-parallel-reverts-distinct-after` revert the recognised `distinct` back
+  to the native call before `307` can fold it (#738).
+
 ## How to Use in Gradle
 
 You can use this plugin with [Gradle] too, but it requires

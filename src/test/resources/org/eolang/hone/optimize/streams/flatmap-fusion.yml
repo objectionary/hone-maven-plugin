@@ -23,12 +23,15 @@
 # class reproduces it exactly (1535632236), which is the real proof — bytecode
 # that merely verifies but miswires the consumers would print a different number.
 #
-# Counts: invokeinterface drops from 7 to 6. The three fan-out call sites
+# Counts: invokeinterface stays at 7. The three fan-out call sites
 # (Stream.flatMap + two Stream.mapMulti) collapse to the single surviving
-# Stream.mapMulti, and the converted flatMap contributes one Stream.forEach in
-# its `flatadapt` body; the three Consumer.accept calls in the two mapMulti
-# bodies and the terminal reduce are untouched (1 mapMulti + 1 forEach + 3 accept
-# + 1 reduce = 6, down from 1 flatMap + 2 mapMulti + 3 accept + 1 reduce = 7).
+# Stream.mapMulti, and the converted flatMap contributes one Stream.forEach plus
+# one BaseStream.sequential (flatMap's sequential() drain) in its `flatadapt`
+# body; the three Consumer.accept calls in the two mapMulti bodies and the
+# terminal reduce are untouched (1 mapMulti + 1 forEach + 1 sequential + 3 accept
+# + 1 reduce = 7, the same total as 1 flatMap + 2 mapMulti + 3 accept + 1
+# reduce = 7 before — the collapsed call sites are offset by the adapter's
+# sequential drain).
 # invokedynamic stays at 4 (flatMap + two mapMulti + reduce lambdas before; one
 # surviving mapMulti call site + two relocated wrapper-builder indys + the reduce
 # lambda after) — like 461, the adapter relocates each fused-away call-site indy
@@ -67,4 +70,4 @@ before:
   invokeinterface: 7
 after:
   invokedynamic: 4
-  invokeinterface: 6
+  invokeinterface: 7

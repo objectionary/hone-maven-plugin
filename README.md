@@ -351,9 +351,9 @@ The same revert-on-parallel guard applies verbatim to a future `dropWhile`
   stays sequential.
 The fused seen-set is a thread-safe `ConcurrentHashMap.newKeySet()`, which
   #715 introduced to close the data race on parallel streams; making `add()`
-  atomic, however, only fixes *whether* duplicates leak, not *which* element
+  atomic, however, only fixes _whether_ duplicates leak, not _which_ element
   survives among equals.
-The JDK's `distinct()` is documented *stable* on an ordered stream: among
+The JDK's `distinct()` is documented _stable_ on an ordered stream: among
   equal elements it keeps the one first in encounter order.
 A single shared set populated by several `ForkJoin` workers instead keeps
   whichever equal element wins the race to `add()` — arrival-order-first,

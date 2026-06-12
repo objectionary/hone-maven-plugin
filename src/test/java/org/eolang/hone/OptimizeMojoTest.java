@@ -45,14 +45,6 @@ import org.yaml.snakeyaml.Yaml;
 /**
  * Test case for {@link OptimizeMojo}.
  * @since 0.1.0
- * @todo #440:90min enable 'grep-in' tests.
- *  The following test is disabled because it fails on Rultor:
- *  <a href="https://github.com/objectionary/hone-maven-plugin/pull/458">PR</a>
- *  However, all the tests pass locally.
- *  We should find a reason why the following test fails on specific
- *  environment and fix it:
- *  - {@link OptimizeMojoTest#optimizesAsSpecifiedInYamlPack}
- *  When this test is fixed, remove @Disabled annotation.
  */
 @Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)

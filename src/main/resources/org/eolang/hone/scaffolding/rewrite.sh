@@ -19,6 +19,20 @@ if ! "${RP}" --version >/dev/null; then
   exit 1
 fi
 
+SETSID=""
+if command -v setsid >/dev/null 2>&1; then
+  SETSID="setsid"
+elif command -v gsetsid >/dev/null 2>&1; then
+  SETSID="gsetsid"
+else
+  for cand in /opt/homebrew/opt/util-linux/bin/setsid /usr/local/opt/util-linux/bin/setsid; do
+    if [ -x "${cand}" ]; then
+      SETSID="${cand}"
+      break
+    fi
+  done
+fi
+
 statistics_csv="${TARGET}/hone-statistics.csv"
 
 function verbose {
@@ -159,7 +173,7 @@ function rewrite_with_timeout {
   # whole process group (and any stragglers in its tree) so phino dies too.
   flag=$(mktemp)
   rm -f "${flag}"
-  setsid --wait "${0}" rewrite "$@" &
+  "${SETSID}" --wait "${0}" rewrite "$@" &
   sid=$!
   leader=""
   for _ in $(seq 1 100); do
@@ -240,12 +254,14 @@ if [ "${HONE_TIMEOUT}" -lt 5 ]; then
 fi
 echo "Timeout: ${HONE_TIMEOUT} seconds"
 
-for tool in setsid pgrep; do
-  if ! command -v "${tool}" >/dev/null 2>&1; then
-    echo "The '${tool}' utility is required to enforce the per-file timeout, can't rewrite"
-    exit 1
-  fi
-done
+if [ -z "${SETSID}" ]; then
+  echo "The 'setsid' utility is required to enforce the per-file timeout, can't rewrite"
+  exit 1
+fi
+if ! command -v pgrep >/dev/null 2>&1; then
+  echo "The 'pgrep' utility is required to enforce the per-file timeout, can't rewrite"
+  exit 1
+fi
 
 echo "Using ${#rules[@]} rewriting rule(s)"
 

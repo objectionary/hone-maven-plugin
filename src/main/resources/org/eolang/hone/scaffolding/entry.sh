@@ -14,6 +14,26 @@ else
   exit 1
 fi
 
+SETSID=""
+if command -v setsid >/dev/null 2>&1; then
+  SETSID="setsid"
+elif command -v gsetsid >/dev/null 2>&1; then
+  SETSID="gsetsid"
+else
+  for cand in /opt/homebrew/opt/util-linux/bin/setsid /usr/local/opt/util-linux/bin/setsid; do
+    if [ -x "${cand}" ]; then
+      SETSID="${cand}"
+      break
+    fi
+  done
+fi
+if [ "${SKIP_PHINO}" != 'true' ] && [ -z "${SETSID}" ]; then
+  echo "The 'setsid' utility is required to enforce the per-file rewrite \
+timeout, but it was not found; on macOS install it via 'brew install util-linux', \
+on Debian/Ubuntu it ships in the 'util-linux' package"
+  exit 1
+fi
+
 if [ "${DEBUG}" == 'true' ]; then
   echo "We are in debug mode, printing all commands..."
   set -x

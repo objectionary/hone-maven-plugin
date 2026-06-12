@@ -458,24 +458,16 @@ is, how many of the stream-using classes the plugin actually rewrote.
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [commons-cli](https://github.com/apache/commons-cli/commit/17de58009bf9dada031a7b3891014c6de5a089bf) | 248 | 11243 | 56 | 7s | 0/2 | 16s | 7s |
-| [jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2290 | 39031 | 317 | 14s | 0/8 | 38s | 14s |
-| [jackson-core](https://github.com/FasterXML/jackson-core/commit/3c0bcb749b106d6b80cd1d1d133cf1c97b66e752) | 889 | 86966 | 176 | 30s | 0/0 | 32s | 30s |
-| [commons-codec](https://github.com/apache/commons-codec/commit/77fcf89711a0e20393105a1247c41968f6eb58d4) | 268 | 27186 | 150 | 22s | 0/4 | 22s | 21s |
-| [commons-csv](https://github.com/apache/commons-csv/commit/6f93c7edfa0f758f757227b1d30588411fdbf669) | 301 | 10092 | 20 | 9s | 0/3 | 16s | 9s |
-| [commons-text](https://github.com/apache/commons-text/commit/283eaf49586331a7adc0b28fdfa5e8f09df87123) | 286 | 28298 | 168 | 36s | 0/8 | 29s | 37s |
-| [JSON-java](https://github.com/stleary/JSON-java/commit/d749ee16abd084ae94785c7afe954de25d921a5d) | 2594 | 16352 | 31 | 5s | 0/0 | 21s | 4s |
-| [HdrHistogram](https://github.com/HdrHistogram/HdrHistogram/commit/de84b0a7de2378abfc405da503bf4898e84ea98e) | 269 | 13086 | 97 | 54s | 0/0 | 21s | 56s |
-| [vavr](https://github.com/vavr-io/vavr/commit/1c9b7af87949df5232c81253a7fc59fde3598aec) | 664 | 74130 | 435 | 46s | 0/24 | 106s | 47s |
-| [junit4](https://github.com/junit-team/junit4/commit/300468b1efd48d76fac2f7bd6d576846dcbbf5ed) | 3269 | 31232 | 349 | 8s | 0/0 | 32s | 8s |
-| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 1974 | 104400 | 433 | 244s | 1/34 | 66s | 269s ⚠️ |
-| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 517 | 73500 | 614 | 25s | 0/12 | 65s | 25s |
-| [commons-pool](https://github.com/apache/commons-pool/commit/772089fa7b441b61fbbb1663cdbcab2158dbc9a5) | 302 | 16596 | 87 | 381s | 0/7 | 21s | 371s |
-| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 148 | 52534 | 400 | 30s | 1/27 | 44s | 30s |
-| [commons-validator](https://github.com/apache/commons-validator/commit/2747da8d0ff7d3aa971369543239160f7d723da9) | 178 | 17086 | 88 | 7s | 0/0 | 41s | 7s |
+| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 148 | 52534 | 400 | 32s | 1/27 | 50s | 32s |
+| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 665 | 68282 | 388 | 83s | 0/24 | 113s | 76s |
+| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 312 | 79083 | 619 | 119s | 0/19 | 86s | 112s |
+| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12908 | 71445 | 486 | 46s | 1/14 | 56s | 47s |
+| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 341 | 31282 | 312 | 14s | 0/12 | 58s | 15s |
+| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 517 | 73500 | 614 | 25s | 0/12 | 79s | 26s |
+| [jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2290 | 39031 | 317 | 14s | 0/8 | 43s | 14s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-06-11 at 20:39,
+on 2026-06-12 at 00:28,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -499,7 +491,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27192081741
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27370278770
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27383931784
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

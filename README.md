@@ -458,16 +458,16 @@ is, how many of the stream-using classes the plugin actually rewrote.
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 148 | 52534 | 400 | 32s | 1/27 | 50s | 32s |
-| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 665 | 68282 | 388 | 83s | 0/24 | 113s | 76s |
-| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 312 | 79083 | 619 | 119s | 0/19 | 86s | 112s |
-| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12908 | 71445 | 486 | 46s | 1/14 | 56s | 47s |
-| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 341 | 31282 | 312 | 14s | 0/12 | 58s | 15s |
-| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 517 | 73500 | 614 | 25s | 0/12 | 79s | 26s |
-| [jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2290 | 39031 | 317 | 14s | 0/8 | 43s | 14s |
+| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 148 | 52534 | 400 | 30s | 1/27 | 45s | 30s |
+| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 665 | 68282 | 388 | 81s | 0/24 | 96s | 80s |
+| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 312 | 79083 | 619 | 110s | 0/19 | 74s | 82s |
+| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12908 | 71445 | 486 | 43s | 1/14 | 50s | 43s |
+| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 341 | 31282 | 312 | 14s | 0/12 | 52s | 13s |
+| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 517 | 73500 | 614 | 25s | 0/12 | 66s | 25s |
+| [jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2290 | 39031 | 317 | 14s | 0/8 | 38s | 13s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-06-12 at 00:28,
+on 2026-06-13 at 04:32,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -491,7 +491,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27192081741
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27383931784
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27455408936
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

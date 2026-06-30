@@ -16,6 +16,26 @@ import java.io.IOException;
 final class Phino {
 
     /**
+     * The executable to run.
+     */
+    private final String executable;
+
+    /**
+     * Ctor.
+     */
+    Phino() {
+        this("phino");
+    }
+
+    /**
+     * Ctor.
+     * @param executable The executable to run, instead of "phino"
+     */
+    Phino(final String executable) {
+        this.executable = executable;
+    }
+
+    /**
      * Is it available?
      * @param expected This is the expected version
      * @return TRUE if available
@@ -23,7 +43,8 @@ final class Phino {
     boolean available(final String expected) {
         boolean available = false;
         try {
-            final Result result = new Jaxec("phino", "--version").withCheck(false).execUnsafe();
+            final Result result = new Jaxec(this.executable, "--version")
+                .withCheck(false).execUnsafe();
             if (result.code() == 0) {
                 final String version = result.stdout().trim();
                 if (version.equals(expected)) {

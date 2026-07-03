@@ -15,7 +15,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/1xx/119-cp-filter-peel-reference.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "filter", v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
       a ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
@@ -33,7 +33,7 @@ input: |
       ⟧,
       ρ ↦ ∅
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-a, body-acc ↦ ⟦ 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/List" ⟧, 𝐵-br ⟧, 𝐵-c ⟧

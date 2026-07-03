@@ -5,7 +5,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/207-lambda-to-peek.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       op ↦ ⟦
         φ ↦ Φ.hone.lambda,
@@ -30,6 +30,6 @@ input: |
         ⟧
       ⟧
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ body ↦ ⟦ 𝜏-op ↦ ⟦ φ ↦ Φ.hone.peek, opcode ↦ "invokestatic", class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Integer;", returned ↦ "Ljava/lang/Integer;", 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧

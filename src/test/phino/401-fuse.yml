@@ -13,7 +13,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/4xx/401-fuse.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       op1 ↦ ⟦
         φ ↦ Φ.hone.distill,
@@ -55,7 +55,7 @@ input: |
       ⟧,
       ρ ↦ ∅
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "distinct", 𝐵-b ⟧
   - ⟦ 𝐵-x, 𝜏-s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧, 𝐵-y, 𝜏-s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧, 𝐵-z ⟧

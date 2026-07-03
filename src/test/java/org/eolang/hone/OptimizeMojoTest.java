@@ -193,17 +193,10 @@ final class OptimizeMojoTest {
             );
         }
         final Path root = Paths.get(System.getProperty("target.directory")).getParent();
-        final String trimmed = raw.replaceFirst("^\\s+", "");
-        final String content;
-        if (trimmed.startsWith("{") || trimmed.startsWith("Φ")) {
-            content = raw;
-        } else {
-            content = String.format("{%s}", raw);
-        }
         final Path input = dir.resolve("input.phi");
         Files.write(
             input,
-            String.format("%s%n", content).getBytes(StandardCharsets.UTF_8)
+            String.format("%s%n", raw).getBytes(StandardCharsets.UTF_8)
         );
         final List<String> cmd = new ArrayList<>();
         cmd.add("phino");
@@ -958,8 +951,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: fifty-to-sixty
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -967,8 +960,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: thirty-three-to-one
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -976,8 +969,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: hello-to-bye
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -985,8 +978,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: mama-to-papa
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1068,8 +1061,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: fifty-to-sixty
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1077,8 +1070,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: thirty-three-to-one
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1086,8 +1079,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: hello-to-bye
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1095,8 +1088,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: mama-to-papa
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1177,8 +1170,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: 321-to-567
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1186,8 +1179,8 @@ final class OptimizeMojoTest {
                     .write(
                         """
                         name: 567-to-987
-                        pattern: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
-                        result: 'Φ.bytes ( α0 ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
+                        pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                        result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
                         """.getBytes(StandardCharsets.UTF_8)
                     );
                 f.files()
@@ -1289,7 +1282,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'map' byte sequence",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">6D-61-70</o>"),
             Matchers.is(true)
         );
     }
@@ -1299,7 +1292,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'filter' byte sequence",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">66-69-6C-74-65-72</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">66-69-6C-74-65-72</o>"),
             Matchers.is(true)
         );
     }
@@ -1309,7 +1302,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must not match 'map' bytes embedded in 'mapped/X' (see #449)",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70-70-65-64-2F-58</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">6D-61-70-70-65-64-2F-58</o>"),
             Matchers.is(false)
         );
     }
@@ -1319,7 +1312,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must not match 'filter' bytes embedded in 'filtered'",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">66-69-6C-74-65-72-65-64</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">66-69-6C-74-65-72-65-64</o>"),
             Matchers.is(false)
         );
     }
@@ -1329,7 +1322,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'mapToInt' byte sequence (see #705)",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">6D-61-70-54-6F-49-6E-74</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">6D-61-70-54-6F-49-6E-74</o>"),
             Matchers.is(true)
         );
     }
@@ -1339,7 +1332,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'skip' byte sequence (see #705)",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">73-6B-69-70</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">73-6B-69-70</o>"),
             Matchers.is(true)
         );
     }
@@ -1349,7 +1342,7 @@ final class OptimizeMojoTest {
         throws IOException {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'flatMap' byte sequence (see #705)",
-            OptimizeMojoTest.grepInMatches(dir, "<o as=\"α0\">66-6C-61-74-4D-61-70</o>"),
+            OptimizeMojoTest.grepInMatches(dir, "<o as=\"data\">66-6C-61-74-4D-61-70</o>"),
             Matchers.is(true)
         );
     }
@@ -1360,7 +1353,7 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "default grep-in must match a standalone 'distinct' byte sequence (see #705)",
             OptimizeMojoTest.grepInMatches(
-                dir, "<o as=\"α0\">64-69-73-74-69-6E-63-74</o>"
+                dir, "<o as=\"data\">64-69-73-74-69-6E-63-74</o>"
             ),
             Matchers.is(true)
         );
@@ -1372,7 +1365,7 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "default grep-in must not match 'mapToInt' bytes embedded in a longer sequence",
             OptimizeMojoTest.grepInMatches(
-                dir, "<o as=\"α0\">6D-61-70-54-6F-49-6E-74-65-72</o>"
+                dir, "<o as=\"data\">6D-61-70-54-6F-49-6E-74-65-72</o>"
             ),
             Matchers.is(false)
         );

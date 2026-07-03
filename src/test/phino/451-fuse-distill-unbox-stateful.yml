@@ -15,7 +15,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/4xx/451-fuse-distill-unbox.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       op1 ↦ ⟦
         φ ↦ Φ.hone.distill,
@@ -58,7 +58,7 @@ input: |
       ⟧,
       ρ ↦ ∅
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, bridge-output ↦ "D", 𝐵-c, state ↦ ⟦ 𝐵-s1, 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧, 𝐵-s2 ⟧, 𝐵-d ⟧
   - ⟦ 𝐵-p, 𝜏-g ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$f$0", 𝐵-y ⟧, 𝜏-u ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i3 ↦ "lambda$f$1", 𝐵-w ⟧, 𝐵-q ⟧

@@ -13,7 +13,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/3xx/316-c-map-to-distill.phr
 input: |
-  {⟦
+  ⟦
     φ ↦ Φ.hone.c-map,
     state-acc ↦ ⟦
       s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
@@ -42,7 +42,7 @@ input: |
     returned ↦ "Ljava/lang/Integer;",
     static ↦ "true",
     target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$1", signature ↦ "(IILjava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "c-map", 𝐵-b ⟧
   - ⟦ 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝐵-br ⟧

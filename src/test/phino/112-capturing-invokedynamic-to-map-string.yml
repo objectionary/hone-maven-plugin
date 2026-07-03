@@ -15,7 +15,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/1xx/112-capturing-invokedynamic-to-map.phr
 input: |
-  {⟦
+  ⟦
     φ ↦ Φ.jeo.class,
     version ↦ 68,
     access ↦ 33,
@@ -50,7 +50,7 @@ input: |
       trycatchblocks ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
       local-variable-table ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-a, bridge-input ↦ "Ljava/lang/String;", 𝐵-b ⟧

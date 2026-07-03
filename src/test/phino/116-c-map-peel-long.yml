@@ -12,7 +12,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/1xx/116-c-map-peel-long.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧,
       x ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 0 ⟧,
@@ -31,7 +31,7 @@ input: |
       ⟧,
       ρ ↦ ∅
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 0 ⟧, 𝜏-b ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Long", 𝐵-bx ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-a, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Long" ⟧, 𝜏-lv ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Long", 𝐵-lv ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Long" ⟧, 𝐵-br ⟧, 𝐵-c ⟧

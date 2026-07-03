@@ -15,7 +15,7 @@ rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/205-lambda-to-unbox.phr
   - src/main/resources/org/eolang/hone/rules/streams/6xx/603-unbox-to-lambda.phr
 input: |
-  {⟦
+  ⟦
     foo ↦ ⟦
       φ ↦ Φ.hone.unbox,
       opcode ↦ "invokestatic",
@@ -30,6 +30,6 @@ input: |
         is-interface ↦ Φ.false
       ⟧
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, lowered ↦ Φ.true, 𝐵-c ⟧

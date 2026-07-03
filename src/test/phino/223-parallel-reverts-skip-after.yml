@@ -8,7 +8,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/223-parallel-reverts-skip-after.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       op0 ↦ ⟦
         φ ↦ Φ.hone.skip,
@@ -25,7 +25,7 @@ input: |
       ⟧,
       ρ ↦ ∅
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, i3 ↦ "skip", 𝐵-t ⟧
   - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, reverted ↦ Φ.true, 𝐵-t ⟧

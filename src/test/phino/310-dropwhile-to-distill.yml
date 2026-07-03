@@ -5,7 +5,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/3xx/310-dropwhile-to-distill.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       op1 ↦ ⟦
         φ ↦ Φ.hone.dropWhile,
@@ -26,7 +26,7 @@ input: |
       ⟧,
       ρ ↦ ∅
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "dropWhile", 𝐵-b ⟧
   - ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧

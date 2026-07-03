@@ -5,7 +5,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/271-remove-useless-types.phr
 input: |
-  {⟦
+  ⟦
     body ↦ ⟦
       op1 ↦ ⟦
         φ ↦ Φ.hone.type,
@@ -18,6 +18,6 @@ input: |
         v1 ↦ 0
       ⟧
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ body ↦ ⟦ 𝜏-only ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧

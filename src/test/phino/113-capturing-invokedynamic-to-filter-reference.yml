@@ -14,7 +14,7 @@
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/1xx/113-capturing-invokedynamic-to-filter.phr
 input: |
-  {⟦
+  ⟦
     φ ↦ Φ.jeo.class,
     version ↦ 68,
     access ↦ 33,
@@ -49,7 +49,7 @@ input: |
       trycatchblocks ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
       local-variable-table ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
     ⟧
-  ⟧}
+  ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(Ljava/util/List;Ljava/lang/Integer;)Z", 𝐵-i ⟧, 𝐵-j ⟧

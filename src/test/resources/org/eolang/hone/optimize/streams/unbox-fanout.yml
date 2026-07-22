@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Reproduction of issue #764: the `sources` and `fanout` benchmark shapes from
+# objectionary/sabj25, both boxed Stream pipelines lowered into the primitive
+# domain. On hone 0.28.0 optimizing them occasionally emitted a class that
+# failed at LINK time (not verification) inside the object-to-primitive
+# unboxing-lambda bridge — the Long/long family of the closed #704 / #713:
+#
+#   sources — NoSuchMethodError for a synthetic unboxing lambda
+#     `lambda$hone$N:(Ljava/lang/Long;)J` that the pass referenced from its
+#     invokedynamic but never emitted.
+#   fanout  — LambdaConversionException "Invalid receiver type long; not a
+#     subtype of implementation type class java.lang.Long", the fused
+#     invokedynamic instantiating a primitive `long` receiver where the
+#     metafactory needed the boxed `Long` implementation.
+#
+# `sources` is a boxed Stream unboxed through a tail mapToLong(Long::longValue):
+# 103 desugars the unbound-instance reference into a private-static
+# lambda$hone$N wrapper, 111 lifts it, and 205/451 fuse the trailing unbox onto
+# the preceding filter+map distill so the whole chain collapses to one
+# Stream.mapMultiToLong. `fanout` is a Stream.flatMapToLong that 457 rewrites
+# into a mapMultiToLong backed by a synthesised BiConsumer flatadapt. Exercising
+# both in one class puts several independently numbered synthetic lambdas next
+# to each other, which is where the reported run-to-run variance lived.
+#
+# The values are order- and count-sensitive so a miswired unboxing bridge would
+# print a different result even if the class happened to link: {1..6} kept to
+# the even {2,4,6}, each +1 = {3,5,7}, summed as long = 15; {1..5} kept to
+# {2,3,4,5}, each fanned out to (n, n*10) and summed = 154. Both mapToLong and
+# flatMapToLong collapse into a single Stream.mapMultiToLong dispatch, so the
+# five javac invokedynamic factories (sources: filter, map, mapToLong; fanout:
+# filter, flatMapToLong) drop to three.
+java: |
+  package sabj25;
+  import java.util.List;
+  import java.util.stream.Stream;
+  import java.util.stream.LongStream;
+  public class X {
+    static long sources() {
+      return List.of(1L, 2L, 3L, 4L, 5L, 6L).stream()
+        .filter(n -> n % 2L == 0L)
+        .map(n -> n + 1L)
+        .mapToLong(Long::longValue)
+        .sum();
+    }
+    static long fanout() {
+      return Stream.of(1L, 2L, 3L, 4L, 5L)
+        .filter(n -> n > 1L)
+        .flatMapToLong(n -> LongStream.of(n, n * 10L))
+        .sum();
+    }
+    public static void main(String[] a) {
+      System.out.printf("The result is %d %d%n", sources(), fanout());
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 15 154"
+before:
+  invokedynamic: 5
+after:
+  invokedynamic: 3

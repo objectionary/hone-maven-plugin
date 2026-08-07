@@ -123,7 +123,7 @@ result: |
 where:
   - meta: 𝑒-label
     function: random-string
-    args: ['"L%d"']
+    args: ['"L310%d"']
   - meta: 𝜏-opcode
     function: tau
     args: [𝑒-opcode]

@@ -35,6 +35,9 @@ rule, how to test, and what to avoid*.
    subdirectory whose digit matches the rule's hundreds prefix). Start from
    the closest existing rule and keep its header block (`SPDX` +
    `# yamllint disable rule:line-length`).
+   If the rule mints a synthetic name with `random-string`, embed its own
+   `NNN` in the format pattern (`distill_501%d`, not `distill_%d`), so that no
+   two rules can ever draw the same name; `RulesTest` enforces this.
 3. **Run small-steps locally** on a representative `.phi` to see what your
    rule produces:
 
@@ -128,6 +131,13 @@ every `@Tag("deep")` test runs against the real `phino` binary on the host.
   unfolded pragma at `350-` would silently break fusion on that method.
 - Do not change `Collections.sort(names)` in `Rules.discover()`. The pipeline
   depends on alphabetical ordering as its scheduling mechanism.
+- Do not let two rules share one `random-string` pattern. Phino guarantees
+  minted names are unique only inside a single process, and it seeds its
+  generator identically on every run since 0.0.106, so in small-steps mode —
+  one process per rule — both rules draw the very same name and produce two
+  methods with one name in one class. `711` then reverts an invokedynamic
+  through the wrong wrapper and the class dies at link time with
+  `LambdaConversionException` (see #777).
 - Do not hand-edit `.class` files in `target/classes-before-hone/`. That
   directory is the backup the plugin makes before mutation; it is the only way
   to recover the pre-optimization bytecode without recompiling.

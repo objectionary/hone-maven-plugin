@@ -245,7 +245,7 @@ where:
     function: random-tau
   - meta: 𝑒-wrapper-name
     function: random-string
-    args: ['"lambda$hone$%d"']
+    args: ['"lambda$hone$103%d"']
   - meta: 𝑒-return-op
     function: sed
     args:

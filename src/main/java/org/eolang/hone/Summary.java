@@ -71,7 +71,6 @@ public final class Summary {
         return destination;
     }
 
-    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private static CSV reduce(final List<CSV> csvs) {
         final CSV res = csvs.stream().reduce(CSV::add).orElseThrow(
             () -> new IllegalStateException(

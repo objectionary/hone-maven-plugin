@@ -32,8 +32,8 @@ import org.cactoos.list.ListOf;
 public final class CSV {
 
     /**
-    * CSV header.
-    */
+     * CSV header.
+     */
     private final List<String> headers;
 
     /**
@@ -44,7 +44,6 @@ public final class CSV {
     /**
      * Constructor.
      * @param root CSV file path
-     * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
     CSV(final Path root) {
         this(CSV.from(root));
@@ -53,7 +52,6 @@ public final class CSV {
     /**
      * Constructor.
      * @param other The CSV to copy fields from
-     * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
     private CSV(final CSV other) {
         this(other.headers, other.records);
@@ -84,9 +82,9 @@ public final class CSV {
     }
 
     /**
-    * Number of records in the CSV.
-    * @return The number of records in the CSV
-    */
+     * Number of records in the CSV.
+     * @return The number of records in the CSV
+     */
     int size() {
         return this.records.size();
     }
@@ -155,7 +153,6 @@ public final class CSV {
             .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private static CSV from(final Path csv) {
         try (
             Reader reader = new InputStreamReader(

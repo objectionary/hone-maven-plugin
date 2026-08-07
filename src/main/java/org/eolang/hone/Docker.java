@@ -91,7 +91,6 @@ final class Docker {
      * @return Exit code (always 0 on success)
      * @throws IOException If the command fails or returns non-zero exit code
      */
-    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));

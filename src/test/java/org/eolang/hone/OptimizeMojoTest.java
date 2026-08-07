@@ -49,11 +49,7 @@ import org.yaml.snakeyaml.Yaml;
 @Execution(ExecutionMode.SAME_THREAD)
 @ExtendWith(RandomImageResolver.class)
 @ExtendWith(MktmpResolver.class)
-@SuppressWarnings({
-    "PMD.AvoidDuplicateLiterals",
-    "PMD.TooManyMethods",
-    "PMD.GodClass"
-})
+@SuppressWarnings("PMD.GodClass")
 final class OptimizeMojoTest {
 
     @Test

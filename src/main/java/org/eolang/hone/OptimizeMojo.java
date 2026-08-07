@@ -54,16 +54,9 @@ import org.cactoos.text.TextOf;
  * of the <tt>rmi</tt> goal.</p>
  *
  * @since 0.1.0
- * @checkstyle CyclomaticComplexityCheck (500 lines)
- * @checkstyle NPathComplexityCheck (500 lines)
- * @checkstyle ExecutableStatementCountCheck (500 lines)
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
-@SuppressWarnings({
-    "PMD.AvoidDuplicateLiterals",
-    "PMD.TooManyFields",
-    "PMD.TooManyMethods"
-})
+@SuppressWarnings("PMD.TooManyFields")
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
@@ -120,7 +113,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * Location of <tt>.class</tt> files to optimize inside
      * the {@code target} directory.
      * @since 0.8.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.classes", defaultValue = "classes")
     private String classes;
@@ -141,7 +133,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * only.</p>
      *
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.rules", defaultValue = "none")
     private String rules;
@@ -150,7 +141,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * List of extra rules to use for optimization, provided as
      * YAML files.
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.extra")
     private List<String> extra;
@@ -213,7 +203,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * output but may help debug internal issues.</p>
      *
      * @since 0.11.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.debug", defaultValue = "false")
     private boolean debug;
@@ -266,7 +255,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * failure but only to the file processing being skipped.</p>
      *
      * @since 0.11.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.timeout", defaultValue = "999")
     private int timeout;
@@ -281,7 +269,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * of worker threads.</p>
      *
      * @since 0.11.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.threads", defaultValue = "0")
     private int threads;
@@ -303,7 +290,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>Start them with {@code "/target/classes"}.</p>
      *
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.includes")
     private String[] includes;
@@ -317,7 +303,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>Start them with {@code "/target/classes"}.</p>
      *
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.excludes")
     private String[] excludes;
@@ -333,10 +318,6 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * EO cache directory.
      * @since 0.1.0
-     * @checkstyle MemberNameCheck (7 lines)
-     * @checkstyle VisibilityModifierCheck (10 lines)
-     * @checkstyle JavaNCSSCheck (500 lines)
-     * @checkstyle MethodLengthCheck (500 lines)
      */
     @Parameter(property = "hone.cache")
     @SuppressWarnings("PMD.ImmutableField")
@@ -370,9 +351,9 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     /**
-    * Check if the classes directory is absent or doesn't have classes.
-    * @return True if there are no class files, false otherwise
-    */
+     * Check if the classes directory is absent or doesn't have classes.
+     * @return True if there are no class files, false otherwise
+     */
     private boolean withoutClasses() {
         final Path dir = this.target.toPath().resolve(this.classes);
         final boolean exists = dir.toFile().exists();
@@ -398,7 +379,6 @@ public final class OptimizeMojo extends AbstractMojo {
         return without;
     }
 
-    @SuppressWarnings("PMD.UnnecessaryLocalRule")
     private void optimize() throws IOException {
         final long start = System.currentTimeMillis();
         if (this.alwaysWithDocker || !new Phino().available(this.phino())) {

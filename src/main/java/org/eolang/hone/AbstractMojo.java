@@ -72,9 +72,9 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     /**
      * Run without Docker even if phino is available.
      *
-     * <p>If this is set to <tt>true</tt>, Docker is used
+     * <p>If this is set to {@code true}, Docker is used
      * even if phino is available. It is recommended to keep this parameter
-     * to <tt>false</tt>, thus making the build faster if it's possible.</p>
+     * to {@code false}, thus making the build faster if it's possible.</p>
      *
      * @since 0.17.0
      * @checkstyle MemberNameCheck (6 lines)

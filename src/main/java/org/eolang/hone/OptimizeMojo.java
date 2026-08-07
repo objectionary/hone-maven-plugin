@@ -36,27 +36,27 @@ import org.cactoos.text.TextOf;
  * Converts Bytecode to Bytecode in order to make it faster.
  *
  * <p>This goal takes every {@code .class} file from the
- * <tt>target/classes/</tt> directory, converts it to {@code .xmir}
+ * {@code target/classes/} directory, converts it to {@code .xmir}
  * format (which is XML representation of <a href="https://www.eolang.org">EO</a>),
  * then converts {@code .xmir} to {@code .phi} (which is
  * <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>),
  * then optimizes it via
  * <a href="https://github.com/objectionary/phino">phino</a>,
  * and then back to {@code .xmir} and to {@code .class}. As a result,
- * you obtain optimized Bytecode in the <tt>target/classes/</tt> directory,
+ * you obtain optimized Bytecode in the {@code target/classes/} directory,
  * which supposedly works faster than before.</p>
  *
  * <p>The entire optimization pipeline happens inside Docker container,
- * which is run from the image specified in the <tt>image</tt> parameter.
+ * which is run from the image specified in the {@code image} parameter.
  * The image may either be pulled or built locally. We recommend pulling
- * it from the Docker Hub with the help of the <tt>pull</tt> goal. Also,
+ * it from the Docker Hub with the help of the {@code pull} goal. Also,
  * we recommend deleting the image after optimization is done, with the help
- * of the <tt>rmi</tt> goal.</p>
+ * of the {@code rmi} goal.</p>
  *
  * @since 0.1.0
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
-@SuppressWarnings("PMD.TooManyFields")
+@SuppressWarnings({"PMD.TooManyFields", "PMD.GodClass"})
 public final class OptimizeMojo extends AbstractMojo {
 
     /**
@@ -67,18 +67,18 @@ public final class OptimizeMojo extends AbstractMojo {
      * bytecode mentions at least one of the {@code java.util.stream} methods
      * that the {@code streams/} pipeline knows how to fuse. The pattern is
      * assembled by {@link Greppable} from the method names below; each name is
-     * turned into its hex-byte form (for example <tt>"map"</tt> becomes
-     * <tt>6D-61-70</tt>, exactly the way jeo encodes a string literal inside a
+     * turned into its hex-byte form (for example {@code "map"} becomes
+     * {@code 6D-61-70}, exactly the way jeo encodes a string literal inside a
      * {@code .xmir} file) and the alternatives are anchored between the closing
-     * <tt>&gt;</tt> of an opening tag and the opening <tt>&lt;</tt> of a closing
+     * {@code >} of an opening tag and the opening {@code <} of a closing
      * tag.</p>
      *
      * <p>Anchoring between those XML tag boundaries means an alternative
      * matches only when the hex bytes are the <em>entire</em> content of an
      * {@code <o>} element, not when they happen to be a prefix or suffix of a
-     * longer sequence (e.g. <tt>"mapped/X"</tt> or <tt>"filtered"</tt>, see
+     * longer sequence (e.g. {@code "mapped/X"} or {@code "filtered"}, see
      * issue #449). Because of this each method needs its own alternative:
-     * <tt>"map"</tt> does not cover <tt>"mapMulti"</tt> or <tt>"mapToInt"</tt>,
+     * {@code "map"} does not cover {@code "mapMulti"} or {@code "mapToInt"},
      * so a class that uses only one of those would otherwise be skipped
      * entirely (see issues #678 and #705). Anchoring also keeps the pattern
      * free of PCRE lookaround, which {@code grep -E} cannot parse — a mismatch
@@ -110,7 +110,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private static final Pattern COMMA = Pattern.compile("\\s*,\\s*");
 
     /**
-     * Location of <tt>.class</tt> files to optimize inside
+     * Location of {@code .class} files to optimize inside
      * the {@code target} directory.
      * @since 0.8.0
      */
@@ -120,15 +120,15 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * List of built-in rules to use for optimization.
      *
-     * <p>For example, <tt>"simple,b*,!abc"</tt> would include
-     * the <tt>simple</tt> rule, all rules that start
-     * with the <tt>b</tt> character, and exclude the <tt>abc</tt>
+     * <p>For example, {@code "simple,b*,!abc"} would include
+     * the {@code simple} rule, all rules that start
+     * with the {@code b} character, and exclude the {@code abc}
      * rule.</p>
      *
      * <p>In order to disable them all, simply set this parameter
-     * to <tt>none</tt>.</p>
+     * to {@code none}.</p>
      *
-     * <p>If you enable them all with <tt>"*"</tt>, your code most definitely
+     * <p>If you enable them all with {@code "*"}, your code most definitely
      * will be corrupted, because some rules are for testing purposes
      * only.</p>
      *
@@ -159,26 +159,26 @@ public final class OptimizeMojo extends AbstractMojo {
      * <p>Using this regular expression, you can filter in (include) XMIR files that
      * need to be rewritten. It's advised to use this regex to
      * save time. This is a good example to filter in only the files
-     * that contain <tt>filter()</tt> and <tt>map()</tt> methods:</p>
+     * that contain {@code filter()} and {@code map()} methods:</p>
      *
      * <pre>"&lt;o&gt;(66-69-6C-74-65-72|6D-61-70)&lt;/o&gt;</pre>
      *
-     * <p>Here, <tt>66-69-6C-74-65-72</tt> stands for the <tt>"filter"</tt>
-     * and <tt>6D-61-70</tt> for the <tt>"map"</tt>, in hexadecimal format.</p>
+     * <p>Here, {@code 66-69-6C-74-65-72} stands for the {@code "filter"}
+     * and {@code 6D-61-70} for the {@code "map"}, in hexadecimal format.</p>
      *
-     * <p>To rewrite all files, use the <tt>.*</tt> pattern</p>
+     * <p>To rewrite all files, use the {@code .*} pattern</p>
      *
      * @since 0.10.0
      * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.grep-in")
     @SuppressWarnings("PMD.ImmutableField")
-    private String grepIn = OptimizeMojo.DEFAULT_GREP_IN;
+    private String grepIn;
 
     /**
      * Skip phino entirely.
      *
-     * <p>If this is set to <tt>true</tt>, phino is not
+     * <p>If this is set to {@code true}, phino is not
      * executed and no rewriting happens.</p>
      *
      * @since 0.15.0
@@ -198,8 +198,8 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Print all commands of all Bash scripts.
      *
-     * <p>If this is set to <tt>true</tt>, all our internal bash scripts will
-     * start with <tt>set -x</tt>. This will lead to very verbose
+     * <p>If this is set to {@code true}, all our internal bash scripts will
+     * start with {@code set -x}. This will lead to very verbose
      * output but may help debug internal issues.</p>
      *
      * @since 0.11.0
@@ -226,7 +226,7 @@ public final class OptimizeMojo extends AbstractMojo {
      *
      * <p>This number doesn't need to be changed. However, it may be used for debugging.
      * The larger the number, the longer optimization might take. We pass
-     * this number to <tt>phino</tt> as the <tt>--max-depth</tt> argument.</p>
+     * this number to {@code phino} as the {@code --max-depth} argument.</p>
      *
      * @since 0.4.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -239,7 +239,7 @@ public final class OptimizeMojo extends AbstractMojo {
      *
      * <p>This number doesn't need to be changed. However, it may be used for debugging.
      * The larger the number, the longer optimization might take. We pass
-     * this number to <tt>phino</tt> as the <tt>--max-depth</tt> argument.</p>
+     * this number to {@code phino} as the {@code --max-depth} argument.</p>
      *
      * @since 0.4.0
      * @checkstyle MemberNameCheck (6 lines)
@@ -248,7 +248,7 @@ public final class OptimizeMojo extends AbstractMojo {
     private int maxCycles;
 
     /**
-     * How many seconds to spend on each <tt>.phi</tt> file at most?
+     * How many seconds to spend on each {@code .phi} file at most?
      *
      * <p>If rewriting for a file takes longer than the timeout,
      * the file remains untouched. The timeout doesn't lead to runtime
@@ -264,7 +264,7 @@ public final class OptimizeMojo extends AbstractMojo {
      *
      * <p>By default, it is set to zero, which means the number of threads
      * will be set to the number of CPUs on the machine. This is normally
-     * the most efficient choice for large projects. Set it to <tt>1</tt>
+     * the most efficient choice for large projects. Set it to {@code 1}
      * to disable parallelism, or to any positive value to cap the number
      * of worker threads.</p>
      *
@@ -319,9 +319,15 @@ public final class OptimizeMojo extends AbstractMojo {
      * EO cache directory.
      * @since 0.1.0
      */
-    @Parameter(property = "hone.cache")
-    @SuppressWarnings("PMD.ImmutableField")
-    private File cache = Paths.get(System.getProperty("user.home")).resolve(".eo").toFile();
+    @Parameter(property = "hone.cache", defaultValue = "${user.home}/.eo")
+    private File cache;
+
+    /**
+     * Ctor.
+     */
+    public OptimizeMojo() {
+        this.grepIn = OptimizeMojo.DEFAULT_GREP_IN;
+    }
 
     @Override
     public void exec() throws IOException {

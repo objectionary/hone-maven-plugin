@@ -14,15 +14,22 @@ import org.apache.maven.plugins.annotations.Mojo;
  *
  * <p>This goal pulls Docker image from
  * <a href="https://hub.docker.com">Docker Hub</a> to your machine. You
- * may skip this goal and simply use the <tt>optimize</tt> goal, which
+ * may skip this goal and simply use the {@code optimize} goal, which
  * will automatically pull the image from the Hub. However, it would be
- * cleaner to use <tt>pull</tt>, then <tt>optimize</tt>, and
- * then <tt>rmi</tt> (which deletes the image from your machine).</p>
+ * cleaner to use {@code pull}, then {@code optimize}, and
+ * then {@code rmi} (which deletes the image from your machine).</p>
  *
  * @since 0.1.0
  */
 @Mojo(name = "pull", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
 public final class PullMojo extends AbstractMojo {
+
+    /**
+     * Ctor.
+     */
+    public PullMojo() {
+        // nothing
+    }
 
     @Override
     public void exec() throws IOException {

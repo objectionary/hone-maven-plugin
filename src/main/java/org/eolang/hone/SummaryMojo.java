@@ -24,6 +24,13 @@ import org.apache.maven.plugins.annotations.Mojo;
 )
 public final class SummaryMojo extends AbstractMojo {
 
+    /**
+     * Ctor.
+     */
+    public SummaryMojo() {
+        // nothing
+    }
+
     @Override
     public void exec() throws IOException {
         Logger.info(this, "Collecting summary build statistics...");

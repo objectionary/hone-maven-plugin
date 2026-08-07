@@ -21,6 +21,13 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "rmi", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
 public final class RmiMojo extends AbstractMojo {
 
+    /**
+     * Ctor.
+     */
+    public RmiMojo() {
+        // nothing
+    }
+
     @Override
     public void exec() throws IOException {
         if (!this.alwaysWithDocker && new Phino().available(this.phino())) {

@@ -28,7 +28,7 @@ import org.cactoos.text.TextOf;
  * Docker image for your project. This may be useful when you don't have
  * network access to Docker Hub. In most cases, you have it and that's
  * why don't need this goal.
- * Instead, just use the <tt>pull</tt> goal, which will simply pull
+ * Instead, just use the {@code pull} goal, which will simply pull
  * a required Docker image from the Hub.</p>
  *
  * <p>This goal is mostly for testing and CI/CD.</p>
@@ -53,6 +53,13 @@ public final class BuildMojo extends AbstractMojo {
      */
     @Parameter(property = "hone.jeo-version")
     private String jeoVersion;
+
+    /**
+     * Ctor.
+     */
+    public BuildMojo() {
+        // nothing
+    }
 
     @Override
     public void exec() throws IOException {

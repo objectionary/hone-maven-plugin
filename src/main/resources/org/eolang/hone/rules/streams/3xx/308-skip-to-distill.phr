@@ -91,7 +91,7 @@ result: |
 where:
   - meta: 𝑒-label
     function: random-string
-    args: ['"L%d"']
+    args: ['"L308%d"']
   - meta: 𝜏-alen
     function: random-tau
   - meta: 𝜏-new-cnt

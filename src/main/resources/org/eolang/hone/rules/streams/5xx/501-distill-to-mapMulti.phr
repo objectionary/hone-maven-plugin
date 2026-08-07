@@ -88,7 +88,7 @@ where:
     function: random-tau
   - meta: 𝑒-target-method
     function: random-string
-    args: [ '"distill_%d"' ]
+    args: [ '"distill_501%d"' ]
   # Stream.mapMultiToX takes a plain BiConsumer<T, XConsumer>, so the SAM
   # type and its erased samMethodType are decided by the distill INPUT
   # exactly as for an ordinary mapMulti — only the XConsumer the body

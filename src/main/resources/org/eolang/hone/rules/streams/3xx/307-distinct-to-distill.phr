@@ -92,7 +92,7 @@ result: |
 where:
   - meta: 𝑒-label
     function: random-string
-    args: ['"L%d"']
+    args: ['"L307%d"']
   - meta: 𝜏-dup-list
     function: random-tau
   - meta: 𝜏-new-set

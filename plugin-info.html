@@ -118,11 +118,11 @@
                             </div>
                             <ul class="badges">
                                 <li>
-                                    <strong itemprop="version">0.29.1</strong>
+                                    <strong itemprop="version">0.29.3</strong>
                                 </li>
                                 <li>
-                                    <time itemprop="datePublished" datetime="2026-07-24">
-                                        24-Jul-2026
+                                    <time itemprop="datePublished" datetime="2026-08-07">
+                                        7-Aug-2026
                                     </time>
                                 </li>
                                 <li class="menu-button">menu</li>
@@ -145,7 +145,7 @@
 <tr class="b">
 <td><a href="./build-mojo.html">hone:build</a></td>
 <td>Build Docker image. 
-<p>This goal must be used only if you want to build a local custom Docker image for your project. This may be useful when you don't have network access to Docker Hub. In most cases, you have it and that's why don't need this goal. Instead, just use the <tt>pull</tt> goal, which will simply pull a required Docker image from the Hub.</p>
+<p>This goal must be used only if you want to build a local custom Docker image for your project. This may be useful when you don't have network access to Docker Hub. In most cases, you have it and that's why don't need this goal. Instead, just use the <code>pull</code> goal, which will simply pull a required Docker image from the Hub.</p>
 <p>This goal is mostly for testing and CI/CD.</p></td></tr>
 <tr class="a">
 <td><a href="./help-mojo.html">hone:help</a></td>
@@ -155,12 +155,12 @@
 <tr class="b">
 <td><a href="./optimize-mojo.html">hone:optimize</a></td>
 <td>Converts Bytecode to Bytecode in order to make it faster. 
-<p>This goal takes every <code>.class</code> file from the <tt>target/classes/</tt> directory, converts it to <code>.xmir</code> format (which is XML representation of <a href="https://www.eolang.org">EO</a>), then converts <code>.xmir</code> to <code>.phi</code> (which is <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>), then optimizes it via <a href="https://github.com/objectionary/phino">phino</a>, and then back to <code>.xmir</code> and to <code>.class</code>. As a result, you obtain optimized Bytecode in the <tt>target/classes/</tt> directory, which supposedly works faster than before.</p>
-<p>The entire optimization pipeline happens inside Docker container, which is run from the image specified in the <tt>image</tt> parameter. The image may either be pulled or built locally. We recommend pulling it from the Docker Hub with the help of the <tt>pull</tt> goal. Also, we recommend deleting the image after optimization is done, with the help of the <tt>rmi</tt> goal.</p></td></tr>
+<p>This goal takes every <code>.class</code> file from the <code>target/classes/</code> directory, converts it to <code>.xmir</code> format (which is XML representation of <a href="https://www.eolang.org">EO</a>), then converts <code>.xmir</code> to <code>.phi</code> (which is <a href="https://arxiv.org/abs/2111.13384">𝜑-calculus</a>), then optimizes it via <a href="https://github.com/objectionary/phino">phino</a>, and then back to <code>.xmir</code> and to <code>.class</code>. As a result, you obtain optimized Bytecode in the <code>target/classes/</code> directory, which supposedly works faster than before.</p>
+<p>The entire optimization pipeline happens inside Docker container, which is run from the image specified in the <code>image</code> parameter. The image may either be pulled or built locally. We recommend pulling it from the Docker Hub with the help of the <code>pull</code> goal. Also, we recommend deleting the image after optimization is done, with the help of the <code>rmi</code> goal.</p></td></tr>
 <tr class="a">
 <td><a href="./pull-mojo.html">hone:pull</a></td>
 <td>Pull Docker image from Docker Hub. 
-<p>This goal pulls Docker image from <a href="https://hub.docker.com">Docker Hub</a> to your machine. You may skip this goal and simply use the <tt>optimize</tt> goal, which will automatically pull the image from the Hub. However, it would be cleaner to use <tt>pull</tt>, then <tt>optimize</tt>, and then <tt>rmi</tt> (which deletes the image from your machine).</p></td></tr>
+<p>This goal pulls Docker image from <a href="https://hub.docker.com">Docker Hub</a> to your machine. You may skip this goal and simply use the <code>optimize</code> goal, which will automatically pull the image from the Hub. However, it would be cleaner to use <code>pull</code>, then <code>optimize</code>, and then <code>rmi</code> (which deletes the image from your machine).</p></td></tr>
 <tr class="b">
 <td><a href="./rmi-mojo.html">hone:rmi</a></td>
 <td>Remove Docker image. 
@@ -186,7 +186,7 @@
 <th>Maven</th>
 <th>JDK</th></tr>
 <tr class="b">
-<td>from 0.5.4 to 0.29.0</td>
+<td>from 0.5.4 to 0.29.1</td>
 <td>-</td>
 <td>8</td></tr>
 <tr class="a">
@@ -208,7 +208,7 @@
         &lt;plugin&gt;
           &lt;groupId&gt;org.eolang&lt;/groupId&gt;
           &lt;artifactId&gt;hone-maven-plugin&lt;/artifactId&gt;
-          &lt;version&gt;0.29.1&lt;/version&gt;
+          &lt;version&gt;0.29.3&lt;/version&gt;
         &lt;/plugin&gt;
         ...
       &lt;/plugins&gt;

@@ -53,9 +53,12 @@ public final class Summary {
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
         final String stats = "hone-statistics.csv";
+        final Path destination = this.target.resolve(stats);
+        final Path output = destination.toAbsolutePath().normalize();
         try (Stream<Path> paths = Files.walk(this.root)) {
             paths.filter(Files::isRegularFile)
                 .filter(path -> stats.equals(path.getFileName().toString()))
+                .filter(path -> !output.equals(path.toAbsolutePath().normalize()))
                 .map(CSV::new)
                 .forEach(found::add);
         } catch (final IOException exception) {
@@ -64,7 +67,6 @@ public final class Summary {
                 exception
             );
         }
-        final Path destination = this.target.resolve(stats);
         if (!found.isEmpty()) {
             Summary.reduce(found).flush(destination);
         }

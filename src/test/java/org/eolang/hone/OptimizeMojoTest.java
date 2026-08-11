@@ -58,7 +58,7 @@ final class OptimizeMojoTest {
      * Raise it with {@code -Dhone.random.pipelines=50} to search harder; the
      * count is the number of generated programs, not the number of builds.
      */
-    private static final int PIPELINES = Integer.getInteger("hone.random.pipelines", 12);
+    private static final int PIPELINES = Integer.getInteger("hone.random.pipelines", 24);
 
     @Test
     void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {

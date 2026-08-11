@@ -40,6 +40,23 @@ final class SummaryTest {
     }
 
     @Test
+    void excludesPreviousSummaryFromCollection(@Mktmp final Path temp) throws Exception {
+        final Path root = SummaryTest.modular(temp);
+        final Summary summary = new Summary(
+            root,
+            Files.createDirectories(root.resolve("target"))
+        );
+        final Path report = summary.collect();
+        final String expected = new TextOf(report).asString();
+        summary.collect();
+        MatcherAssert.assertThat(
+            "report must be stable across repeated collections",
+            new TextOf(report).asString(),
+            Matchers.equalTo(expected)
+        );
+    }
+
+    @Test
     void skipsModulesWithoutStatistics(@Mktmp final Path temp) throws Exception {
         final Path dir = SummaryTest.modular(temp);
         Files.deleteIfExists(dir.resolve("server/hone-statistics.csv"));

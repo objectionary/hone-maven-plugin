@@ -2,6 +2,20 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# A filter guard consumes the item with its predicate, so it needs a
+# throwaway copy duplicated in front of it. This rule splices that
+# Φ.hone.dup between a point-wise producer and the filter that follows it.
+#
+# `peek` belongs in the producer list next to `map` and the two filters
+# (see #790). A peek forwards the element unchanged, so it looks pointwise
+# to 401-fuse, but its own body spends the `dup` that 309 emits on the void
+# Consumer call and hands the next stage a single item — exactly what a map
+# or a filter hands over. Without this rule a `.peek(...).filter(...)` pair
+# reached 4xx with no guard at all, 401 fused it into a distill that
+# inherited the HEAD's `start ↦ "peek"`, and 431 — which only ever sees
+# `start ↦ "filter"` — could no longer put the guard in. The predicate then
+# ate the only item and the keep label was reached with an empty stack,
+# against a frame promising the element: VerifyError at link time.
 name: insert-dup-before-filter
 pattern: |
   ⟦
@@ -68,6 +82,7 @@ when:
         - eq: [𝜏-one, 'map']
         - eq: [𝜏-one, 'o-filter']
         - eq: [𝜏-one, 'p-filter']
+        - eq: [𝜏-one, 'peek']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

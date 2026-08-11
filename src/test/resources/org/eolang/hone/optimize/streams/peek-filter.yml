@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A `.peek(...)` immediately followed by a `.filter(...)` — the shape that used
+# to produce a class the JVM refused to load (#790).
+#
+# Both operators are point-wise, so 401 fuses them into a single distill and the
+# whole pipeline lowers to ONE Stream.mapMulti: invokedynamic drops from 3 (peek
+# lambda + filter lambda + Long::sum) to 2 (the fused mapMulti + the untouched
+# reduce accumulator).
+#
+# The fused body needs TWO guard copies of the element, one per consumer that
+# eats it: 309 emits the peek's `dup` for the void Consumer call, and 281 splices
+# the filter's own `dup` in front of the predicate. Before 281 covered `peek` as
+# a predecessor the second one was never emitted — 401 gave the fused distill the
+# head's `start ↦ "peek"`, so 431, which only matches `start ↦ "filter"`, could
+# not add it afterwards. The predicate then consumed the only copy and the keep
+# label was reached with an empty stack against a frame promising the element:
+# `VerifyError: Inconsistent stackmap frames at branch target`. The `dup` tally
+# (6 -> 8, both new ones inside the synthesised distill) pins that guard down,
+# and the printed line proves the class loads and the pipeline still computes
+# what javac's version computed.
+#
+#   [5,3,6,11] --peek(SUM += n)--> (forwarded unchanged, SUM == 25)
+#              --filter(even)--> [6] --reduce(0, Long::sum)--> 6
+java: |
+  package peek;
+  import java.util.stream.*;
+  public class PeekFilter {
+    private static final long[] SUM = new long[1];
+    public static void main(String[] args) {
+      long n = Stream.of(5L, 3L, 6L, 11L)
+        .peek(x -> SUM[0] += x)
+        .filter(x -> x % 2L == 0L)
+        .reduce(0L, Long::sum);
+      System.out.printf("The result is %d, after peeking %d%n", n, SUM[0]);
+    }
+  }
+log:
+  - "Modified 1/1 PeekFilter.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 6, after peeking 25"
+before:
+  invokedynamic: 3
+  invokeinterface: 3
+  dup: 6
+  ifne: 1
+after:
+  invokedynamic: 2
+  invokeinterface: 3
+  dup: 8
+  ifne: 2

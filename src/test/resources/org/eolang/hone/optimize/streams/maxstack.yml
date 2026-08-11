@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for #787: the caller's DECLARED max-stack must grow with the state
+# prologue 502 splices in front of the dispatch.
+#
+# The pipeline lives in its own method, whose only stack traffic is the chain
+# itself, so javac sizes max_stack at just 2 — [stream, function] at the map's
+# invokedynamic. That is the tightest possible declaration, and every earlier
+# stateful fixture hides the bug behind a roomier one: `Stream.of(1, 2, ...)`
+# builds its varargs array with dup/index/box before each aastore and so declares
+# 4 or more all by itself.
+#
+# 216 -> 307 folds the distinct into a stateful distill, 401 fuses the preceding
+# map into it, and 502 lowers the pair to one Stream.mapMulti — splicing `new
+# java/util/ArrayList`, `dup`, `invokespecial <init>` and the relocated seen-set
+# append ahead of the dispatch, with the source stream already on the stack. That
+# prologue peaks at 4, two cells above what javac declared. jeo re-emits maxs
+# verbatim (BytecodeMaxs.compute() only fires when both are -1, never true for a
+# disassembled method), so before the fix the class died at load with
+# "VerifyError: Exceeded max stack size" and the run never printed anything —
+# hence "BUILD SUCCESS" and the result line are the assertion that matters here.
+#
+# [1, 2, 2, 3] --map(+1)--> [2, 3, 3, 4] --distinct--> [2, 3, 4] --count()--> 3.
+# `new` goes 0 -> 1: the one allocation is the ArrayList holding the captured
+# state, which is also the proof that 502 fired at all (the seen-set itself comes
+# from the static ConcurrentHashMap.newKeySet() factory, not from a `new`).
+java: |
+  package maxstack;
+  import java.util.List;
+  public class X {
+    static long count(List<Integer> list) {
+      return list.stream().map(x -> x + 1).distinct().count();
+    }
+    public static void main(String[] a) {
+      System.out.printf("The result is %d\n", count(List.of(1, 2, 2, 3)));
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3"
+before:
+  new: 0
+after:
+  new: 1

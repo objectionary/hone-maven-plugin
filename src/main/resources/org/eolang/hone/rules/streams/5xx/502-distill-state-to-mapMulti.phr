@@ -17,6 +17,26 @@
 # It fires only when the state block carries at least one opcode (the
 # leading 𝜏-state-first binding), which is exactly what keeps 501 —
 # matching an empty state — on the stateless path.
+#
+# The spliced prologue is DEEPER than the dispatch it replaces, so the caller's
+# declared max-stack has to grow with it (issue #787). javac sized max_stack for
+# the unfused invokeinterface chain — usually just [stream, function] — while the
+# prologue peaks well above that: with the source stream already on the stack the
+# `new`/`dup` pair alone reaches two cells above it, 307's append (dup;
+# newKeySet; List.add; pop) three, and 308's (the long[1] seed, two slots per
+# push) six. jeo never recomputes maxs — BytecodeMaxs.compute() gives up unless
+# BOTH maxs are -1, which never holds for a method disassembled from an existing
+# class, so BytecodeMethod.write re-emits whatever number was there — and no
+# later rule repairs it either; the "bounded peak" 307 and 308 talk about is
+# their own, not a DECLARED one. Left alone the class dies at load with
+# "Exceeded max stack size". So, exactly as 112 does for its relocated boxing
+# append, this rule splits `maxs` out of 𝐵-method-head and BUMPS max-stack by 6:
+# six covers the deepest state append (308's), the peak of every append is
+# measured from the same [.. stream, list] base no matter how many operators 401
+# fused, and over-allocating max_stack is always verifier-safe. jeo names the two
+# maxs bindings "m1" (max-stack) and "m2" (max-locals), so they are matched by
+# those literal names — a 𝜏- metavariable used as a binding NAME no longer binds
+# to a scalar value (see 112).
 name: distill-state-to-mapMulti
 pattern: |
   ⟦
@@ -30,7 +50,13 @@ pattern: |
     𝐵-class-head-after,
     𝜏-method ↦ ⟦
       φ ↦ Φ.jeo.method,
-      𝐵-method-head,
+      𝐵-method-head-before,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        m1 ↦ 𝑒-max-stack,
+        m2 ↦ 𝑒-max-locals
+      ⟧,
+      𝐵-method-head-after,
       body ↦ ⟦
         𝐵-body-head,
         𝜏-distill ↦ ⟦
@@ -68,7 +94,13 @@ result: |
     𝐵-class-head-after,
     𝜏-method ↦ ⟦
       φ ↦ Φ.jeo.method,
-      𝐵-method-head,
+      𝐵-method-head-before,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        m1 ↦ 𝑒-bumped-stack,
+        m2 ↦ 𝑒-max-locals
+      ⟧,
+      𝐵-method-head-after,
       body ↦ ⟦
         𝐵-body-head,
         𝜏-new-list ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/ArrayList" ⟧,
@@ -114,6 +146,14 @@ result: |
     ρ ↦ ∅
   ⟧
 where:
+  # Six is the peak of the deepest state append, 308's: from [.. list] it goes
+  # iconst_1, newarray, dup, iconst_0, <2-slot count push> before lastore
+  # collapses it back. 307's is three and the leading new/dup pair is two, so one
+  # bump covers them all, however many appends 401 fused into this distill —
+  # every append starts and ends at [.. list].
+  - meta: 𝑒-bumped-stack
+    function: sum
+    args: [𝑒-max-stack, '6']
   - meta: 𝜏-distill-lambda
     function: random-tau
   - meta: 𝜏-new-list

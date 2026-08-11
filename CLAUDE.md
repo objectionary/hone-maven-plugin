@@ -113,9 +113,9 @@ emits one pipeline per class, seeded by its index, and the test compiles them,
 runs them, optimizes them, runs them again, and compares what the two runs
 printed line by line. A seed is the whole reproduction — `new RandomPipeline(7L)
 .java("random", "P0007")` prints the very class that failed, ready to paste into
-a `.yml` fixture once the defect is understood. Raise `PIPELINES` in the test to
-generate more of them; the pipeline count is the number of `javac`-verified
-programs, not the number of Maven builds, so it costs little.
+a `.yml` fixture once the defect is understood. Pass
+`-Dhone.random.pipelines=50` to generate more of them; the count is the number
+of `javac`-verified programs, not the number of Maven builds, so it costs little.
 
 ## Tools to keep on hand
 

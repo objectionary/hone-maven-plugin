@@ -12,6 +12,7 @@ import com.yegor256.MktmpResolver;
 import com.yegor256.Result;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.tools.ToolProvider;
 import org.cactoos.io.ResourceOf;
 import org.cactoos.iterable.Mapped;
 import org.cactoos.text.IoCheckedText;
@@ -52,13 +54,6 @@ import org.yaml.snakeyaml.Yaml;
 @ExtendWith(MktmpResolver.class)
 @SuppressWarnings("PMD.GodClass")
 final class OptimizeMojoTest {
-
-    /**
-     * How many random pipelines the differential test generates, one per class.
-     * Raise it with {@code -Dhone.random.pipelines=50} to search harder; the
-     * count is the number of generated programs, not the number of builds.
-     */
-    private static final int PIPELINES = Integer.getInteger("hone.random.pipelines", 24);
 
     @Test
     void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
@@ -1298,16 +1293,78 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void repeatsTheSamePipelineOnTheSameSeed() {
+        MatcherAssert.assertThat(
+            "the same seed must produce the very same class, or a failure found once is lost",
+            new RandomPipeline(42L).java("same", "X"),
+            Matchers.equalTo(new RandomPipeline(42L).java("same", "X"))
+        );
+    }
+
+    @Test
+    void walksElsewhereOnAnotherSeed() {
+        MatcherAssert.assertThat(
+            "two seeds must not walk the grammar the same way",
+            new RandomPipeline(1L).java("other", "X"),
+            Matchers.not(Matchers.equalTo(new RandomPipeline(2L).java("other", "X")))
+        );
+    }
+
+    @Test
+    void countsElementsOnlyWhenTheTerminalWalksThemAll() {
+        final List<String> peeked = new ArrayList<>(0);
+        for (int seed = 0; seed < 24; ++seed) {
+            final String java = new RandomPipeline(seed).java("counted", "X");
+            if (java.contains(".peek(") && java.contains(".count()")) {
+                peeked.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "a peek must not sit in front of count(), which may skip the traversal",
+            peeked,
+            Matchers.empty()
+        );
+    }
+
+    @Test
+    void generatesPipelinesThatCompile(@Mktmp final Path dir) throws IOException {
+        final List<String> files = new ArrayList<>(0);
+        for (int seed = 0; seed < 24; ++seed) {
+            final String name = String.format("P%04d", seed);
+            final Path java = dir.resolve(String.format("%s.java", name));
+            Files.write(
+                java,
+                new RandomPipeline(seed).java("compiled", name).getBytes(StandardCharsets.UTF_8)
+            );
+            files.add(java.toString());
+        }
+        final ByteArrayOutputStream errors = new ByteArrayOutputStream();
+        final List<String> args = new ArrayList<>(0);
+        args.add("-d");
+        args.add(dir.toString());
+        args.addAll(files);
+        ToolProvider.getSystemJavaCompiler().run(
+            null, null, errors, args.toArray(new String[0])
+        );
+        MatcherAssert.assertThat(
+            "every generated class must compile, or the grammar is not typed",
+            new String(errors.toByteArray(), StandardCharsets.UTF_8),
+            Matchers.emptyString()
+        );
+    }
+
+    @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @Timeout(1200L)
     @DisabledWithoutDocker
     void preservesWhatRandomPipelinesPrint(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
+        final int pipelines = Integer.getInteger("hone.random.pipelines", 24);
         new Farea(home).together(
             f -> {
                 f.clean();
-                for (int seed = 0; seed < OptimizeMojoTest.PIPELINES; ++seed) {
+                for (int seed = 0; seed < pipelines; ++seed) {
                     final String name = String.format("P%04d", seed);
                     f.files()
                         .file(String.format("src/main/java/random/%s.java", name))
@@ -1334,7 +1391,7 @@ final class OptimizeMojoTest {
                     RequisiteMatcher.SUCCESS
                 );
                 int rewritten = 0;
-                for (int seed = 0; seed < OptimizeMojoTest.PIPELINES; ++seed) {
+                for (int seed = 0; seed < pipelines; ++seed) {
                     final String klass = String.format("random/P%04d.class", seed);
                     if (!Arrays.equals(
                         Files.readAllBytes(home.resolve("target/classes").resolve(klass)),
@@ -1348,13 +1405,13 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     String.format(
                         "at least one of the %d pipelines must be rewritten, or the experiment proves nothing",
-                        OptimizeMojoTest.PIPELINES
+                        pipelines
                     ),
                     rewritten,
                     Matchers.greaterThan(0)
                 );
                 final List<String> broken = new ArrayList<>(0);
-                for (int seed = 0; seed < OptimizeMojoTest.PIPELINES; ++seed) {
+                for (int seed = 0; seed < pipelines; ++seed) {
                     final String name = String.format("P%04d", seed);
                     final Result before = OptimizeMojoTest.runs(
                         home, "target/classes-before-hone", name
@@ -1370,7 +1427,7 @@ final class OptimizeMojoTest {
                 MatcherAssert.assertThat(
                     String.format(
                         "optimization must not change what a pipeline prints, %d of %d did",
-                        broken.size(), OptimizeMojoTest.PIPELINES
+                        broken.size(), pipelines
                     ),
                     broken,
                     Matchers.empty()

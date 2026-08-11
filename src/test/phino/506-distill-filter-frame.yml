@@ -9,12 +9,12 @@
 # that stayed boxed — has a PRIMITIVE predicate (J)Z and a WRAPPER bridge-input
 # Ljava/lang/Long;, so 506 claims it; 412 has promoted `returned` to that same
 # wrapper, so the survivor (the wrapper the dup kept) is declared as a one-slot
-# java/lang/Long. 507 (the fallback) is also listed but sees no marker left.
+# java/lang/Long. 509 (the fallback) is also listed but sees no marker left.
 # Scoped to a Φ.hone.distill-lambda WITHOUT `captured`, so stateful keep-labels
 # stay with 503/504.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
-  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/509-distill-filter-frame-fallback.phr
 input: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,

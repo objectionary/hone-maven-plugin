@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A map that changes the element type, fused in front of a filter — the shape
+# #794 reports. The fused body mints the element with the map's invokestatic,
+# the filter's guard `dup` copies it and the predicate eats the copy, so the
+# survivor at the keep-label is the map's result. Before 507 the keep-frame was
+# derived from the distill's bridge-input, which still names what the distill
+# RECEIVED (Ljava/lang/Long; for the first pipeline), and the optimized class
+# died at load time with "Inconsistent stackmap frames at branch target: Type
+# 'java/lang/String' is not assignable to 'java/lang/Long'". Both pipelines are
+# ordinary code, which is the point: nothing exotic is needed to reach the gap.
+#
+#   * long-to-String — Object::toString over a Stream<Long>, so the element
+#     enters the distill as a Long and reaches the predicate as a String:
+#     5, 30, 60 -> "5", "30", "60" -> length > 1 keeps two, count = 2.
+#   * String-to-String — the control: toUpperCase keeps the element type, so
+#     the old bridge-input frame happened to be right here and this half of the
+#     pack passed all along. "alpha", "", "beta" -> upper-cased -> non-empty
+#     -> findFirst = ALPHA.
+# The `after` counts are left unasserted on purpose: this pack exists to prove
+# the optimized class VERIFIES and still computes the right answer, which the
+# printed line asserts end to end.
+java: |
+  package mappedfilter;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long kept = Stream.of(5L, 30L, 60L)
+        .map(Object::toString)
+        .filter(s -> s.length() > 1)
+        .count();
+      String first = Stream.of("alpha", "", "beta")
+        .map(String::toUpperCase)
+        .filter(s -> !s.isEmpty())
+        .findFirst()
+        .orElse("none");
+      System.out.printf("The result is %d/%s\n", kept, first);
+    }
+  }
+# The production default grep-in would already select this class via its `map`
+# and `filter` tokens, but the pack opts the pre-filter off with `.*` so it
+# stays decoupled from the exact set of method names the default includes.
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 2/ALPHA"

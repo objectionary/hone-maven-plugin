@@ -29,7 +29,9 @@
 # Every other marker — an OBJECT-predicate filter such as a boxed-roundtrip
 # `(Ljava/lang/Integer;)Z`, whose survivor IS bridge-input even though trailing
 # maps make `returned` a different (re-boxed or primitive) type — falls through
-# to 507, which derives from bridge-input. A same-locals-1 frame is enough — a
+# to 507, which claims the ones whose element a fused map minted one opcode
+# earlier and derives them from that map's return type, and then to 509, which
+# derives from bridge-input. A same-locals-1 frame is enough — a
 # stateless wrapper owns no per-call counter. Scoped to a distill-lambda WITHOUT
 # `captured`, so stateful keep-labels stay with 503/504.
 name: distill-filter-frame

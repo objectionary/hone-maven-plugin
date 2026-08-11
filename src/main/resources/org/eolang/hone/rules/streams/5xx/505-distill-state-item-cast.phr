@@ -34,12 +34,13 @@
 # method), applied at fixpoint — a checkcast it already inserted now sits
 # between the frame and the invoke, so the adjacency does not re-match.
 #
-# Limitation: only the FIRST typed op directly after the (last) guard is
-# reached, which is exactly the boxed()/mapToX-after-distinct/skip shape #649
-# reports. A filter or peek wedged between the guard and the boxing tail opens
-# its body with a dup, breaking the frame → invokestatic adjacency; narrowing
-# through that interleaving is a follow-up puzzle on the same shared-state
-# channel.
+# Scope: only the FIRST typed op directly after the (last) guard is reached,
+# which is exactly the boxed()/mapToX-after-distinct/skip shape #649 reports. A
+# filter wedged between the guard and the typed tail opens its body with a dup
+# (spliced by 283, or by 431 after a fuse), breaking the frame → invokestatic
+# adjacency this rule anchors on; 508 is the twin that matches that
+# interleaving and casts in front of the dup, so both copies of the item are
+# narrowed (#788).
 name: distill-state-item-cast
 pattern: |
   ⟦

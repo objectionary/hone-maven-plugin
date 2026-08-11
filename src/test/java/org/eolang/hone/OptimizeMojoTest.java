@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -51,6 +52,13 @@ import org.yaml.snakeyaml.Yaml;
 @ExtendWith(MktmpResolver.class)
 @SuppressWarnings("PMD.GodClass")
 final class OptimizeMojoTest {
+
+    /**
+     * How many random pipelines the differential test generates, one per class.
+     * Raise it with {@code -Dhone.random.pipelines=50} to search harder; the
+     * count is the number of generated programs, not the number of builds.
+     */
+    private static final int PIPELINES = Integer.getInteger("hone.random.pipelines", 12);
 
     @Test
     void skipsOptimizationOnFlag(@Mktmp final Path dir) throws Exception {
@@ -255,6 +263,56 @@ final class OptimizeMojoTest {
                 .collect(Collectors.toList());
         }
         return packs.stream();
+    }
+
+    /**
+     * What the two runs of one pipeline disagree about.
+     * @param before The run of the class as {@code javac} left it
+     * @param after The run of the same class after optimization
+     * @param java The source of the class, printed when there is a complaint
+     * @param name The name of the class
+     * @return The complaint, or an empty string when the two runs agree
+     */
+    private static String differs(final Result before, final Result after,
+        final String java, final String name) {
+        final String complaint;
+        if (before.code() == 0 && after.code() == 0
+            && before.stdout().equals(after.stdout())) {
+            complaint = "";
+        } else if (before.code() == 0 && after.code() == 0) {
+            complaint = String.format(
+                "%s printed '%s' before optimization and '%s' after it:%n%s",
+                name, before.stdout().trim(), after.stdout().trim(), java
+            );
+        } else if (before.code() == 0) {
+            complaint = String.format(
+                "%s cannot run after optimization:%n%s%n%s", name, java, after.stderr()
+            );
+        } else {
+            complaint = String.format(
+                "%s cannot run before optimization, so the grammar is broken:%n%s%n%s",
+                name, java, before.stderr()
+            );
+        }
+        return complaint;
+    }
+
+    /**
+     * Run one class of the fake project, in the JVM that runs this test.
+     * @param home The root of the fake Maven project
+     * @param dir The directory with compiled classes, relative to the root
+     * @param name The name of the class in the {@code random} package
+     * @return What the JVM printed and the code it exited with
+     * @throws IOException If the JVM cannot be started
+     */
+    private static Result runs(final Path home, final String dir, final String name)
+        throws IOException {
+        return new Jaxec(
+            Paths.get(System.getProperty("java.home"), "bin", "java").toString(),
+            "-cp",
+            home.resolve(dir).toString(),
+            String.format("random.%s", name)
+        ).withCheck(false).execUnsafe();
     }
 
     /**
@@ -1234,6 +1292,88 @@ final class OptimizeMojoTest {
                     "the build must be successful",
                     f.log(),
                     RequisiteMatcher.SUCCESS
+                );
+            }
+        );
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(1200L)
+    @DisabledWithoutDocker
+    void preservesWhatRandomPipelinesPrint(@Mktmp final Path home,
+        @RandomImage final String image) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                for (int seed = 0; seed < OptimizeMojoTest.PIPELINES; ++seed) {
+                    final String name = String.format("P%04d", seed);
+                    f.files()
+                        .file(String.format("src/main/java/random/%s.java", name))
+                        .write(
+                            new RandomPipeline(seed)
+                                .java("random", name)
+                                .getBytes(StandardCharsets.UTF_8)
+                        );
+                }
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("build", "optimize")
+                    .configuration()
+                    .set("rules", "streams/*")
+                    .set("grepIn", ".*")
+                    .set("image", image);
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "the build of the random pipelines must be successful",
+                    f.log(),
+                    RequisiteMatcher.SUCCESS
+                );
+                int rewritten = 0;
+                for (int seed = 0; seed < OptimizeMojoTest.PIPELINES; ++seed) {
+                    final String klass = String.format("random/P%04d.class", seed);
+                    if (!Arrays.equals(
+                        Files.readAllBytes(home.resolve("target/classes").resolve(klass)),
+                        Files.readAllBytes(
+                            home.resolve("target/classes-before-hone").resolve(klass)
+                        )
+                    )) {
+                        rewritten += 1;
+                    }
+                }
+                MatcherAssert.assertThat(
+                    String.format(
+                        "at least one of the %d pipelines must be rewritten, or the experiment proves nothing",
+                        OptimizeMojoTest.PIPELINES
+                    ),
+                    rewritten,
+                    Matchers.greaterThan(0)
+                );
+                final List<String> broken = new ArrayList<>(0);
+                for (int seed = 0; seed < OptimizeMojoTest.PIPELINES; ++seed) {
+                    final String name = String.format("P%04d", seed);
+                    final Result before = OptimizeMojoTest.runs(
+                        home, "target/classes-before-hone", name
+                    );
+                    final Result after = OptimizeMojoTest.runs(home, "target/classes", name);
+                    final String complaint = OptimizeMojoTest.differs(
+                        before, after, new RandomPipeline(seed).java("random", name), name
+                    );
+                    if (!complaint.isEmpty()) {
+                        broken.add(complaint);
+                    }
+                }
+                MatcherAssert.assertThat(
+                    String.format(
+                        "optimization must not change what a pipeline prints, %d of %d did",
+                        broken.size(), OptimizeMojoTest.PIPELINES
+                    ),
+                    broken,
+                    Matchers.empty()
                 );
             }
         );

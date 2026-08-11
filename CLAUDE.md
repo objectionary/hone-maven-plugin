@@ -20,6 +20,7 @@ rule, how to test, and what to avoid*.
 | Mojo with all user-facing knobs      | `src/main/java/org/eolang/hone/OptimizeMojo.java`                     |
 | End-to-end test fixtures             | `src/test/resources/org/eolang/hone/optimize/streams/*.yml`           |
 | Single-rule unit tests               | `src/test/phino/*.yml`                                                |
+| Random pipeline generator            | `src/test/java/org/eolang/hone/RandomPipeline.java`                   |
 <!-- markdownlint-enable MD013 -->
 
 ## How to add a new rule
@@ -103,6 +104,18 @@ mvn -Pdeep test
 
 when verifying a rule change; the `deep` profile clears `excludedGroups` so
 every `@Tag("deep")` test runs against the real `phino` binary on the host.
+
+Every fixture under `optimize/streams/` is a pipeline somebody wrote on
+purpose, which makes the suite evidence about the shapes we thought of and
+nothing at all about the rest. `OptimizeMojoTest#preservesWhatRandomPipelinesPrint`
+covers the rest: `RandomPipeline` walks a typed grammar of the Stream API and
+emits one pipeline per class, seeded by its index, and the test compiles them,
+runs them, optimizes them, runs them again, and compares what the two runs
+printed line by line. A seed is the whole reproduction — `new RandomPipeline(7L)
+.java("random", "P0007")` prints the very class that failed, ready to paste into
+a `.yml` fixture once the defect is understood. Raise `PIPELINES` in the test to
+generate more of them; the pipeline count is the number of `javac`-verified
+programs, not the number of Maven builds, so it costs little.
 
 ## Tools to keep on hand
 

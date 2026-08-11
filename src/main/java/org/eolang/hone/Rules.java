@@ -79,8 +79,10 @@ final class Rules {
 
     /**
      * Get the YAML file names for all matching rules.
+     *
      * <p>For example, if rules are defined as "n*,33-to-42",
      * this method will return "none.yml 33-to-42.yml".</p>
+     *
      * @return Iterable of YAML file names for matching rules
      */
     Iterable<String> yamls() {

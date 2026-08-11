@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A filter riding a pipeline that a distinct() or a skip() leads — the shape
+# #788 reports. distinct and skip erase the element type, so the fused stateful
+# distill carries bridge-input ↦ Ljava/lang/Object; and 503 frames the guard's
+# keep-label as Object; the filter behind it opens with a `dup` (283 splices it
+# so the predicate has a copy to eat and the keep path still sees the item) and
+# then invokes the desugared predicate, an (Ljava/lang/String;)Z handle for a
+# String element. That dup breaks the frame → invokestatic adjacency 505
+# anchors on, so before 508 no cast was spliced, the erased Object reached the
+# predicate, and the optimized class died in the verifier with "Bad type on
+# operand stack: Type 'java/lang/Object' is not assignable to
+# 'java/lang/String'". 508 now splices a `checkcast java/lang/String` between
+# the frame and the dup, narrowing BOTH copies of the item — the one the
+# predicate consumes and the one that survives on the keep path.
+#
+# Both pipelines the issue reports are here, one per stateful head:
+#   * distinct-led — takeWhile() is a fusion barrier (short-circuiting, never
+#     fused), so distinct heads the fused run: distinct + filter + map collapse
+#     into one mapMulti. of("alpha","beta","alpha") -> distinct -> alpha, beta
+#     -> all non-empty -> upper-cased -> findFirst = ALPHA.
+#   * skip-led — skip(1) drops 1.5, mapToObj stringifies the rest, distinct
+#     heads the fused run again: "2.25", "1.5" -> length > 3 keeps "2.25" only,
+#     count = 1.
+# The `after` counts are left unasserted on purpose: this pack exists to prove
+# the optimized class VERIFIES and still computes the right answer, which the
+# printed line asserts end to end.
+java: |
+  package statefulfiltertail;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      String first = Stream.of("alpha", "beta", "alpha")
+        .takeWhile(s -> s.length() < 12)
+        .distinct()
+        .filter(s -> !s.isEmpty())
+        .map(String::toUpperCase)
+        .findFirst()
+        .orElse("none");
+      long kept = DoubleStream.of(1.5, 2.25, 1.5)
+        .skip(1L)
+        .mapToObj(Double::toString)
+        .distinct()
+        .filter(s -> s.length() > 3)
+        .count();
+      System.out.printf("The result is %s/%d\n", first, kept);
+    }
+  }
+# The production default grep-in (see #449/#671/#705) would already select this
+# class via its `filter`, `map` and `distinct` tokens, but the pack opts the
+# pre-filter off with `.*` so it stays decoupled from the exact set of method
+# names the default happens to include.
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is ALPHA/1"

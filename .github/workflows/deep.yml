@@ -31,7 +31,8 @@ jobs:
           subnet-id: ${{ secrets.AWS_SUBNET }}
           security-group-id: ${{ secrets.AWS_SGROUP }}
   deep:
-    runs-on: ubuntu-24.04
+    needs: start-instance
+    runs-on: ${{ needs.start-instance.outputs.label }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7

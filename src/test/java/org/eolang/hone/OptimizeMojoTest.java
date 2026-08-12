@@ -1311,9 +1311,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void countsElementsOnlyWhenTheTerminalWalksThemAll() {
+    void avoidsAPeekInFrontOfCount() {
         final List<String> peeked = new ArrayList<>(0);
-        for (int seed = 0; seed < 24; ++seed) {
+        for (int seed = 0; seed < 500; ++seed) {
             final String java = new RandomPipeline(seed).java("counted", "X");
             if (java.contains(".peek(") && java.contains(".count()")) {
                 peeked.add(java);
@@ -1327,9 +1327,28 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void reachesEveryProductionOfTheGrammar() {
+        final StringBuilder walked = new StringBuilder();
+        for (int seed = 0; seed < 500; ++seed) {
+            walked.append(new RandomPipeline(seed).java("reached", "X"));
+        }
+        final List<String> missed = new ArrayList<>(0);
+        for (final String fragment : RandomPipeline.productions()) {
+            if (!walked.toString().contains(RandomPipeline.fragment(fragment))) {
+                missed.add(fragment);
+            }
+        }
+        MatcherAssert.assertThat(
+            "every production must be reachable, or the grammar promises more than it walks",
+            missed,
+            Matchers.empty()
+        );
+    }
+
+    @Test
     void generatesPipelinesThatCompile(@Mktmp final Path dir) throws IOException {
         final List<String> files = new ArrayList<>(0);
-        for (int seed = 0; seed < 24; ++seed) {
+        for (int seed = 0; seed < 500; ++seed) {
             final String name = String.format("P%04d", seed);
             final Path java = dir.resolve(String.format("%s.java", name));
             Files.write(
@@ -1360,7 +1379,7 @@ final class OptimizeMojoTest {
     @DisabledWithoutDocker
     void preservesWhatRandomPipelinesPrint(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
-        final int pipelines = Integer.getInteger("hone.random.pipelines", 24);
+        final int pipelines = Integer.getInteger("hone.random.pipelines", 120);
         new Farea(home).together(
             f -> {
                 f.clean();

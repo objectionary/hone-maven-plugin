@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 114's stop condition. The input is the state a c-map is left in once every
+# capture has been gathered — `captures` drained to "" — with an `aload 5` still
+# directly in front of it. That aload is NOT a capture: it is the receiver of the
+# pipeline, the `s` of `s.map(n -> …)` when the stream comes out of a local
+# variable rather than a chained call, and it must stay where it is for the
+# operator to have anything to run on.
+#
+# Since the peel takes whatever binding sits in front of the pragma, only the
+# `when` guard tells the two apart. With `captures` empty the guard fails and the
+# rewrite is a no-op: the aload survives and both accumulators stay empty. Without
+# it the rule would append the Stream itself to the shared state List and fetch it
+# back as a capture, handing the operator one argument too many.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/114-c-map-peel-capture.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      s ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 5 ⟧,
+      cm ↦ ⟦
+        φ ↦ Φ.hone.c-map,
+        state-acc ↦ ⟦⟧,
+        body-acc ↦ ⟦⟧,
+        captures ↦ "",
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(Ljava/util/List;Ljava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-x, 𝜏-s ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 5 ⟧, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-cr ⟧, 𝐵-y ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧

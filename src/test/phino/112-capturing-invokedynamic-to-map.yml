@@ -54,5 +54,6 @@ input: |
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-rc-head, captures ↦ "III", 𝐵-rc-tail ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(IIILjava/lang/Integer;)Ljava/lang/Integer;", 𝐵-i ⟧, 𝐵-j ⟧
   - ⟦ 𝐵-k, 𝜏-last ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 2 ⟧, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-l ⟧, 𝐵-m ⟧

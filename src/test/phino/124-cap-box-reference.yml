@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 124 drops the Φ.hone.cap-box marker of a REFERENCE capture: the value is already
+# an Object, so nothing needs to happen before List.add takes it, and the append
+# stays `dup; aload k; List.add; pop`. The int marker in the same state-acc must
+# survive — 123 owns that one, and neither rule waits on the other.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/124-cap-box-reference.phr
+input: |
+  ⟦
+    state-acc ↦ ⟦
+      d1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      l1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
+      b1 ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "Ljava/util/ArrayList;" ⟧,
+      a1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
+      p1 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      l2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧,
+      b2 ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "I" ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, 𝜏-a ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", 𝐵-x ⟧, 𝐵-b ⟧
+  - ⟦ 𝐵-c, 𝜏-b2 ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "I" ⟧, 𝐵-d ⟧

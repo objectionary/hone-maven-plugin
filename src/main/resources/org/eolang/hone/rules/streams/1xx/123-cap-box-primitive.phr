@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Expands the Φ.hone.cap-box marker 114/118 left in a capturing operator's
+# state-acc into the boxing call for a PRIMITIVE capture: `Integer.valueOf(I)`,
+# `Long.valueOf(J)` or `Double.valueOf(D)`, picked by the marker's type code. The
+# shared state is a java/util/List, so a primitive has to become an Object before
+# `List.add` can take it; 125 unboxes it again on the way out.
+#
+# The marker exists so that the peel itself can be ONE rule (see 114's header):
+# phino gives each rule its own fixpoint and the plugin runs a single cycle over
+# the rule list, so a peel split per capture type could only drain a run whose
+# types were already sorted in rule order. This rule carries no such constraint —
+# it rewrites the marker where it stands, at any depth and in any order relative to
+# its siblings 124/125/126, and its own fixpoint clears every primitive marker in
+# the file.
+#
+# A category-2 (J/D) box takes two stack slots, so its append peaks one slot higher
+# than an int's; 112/113 bump the enclosing method's max-stack by 2 whenever the
+# factory descriptor carries a J or D, since jeo never recomputes maxs.
+name: cap-box-primitive
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ 𝑒-code ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokestatic,
+      i2 ↦ 𝑒-owner,
+      i3 ↦ "valueOf",
+      i4 ↦ 𝑒-descriptor,
+      i5 ↦ Φ.false
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  matches: ['^[IJD]$', 𝑒-code]
+where:
+  - meta: 𝑒-owner
+    function: sed
+    args:
+      - 𝑒-code
+      - '"s/^I$/java\\/lang\\/Integer/"'
+      - '"s/^J$/java\\/lang\\/Long/"'
+      - '"s/^D$/java\\/lang\\/Double/"'
+  - meta: 𝑒-descriptor
+    function: sed
+    args:
+      - 𝑒-code
+      - '"s/^I$/(I)Ljava\\/lang\\/Integer;/"'
+      - '"s/^J$/(J)Ljava\\/lang\\/Long;/"'
+      - '"s/^D$/(D)Ljava\\/lang\\/Double;/"'

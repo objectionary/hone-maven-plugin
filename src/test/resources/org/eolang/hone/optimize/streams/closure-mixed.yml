@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that the capture channel is no longer limited to a run of
+# primitives OR one lone reference (issue #668). The first map captures THREE
+# values of two kinds — two references and an int:
+#
+#   Stream.of(...).map(n -> n + base.size() + k + tag.length()).map(n -> n * 2)
+#
+# javac compiles that factory descriptor as
+# "(Ljava/util/List;ILjava/lang/String;)L…Function;" and pushes the captures with
+# `aload 0; iload 1; aload 2` right in front of the indy. Until #668 the interface
+# guard was an `or` of "([IJD]+)" and a lone "(L…;)", so a MIXED run matched
+# neither branch: the map stayed a native invokedynamic and nothing downstream
+# fused. 112 now admits the whole capture alphabet in one guard,
+# "(([IJD]|L[^;]+;)+)", and seeds the pragma's `captures` with the descriptor's
+# parameter list.
+#
+# Draining that run is what the single peel rule is for. 114 takes the pushes
+# right-to-left, dropping the matching code off `captures` each time, so tag is
+# fetched back as java/lang/String and base as java/util/List — the old
+# "first L-type of target.signature" guess would have typed BOTH as List and the
+# class would have died on a ClassCastException at the first element. A peel split
+# per capture type could not have drained this run at all: it would have left
+# `aload 0` and `iload 1` stranded on the stack and the class would fail to verify.
+# 316 folds a stateful distill whose state List holds base (slot 0), the boxed k
+# (slot 1) and tag (slot 2) in descriptor order, 401 fuses it with the following
+# non-capturing map, and 502/512/521/601 emit one Stream.mapMulti.
+#
+# invokedynamic: before = map(capturing) + map + reduce-accumulator lambda = 3;
+# after = the single fused mapMulti + the untouched reduce lambda = 2. The runtime
+# line proves all three captures arrive intact and in the right slots:
+# base.size() == 3, k == 4, tag.length() == 2, so {1,2,3,4,5} -> n+9 ->
+# {10,11,12,13,14} -> *2 -> {20,22,24,26,28} -> sum == 120.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class CMixed {
+    static int run(List<Integer> base, int k, String tag) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n + base.size() + k + tag.length())
+        .map(n -> n * 2)
+        .reduce(0, (a, b) -> a + b);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run(Arrays.asList(7, 8, 9), 4, "ab"));
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 120"

@@ -7,40 +7,59 @@
 # "(III)L…Function;" instead of "()L…Function;") — into a Φ.hone.c-map pragma,
 # the capturing sibling of the Φ.hone.map that 202 produces. 111 is left
 # untouched: its `\(\).+` interface guard matches the zero-capture space, this
-# rule's `\(I+\)…` guard matches the one-or-more-int-capture space, so the two
+# rule's `\((…)+\)` guard matches the one-or-more-capture space, so the two
 # partition the indy population with no overlap.
 #
 # Each capture rides the lambda-metafactory as one extra factory argument.
-# javac pushes them with a run of leaf-loads (`iload k`) immediately before the
-# indy and the indy consumes them to build the Function. This rule does NOT
-# grab those pushes — it leaves the whole run inline before the emitted c-map
-# and seeds two EMPTY accumulators (`state-acc`, `body-acc`). 114 then peels the
-# pushes one at a time (right-to-left, greedy-left makes the match exact),
-# prepending one boxed append to `state-acc` and one fetch+unbox to `body-acc`
-# per capture, so the captures land in the shared state List in left-to-right
-# order. 316 finally assembles the two accumulators into a stateful distill.
+# javac pushes them with a run of leaf-loads (`iload k`, `aload k`, …)
+# immediately before the indy and the indy consumes them to build the Function.
+# This rule does NOT grab those pushes — it leaves the whole run inline before
+# the emitted c-map and seeds two EMPTY accumulators (`state-acc`, `body-acc`).
+# 114 then peels the pushes one at a time, right-to-left (it pins the binding
+# IMMEDIATELY in front of the pragma), prepending one append to `state-acc` and
+# one fetch to `body-acc` per capture, so the captures land in the shared state
+# List in left-to-right order. 316 finally assembles the accumulators into a
+# distill.
 # Treating a capture as "a pointwise operator that owns one slot in the shared
 # state List" is what lets N captures (and any number of fused capturing
 # operators) reuse the distinct/skip machinery (502/512/521/601) verbatim.
 #
-# v1.4 scope (issues #636, #640, #647, #652): the captures admitted are either
-# one OR MORE category-1/2 PRIMITIVE captures (factory descriptor "([IJD]+)L…Function;",
-# every push a constant-index iload/lload/dload, gathered by 114 for int and by
-# its category-2 twins 116/117 for long/double) OR a SINGLE reference capture
-# (factory descriptor "(L…;)L…Function;", push an aload, gathered by the reference
-# branch 115) — the two are partitioned by the `or` in the interface guard, and a
-# mixed int/long/double run is gathered by 114/116/117 interleaving on their own
-# opcode. In both cases the map is type-PRESERVING over ANY reference element type:
-# the SAM instantiated type is matched as "(LX;)LX;" for any reference X (Integer,
-# String, …) via a backreference guard, and the element type X is sed-extracted
-# into 𝑒-bridge and threaded into all four bridge fields. The lambda$ target is a
-# handle-6 static method. So `map(s -> s.repeat(k))` on a Stream<String> (int
-# capture k), `map(n -> (int)(n + x))` capturing a long, and `map(n -> n +
-# base.size())` capturing a List (reference capture) all fuse exactly like the
-# original Stream<Integer> case.
+# v1.5 scope (issues #636, #640, #647, #652, #668): the captures admitted are ANY
+# run of one or more category-1/2 PRIMITIVE captures (I, J, D — every push a
+# constant-index iload/lload/dload) and REFERENCE captures (L…; — an aload),
+# MIXED in any order and any count. The factory descriptor is matched as
+# "(([IJD]|L[^;]+;)+)L…Function;" — one guard over the whole capture alphabet,
+# replacing the primitives-only / single-reference `or` that partitioned the two
+# before #668. Arrays ("[…") stay out. The map is type-PRESERVING over ANY
+# reference element type: the SAM instantiated type is matched as "(LX;)LX;" for
+# any reference X (Integer, String, …) via a backreference guard, and the element
+# type X is sed-extracted into 𝑒-bridge and threaded into all four bridge fields.
+# The lambda$ target is a handle-6 static method. So `map(s -> s.repeat(k))` on a
+# Stream<String> (int capture k), `map(n -> (int)(n + x))` capturing a long,
+# `map(n -> n + base.size())` capturing a List (reference capture) and
+# `map(n -> n + base.size() + prefix.length() + k)` capturing two references and
+# an int all fuse exactly like the original Stream<Integer> case.
 #
-# A category-2 (J/D) capture occupies two stack slots, so the boxing append 116/117
-# relocate into the caller (502) — `dup; lload k; Long.valueOf; List.add; pop` —
+# Admitting a mixed run took more than relaxing this guard. Every peel must know
+# WHICH capture it is taking — a reference's `fetch` carries the class to
+# checkcast back to, a primitive's carries its wrapper — and it must be able to
+# take them in whatever order the descriptor puts them. That is what the
+# `captures` field is for: this rule seeds it with the factory descriptor's
+# parameter list, one code per capture ("Ljava/util/List;ILjava/lang/String;"),
+# and 114 pops the LAST code off per firing, in step with the push it peels. The
+# k-th peel therefore reads the k-th capture from the right, whatever its type,
+# and the field runs dry exactly when the run does.
+#
+# Before #668 the peel was split per capture type and each branch read the class
+# out of target.signature's FIRST L-type — right only for a run holding exactly
+# one reference, hence the old single-reference limit. Worse, a split peel cannot
+# drain a mixed run at all: phino gives each rule its own fixpoint and the plugin
+# runs one cycle over the rule list, so "iload x; aload y" left x stranded in
+# front of a pragma that no longer expected it and the class died with a
+# VerifyError. 114 is one rule for every type for that reason; see its header.
+#
+# A category-2 (J/D) capture occupies two stack slots, so its boxing append —
+# `dup; lload k; Long.valueOf; List.add; pop`, relocated into the caller by 502 —
 # peaks one slot higher than the int append. jeo never recomputes maxs, so this
 # rule BUMPS the enclosing method's max-stack by 2 (a safe over-allocation) whenever
 # the factory descriptor carries a J or D primitive capture; an int-only or a
@@ -54,28 +73,19 @@
 # instantiated type whose input and output differ (e.g. "(LString;)LInteger;"),
 # so those keep flowing through the unbox/box machinery untouched.
 #
-# The multi-capture FILTER is now done (issue #655): 113 lifts a "(I+)L…Predicate;"
-# factory (one OR MORE int captures), the new 118 peels each push into the shared
-# List, and 314 folds it into a stateful distill with the same N-ary park/reload
-# body this rule's 316 gives a capturing map — the keep-frame stays 503's plain
-# Φ.hone.frame-item because the body preserves the item at the BOTTOM of the stack
-# (dup; astore 1; <captures>; aload 1; predicate) so the keep label still sees a
-# lone [item]. So `filter(n -> n > lo && n < hi)` fuses exactly like the int
-# multi-capture map; see the multiFil case in streams/closures.yml.
-#
-# The reference-capture FILTER is now done (issue #659): 113's interface guard also
-# admits a "(L…;)L…Predicate;" factory (a SINGLE reference capture), the new 119 peels
-# the lone aload into the shared List with no box/unbox (the cp-filter mirror of 115),
-# and 314 folds it into a stateful distill with the same N-ary park/reload body — so
-# `filter(n -> base.contains(n))` fuses exactly like the reference-capture map.
-#
-# The category-2 (J/D) capture FILTER is now done (issue #661): 113's relaxed
-# "([IJD]+)L…Predicate;" interface guard admits one or more long/double captures and
-# bumps the caller max-stack by 2 exactly as this rule does for the map, the new 120
-# / 122 peel the lload/dload pushes with Long/Double box/unbox (the cp-filter mirrors
-# of 116/117), and 314 folds them into a stateful distill with the same N-ary
-# park/reload body — so `filter(n -> n > x)` over a captured long fuses exactly like
-# the category-2 map; see streams/closure-long-filter.yml.
+# The capturing FILTER (issues #655, #659, #661, #668) is this rule's mirror all
+# the way down: 113 lifts a "(([IJD]|L[^;]+;)+)L…Predicate;" factory into a
+# Φ.hone.cp-filter with the same `captures` channel, 118 peels the run with the
+# same one-rule-per-run peel, 123-126 expand the same markers, and 314 folds the
+# result into a stateful distill with the same N-ary park/reload body 316 gives a
+# capturing map. The keep-frame stays 503's plain Φ.hone.frame-item because the
+# body preserves the item at the BOTTOM of the stack (dup; astore 1; <captures>;
+# aload 1; predicate), so the keep label still sees a lone [item]. So
+# `filter(n -> n > lo && n < hi)` (two ints, the multiFil case in
+# streams/closures.yml), `filter(n -> base.contains(n))` (a reference),
+# `filter(n -> n > x)` over a captured long (streams/closure-long-filter.yml) and
+# `filter(n -> base.contains(n) && n > lo)` (mixed) all fuse on exactly the terms
+# their map counterparts do.
 #
 # A LONE capturing operator — one that finds no neighbour to fuse with at 401 and so
 # survives the 4xx pass as a stand-alone stateful distill — is uniformly lowered to a
@@ -87,12 +97,6 @@
 # needs no special casing — and it sidesteps the phino lone-vs-fused discrimination
 # problem (objectionary/phino#747) entirely, since we never need to tell a lone
 # distill from a fused one.
-#
-# @todo #665:45min Generalise the CAPTURE channel further: a MIXED multi-capture
-#  run that contains a reference (only a SINGLE lone reference is admitted today,
-#  in both the map (115) and the filter (119), because each reads the capture type
-#  out of target.signature's first L-type — a multi-reference run needs positional
-#  type extraction). This part is independent of phino and still doable here.
 name: capturing-invokedynamic-to-map
 pattern: |
   ⟦
@@ -210,6 +214,7 @@ result: |
           φ ↦ Φ.hone.c-map,
           state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          captures ↦ 𝑒-captures,
           class ↦ 𝑒-class,
           bridge-input ↦ 𝑒-bridge,
           bridge-output ↦ 𝑒-bridge,
@@ -237,13 +242,9 @@ when:
     - matches:
         - 'lambda\$.+'
         - 𝑒-target-method
-    - or:
-        - matches:
-            - '\([IJD]+\)Ljava/util/function/Function;'
-            - 𝑒-interface
-        - matches:
-            - '\(L[^;]+;\)Ljava/util/function/Function;'
-            - 𝑒-interface
+    - matches:
+        - '\(([IJD]|L[^;]+;)+\)Ljava/util/function/Function;'
+        - 𝑒-interface
     - matches:
         - '\((L[^;]+;)\)\1'
         - 𝑒-instantiated
@@ -254,8 +255,19 @@ where:
       - 𝑒-instantiated
       - '"s/[(]//"'
       - '"s/[)].*//"'
+  # The factory descriptor's parameter list — one code per capture, in descriptor
+  # order ("Ljava/util/List;ID") — threaded onto the pragma so 114 knows the type of
+  # each capture it peels POSITIONALLY instead of guessing it from
+  # target.signature's first L-type. Just the parens stripped: 114 tokenises the
+  # codes off the right end one at a time.
+  - meta: 𝑒-captures
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
   # Bump the caller max-stack by 2 when a category-2 (J/D) primitive capture is
-  # present (its relocated 2-slot boxing append, 116/117, peaks one slot higher
+  # present (its relocated 2-slot boxing append, 123, peaks one slot higher
   # than an int append); an int-only or reference capture bumps by 0. 𝑒-cap-params
   # isolates the factory descriptor's parameter codes and drops every object type
   # ("L…;"), leaving only the primitive capture codes, so a J or D there means a

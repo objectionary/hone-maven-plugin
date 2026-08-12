@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The body-side twin of 123: expands the Φ.hone.cap-fetch marker 114/118 left in a
+# capturing operator's body-acc into the pair that reads a PRIMITIVE capture back
+# out of the shared state List — a Φ.hone.fetch typed with the wrapper class, then
+# the unboxing call that undoes 123's valueOf (`intValue`, `longValue` or
+# `doubleValue`, picked by the marker's type code).
+#
+# 521 later turns the fetch itself into `List.get(counter++)` plus a checkcast to
+# that wrapper, so the unboxing call always has the right receiver on the stack.
+# Like its siblings this rule rewrites the marker where it stands, so it is free of
+# any ordering relation to 123/124/126.
+name: cap-fetch-primitive
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ 𝑒-code ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-owner ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokevirtual,
+      i1 ↦ 𝑒-owner,
+      i2 ↦ 𝑒-method,
+      i3 ↦ 𝑒-descriptor,
+      i4 ↦ Φ.false
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  matches: ['^[IJD]$', 𝑒-code]
+where:
+  - meta: 𝑒-owner
+    function: sed
+    args:
+      - 𝑒-code
+      - '"s/^I$/java\\/lang\\/Integer/"'
+      - '"s/^J$/java\\/lang\\/Long/"'
+      - '"s/^D$/java\\/lang\\/Double/"'
+  - meta: 𝑒-method
+    function: sed
+    args:
+      - 𝑒-code
+      - '"s/^I$/intValue/"'
+      - '"s/^J$/longValue/"'
+      - '"s/^D$/doubleValue/"'
+  - meta: 𝑒-descriptor
+    function: sed
+    args:
+      - 𝑒-code
+      - '"s/^([IJD])$/()$1/"'
+  - meta: 𝜏-unbox
+    function: random-tau

@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The reference half of 125: a captured REFERENCE went into the shared state List
+# unboxed, so reading it back needs no unboxing call — the Φ.hone.cap-fetch marker
+# becomes a bare Φ.hone.fetch and nothing else.
+#
+# The fetch's `type` is the captured object's class, sed-extracted from the marker's
+# "L…;" descriptor: 521 turns the fetch into `List.get(counter++)` followed by a
+# checkcast to exactly that class, which is what puts the reference back on the
+# stack with the type the static lambda$ declares for that parameter.
+#
+# This is where the positional capture channel pays off (issue #668). The code in
+# the marker is the one 114/118 took off the END of `captures` in the same firing
+# that peeled the push, so it is the class of THAT capture, whatever else the run
+# holds. Reading target.signature's first L-type instead — what the dedicated
+# reference peel did before — is only right when the run holds exactly one
+# reference, which is why mixed and multi-reference runs were declined outright.
+name: cap-fetch-reference
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ 𝑒-code ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-type ⟧,
+    𝐵-after
+  ⟧
+when:
+  matches: ['^L[^;]*;$', 𝑒-code]
+where:
+  - meta: 𝑒-type
+    function: sed
+    args:
+      - 𝑒-code
+      - '"s/^L//"'
+      - '"s/;$//"'

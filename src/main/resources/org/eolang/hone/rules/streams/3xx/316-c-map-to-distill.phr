@@ -11,12 +11,18 @@
 # capturing operators fuse by 401's blind state+body join exactly like two
 # distincts.
 #
-# 114 has already assembled both halves into the c-map's accumulators:
-#   state-acc — one `dup; iload k; Integer.valueOf; List.add; pop` per capture,
-#               in left-to-right order (slot 0 = first capture); it becomes the
+# 114 has already assembled both halves into the c-map's accumulators, and 123-126
+# have expanded the type markers it left behind:
+#   state-acc — one `dup; <push>; [box]; List.add; pop` per capture, in
+#               left-to-right order (slot 0 = first capture); it becomes the
 #               distill `state` verbatim.
-#   body-acc  — one `fetch; intValue` per capture (521 later turns each fetch
-#               into List.get(counter++); the intValue unboxes it).
+#   body-acc  — one `fetch` per capture, followed by the unboxing call when the
+#               capture is a primitive (521 later turns each fetch into
+#               List.get(counter++) plus a checkcast).
+# The third field 112 seeds, `captures`, is the peel's own bookkeeping — the codes
+# 114 has yet to gather, drained to "" by the time the run is gone — so this rule
+# binds it only to drop it: a distill carries no captures of its own, just state
+# and body.
 # This rule wraps body-acc into the auto emit-shape (one item in, one item out):
 #   astore 1            park the incoming item in its own (now-dead) param slot
 #   <body-acc>          push capture 0, 1, … N-1 as ints
@@ -34,6 +40,7 @@ pattern: |
     φ ↦ Φ.hone.c-map,
     state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
     body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+    captures ↦ 𝑒-captures,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,

@@ -53,6 +53,7 @@ input: |
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-rc-head, captures ↦ "I", 𝐵-rc-tail ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-a, bridge-input ↦ "Ljava/lang/String;", 𝐵-b ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-c, bridge-output ↦ "Ljava/lang/String;", 𝐵-d ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(ILjava/lang/String;)Ljava/lang/String;", 𝐵-i ⟧, 𝐵-j ⟧

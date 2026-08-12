@@ -9,11 +9,12 @@
 #
 # The first map captures `base`, so javac compiles its factory descriptor as
 # "(Ljava/util/List;)L…Function;" and its SAM instantiated type as the
-# type-preserving "(Ljava/lang/Integer;)Ljava/lang/Integer;". 112's new "(L…;)"
-# interface-guard branch admits the single reference capture and lifts it to a
-# Φ.hone.c-map; 115 peels the lone `aload` push, appending the List to the shared
-# state List WITHOUT a box (a reference is already an Object) and reading it back
-# via a `fetch` typed java/util/List (no unbox). 316 folds a stateful distill and
+# type-preserving "(Ljava/lang/Integer;)Ljava/lang/Integer;". The "L…;" alternative
+# of 112's capture-alphabet guard admits the reference capture and lifts it to a
+# Φ.hone.c-map; 114 peels the lone `aload` push, appending the List to the shared
+# state List WITHOUT a box (a reference is already an Object, so 124 drops the box
+# marker) and reading it back via a `fetch` typed java/util/List (126, no unbox).
+# 316 folds a stateful distill and
 # 401 fuses it with the following NON-capturing map (n -> n * 2, empty state).
 # 502/512/521/601 emit one Stream.mapMulti whose wrapper reads the captured List
 # back and calls List.size() per element — the whole stateful machinery reused

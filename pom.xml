@@ -342,6 +342,34 @@
       </plugin>
     </plugins>
   </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <!--
+        The parent POM pins this version only inside its "site"
+        profile, while the site plugin adds the report by default,
+        without a version
+        -->
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>3.9.0</version>
+      </plugin>
+      <plugin>
+        <!--
+        Generates plugin-info.html, which the "Goals" menu item
+        in src/site/site.xml points to
+        -->
+        <artifactId>maven-plugin-report-plugin</artifactId>
+        <version>3.15.2</version>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>report</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+    </plugins>
+  </reporting>
   <profiles>
     <profile>
       <id>self</id>

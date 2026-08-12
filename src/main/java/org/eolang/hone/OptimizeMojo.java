@@ -97,6 +97,7 @@ public final class OptimizeMojo extends AbstractMojo {
         "peek",
         "distinct",
         "skip",
+        "dropWhile",
         "flatMap",
         "flatMapToInt",
         "flatMapToLong",

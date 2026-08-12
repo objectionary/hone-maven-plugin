@@ -12,7 +12,7 @@
 # Consumer call and hands the next stage a single item — exactly what a map
 # or a filter hands over. Without this rule a `.peek(...).filter(...)` pair
 # reached 4xx with no guard at all, 401 fused it into a distill that
-# inherited the HEAD's `start ↦ "peek"`, and 431 — which only ever sees
+# inherited the HEAD's `start ↦ "peek"`, and 413 — which only ever sees
 # `start ↦ "filter"` — could no longer put the guard in. The predicate then
 # ate the only item and the keep label was reached with an empty stack,
 # against a frame promising the element: VerifyError at link time.

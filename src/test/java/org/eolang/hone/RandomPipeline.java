@@ -34,13 +34,21 @@ import java.util.Random;
  * the API allows to skip the traversal altogether.</p>
  *
  * <p>The grammar does not step around the operations that the rewrite has been
- * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804
- * and #805 is still reachable, since a generator that avoids the defects we
+ * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804,
+ * #805 and #811 is still reachable, since a generator that avoids the defects we
  * already know about would only prove that we know about them, and nothing
  * about a regression. Nothing is quarantined at the moment: {@code
  * quarantined()} names the shapes that break the rewrite today, so that a suite
  * failing on them every night does not report what is already filed, and both
  * of the clauses it held have been deleted along with the issue that owned
+ * them.</p>
+ *
+ * <p>Reaching a shape is not the same as reaching it soon. #811 — two operators
+ * in a primitive-stream run whose trailing {@code boxed()} keeps it in the boxed
+ * domain — sits at seed 334, so the 120 seeds walked by default never saw it and
+ * {@code -Dhone.random.pipelines=360} is what found it. Shapes that rare earn a
+ * deterministic pack of their own under {@code optimize/streams/} once they are
+ * understood; the walk is the net that finds them, not the test that pins
  * them.</p>
  *
  * @since 0.30.0

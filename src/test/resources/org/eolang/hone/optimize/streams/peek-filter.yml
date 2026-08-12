@@ -13,7 +13,7 @@
 # eats it: 309 emits the peek's `dup` for the void Consumer call, and 281 splices
 # the filter's own `dup` in front of the predicate. Before 281 covered `peek` as
 # a predecessor the second one was never emitted — 401 gave the fused distill the
-# head's `start ↦ "peek"`, so 431, which only matches `start ↦ "filter"`, could
+# head's `start ↦ "peek"`, so 413, which only matches `start ↦ "filter"`, could
 # not add it afterwards. The predicate then consumed the only copy and the keep
 # label was reached with an empty stack against a frame promising the element:
 # `VerifyError: Inconsistent stackmap frames at branch target`. The `dup` tally

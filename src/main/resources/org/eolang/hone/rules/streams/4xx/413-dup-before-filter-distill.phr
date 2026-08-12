@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Gives the filter that OPENS a fused run the throwaway copy its predicate eats.
+# 281/282/283 splice a Φ.hone.dup in front of a filter that follows another
+# pragma they recognise (a map, a peek, another filter, a stateful guard); a
+# filter with nothing fusable in front of it — first in the method, or behind a
+# Φ.hone.box or a mapMulti pragma, neither of which is a distill — has no
+# predecessor to splice behind, so 401 hands 4xx a distill whose `start` is still
+# "filter" and whose body opens with the predicate call. This rule prepends the
+# missing dup and flips `start` to "dup" so it fires once per run.
+#
+# ORDER MATTERS: 413 runs AFTER 411, which may still unwind a box/distill/unbox
+# sandwich back to a primitive distill and move `accepted` off the wrapper, and
+# BEFORE 421, which prepends the head `Wrapper.xValue()` when the distill
+# receives a wrapper while its first operator accepts the primitive — and which
+# overwrites `accepted` with the wrapper `bridge-input` on the way. Going in
+# first means 421's unbox lands in FRONT of the guard, so the run unboxes once
+# and the guard copies the primitive the predicate is about to consume; its width
+# comes from the pre-421 `accepted`, which still names that primitive.
+#
+# Running after 421 instead — where this rule sat, as 431, until #811 — read the
+# overwritten wrapper `accepted` and emitted a one-slot `dup` of the wrapper, so
+# every stage behind the guard found a java/lang/Long where it needed a `long`. A
+# lone boxed filter happened to survive that (#704: nothing came after the
+# guard), but a second filter's two-slot `dup2` popped that single one-slot
+# reference and the class died at load with "Operand stack underflow".
+name: dup-before-filter-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "filter",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "dup",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦
+      i-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
+      𝐵-body,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-dup
+    function: sed
+    args:
+      - 𝑒-accepted
+      - '"s/^[DJ]$/dup2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+  - meta: 𝜏-dup
+    function: tau
+    args: [𝑒-dup]

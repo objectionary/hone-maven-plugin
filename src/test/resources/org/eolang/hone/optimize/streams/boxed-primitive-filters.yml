@@ -1,0 +1,118 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reproduction of issue #811: more than one operator in a primitive-stream run
+# whose trailing boxed() keeps it in the boxed domain. 203 lifts each
+# IntStream/LongStream/DoubleStream filter, 211 splits it into box +
+# boxed-primitive-filter + unbox, 221 cancels the unbox of one against the head
+# box of the next, and 232 promotes each into a p-filter whose bridge-input is
+# the wrapper while `accepted`/`returned` stay the primitive the predicate takes.
+# Because the user's own boxed() consumes the last compensating unbox, 411 never
+# unwinds the sandwich and the fused distill still receives the wrapper — the
+# #704 shape, one operator wide.
+#
+# Two operators wide it fell apart. 421 prepends the head Wrapper.xValue() and
+# overwrites `accepted` with the wrapper bridge-input on the way; the head guard
+# rule then read that overwritten `accepted` and emitted a ONE-slot dup of the
+# wrapper, so everything behind the guard met a java/lang/Long where it needed a
+# `long`. A second filter's two-slot `dup2` (281 splices it from the primitive
+# `returned`) popped an empty stack — "java.lang.VerifyError: Operand stack
+# underflow", the message #811 reports — an interior map's (J)J body got the
+# wrapper instead ("Type 'java/lang/Long' is not assignable to long_2nd"), and an
+# int chain, whose one-slot widths happen to line up, handed its predicate an
+# Integer ("Type 'java/lang/Integer' is not assignable to integer").
+#
+# The fix moves the head-guard rule to 413, ahead of 421, so it reads the
+# primitive `accepted` and 421's unbox lands in FRONT of the guard: the run
+# unboxes once, every guard copies the primitive, and 422 re-boxes the survivor
+# at the tail. That made 412 — which used to promote the distill's `returned` to
+# the wrapper so 422 would skip that re-box — both wrong and unnecessary, so it
+# is gone, and with it the split between the two keep-frame rules: the survivor
+# at a filter's keep-label is always the value the guard duplicated one opcode
+# earlier, which is the value the predicate consumed, so 506 now reads every
+# frame off the predicate's own parameter, primitive or object.
+#
+# Six pipelines, one class:
+#   * twice   — the reported reproduction, reduced: evens of 1..12 are
+#     {2,4,6,8,10,12}, of those the multiples of three are {6,12} -> "6+12".
+#   * thrice  — three filters, so the guard has to be right at every one of
+#     them: evens of 1..20 that divide by three are {6,12,18}, over six
+#     -> "12+18".
+#   * spanned — a map BETWEEN two filters, the shape whose interior (J)J body
+#     used to be handed the wrapper: evens {2,4,6,8,10} times three are
+#     {6,12,18,24,30}, of those the multiples of four -> "12+24".
+#   * headed  — a map AHEAD of the only filter, which is where 412's promotion
+#     mis-declared a primitive survivor as the wrapper: 1..6 plus ten is
+#     {11..16}, the odd ones -> "11+13+15".
+#   * ints    — the int sibling: multiples of three in 1..10 are {3,6,9}, the
+#     even one -> "6".
+#   * reals   — the double sibling, on values with an exact binary
+#     representation so the printed text is stable: over one -> {1.5,2.5,6.5},
+#     under six -> "1.5+2.5".
+# Joining the survivors rather than counting them asserts their values AND their
+# order, so a rewrite that verifies but miswires the guard prints a different
+# line. The `after` counts are left unasserted on purpose: this pack exists to
+# prove the optimized class VERIFIES and still computes the right answer, which
+# the printed line asserts end to end.
+java: |
+  package boxedprimitivefilters;
+  import java.util.stream.Collectors;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      String twice = LongStream.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L)
+        .filter(n -> n % 2L == 0L)
+        .filter(n -> n % 3L == 0L)
+        .boxed()
+        .map(String::valueOf)
+        .collect(Collectors.joining("+"));
+      String thrice = LongStream.rangeClosed(1L, 20L)
+        .filter(n -> n % 2L == 0L)
+        .filter(n -> n % 3L == 0L)
+        .filter(n -> n > 6L)
+        .boxed()
+        .map(String::valueOf)
+        .collect(Collectors.joining("+"));
+      String spanned = LongStream.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
+        .filter(n -> n % 2L == 0L)
+        .map(n -> n * 3L)
+        .filter(n -> n % 4L == 0L)
+        .boxed()
+        .map(String::valueOf)
+        .collect(Collectors.joining("+"));
+      String headed = LongStream.rangeClosed(1L, 6L)
+        .map(n -> n + 10L)
+        .filter(n -> n % 2L == 1L)
+        .boxed()
+        .map(String::valueOf)
+        .collect(Collectors.joining("+"));
+      String ints = IntStream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        .filter(n -> n % 3 == 0)
+        .filter(n -> n % 2 == 0)
+        .boxed()
+        .map(String::valueOf)
+        .collect(Collectors.joining("+"));
+      String reals = DoubleStream.of(0.5, 1.5, 2.5, 6.5)
+        .filter(d -> d > 1.0)
+        .filter(d -> d < 6.0)
+        .boxed()
+        .map(String::valueOf)
+        .collect(Collectors.joining("+"));
+      System.out.printf(
+        "The result is %s/%s/%s/%s/%s/%s\n", twice, thrice, spanned, headed, ints, reals
+      );
+    }
+  }
+# The production default grep-in (see #449/#671/#705) would already select this
+# class via its `filter` and `map` tokens, but the pack opts the pre-filter off
+# with `.*` so it stays decoupled from the exact set of method names the
+# default happens to include.
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 6+12/12+18/12+24/11+13+15/6/1.5+2.5"

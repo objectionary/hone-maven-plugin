@@ -9,17 +9,22 @@
 # is the wrapper Ljava/lang/Long; while accepted/returned stay the primitive J.
 # Because the trailing .boxed() keeps the boxing alive, 411 never unwinds the
 # filter distill back to a primitive one, so the distill stays in the boxed
-# domain (bridge-input = Ljava/lang/Long;). The keep-frame and the survivor the
-# filter passes to its Consumer must therefore describe a one-slot
-# java/lang/Long reference, not a two-slot primitive long. Before the fix the
-# distill emitted a `long` keep-frame and re-boxed the survivor with a stray
-# Long.valueOf(J), so the optimized class failed JVM verification with
-# "Inconsistent stackmap frames at branch target 12 ... stack size doesn't
-# match" (the kept value is a one-slot Ljava/lang/Long; while the frame and the
-# valueOf assume a two-slot long). The deferred Φ.hone.frame-item marker (304,
-# resolved by 506 from the final bridge-input) and 412 (which realigns a
-# boxed filter distill's `returned` to its wrapper bridge-output so 422 adds no
-# valueOf) fix it.
+# domain (bridge-input = Ljava/lang/Long;) and something has to reconcile the
+# wrapper the distill receives with the primitive its predicate takes. Before the
+# fix nothing did: the distill emitted a `long` keep-frame over a one-slot
+# Ljava/lang/Long; and re-boxed that reference with a stray Long.valueOf(J), so
+# the optimized class failed JVM verification with "Inconsistent stackmap frames
+# at branch target 12 ... stack size doesn't match".
+#
+# The reconciliation is a single unbox at the head of the run: 421 prepends
+# Long.longValue() and 413 puts the guard's dup2 behind it, so the whole distill
+# works on the primitive and 422 re-boxes the survivor once at the tail. The
+# keep-frame is the deferred Φ.hone.frame-item marker 304 leaves behind, resolved
+# by 506 from the predicate's own (J)Z parameter — the value the guard duplicated
+# one opcode earlier. #811 is where the second half of that arrangement comes
+# from: this one-operator shape verified for a while with the dup ahead of the
+# unbox and the frame read off a wrapper-promoted `returned`, and fell apart the
+# moment a second operator joined the run.
 #
 # {1..10} filtered to multiples of 3 = {3, 6, 9}, summed back as long = 18. The
 # lone filter lowers to a single Stream.mapMulti, so invokedynamic stays at 1.

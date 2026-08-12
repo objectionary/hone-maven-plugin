@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reproduction of #811 at the rule level: how wide the head guard of a
+# boxed-primitive filter run is, which is decided by whether this rule runs
+# before or after 421. The input is the distill 401 leaves for a
+# `LongStream.of(...).filter(p).boxed()` — the trailing boxed() keeps 411 from
+# unwinding the box/distill/unbox sandwich, so the distill still receives the
+# wrapper (bridge-input = Ljava/lang/Long;) while the predicate is the primitive
+# (J)Z that 232 recorded in `accepted`. There is no dup in the input: a filter
+# that opens its own run has no predecessor for 281 to splice behind, which is
+# exactly what this rule exists to repair.
+#
+# Both rules are listed in their pipeline order. 413 prepends the head guard
+# FIRST, reading its width off the pre-421 primitive `accepted` (J -> dup2), and
+# 421 then puts its head Long.longValue() in FRONT of that guard — so the run
+# unboxes once and every guard behind it copies a two-slot `long`, matching the
+# `dup2` that 281 splices in front of any further filter. Running 421 first
+# (which is where this rule sat, as 431, before #811) overwrote `accepted` with
+# the wrapper bridge-input, so this rule emitted a one-slot `dup` of the
+# java/lang/Long instead: a lone filter survived that, but a second filter's
+# `dup2` met the single one-slot reference and the class died at load with
+# "java.lang.VerifyError: Operand stack underflow".
+#
+# The `dup2` pattern is the discriminator — under the old order this body would
+# hold a one-slot `dup` and no `dup2` at all. The distill pattern pins the rest:
+# `start` has flipped to "dup" so the guard goes in once per run, and `accepted`
+# carries 421's wrapper promotion, which is what made the width ambiguous.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/413-dup-before-filter-distill.phr
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/421-transform-distill-head-to-object.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ "Foo",
+    bridge-input ↦ "Ljava/lang/Long;",
+    bridge-output ↦ "Ljava/lang/Long;",
+    start ↦ "filter",
+    accepted ↦ "J",
+    returned ↦ "J",
+    static ↦ "true",
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(J)Z", i5 ↦ Φ.false ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i2 ↦ "java/lang/Long", i3 ↦ "longValue", i4 ↦ "()J", i5 ↦ Φ.false ⟧
+  - ⟦ φ ↦ Φ.hone.distill, class ↦ "Foo", bridge-input ↦ "Ljava/lang/Long;", bridge-output ↦ "Ljava/lang/Long;", start ↦ "dup", accepted ↦ "Ljava/lang/Long;", 𝐵-rest ⟧

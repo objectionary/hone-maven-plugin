@@ -8,7 +8,7 @@
 # keep-frame and the first body opcode that consumes the item as a NARROWER
 # reference; it anchors on a Φ.jeo.frame IMMEDIATELY followed by an
 # invokestatic. A filter riding the same pipeline breaks that adjacency: 283
-# splices a Φ.hone.dup in front of a filter that follows a stateful guard (431
+# splices a Φ.hone.dup in front of a filter that follows a stateful guard (413
 # does the same after a fuse), because the predicate eats the item and the keep
 # path needs a copy — and a peek, whose body 309 shapes as `dup` + the consumer
 # invocation, arrives with the very same opening. The joined body therefore

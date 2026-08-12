@@ -206,7 +206,7 @@ After this stage,
   has been reduced to a flat list of `distill` pragmas
   inside the same method.
 
-**Stage 4 (rules `401-` to `431-`): fuse adjacent `distill` pragmas.**
+**Stage 4 (rules `401-` to `461-`): fuse adjacent `distill` pragmas.**
 This is the optimization that actually saves work at runtime.
 Rule `401-fuse` looks for two consecutive `distill` pragmas
   inside the same method body
@@ -226,8 +226,12 @@ Concatenation only works when the type that flows between
   by pushing the boxing/unboxing inside the body,
   and `421-`/`422-` align the head and tail types
   with the surrounding bytecode.
-Rule `431-dup-before-filter-distill` re-applies the `DUP`
-  fix-up after a fusion changed which value is being filtered.
+Rule `413-dup-before-filter-distill` re-applies the `DUP`
+  fix-up for the filter that opens a fused run,
+  which has no predecessor for `281-` to splice a guard behind;
+  it deliberately runs ahead of `421-`,
+  so that a head unboxing lands in front of the guard
+  and the copy the predicate eats is the primitive it expects.
 
 **Stage 5 (rules `501-` and `511-`): emit a single `mapMulti` call.**
 At this point each fused `distill` is one big anonymous function

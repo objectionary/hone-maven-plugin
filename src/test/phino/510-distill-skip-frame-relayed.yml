@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip() twin of `510-distill-distinct-frame-relayed` (#805): a
+# type-changing object map, then 307's seen-set guard, then 308's countdown
+# guard. distinct keeps the item it was given, so the survivor at BOTH
+# keep-labels is the Pair the head `lambda$main$0:(Ljava/lang/String;)
+# Lprobe/Pair;` produced, while the distill still receives a java/lang/String.
+#
+# `503-distill-distinct-frame` reads the survivor for the first guard off the
+# invokestatic in front of it; the second one has the first's keep-frame in front
+# of it instead, which no rule of the 503 family can read in time, so
+# `503-distill-state-frame` wrote it from `bridge-input`. 510 copies the
+# neighbour's stack slot into it afterwards.
+#
+# The two `expected` patterns pin the frames by the label in front of them, since
+# both end up naming the same type. "L0" is the distinct's, already right before
+# this rule; "L1" is the skip's, the one the fallback wrote as a
+# java/lang/String.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-distinct-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/510-distill-skip-frame-relayed.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/String;",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    target-method ↦ "distill_1",
+    captured ↦ "Ljava/util/List;",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/String;)Lprobe/Pair;", i5 ↦ Φ.false ⟧,
+      d1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
+      d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      d3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      d4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView", i2 ↦ "add", i3 ↦ "(Ljava/lang/Object;)Z", i4 ↦ Φ.false ⟧,
+      d5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L0" ⟧ ⟧,
+      d6 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      d7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      d8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L0" ⟧,
+      d9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      s1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+      s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      s6 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      s11 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      s12 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      s13 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      s14 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      s15 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-before, 𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L0" ⟧, 𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, type ↦ 0, locals ↦ ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧, stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "probe/Pair" ⟧ ⟧, 𝐵-after ⟧
+  - ⟦ 𝐵-before, 𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧, 𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, type ↦ 0, locals ↦ ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧, stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "probe/Pair" ⟧ ⟧, 𝐵-after ⟧

@@ -34,13 +34,14 @@ import java.util.Random;
  * the API allows to skip the traversal altogether.</p>
  *
  * <p>The grammar does not step around the operations that the rewrite has been
- * known to break — every shape behind #787, #788, #790, #794, #798, #799 and
- * #804 is still reachable, since a generator that avoids the defects we already
- * know about would only prove that we know about them, and nothing about a
- * regression. One shape is quarantined all the same, in
- * {@code quarantined()}: it breaks the rewrite today, it is filed as #805, and
- * a suite that fails on it every night reports nothing new. It is named by its
- * issue, so closing the issue widens the walk by deleting one clause.</p>
+ * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804
+ * and #805 is still reachable, since a generator that avoids the defects we
+ * already know about would only prove that we know about them, and nothing
+ * about a regression. Nothing is quarantined at the moment: {@code
+ * quarantined()} names the shapes that break the rewrite today, so that a suite
+ * failing on them every night does not report what is already filed, and both
+ * of the clauses it held have been deleted along with the issue that owned
+ * them.</p>
  *
  * @since 0.30.0
  * @todo #791:60min Reach the last corners of the API. There is no
@@ -415,30 +416,6 @@ final class RandomPipeline {
     );
 
     /**
-     * The domains whose elements are references, where {@code distinct} and
-     * {@code skip} erase the element type down to {@code Object}.
-     */
-    private static final List<String> OBJECTS = Arrays.asList(
-        "boxed", "ibox", "pairs", "words"
-    );
-
-    /**
-     * The operations that carry a decision from one element to the next, which
-     * the rewrite fuses into a wrapper with a latch or a counter in it.
-     */
-    private static final List<String> GUARDS = Arrays.asList(
-        "distinct", "dropWhile", "skip"
-    );
-
-    /**
-     * The operations no fused run reaches across, either because the API cannot
-     * express them in one pass or because the rewrite leaves them alone.
-     */
-    private static final List<String> BARRIERS = Arrays.asList(
-        "flatMap", "limit", "sorted", "takeWhile"
-    );
-
-    /**
      * The largest number of intermediate operations in one pipeline.
      */
     private static final int STAGES = 7;
@@ -573,102 +550,27 @@ final class RandomPipeline {
     /**
      * The issue that quarantines this walk, if one does.
      *
-     * <p>One shape breaks the rewrite today, emitting a class the verifier
-     * rejects, and it is reported upstream. A walk that reaches it is re-rolled
-     * from a derived seed instead of being generated, so the suite stays a net
-     * for regressions rather than a standing failure. Delete a clause here the
-     * day its issue closes, and the walk widens again.</p>
+     * <p>A shape that breaks the rewrite today, emitting a class the verifier
+     * rejects, gets a clause here once it is reported upstream: a walk that
+     * reaches it is re-rolled from a derived seed instead of being generated, so
+     * the suite stays a net for regressions rather than a standing failure. Each
+     * clause is as narrow as the shape it owns and is named by its issue, so
+     * closing the issue widens the walk again by deleting one.</p>
      *
-     * <p>Each clause is as narrow as the shape it owns. #805 wants three things
-     * at once: a conversion into an object domain, so the type the guard's frame
-     * is derived from is no longer the type the fused body was handed; a
-     * stateful guard after it; and something between the two that produces no
-     * value — a {@code peek}, a {@code filter}, or another guard. A {@code map}
-     * in between is fine, since the guard then reads its type off that map, and
-     * a barrier in between is fine too, since the run is fused again behind
-     * it.</p>
+     * <p>There is nothing to quarantine right now. The two clauses this method
+     * held are both gone: #804's, a {@code filter} behind a {@code dropWhile},
+     * which lost the copy of the item its predicate eats, and #805's, a
+     * conversion into an object domain with a {@code peek}, a {@code filter} or
+     * another guard between it and a stateful guard, whose keep-frame was read
+     * off whatever opcode happened to sit in front of it. Add the next one the
+     * day the walk finds a shape we cannot fix at once.</p>
      *
      * @param walk The lines the walk picked
      * @return The issue that owns the shape, or an empty string
      */
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private static String quarantined(final List<String> walk) {
-        String issue = "";
-        if (RandomPipeline.retypesThenGuards(walk)) {
-            issue = "#805";
-        }
-        return issue;
-    }
-
-    /**
-     * Does a stateful guard sit behind a conversion into an object domain with
-     * nothing that produces a value between the two?
-     * @param walk The lines the walk picked
-     * @return TRUE if the walk reaches the shape of #805
-     */
-    private static boolean retypesThenGuards(final List<String> walk) {
-        boolean found = false;
-        boolean retyped = false;
-        boolean opaque = false;
-        for (final String line : walk) {
-            final String code = RandomPipeline.code(line);
-            if (retyped && opaque && RandomPipeline.starts(code, RandomPipeline.GUARDS)) {
-                found = true;
-                break;
-            }
-            if (RandomPipeline.starts(code, RandomPipeline.BARRIERS)) {
-                retyped = false;
-                opaque = false;
-            } else if ("turn".equals(line.split("\\|", 3)[1])) {
-                retyped = RandomPipeline.OBJECTS.contains(RandomPipeline.landing(line));
-                opaque = false;
-            } else {
-                opaque = RandomPipeline.relays(code);
-            }
-        }
-        return found;
-    }
-
-    /**
-     * Does this step hand the element on without producing a new one, so that
-     * the type a guard behind it reads is not the type of its survivor?
-     * @param code The Java code of one step of a pipeline
-     * @return TRUE if the step produces no value of its own
-     */
-    private static boolean relays(final String code) {
-        return RandomPipeline.starts(code, RandomPipeline.GUARDS)
-            || code.startsWith("peek(")
-            || code.startsWith("filter(");
-    }
-
-    /**
-     * The element domain one line of a walk leaves behind it.
-     * @param line The line, as {@code domain|role|fragment}
-     * @return The domain a turn lands in, or the one the step was already in
-     */
-    private static String landing(final String line) {
-        final String[] parts = line.split("\\|", 3);
-        final int lands = parts[2].lastIndexOf('|');
-        final String domain;
-        if (lands >= 0) {
-            domain = parts[2].substring(lands + 1);
-        } else {
-            domain = parts[0];
-        }
-        return domain;
-    }
-
-    /**
-     * Does this fragment call one of these operations?
-     * @param code The Java code of one step of a pipeline
-     * @param names The names of the operations to look for
-     * @return TRUE if the step is a call to one of them
-     */
-    private static boolean starts(final String code, final List<String> names) {
-        boolean found = false;
-        for (final String name : names) {
-            found = found || code.startsWith(String.format("%s(", name));
-        }
-        return found;
+        return "";
     }
 
     /**

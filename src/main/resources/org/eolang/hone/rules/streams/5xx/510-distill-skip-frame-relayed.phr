@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip() twin of `510-distill-distinct-frame-relayed` — read its header for
+# the reasoning; only the guard shape differs (#805).
+#
+# `503-distill-skip-frame` insists that the invokestatic that produced the
+# survivor sit immediately in front of 308's `Φ.hone.fetch` marker. A filter, a
+# dropWhile, a distinct or another skip fused in between produces no value of
+# its own and ends at a keep-label with a stackmap frame on it, so the adjacency
+# breaks and `503-distill-state-frame` writes the frame from `bridge-input`
+# again: `Stream.of("a", "bb").map(s -> new Pair(1L, s))
+# .filter(p -> p.key() > 0L).skip(1L).count()` dies with "Type 'probe/Pair'
+# (current frame, stack[0]) is not assignable to 'java/lang/String' (stack map,
+# stack[0])".
+#
+# The frame such a relay leaves already names the survivor, so this rule copies
+# its single stack slot into the frame of the skip behind it, leaving the local
+# at slot 1 — the bridge method's declared parameter — untouched. Like its twin
+# it runs as a CORRECTION at 510, after the 503 family has resolved every
+# `Φ.hone.frame-item`: a chain of relays has to be walked in body order, which
+# no fixed alphabetical rule order can follow, and correcting a written frame
+# converges from any starting point, a frame that already agrees with its
+# neighbour rewriting to itself and stopping.
+#
+# The one relay that leaves no frame is peek(); `503-distill-skip-frame-peeked`
+# names the survivor from the peek's own consumer parameter instead.
+name: distill-skip-frame-relayed
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-relay ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-relay-captured,
+          x1 ↦ 𝑒-relay-input,
+          x2 ↦ 𝑒-relay-consumer,
+          x3 ↦ 𝑒-relay-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-dup-slot ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      𝜏-load-count ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      𝜏-dup-count ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      𝜏-decrement ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      𝜏-store-count ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      𝜏-zero ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      𝜏-compare ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      𝜏-ifle ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ 𝑒-ifle-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ 𝑒-frame-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-stale ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-relay ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-relay-captured,
+          x1 ↦ 𝑒-relay-input,
+          x2 ↦ 𝑒-relay-consumer,
+          x3 ↦ 𝑒-relay-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-dup-slot ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      𝜏-load-count ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      𝜏-dup-count ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      𝜏-decrement ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      𝜏-store-count ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      𝜏-zero ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      𝜏-compare ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      𝜏-ifle ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ 𝑒-ifle-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ 𝑒-frame-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧

@@ -1,0 +1,121 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reproduction of #805: the #798 shape with something standing BETWEEN the
+# retyping map and the stateful guard. `map-retype-stateful.yml` keeps the two
+# adjacent, which is the only arrangement 503's keep-frame rules could read: they
+# take the survivor off an invokestatic required to sit immediately in front of
+# the guard's `Φ.hone.fetch` marker. Fuse a peek, a filter or a second guard in
+# between and that adjacency is gone — a relay produces no value of its own, so
+# what the fetch follows is a void call or a keep-label's frame — the marker falls
+# through to `503-distill-state-frame`, and the frame is written from
+# `bridge-input` again: "java.lang.VerifyError: Inconsistent stackmap frames ...
+# Type 'mapretyperelayed/X$Pair' (current frame, stack[0]) is not assignable to
+# 'java/lang/String' (stack map, stack[0])".
+#
+# One pipeline per relay, each one retyping first so that bridge-input and the
+# survivor differ:
+#   * peek between map and skip — the relay that leaves no frame at all, since
+#     309 shapes a peek as `dup` + a void call.
+#     `503-distill-skip-frame-peeked` names the survivor through that call's own
+#     parameter. Lengths {1, 2, 3}, one skipped, count = 2.
+#   * filter between map and distinct — TWO wrong frames in one pipeline: 304
+#     leaves a marker at the filter's own keep-label, which in a stateful wrapper
+#     nothing but the fallback claimed (`503-distill-predicate-frame` now names it
+#     from the predicate, the way 506 does for a stateless one), and then the
+#     distinct behind it reads the filter's frame through
+#     `510-distill-distinct-frame-relayed`. Lengths {1, 2, 2, 3}, the 1 filtered
+#     out, three distinct pairs left.
+#   * dropWhile between map and distinct — 310's latch guard names its own
+#     survivor, so its frame was right all along; the distinct behind it is the
+#     one that was not. "1" and "2" dropped, "3" and "4" kept, count = 2.
+#   * distinct between map and distinct — a guard relaying into a guard, the
+#     chain `510` walks one link at a time. {"1", "2", "2", "3"} has three
+#     distinct elements and staying distinct keeps three.
+#   * distinct between map and skip — the same for `510-distill-skip-frame-relayed`.
+#     Lengths {1, 2, 3, 4}, all distinct, one skipped, count = 3.
+#
+# `SUM` is written by the peek but not printed: `count()` is allowed to skip the
+# traversal altogether on a SIZED pipeline, so what the peek accumulates differs
+# between the two runs by the API's own contract, and only the counts are an
+# oracle here. Every pipeline collapses its map + operators into one
+# Stream.mapMulti: invokedynamic drops 8 -> 5, the five captured java/util/List
+# holders push new from 3 to 8, and the two skip countdowns plus the dropWhile
+# latch push newarray from 1 to 4. The printed line asserts end to end that the
+# optimized class VERIFIES and still computes the right answers.
+java: |
+  package mapretyperelayed;
+  import java.util.stream.Stream;
+  public class X {
+    private static final long[] SUM = new long[1];
+    public static void main(String[] a) {
+      long peeked = Stream.of("a", "bb", "ccc")
+        .map(s -> new Pair((long) s.length(), s))
+        .peek(p -> SUM[0] += p.key())
+        .skip(1L)
+        .count();
+      long picked = Stream.of("a", "bb", "cc", "ddd")
+        .map(s -> new Pair((long) s.length(), s))
+        .filter(p -> p.key() > 1L)
+        .distinct()
+        .count();
+      long dropped = Stream.of(1, 2, 3, 4)
+        .map(n -> n.toString())
+        .dropWhile(s -> s.compareTo("3") < 0)
+        .distinct()
+        .count();
+      long twice = Stream.of(1, 2, 2, 3)
+        .map(n -> n.toString())
+        .distinct()
+        .distinct()
+        .count();
+      long tailed = Stream.of("a", "bb", "ccc", "dddd")
+        .map(s -> new Pair((long) s.length(), s))
+        .distinct()
+        .skip(1L)
+        .count();
+      System.out.printf("The result is %d/%d/%d/%d/%d\n", peeked, picked, dropped, twice, tailed);
+    }
+    static final class Pair {
+      private final long num;
+      private final String word;
+      Pair(final long key, final String text) {
+        this.num = key;
+        this.word = text;
+      }
+      long key() {
+        return this.num;
+      }
+      @Override
+      public boolean equals(final Object other) {
+        return other instanceof Pair && ((Pair) other).num == this.num
+          && ((Pair) other).word.equals(this.word);
+      }
+      @Override
+      public int hashCode() {
+        return (int) this.num * 31 + this.word.hashCode();
+      }
+    }
+  }
+log:
+  - "Modified 2/2 X.phi"
+  - "Finished rewriting 2 file"
+  - "BUILD SUCCESS"
+  - "The result is 2/3/2/3/3"
+before:
+  invokedynamic: 8
+  invokeinterface: 20
+  invokestatic: 18
+  invokevirtual: 9
+  new: 3
+  newarray: 1
+  checkcast: 0
+after:
+  invokedynamic: 5
+  invokeinterface: 31
+  invokestatic: 31
+  invokevirtual: 14
+  new: 8
+  newarray: 4
+  checkcast: 8

@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip() twin of `503-distill-distinct-frame-peeked` (#805): a type-changing
+# object map fused in AHEAD of 308's countdown guard, with a peek BETWEEN the
+# two. The wrapper receives a java/lang/String, the head
+# `lambda$main$0:(Ljava/lang/String;)Lprobe/Pair;` retypes it, and 309's `dup` +
+# void call relays the Pair on unchanged, so the survivor waiting at the
+# keep-label is that Pair while `503-distill-skip-frame` — which needs an
+# object-returning invokestatic right in front of the fetch — cannot see it. The
+# peek's consumer parameter names it. The local at slot 1 stays the String.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-skip-frame-peeked.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-skip-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/String;",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    target-method ↦ "distill_1",
+    captured ↦ "Ljava/util/List;",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/String;)Lprobe/Pair;", i5 ↦ Φ.false ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$1", i4 ↦ "(Lprobe/Pair;)V", i5 ↦ Φ.false ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i15 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i17 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i18 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 0, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "probe/Pair" ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧

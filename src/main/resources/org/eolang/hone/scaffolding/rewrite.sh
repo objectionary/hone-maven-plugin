@@ -90,10 +90,18 @@ function rewrite {
     return
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
-  if [ -n "${HONE_GREP_IN}" ] && ! grep -qE "${HONE_GREP_IN}" "${xi}"; then
-    cp "${xi}" "${xo}"
-    echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
-    return
+  if [ -n "${HONE_GREP_IN}" ]; then
+    rc=0
+    grep -qE "${HONE_GREP_IN}" "${xi}" || rc=$?
+    if [ "${rc}" -eq 2 ]; then
+      echo "The grep-in pattern '${HONE_GREP_IN}' is invalid (grep exited with code 2); refusing to skip classes blindly" >&2
+      exit 1
+    fi
+    if [ "${rc}" -ne 0 ]; then
+      cp "${xi}" "${xo}"
+      echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
+      return
+    fi
   fi
   phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}" > "${phi}"
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"

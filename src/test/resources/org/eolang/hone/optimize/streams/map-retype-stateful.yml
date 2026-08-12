@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reproduction of #798: an object map that CHANGES the element type sitting in
+# front of a STATEFUL guard — the distinct / skip / dropWhile twin of #794's
+# filter shape. 401 fuses the map in ahead of the guard, so the synthesized
+# wrapper still receives the pipeline's element (distill_502N(java.util.List,
+# java.lang.String, java.util.function.Consumer)) while the head
+# `lambda$main$N:(Ljava/lang/String;)Ljava/lang/Long;` has already retyped it:
+# the value alive at the guard's keep-label is that Long.
+#
+# Before the fix the keep-frame came from 503, which fills BOTH the local at
+# slot 1 and the single stack item from the distill's `bridge-input`. The local
+# is right — it is the bridge method's declared parameter, the item 512 loads
+# with `aload 1` — but the stack item is not, so the frame promised a
+# java/lang/String over a Long and the class did not load:
+# "java.lang.VerifyError: Inconsistent stackmap frames at branch target 29 ...
+# Type 'java/lang/Long' (current frame, stack[0]) is not assignable to
+# 'java/lang/String' (stack map, stack[0])". `503-distill-distinct-frame`,
+# `503-distill-dropwhile-frame` and `503-distill-skip-frame` now claim such
+# markers and derive only the STACK item from the survivor, leaving the local on
+# bridge-input the way 504 already does. Keeping the element type identical
+# hides the bug (`map(x -> x + 1).distinct()` in `distinct.yml` always ran),
+# which is why every other stateful fixture passed.
+#
+# All three guards are here, plus both retyping shapes, one per pipeline:
+#   * lambda map + distinct — 307's seen-set guard. String -> Long lengths
+#     {1, 2, 2, 3}, three of them distinct.
+#   * lambda map + skip — 308's countdown guard. Three elements, one skipped,
+#     count = 2.
+#   * lambda map + dropWhile — 310's latch guard, the one that names its own
+#     survivor through the predicate it tests the item with. Lengths
+#     {1, 2, 3, 1}, the leading 1 dropped, count = 3.
+#   * methodref map + distinct — Object::toString, desugared by 107 into a
+#     wrapper whose signature is (Ljava/lang/Long;)Ljava/lang/String;, so this
+#     one retypes the other way round ("Type 'java/lang/String' ... is not
+#     assignable to 'java/lang/Long'"). {5, 3, 5, 6, 7} stringified, four
+#     distinct.
+# Each pipeline collapses its map + stateful operator into a single
+# Stream.mapMulti: invokedynamic drops 5 -> 4 (dropWhile's map and predicate
+# share one dispatch, the other three pipelines had one lambda each all along),
+# the four captured java/util/List holders show up as new == 4, and the skip's
+# long[1] countdown plus dropWhile's int[1] latch as newarray == 2. The printed
+# line asserts end to end that the optimized class VERIFIES and still computes
+# the right answers.
+java: |
+  package mapretypestateful;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long kinds = Stream.of("a", "bb", "cc", "ddd")
+        .map(s -> Long.valueOf(s.length()))
+        .distinct()
+        .count();
+      long tails = Stream.of("a", "bb", "ccc")
+        .map(s -> Long.valueOf(s.length()))
+        .skip(1L)
+        .count();
+      long longer = Stream.of("a", "bb", "ccc", "d")
+        .map(s -> Long.valueOf(s.length()))
+        .dropWhile(v -> v < 2L)
+        .count();
+      long texts = Stream.of(5L, 3L, 5L, 6L, 7L)
+        .map(Object::toString)
+        .distinct()
+        .count();
+      System.out.printf("The result is %d/%d/%d/%d\n", kinds, tails, longer, texts);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3/2/3/4"
+before:
+  invokedynamic: 5
+  invokeinterface: 12
+  invokestatic: 16
+  invokevirtual: 5
+  new: 0
+  newarray: 0
+after:
+  invokedynamic: 4
+  invokeinterface: 20
+  invokestatic: 23
+  invokevirtual: 8
+  new: 4
+  newarray: 2

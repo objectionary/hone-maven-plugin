@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reproduction of #798 at the rule level: a type-changing object map fused in
+# AHEAD of a distinct() guard. The wrapper receives a java/lang/String
+# (bridge-input), the head `lambda$main$0:(Ljava/lang/String;)Ljava/lang/Long;`
+# retypes it, and the value the guard's dup_x1 leaves alive at the keep-label is
+# that java/lang/Long. The local at slot 1 must still be the String (it is the
+# bridge method's declared parameter, loaded by 512's `aload 1`), so only the
+# STACK item follows the survivor — read off the producer's return type. Before
+# the fix 503 filled both from bridge-input and the class failed JVM
+# verification at the branch target. 503 is listed here too, to prove the
+# alphabetical order leaves it nothing to fall back on.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-distinct-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-dropwhile-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-skip-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/String;",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    target-method ↦ "distill_1",
+    captured ↦ "Ljava/util/List;",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/String;)Ljava/lang/Long;", i5 ↦ Φ.false ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView", i2 ↦ "add", i3 ↦ "(Ljava/lang/Object;)Z", i4 ↦ Φ.false ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i10 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 0, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Long" ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧

@@ -1,0 +1,145 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip() twin of `503-distill-distinct-frame` — read its header for the
+# reasoning; only the guard shape differs. skip is "a filter that owns a
+# countdown counter" and is just as type-transparent as distinct, so when 401
+# fuses a type-CHANGING map in AHEAD of it the survivor waiting at 308's
+# keep-label is the map's return type, not the distill's `bridge-input`, and
+# the frame 503 writes fails JVM verification the same way (#798):
+# `Stream.of("a", "bb", "ccc").map(s -> Long.valueOf(s.length())).skip(1L)`
+# dies with "Type 'java/lang/Long' (current frame, stack[0]) is not assignable
+# to 'java/lang/String' (stack map, stack[0])".
+#
+# The local at slot 1 stays on bridge-input (it IS the bridge method's declared
+# parameter); only the stack item is derived, from the return type of the
+# invokestatic matched immediately in front of 308's fetch marker. 308's guard
+# consumes its long[] counter before the branch, so the keep-label leaves only
+# the item on the stack, exactly like 307's.
+#
+# Ordering: shares 503's number, since no integer is free between 502 and 503,
+# and relies on `503-distill-skip-frame` < `503-distill-state-frame`
+# alphabetically so the retyped markers are claimed before the fallback reads
+# bridge-input for the rest.
+name: distill-skip-frame
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-head ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-head-class,
+        i3 ↦ 𝑒-head-method,
+        i4 ↦ 𝑒-head-signature,
+        i5 ↦ 𝑒-head-is-interface
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-dup-slot ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      𝜏-load-count ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      𝜏-dup-count ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      𝜏-decrement ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      𝜏-store-count ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      𝜏-zero ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      𝜏-compare ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      𝜏-ifle ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ 𝑒-ifle-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-head ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-head-class,
+        i3 ↦ 𝑒-head-method,
+        i4 ↦ 𝑒-head-signature,
+        i5 ↦ 𝑒-head-is-interface
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-dup-slot ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      𝜏-load-count ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      𝜏-dup-count ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      𝜏-decrement ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      𝜏-store-count ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      𝜏-zero ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      𝜏-compare ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      𝜏-ifle ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ 𝑒-ifle-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ "integer"
+        ⟧,
+        stack ↦ ⟦
+          φ ↦ Φ.jeo.seq.of1,
+          x0 ↦ 𝑒-frame-item
+        ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^\(.*\)L[^;]+;$'
+        - 𝑒-head-signature
+where:
+  - meta: 𝑒-frame-item
+    function: sed
+    args:
+      - 𝑒-head-signature
+      - '"s/^\\(.*\\)L(.+);$/$1/g"'
+  - meta: 𝑒-frame-input
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^B$/byte/g"'
+      - '"s/^C$/char/g"'
+      - '"s/^D$/double/g"'
+      - '"s/^F$/float/g"'
+      - '"s/^I$/integer/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^S$/short/g"'
+      - '"s/^Z$/boolean/g"'
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-frame-captured
+    function: sed
+    args:
+      - 𝑒-captured
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-frame-consumer
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/^L(.+);$/$1/g"'

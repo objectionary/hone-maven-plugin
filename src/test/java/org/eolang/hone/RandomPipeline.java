@@ -43,12 +43,15 @@ import java.util.Random;
  * of the clauses it held have been deleted along with the issue that owned
  * them.</p>
  *
+ * <p>The walk reaches the three primitive domains, all three of their boxed
+ * counterparts — {@code Stream<Long>}, {@code Stream<Integer>} and
+ * {@code Stream<Double>} — and two reference domains, one of strings and one of
+ * a small value class of its own. It reaches the corners of the terminal API as
+ * well: collectors assembled by hand out of {@code Collector.of},
+ * {@code Collectors.teeing}, {@code Collectors.flatMapping}, and {@code Optional}
+ * chains longer than a single {@code orElse}.</p>
+ *
  * @since 0.30.0
- * @todo #791:60min Reach the last corners of the API. There is no
- *  {@code Stream<Double>} domain, no custom {@code Collector}, no
- *  {@code Collectors.teeing} or {@code flatMapping}, and no {@code Optional}
- *  chain longer than one {@code orElse}. Everything parallel stays out on
- *  purpose: the printed value is the oracle, so it has to be deterministic.
  */
 final class RandomPipeline {
 
@@ -71,6 +74,13 @@ final class RandomPipeline {
      * pins how much of the stream it walks. Nothing here is parallel and nothing
      * is {@code findAny}: the value a pipeline prints has to be the same on
      * every run, or it cannot be an oracle.</p>
+     *
+     * <p>A production wider than one line is joined from pieces, which is what
+     * the few {@code String.join} entries are. The terminals that tee, and the
+     * ones that assemble a {@code Collector} by hand, spell their type arguments
+     * out: a pipeline is printed through {@code String.valueOf}, and its
+     * overloads bound the result of such a terminal by {@code char[]} as well as
+     * by {@code Object}, which no inferred type can satisfy.</p>
      */
     private static final String GRAMMAR = String.join(
         RandomPipeline.EOL,
@@ -98,6 +108,7 @@ final class RandomPipeline {
         "long|turn|mapToObj(n -> new Pair(n, Long.toString(n)))|pairs",
         "long|turn|mapToInt(n -> (int) n)|ints",
         "long|turn|asDoubleStream()|reals",
+        "long|turn|mapToObj(n -> (double) n)|dbox",
         "long|end|*sum()",
         "long|end|*reduce(0L, Long::sum)",
         "long|end|*max().orElse(0L)",
@@ -107,6 +118,7 @@ final class RandomPipeline {
         "long|end|*toArray().length",
         "long|end|*mapToObj(Long::toString).collect(Collectors.joining(\"+\"))",
         "long|end|*boxed().collect(Collectors.toList()).size()",
+        "long|end|*max().stream().mapToObj(Long::toString).findFirst().orElse(\"none\")",
         "long|end|count()",
         "long|end|*anyMatch(n -> n > 5L)",
         "long|end|*allMatch(n -> n > 0L)",
@@ -131,6 +143,7 @@ final class RandomPipeline {
         "ints|turn|asLongStream()|long",
         "ints|turn|asDoubleStream()|reals",
         "ints|turn|boxed()|ibox",
+        "ints|turn|mapToObj(n -> n / 2.0)|dbox",
         "ints|turn|mapToObj(Integer::toString)|words",
         "ints|end|*sum()",
         "ints|end|*reduce(1, (a, b) -> a + b)",
@@ -140,6 +153,7 @@ final class RandomPipeline {
         "ints|end|*summaryStatistics().getMax()",
         "ints|end|*toArray().length",
         "ints|end|*boxed().toList().size()",
+        "ints|end|*max().stream().boxed().findFirst().map(Object::toString).orElse(\"none\")",
         "ints|end|count()",
         "ints|end|*noneMatch(n -> n < 0)",
         "reals|source|DoubleStream.of(DECIMALS)",
@@ -157,6 +171,7 @@ final class RandomPipeline {
         "reals|stage|flatMap(d -> DoubleStream.of(d, d * 0.5))",
         "reals|stage|mapMulti((d, sink) -> { sink.accept(d); sink.accept(d * 2.0); })",
         "reals|peek|peek(x -> SUM[0] += (long) x)",
+        "reals|turn|boxed()|dbox",
         "reals|turn|mapToLong(d -> (long) d)|long",
         "reals|turn|mapToInt(d -> (int) d)|ints",
         "reals|turn|mapToObj(Double::toString)|words",
@@ -167,6 +182,7 @@ final class RandomPipeline {
         "reals|end|*summaryStatistics().getCount()",
         "reals|end|*toArray().length",
         "reals|end|*mapToObj(Double::toString).collect(Collectors.joining(\";\"))",
+        "reals|end|*max().stream().boxed().findFirst().map(d -> d * 2.0).orElse(0.0)",
         "reals|end|count()",
         "boxed|source|LIST.stream()",
         "boxed|source|Stream.of(3L, 7L, 7L, 1L, 9L)",
@@ -189,6 +205,7 @@ final class RandomPipeline {
         "boxed|turn|mapToLong(Long::longValue)|long",
         "boxed|turn|mapToInt(Long::intValue)|ints",
         "boxed|turn|mapToDouble(Long::doubleValue)|reals",
+        "boxed|turn|map(Long::doubleValue)|dbox",
         "boxed|turn|flatMapToLong(n -> LongStream.of(n, n + 1L))|long",
         "boxed|turn|flatMapToInt(n -> IntStream.of(n.intValue()))|ints",
         "boxed|turn|flatMapToDouble(n -> DoubleStream.of(n, n / 2.0))|reals",
@@ -204,8 +221,15 @@ final class RandomPipeline {
         "boxed|end|*mapToLong(Long::longValue).sum()",
         "boxed|end|*reduce(0L, Long::sum)",
         "boxed|end|*min(Comparator.naturalOrder()).orElse(0L)",
+        "boxed|end|*collect(Collectors.flatMapping(n -> Stream.of(n, n), Collectors.counting()))",
+        String.join(
+            "",
+            "boxed|end|*collect(Collector.<Long, long[], Long>of(() -> new long[1], ",
+            "(a, n) -> a[0] += n, (a, b) -> new long[] {a[0] + b[0]}, a -> a[0]))"
+        ),
         "boxed|end|count()",
         "boxed|end|*findFirst().orElse(-1L)",
+        "boxed|end|*max(Comparator.naturalOrder()).map(n -> n + 1L).orElse(0L)",
         "boxed|end|*anyMatch(n -> n > 5L)",
         "ibox|source|INTEGERS.stream()",
         "ibox|source|IntStream.of(INTS).boxed()",
@@ -225,6 +249,7 @@ final class RandomPipeline {
         "ibox|turn|mapToInt(Integer::intValue)|ints",
         "ibox|turn|mapToLong(Integer::longValue)|long",
         "ibox|turn|mapToDouble(Integer::doubleValue)|reals",
+        "ibox|turn|map(Integer::doubleValue)|dbox",
         "ibox|turn|flatMapToInt(n -> IntStream.of(n, n + 1))|ints",
         "ibox|turn|map(n -> n.toString())|words",
         "ibox|end|*mapToInt(Integer::intValue).sum()",
@@ -232,8 +257,10 @@ final class RandomPipeline {
         "ibox|end|*collect(Collectors.toSet()).size()",
         "ibox|end|*toList().size()",
         "ibox|end|*max(Comparator.naturalOrder()).orElse(-1)",
+        "ibox|end|*collect(Collectors.flatMapping(n -> Stream.of(n, -n), Collectors.counting()))",
         "ibox|end|count()",
         "ibox|end|*findFirst().orElse(-1)",
+        "ibox|end|*findFirst().map(n -> n * 2).filter(n -> n > 4).orElse(-1)",
         "words|source|WORDS.stream()",
         "words|source|Stream.of(\"alpha\", \"beta\", \"gamma\", \"beta\")",
         "words|source|Arrays.stream(PROSE.split(\" \"))",
@@ -259,6 +286,7 @@ final class RandomPipeline {
         "words|turn|flatMapToInt(String::chars)|ints",
         "words|turn|mapMultiToInt((s, sink) -> sink.accept(s.length()))|ints",
         "words|turn|map(s -> (long) s.length())|boxed",
+        "words|turn|map(s -> (double) s.length())|dbox",
         "words|turn|map(String::length)|ibox",
         "words|turn|map(s -> new Pair((long) s.length(), s))|pairs",
         "words|end|*collect(Collectors.joining(\"-\"))",
@@ -270,11 +298,24 @@ final class RandomPipeline {
         "words|end|*collect(ArrayList::new, List::add, List::addAll).size()",
         "words|end|*collect(Collectors.groupingBy(String::length, Collectors.counting())).size()",
         "words|end|*collect(Collectors.toMap(s -> s, String::length, (a, b) -> a, TreeMap::new))",
+        "words|end|*collect(Collectors.flatMapping(s -> Stream.of(s, s), Collectors.counting()))",
+        String.join(
+            "",
+            "words|end|*collect(Collectors.<String, Long, String, String>teeing(",
+            "Collectors.counting(), Collectors.joining(), (n, j) -> n + j))"
+        ),
+        String.join(
+            "",
+            "words|end|*collect(Collector.<String, StringBuilder, String>of(",
+            "StringBuilder::new, StringBuilder::append, StringBuilder::append, ",
+            "StringBuilder::toString))"
+        ),
         "words|end|*toList().size()",
         "words|end|*reduce(\"\", String::concat)",
         "words|end|*max(Comparator.naturalOrder()).orElse(\"none\")",
         "words|end|count()",
         "words|end|*findFirst().orElse(\"none\")",
+        "words|end|*findFirst().filter(s -> !s.isEmpty()).map(String::toUpperCase).orElse(\"x\")",
         "words|end|*anyMatch(String::isEmpty)",
         "pairs|source|PAIRS.stream()",
         "pairs|source|Stream.of(new Pair(3L, \"a\"), new Pair(1L, \"b\"), new Pair(3L, \"a\"))",
@@ -294,12 +335,55 @@ final class RandomPipeline {
         "pairs|turn|mapToInt(p -> p.text().length())|ints",
         "pairs|turn|map(Pair::text)|words",
         "pairs|turn|map(Pair::key)|boxed",
+        "pairs|turn|map(p -> p.key() / 2.0)|dbox",
         "pairs|end|*map(Pair::text).collect(Collectors.joining(\"-\"))",
         "pairs|end|*mapToLong(Pair::key).sum()",
         "pairs|end|*collect(Collectors.counting())",
         "pairs|end|*toList().size()",
         "pairs|end|count()",
-        "pairs|end|*findFirst().map(Pair::text).orElse(\"none\")"
+        "pairs|end|*findFirst().map(Pair::text).orElse(\"none\")",
+        "pairs|end|*findFirst().map(Pair::text).filter(s -> s.length() > 1).orElse(\"x\")",
+        "dbox|source|DOUBLES.stream()",
+        "dbox|source|DoubleStream.of(DECIMALS).boxed()",
+        "dbox|source|Stream.of(1.5, 2.25, 1.5, 8.125)",
+        "dbox|source|Stream.iterate(0.5, d -> d + 1.5).limit(5L)",
+        "dbox|source|Stream.concat(DOUBLES.stream(), Stream.of(9.5))",
+        "dbox|stage|map(d -> d * 1.5)",
+        "dbox|stage|map(d -> d + 0.25)",
+        "dbox|stage|filter(d -> d > 1.0)",
+        "dbox|stage|distinct()",
+        "dbox|stage|sorted()",
+        "dbox|stage|sorted(Comparator.reverseOrder())",
+        "dbox|stage|skip(1L)",
+        "dbox|stage|limit(6L)",
+        "dbox|stage|takeWhile(d -> d < 12.0)",
+        "dbox|stage|dropWhile(d -> d < 1.0)",
+        "dbox|stage|flatMap(d -> Stream.of(d, d + 0.5))",
+        "dbox|stage|<Double>mapMulti((d, sink) -> { sink.accept(d); sink.accept(d * 2.0); })",
+        "dbox|peek|peek(x -> SUM[0] += x.longValue())",
+        "dbox|turn|mapToDouble(Double::doubleValue)|reals",
+        "dbox|turn|mapToLong(Double::longValue)|long",
+        "dbox|turn|mapToInt(Double::intValue)|ints",
+        "dbox|turn|map(Double::longValue)|boxed",
+        "dbox|turn|map(Double::intValue)|ibox",
+        "dbox|turn|map(d -> Double.toString(d))|words",
+        "dbox|turn|map(d -> new Pair(d.longValue(), Double.toString(d)))|pairs",
+        "dbox|turn|flatMapToDouble(d -> DoubleStream.of(d, d * 0.5))|reals",
+        "dbox|turn|mapMultiToDouble((d, sink) -> sink.accept(d / 2.0))|reals",
+        "dbox|end|*mapToDouble(Double::doubleValue).sum()",
+        "dbox|end|*reduce(0.0, Double::sum)",
+        "dbox|end|*collect(Collectors.summingDouble(Double::doubleValue))",
+        "dbox|end|*collect(Collectors.averagingDouble(Double::doubleValue))",
+        String.join(
+            "",
+            "dbox|end|*collect(Collectors.<Double, Long, List<Double>, Long>teeing(",
+            "Collectors.counting(), Collectors.toList(), (n, l) -> n + l.size()))"
+        ),
+        "dbox|end|*collect(Collectors.toSet()).size()",
+        "dbox|end|*toList().size()",
+        "dbox|end|*max(Comparator.naturalOrder()).orElse(0.0)",
+        "dbox|end|*findFirst().map(d -> d * 2.0).filter(d -> d > 1.0).orElse(0.0)",
+        "dbox|end|count()"
     );
 
     /**
@@ -314,6 +398,7 @@ final class RandomPipeline {
         "import java.util.Comparator;",
         "import java.util.List;",
         "import java.util.TreeMap;",
+        "import java.util.stream.Collector;",
         "import java.util.stream.Collectors;",
         "import java.util.stream.DoubleStream;",
         "import java.util.stream.IntStream;",
@@ -331,6 +416,8 @@ final class RandomPipeline {
         "    private static final List<Long> LIST = List.of(4L, 8L, 8L, 15L, 16L, 23L);",
         "",
         "    private static final List<Integer> INTEGERS = List.of(6, 3, 6, 11, 4);",
+        "",
+        "    private static final List<Double> DOUBLES = List.of(0.5, 2.5, 0.5, 3.75);",
         "",
         "    private static final List<String> WORDS = List.of(\"phi\", \"rule\", \"phi\");",
         "",
@@ -404,7 +491,7 @@ final class RandomPipeline {
      * The domains a pipeline may travel through, in the order it may start in.
      */
     private static final List<String> DOMAINS = Arrays.asList(
-        "boxed", "ibox", "ints", "long", "pairs", "reals", "words"
+        "boxed", "dbox", "ibox", "ints", "long", "pairs", "reals", "words"
     );
 
     /**

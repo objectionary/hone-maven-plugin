@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The other half of #804: the guard that 216 mints for distinct puts `class`
+# directly behind `φ` and carries no `opcode` at all, so the 𝐵-first-head meta
+# that lets 283 reach a dropWhile has to bind the empty run of bindings here
+# and leave this site rewritten exactly as it was before.
+#
+# The dup opcode is read off the filter's `bridge-input`, a reference type
+# here, so it is the one-slot `dup` rather than `dup2`; distinct erases the
+# element type, hence the Object.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/283-insert-dup-before-filter-after-stateful.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "dist/X",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.o-filter,
+        opcode ↦ "invokestatic",
+        class ↦ "dist/X",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        accepted ↦ "Ljava/lang/String;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "dist/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(Ljava/lang/String;)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-head, 𝜏-distinct ↦ ⟦ φ ↦ Φ.hone.distinct, 𝐵-distinct ⟧, 𝜏-dup ↦ ⟦ φ ↦ Φ.hone.dup, opcode ↦ "dup", class ↦ "dist/X" ⟧, 𝜏-filter ↦ ⟦ φ ↦ Φ.hone.o-filter, 𝐵-filter ⟧, 𝐵-tail ⟧

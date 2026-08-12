@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A filter riding behind a dropWhile() — the shape #804 reports. A filter guard
+# spends the item on its predicate, so 283 splices a Φ.hone.dup in front of it
+# whenever a stateful guard leads; the dup is what the keep path pops when the
+# predicate says yes. The Φ.hone.dropWhile pragma 208 mints is lambda-bearing,
+# so it carries `opcode` between `φ` and `class`, while the distinct and skip
+# pragmas 216 and 220 mint put `class` directly behind `φ`. phino matches
+# bindings positionally, so 283's 𝜏-first — which spelled `class` out as the
+# second binding — matched the two of them and never the dropWhile. No dup was
+# spliced, the predicate ate the only copy of the item, and the keep label was
+# reached with an empty stack against a frame promising the element:
+# "Inconsistent stackmap frames at branch target" at load time.
+#
+# Four pipelines, one class:
+#   * plain  — the reported reproduction: dropWhile(< 2) sees 3 first, so its
+#     latch sticks at once and 3, 1, 2 all survive; filter(> 1) keeps 3 and 2
+#     -> count 2.
+#   * text   — the same shape on a String element, proving it is not about
+#     Long: the leading "" is dropped, filter(length > 1) keeps "aa" and "ccc"
+#     -> "aa+ccc". A re-evaluated predicate would drop "b" as well, so the
+#     joined text also asserts the latch still sticks.
+#   * mapped — a map behind the filter, so the whole run fuses into one
+#     mapMulti and the dup has to survive fusion: 1, 2 dropped, filter keeps
+#     the odd 3 and 5, times ten -> 80.
+#   * twice  — TWO filters behind one dropWhile, so the rule has to fire again
+#     at fixpoint on the pair it left adjacent: 5 latches the guard, filter
+#     (> 1) keeps 5, 6, 2, 7 and filter(< 7) keeps 5, 6, 2 -> count 3.
+# The `after` counts are left unasserted on purpose: this pack exists to prove
+# the optimized class VERIFIES and still computes the right answer, which the
+# printed line asserts end to end.
+java: |
+  package dropwhilefilter;
+  import java.util.stream.Collectors;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long plain = Stream.of(3L, 1L, 2L)
+        .dropWhile(n -> n < 2L)
+        .filter(n -> n > 1L)
+        .count();
+      String text = Stream.of("", "aa", "b", "ccc")
+        .dropWhile(s -> s.isEmpty())
+        .filter(s -> s.length() > 1)
+        .collect(Collectors.joining("+"));
+      long mapped = Stream.of(1L, 2L, 3L, 4L, 5L)
+        .dropWhile(n -> n < 3L)
+        .filter(n -> n % 2L == 1L)
+        .map(n -> n * 10L)
+        .reduce(0L, Long::sum);
+      long twice = Stream.of(5L, 1L, 6L, 2L, 7L)
+        .dropWhile(n -> n < 4L)
+        .filter(n -> n > 1L)
+        .filter(n -> n < 7L)
+        .count();
+      System.out.printf("The result is %d/%s/%d/%d\n", plain, text, mapped, twice);
+    }
+  }
+# The production default grep-in (see #449/#671/#705) would already select this
+# class via its `filter` and `map` tokens, but the pack opts the pre-filter off
+# with `.*` so it stays decoupled from the exact set of method names the
+# default happens to include.
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 2/aa+ccc/80/3"

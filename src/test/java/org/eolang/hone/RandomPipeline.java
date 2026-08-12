@@ -54,10 +54,12 @@ import java.util.Random;
  * <p>Reaching a shape is not the same as reaching it soon, and widening the
  * grammar re-deals every seed. #811 — two operators in a primitive-stream run
  * whose trailing {@code boxed()} keeps it in the boxed domain — was found at seed
- * 334 of the walk as it stood before this grammar grew, well outside the 120
- * seeds walked by default. Shapes that rare earn a deterministic pack of their
- * own under {@code optimize/streams/} once they are understood; the walk is the
- * net that finds them, not the test that pins them.</p>
+ * 334 of the walk as it stood before this grammar grew, already well outside the
+ * 120 seeds walked by default, and the re-dealt walk does not reach it inside 360
+ * at all. That is the argument for the deterministic pack: a shape the walk finds
+ * earns one of its own under {@code optimize/streams/} the day it is understood,
+ * because the walk is the net that catches a defect, not the test that keeps it
+ * caught.</p>
  *
  * @since 0.30.0
  */

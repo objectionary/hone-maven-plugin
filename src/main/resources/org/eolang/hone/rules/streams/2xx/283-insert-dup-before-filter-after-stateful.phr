@@ -14,12 +14,25 @@
 # stateful guards and 𝜏-second is a filter, it splices the same Φ.hone.dup
 # between them. After
 # insertion the two are no longer adjacent, so it fires once per site.
+#
+# The three guards disagree about the ORDER of their bindings, and phino
+# matches bindings positionally — a 𝐵 meta swallows a run of them, everything
+# else has to line up one for one. 216 and 220 mint `class` directly behind
+# `φ`, but the Φ.hone.dropWhile that 208 mints carries `opcode` in between,
+# because it is a lambda-bearing pragma shaped like map and filter. A 𝜏-first
+# that spelled `class` out as the second binding therefore matched distinct
+# and skip and silently walked past every dropWhile: no dup was spliced, the
+# predicate ate the only copy of the item, and the class died at load with
+# "Inconsistent stackmap frames" (#804). 𝐵-first-head absorbs whatever the
+# guard puts between `φ` and `class` — none of it is anything this rule reads
+# — so the ordering a fourth guard picks will not matter either.
 name: insert-dup-before-filter-after-stateful
 pattern: |
   ⟦
     𝐵-before,
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.𝜏-one,
+      𝐵-first-head,
       class ↦ 𝑒-class,
       𝐵-first-rest
     ⟧,
@@ -41,6 +54,7 @@ result: |
     𝐵-before,
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.𝜏-one,
+      𝐵-first-head,
       class ↦ 𝑒-class,
       𝐵-first-rest
     ⟧,

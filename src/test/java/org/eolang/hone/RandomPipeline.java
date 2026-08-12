@@ -34,13 +34,14 @@ import java.util.Random;
  * the API allows to skip the traversal altogether.</p>
  *
  * <p>The grammar does not step around the operations that the rewrite has been
- * known to break — every shape behind #787, #788, #790, #794, #798, #799 and
- * #805 is still reachable, since a generator that avoids the defects we already
- * know about would only prove that we know about them, and nothing about a
- * regression. One shape is quarantined all the same, in
- * {@code quarantined()}: it breaks the rewrite today, it is filed as #804, and
- * a suite that fails on it every night reports nothing new. It is named by its
- * issue, so closing the issue widens the walk by deleting one clause.</p>
+ * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804
+ * and #805 is still reachable, since a generator that avoids the defects we
+ * already know about would only prove that we know about them, and nothing
+ * about a regression. Nothing is quarantined at the moment: {@code
+ * quarantined()} names the shapes that break the rewrite today, so that a suite
+ * failing on them every night does not report what is already filed, and both
+ * of the clauses it held have been deleted along with the issue that owned
+ * them.</p>
  *
  * @since 0.30.0
  * @todo #791:60min Reach the last corners of the API. There is no
@@ -549,48 +550,27 @@ final class RandomPipeline {
     /**
      * The issue that quarantines this walk, if one does.
      *
-     * <p>One shape breaks the rewrite today, emitting a class the verifier
-     * rejects, and it is reported upstream. A walk that reaches it is re-rolled
-     * from a derived seed instead of being generated, so the suite stays a net
-     * for regressions rather than a standing failure. Delete a clause here the
-     * day its issue closes, and the walk widens again.</p>
+     * <p>A shape that breaks the rewrite today, emitting a class the verifier
+     * rejects, gets a clause here once it is reported upstream: a walk that
+     * reaches it is re-rolled from a derived seed instead of being generated, so
+     * the suite stays a net for regressions rather than a standing failure. Each
+     * clause is as narrow as the shape it owns and is named by its issue, so
+     * closing the issue widens the walk again by deleting one.</p>
      *
-     * <p>The clause is as narrow as the shape it owns: a {@code filter} behind
-     * a {@code dropWhile}, which loses the copy of the item its predicate eats.
-     * #805 owned a second one — a conversion into an object domain with a
-     * {@code peek}, a {@code filter} or another guard between it and a stateful
-     * guard — until the keep-frame of such a guard stopped being read off
-     * whatever opcode happens to sit in front of it, and that shape is
-     * reachable again.</p>
+     * <p>There is nothing to quarantine right now. The two clauses this method
+     * held are both gone: #804's, a {@code filter} behind a {@code dropWhile},
+     * which lost the copy of the item its predicate eats, and #805's, a
+     * conversion into an object domain with a {@code peek}, a {@code filter} or
+     * another guard between it and a stateful guard, whose keep-frame was read
+     * off whatever opcode happened to sit in front of it. Add the next one the
+     * day the walk finds a shape we cannot fix at once.</p>
      *
      * @param walk The lines the walk picked
      * @return The issue that owns the shape, or an empty string
      */
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private static String quarantined(final List<String> walk) {
-        String issue = "";
-        if (RandomPipeline.dropsThenFilters(walk)) {
-            issue = "#804";
-        }
-        return issue;
-    }
-
-    /**
-     * Does a {@code filter} follow a {@code dropWhile}, which loses its dup?
-     * @param walk The lines the walk picked
-     * @return TRUE if the walk reaches the shape of #804
-     */
-    private static boolean dropsThenFilters(final List<String> walk) {
-        boolean found = false;
-        boolean dropped = false;
-        for (final String line : walk) {
-            final String code = RandomPipeline.code(line);
-            if (dropped && code.startsWith("filter(")) {
-                found = true;
-                break;
-            }
-            dropped = dropped || code.startsWith("dropWhile(");
-        }
-        return found;
+        return "";
     }
 
     /**

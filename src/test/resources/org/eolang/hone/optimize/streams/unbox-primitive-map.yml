@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# An unboxing mapToX followed by a primitive map must not send the rewrite
+# into a loop (#801).
+#
+# 241 used to mint a Φ.hone.type between two adjacent primitive operations
+# without checking whether the conversion was an identity, and 271 deletes
+# exactly the type nodes whose `from` equals its `to`. The two then took turns
+# on the `I -> I` pair this pipeline lowers to. That is harmless for as long as
+# some other rule keeps changing the expression — which is why
+# `IntStream.of(1, 2, 3).map(n -> n + 2).map(n -> n * 3).sum()` always
+# finished, minting and deleting the very same no-op node on the way. A
+# METHOD-REFERENCE mapToX is the shape that leaves nothing else to do: 205 only
+# recognises a lambda-ised mapToX, so `mapToInt(Integer::intValue)` stays put,
+# the rest of the expression settles, and the oscillation becomes the only
+# thing still happening. phino's loop detector then saw a state it already had,
+# aborted with "it seems rewriting is looping", and the optimize goal died with
+# "Failed to execute docker, code=0x0001".
+#
+# Both the int and the long form are covered; the issue reports
+# mapToLong(Integer::longValue) failing identically. No opcode counts are
+# asserted — this pack is about the build finishing at all and the optimized
+# bytecode still summing to the same numbers.
+java: |
+  package unboxmap;
+  import java.util.Arrays;
+  import java.util.List;
+  public class X {
+    private static final List<Integer> INTEGERS = Arrays.asList(5, 3, 8, 2, 7);
+    public static void main(String[] a) {
+      int i = INTEGERS.stream()
+        .mapToInt(Integer::intValue)
+        .map(n -> n + 2)
+        .sum();
+      long j = INTEGERS.stream()
+        .mapToLong(Integer::longValue)
+        .map(n -> n + 2L)
+        .sum();
+      System.out.printf("The results are %d %d\n", i, j);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The results are 35 35"

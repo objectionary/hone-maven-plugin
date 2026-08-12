@@ -37,11 +37,11 @@ import java.util.Random;
  * known to break — every shape behind #787, #788, #790, #794, #798 and #799 is
  * still reachable, since a generator that avoids the defects we already know
  * about would only prove that we know about them, and nothing about a
- * regression. Three shapes are quarantined all the same, in
- * {@code quarantined()}: they break the rewrite today, they are filed as #801,
- * #804 and #805, and a suite that fails on them every night reports nothing
- * new. Each is named by its issue, so closing the issue widens the walk by
- * deleting one clause.</p>
+ * regression. Two shapes are quarantined all the same, in
+ * {@code quarantined()}: they break the rewrite today, they are filed as #804
+ * and #805, and a suite that fails on them every night reports nothing new.
+ * Each is named by its issue, so closing the issue widens the walk by deleting
+ * one clause.</p>
  *
  * @since 0.30.0
  * @todo #791:60min Reach the last corners of the API. There is no
@@ -574,12 +574,11 @@ final class RandomPipeline {
     /**
      * The issue that quarantines this walk, if one does.
      *
-     * <p>Three shapes break the rewrite today — two emit a class the verifier
-     * rejects, the third loops the rewrite until phino gives up — and all are
-     * reported upstream. A walk that reaches one of them is re-rolled from a
-     * derived seed instead of being generated, so the suite stays a net for
-     * regressions rather than a standing failure. Delete a clause here the day
-     * its issue closes, and the walk widens again.</p>
+     * <p>Two shapes break the rewrite today, both emitting a class the verifier
+     * rejects, and both are reported upstream. A walk that reaches one of them
+     * is re-rolled from a derived seed instead of being generated, so the suite
+     * stays a net for regressions rather than a standing failure. Delete a
+     * clause here the day its issue closes, and the walk widens again.</p>
      *
      * <p>Each clause is as narrow as the shape it owns. #805 wants three things
      * at once: a conversion into an object domain, so the type the guard's frame
@@ -597,8 +596,6 @@ final class RandomPipeline {
         String issue = "";
         if (RandomPipeline.dropsThenFilters(walk)) {
             issue = "#804";
-        } else if (RandomPipeline.unboxesThenMaps(walk)) {
-            issue = "#801";
         } else if (RandomPipeline.retypesThenGuards(walk)) {
             issue = "#805";
         }
@@ -620,26 +617,6 @@ final class RandomPipeline {
                 break;
             }
             dropped = dropped || code.startsWith("dropWhile(");
-        }
-        return found;
-    }
-
-    /**
-     * Does a {@code map} follow an unboxing conversion, which loops the rewrite?
-     * @param walk The lines the walk picked
-     * @return TRUE if the walk reaches the shape of #801
-     */
-    private static boolean unboxesThenMaps(final List<String> walk) {
-        boolean found = false;
-        boolean unboxed = false;
-        for (final String line : walk) {
-            final String code = RandomPipeline.code(line);
-            if (unboxed && code.startsWith("map(")) {
-                found = true;
-                break;
-            }
-            unboxed = code.contains("mapTo")
-                && !RandomPipeline.OBJECTS.contains(RandomPipeline.landing(line));
         }
         return found;
     }

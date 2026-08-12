@@ -9,18 +9,17 @@
 # common case — including a pure-primitive LongStream.filter (bridge-input J ->
 # `long`).
 #
-# Runs AFTER both 506 rules, which have already claimed every marker sitting
-# behind a recognised predicate: `506-distill-filter-frame` takes the two
-# PRIMITIVE-predicate shapes whose survivor is not bridge-input (#704 boxed
-# filter, #713 head-fused unboxing map) and resolves them from `returned`, and
-# `506-distill-predicate-frame` takes the OBJECT-predicate ones and resolves
-# them from the predicate's parameter — the survivor the guard's `dup` copied,
-# which a type-changing map fused ahead of the filter drives away from
-# bridge-input (#794). Whatever marker they left untouched lands here, so this
-# rule needs no guard. By 507 the distill is a Φ.hone.distill-lambda (501) whose
-# bridge-input is final and 511 has not yet wrapped it into a method, so the
-# marker never reaches jeo. Scoped to a distill-lambda WITHOUT `captured`, so
-# stateful keep-labels stay with 503/504.
+# Runs AFTER `506-distill-predicate-frame`, which has already claimed every
+# marker sitting behind a recognised `invokestatic` predicate and resolved it
+# from that predicate's own parameter — the survivor the guard's `dup` copied,
+# which fusion drives away from bridge-input in both directions (a type-changing
+# object map ahead of the filter, #794; a boxed-primitive chain unboxed ahead of
+# the guard, #704/#713/#811). What lands here is a marker with no such predicate
+# in front of it — an instance-lambda filter, whose guarded call is an
+# invokevirtual/invokespecial — so this rule needs no guard. By 507 the distill is
+# a Φ.hone.distill-lambda (501) whose bridge-input is final and 511 has not yet
+# wrapped it into a method, so the marker never reaches jeo. Scoped to a
+# distill-lambda WITHOUT `captured`, so stateful keep-labels stay with 503/504.
 name: distill-filter-frame-fallback
 pattern: |
   ⟦

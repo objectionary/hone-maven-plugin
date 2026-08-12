@@ -7,13 +7,11 @@
 # (bridge-input), the head `lambda$hone$1:(Ljava/lang/Long;)Ljava/lang/String;`
 # retypes it, the guard's `dup` copies the java/lang/String and the predicate
 # `(Ljava/lang/String;)Z` tests it — so the survivor at the keep-label is a
-# String. 506 declines the marker because the predicate parameter is not a
-# primitive; the object rule claims it and reads java/lang/String off the
-# predicate's signature. Before the fix the marker fell through to the 507
-# fallback, which declared bridge-input (java/lang/Long) and the class failed
-# JVM verification at the branch target.
+# String. 506 claims the marker and reads java/lang/String off the predicate's
+# signature. Before the fix the marker fell through to the 507 fallback, which
+# declared bridge-input (java/lang/Long) and the class failed JVM verification at
+# the branch target.
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
   - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-predicate-frame.phr
   - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
 input: |

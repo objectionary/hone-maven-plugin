@@ -17,10 +17,12 @@
 # skipped its Long.valueOf(J) re-box while 451 still appended the
 # Long.longValue() bridge unbox — a longValue applied to a primitive long.
 # The class failed JVM verification with "java.lang.VerifyError: Inconsistent
-# stackmap frames at branch target 12". The fix derives the keep-frame from
-# the distill's `returned` (kept primitive, J -> long) and keeps 412 off this
-# shape (its `accepted` is the wrapper, so 422 boxes the survivor exactly as
-# for a filterless distill), so frame, returned and tail agree again.
+# stackmap frames at branch target 12". The fix derives the keep-frame from the
+# predicate's own (J)Z parameter — the value the guard's dup2 copied one opcode
+# earlier — and 412, which had to be kept off this shape by an `accepted` guard,
+# is gone entirely since #811 (the head unbox now runs ahead of the guard in the
+# boxed shapes it was written for, so the survivor is the primitive there too),
+# leaving frame, returned and tail to agree without it.
 #
 # {1..6} kept to multiples of 3 = {3, 6}, summed as long = 9. The mapToLong +
 # filter collapse to a single Stream.mapMultiToLong, so invokedynamic 2 -> 1.

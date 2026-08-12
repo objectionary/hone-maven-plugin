@@ -2,19 +2,20 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The #713 shape, claimed by 506 (the PRIMITIVE-predicate specific rule): an
-# object-to-primitive map (mapToLong(Long::longValue)) has fused in AHEAD of the
-# filter, so the synthesized method still receives the wrapper (bridge-input =
-# Ljava/lang/Long;) but the head map has already unboxed the element, the dup
-# before the predicate is a two-slot dup2, and the survivor kept at the
-# keep-label is a two-slot `long`. The predicate is PRIMITIVE (J)Z and
-# bridge-input is a WRAPPER, so 506 fires and resolves the frame-item from the
-# primitive `returned` (J -> long) — 412 left it primitive because this shape's
-# `accepted` is a wrapper. Deriving from bridge-input (507's fallback, also
-# listed but never reached here) would wrongly declare a one-slot java/lang/Long
-# and fail JVM verification with "Inconsistent stackmap frames".
+# The PRIMITIVE-predicate half of 506: a boxed-primitive chain whose element has
+# been unboxed ahead of the filter guard. The synthesized method still receives
+# the wrapper (bridge-input = Ljava/lang/Long;) — here because a
+# mapToLong(Long::longValue) fused in AHEAD of the filter (#713); 421's head
+# Long.longValue() puts a LongStream.filter(...).boxed() into the very same shape
+# (#704, #811) — so by the time the guard runs the item is a two-slot `long`, the
+# guard is a `dup2`, and the survivor kept at the keep-label is that primitive.
+# The predicate's own parameter (J)Z names it, so 506 resolves the frame-item to
+# `long`. 507 (the fallback) is also listed but sees no marker left; had it
+# claimed this one, its bridge-input would wrongly declare a one-slot
+# java/lang/Long and the class would fail JVM verification with "Inconsistent
+# stackmap frames".
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-predicate-frame.phr
   - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
 input: |
   ⟦

@@ -9,7 +9,7 @@
 # as a map — but 309 gives its body a `dup` that the void Consumer call spends,
 # so the filter behind it receives a single item and its predicate would eat
 # it. Before this rule covered `peek`, the pair reached 4xx unguarded, 401
-# fused it into a distill carrying the head's `start ↦ "peek"`, and 431 (which
+# fused it into a distill carrying the head's `start ↦ "peek"`, and 413 (which
 # only matches `start ↦ "filter"`) could never insert the guard afterwards.
 #
 # The dup opcode is chosen from the peek's `returned`, a reference type here,

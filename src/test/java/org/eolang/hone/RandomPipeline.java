@@ -34,8 +34,8 @@ import java.util.Random;
  * the API allows to skip the traversal altogether.</p>
  *
  * <p>The grammar does not step around the operations that the rewrite has been
- * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804
- * and #805 is still reachable, since a generator that avoids the defects we
+ * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804,
+ * #805 and #811 is still reachable, since a generator that avoids the defects we
  * already know about would only prove that we know about them, and nothing
  * about a regression. Nothing is quarantined at the moment: {@code
  * quarantined()} names the shapes that break the rewrite today, so that a suite
@@ -50,6 +50,16 @@ import java.util.Random;
  * well: collectors assembled by hand out of {@code Collector.of},
  * {@code Collectors.teeing}, {@code Collectors.flatMapping}, and {@code Optional}
  * chains longer than a single {@code orElse}.</p>
+ *
+ * <p>Reaching a shape is not the same as reaching it soon, and widening the
+ * grammar re-deals every seed. #811 — two operators in a primitive-stream run
+ * whose trailing {@code boxed()} keeps it in the boxed domain — was found at seed
+ * 334 of the walk as it stood before this grammar grew, already well outside the
+ * 120 seeds walked by default, and the re-dealt walk does not reach it inside 360
+ * at all. That is the argument for the deterministic pack: a shape the walk finds
+ * earns one of its own under {@code optimize/streams/} the day it is understood,
+ * because the walk is the net that catches a defect, not the test that keeps it
+ * caught.</p>
  *
  * @since 0.30.0
  */

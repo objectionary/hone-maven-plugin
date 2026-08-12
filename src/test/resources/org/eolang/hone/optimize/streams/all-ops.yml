@@ -1,6 +1,15 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
 # SPDX-License-Identifier: MIT
 ---
+# Every intermediate operator the Stream API offers, in one pipeline, as a
+# smoke test that the whole rule set survives them together. The `after`
+# counts are a tally, not a design: they move whenever a rule starts
+# recognising one more operator or emits one more call, so they need
+# re-measuring rather than defending. Two such moves are already baked in
+# (see #813): 208/310 folding dropWhile into a stateful distill (#718), and
+# the try-with-resources that 455-458 wrap around the inner stream of each
+# flatMap variant — its four Throwable.addSuppressed calls, one per flatMap
+# below, are four of the 18 invokevirtual.
 java: |
   package allops;
   import java.util.*;
@@ -52,8 +61,8 @@ before:
   invokedynamic: 17
   return: 7
 after:
-  invokespecial: 2
-  invokestatic: 31
-  invokevirtual: 14
+  invokespecial: 3
+  invokestatic: 32
+  invokevirtual: 18
   invokedynamic: 14
-  return: 17
+  return: 19

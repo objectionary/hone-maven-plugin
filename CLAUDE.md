@@ -121,6 +121,23 @@ a `.yml` fixture once the defect is understood. It walks 120 seeds by default;
 `-Dhone.random.pipelines=240` moves that either way, and the count is the number
 of `javac`-verified programs, not the number of Maven builds, so it costs little.
 
+The walk picks more than operators. It picks the frame the pipeline sits in — a
+`static` method or an instance one, a body that catches what the pipeline throws
+or one that does not — and each frame opens productions the others cannot reach:
+a lambda that reads `this`, which is the population `121` and `131` exist for
+and that #689 found empty, and a `boom` operator that throws from inside the
+walk and names the element it threw on, so the message is the oracle for how far
+a fused body got before it unwound. Every frame passes four arguments — a
+`long`, an `int`, a `double` and a `String` — that lambdas all over the grammar
+capture, which is the only way to reach the capturing metafactory shapes
+`112`–`126` lift. Two properties are decided last, once the walk knows where it
+ended: a pipeline may go `parallel()`, which `222`–`225` refuse to fuse a `skip`
+or a `distinct` through, and its terminal may return nothing at all. Whatever
+you add to the grammar, keep the printed lines a function of the seed alone —
+`parallel()` is offered only when nothing counts the traversal and no
+floating-point reduction closes the pipeline, because a class that prints
+differently on two sequential runs is not an oracle, it is a flake.
+
 A handful of shapes are quarantined in `RandomPipeline.quarantined()`, each
 named by the issue that owns it: a walk that reaches one is re-rolled from a
 derived seed, so the suite stays a net for regressions instead of a standing

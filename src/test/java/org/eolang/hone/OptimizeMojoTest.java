@@ -1328,9 +1328,138 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void avoidsAThrowInFrontOfCount() {
+        final List<String> thrown = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("counted", "X");
+            if (java.contains("throw boom(") && java.contains(".count()")) {
+                thrown.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "a throwing operator must not sit in front of count(), which may never reach it",
+            thrown,
+            Matchers.empty()
+        );
+    }
+
+    @Test
+    void catchesEveryPipelineThatThrows() {
+        final List<String> loose = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("caught", "X");
+            if (java.contains("throw boom(") && !java.contains("} catch (")) {
+                loose.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "a pipeline that throws must sit in a body that catches, or it kills the JVM",
+            loose,
+            Matchers.empty()
+        );
+    }
+
+    @Test
+    void reachesPipelinesThatThrow() {
+        final List<String> thrown = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("thrown", "X");
+            if (java.contains("throw boom(")) {
+                thrown.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some pipelines must throw, or the tests that guard a throw guard nothing",
+            thrown,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
+    void avoidsParallelWhenTheTraversalIsCounted() {
+        final List<String> raced = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("raced", "X");
+            if (java.contains(".parallel()")
+                && (java.contains("SUM[0] +=") || java.contains("throw boom("))) {
+                raced.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "a parallel pipeline must not count its own traversal, since workers lose updates",
+            raced,
+            Matchers.empty()
+        );
+    }
+
+    @Test
+    void reachesParallelPipelines() {
+        final List<String> raced = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("raced", "X");
+            if (java.contains(".parallel()")) {
+                raced.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some pipelines must go parallel, or the rules that revert fusion are never tried",
+            raced,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
+    void reachesInstanceMethods() {
+        final List<String> instances = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("held", "X");
+            if (java.contains("private String pipe(")) {
+                instances.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some pipelines must sit in an instance method, or only static frames are tried",
+            instances,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
+    void reachesLambdasThatReadThis() {
+        final List<String> selfish = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("selfish", "X");
+            if (java.contains("this.bump(") || java.contains("this::decorate")) {
+                selfish.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some lambdas must read this, or the non-static lambda rules are never tried",
+            selfish,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
+    void reachesLambdasThatCapture() {
+        final List<String> capturing = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("capturing", "X");
+            if (java.contains("n + by") || java.contains("tag::concat")) {
+                capturing.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some lambdas must capture an argument, or the capturing metafactory is never lifted",
+            capturing,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
     void reachesEveryProductionOfTheGrammar() {
         final StringBuilder walked = new StringBuilder();
-        for (int seed = 0; seed < 500; ++seed) {
+        for (int seed = 0; seed < 2000; ++seed) {
             walked.append(new RandomPipeline(seed).java("reached", "X"));
         }
         final List<String> missed = new ArrayList<>(0);

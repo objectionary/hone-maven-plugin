@@ -1,0 +1,85 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# End-to-end proof that a CAPTURING map riding a distinct()-led pipeline
+# verifies (#817). distinct erases the element type, so the fused stateful
+# distill carries bridge-input ↦ Ljava/lang/Object; and the item the guard hands
+# on is an Object. The map that follows captures a `long` method argument, so
+# javac desugars it to a "(JLPair;)LPair;" static handle and 316 lowers it to a
+# park/reload body: `astore 1` parks the item, one `fetch` reads the captured
+# long back out of the shared state List, `aload 1` reloads the item on top, and
+# the invokestatic consumes both. The 505 family narrows the item by anchoring
+# on the guard's keep-frame — 505 on the frame itself, 508 across a filter's
+# `dup`, 509 across a dropWhile's latch — and NONE of them reaches this shape,
+# because the item the call eats is the reloaded copy and the frame is separated
+# from the call by the whole capture run. So before 509-parked the Object
+# reached an invokestatic typed for Pair and the class died at initialization
+# with "Bad type on operand stack: Type 'java/lang/Object' is not assignable to
+# 'statefulclosuretail/X$Pair'" inside the synthesised distill. The new rule
+# splices the `checkcast` between the reload and the call, where the narrowed
+# item is first needed.
+#
+# The opcode tally is where the cast is pinned. `checkcast` is absent from what
+# javac emits here and the optimized class carries exactly three: the
+# ConcurrentHashMap$KeySetView the distinct guard reads out of the captured
+# List, the java/lang/Long the capture is unboxed from, and the Pair this fix
+# adds — drop the fix and the count is two. The two invokedynamics are
+# unchanged: the capturing map's indy becomes the fused mapMulti's, and forEach
+# keeps its own, so the proof of fusion is the mapMulti dispatch
+# (invokeinterface 4 → 8) rather than a dropped indy.
+#
+# PAIRS is {(2,"two"), (5,"five"), (2,"two")}, distinct leaves {(2,"two"),
+# (5,"five")}, the capturing map adds by=3 to each key, and forEach sums them:
+# 5 + 8 = 13.
+java: |
+  package statefulclosuretail;
+  import java.util.List;
+  public class X {
+    private static final List<Pair> PAIRS =
+      List.of(new Pair(2L, "two"), new Pair(5L, "five"), new Pair(2L, "two"));
+    static long sum(long by) {
+      long[] acc = new long[1];
+      PAIRS.stream()
+        .distinct()
+        .map(p -> new Pair(p.key() + by, p.text()))
+        .forEach(p -> acc[0] += p.key());
+      return acc[0];
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", sum(3L));
+    }
+    static final class Pair {
+      private final long num;
+      private final String word;
+      Pair(long key, String text) {
+        this.num = key;
+        this.word = text;
+      }
+      long key() {
+        return this.num;
+      }
+      String text() {
+        return this.word;
+      }
+      @Override
+      public boolean equals(Object other) {
+        return other instanceof Pair
+          && ((Pair) other).num == this.num
+          && ((Pair) other).word.equals(this.word);
+      }
+      @Override
+      public int hashCode() {
+        return (int) this.num * 31 + this.word.hashCode();
+      }
+    }
+  }
+before:
+  invokedynamic: 2
+  checkcast: 0
+after:
+  invokedynamic: 2
+  checkcast: 3
+log:
+  - "BUILD SUCCESS"
+  - "The result is 13"

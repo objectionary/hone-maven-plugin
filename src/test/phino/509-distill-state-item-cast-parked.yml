@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 509-parked is the member of the 505 family that reaches a CAPTURING operator
+# (#817). 316 does not let the consuming invokestatic eat the item where the
+# stateful guard left it: it parks the item in local 1, pushes the captured
+# values back out of the shared state List (one `fetch` each, plus an unboxing
+# call for a primitive capture), reloads the item on top with `aload 1`, and only
+# then calls the desugared lambda$. So the body below reads frame → astore 1 →
+# fetch → longValue → aload 1 → invokestatic, and 505 (frame → invokestatic),
+# 508 (frame → dup → invokestatic) and 509 (frame → latch → dup →
+# invokestatic) all decline it. The item is still the erased Ljava/lang/Object; a
+# distinct/skip-led distill carries, while the desugared map takes
+# "(JLA$Pair;)LA$Pair;" — the captured long first, the item last — so without a
+# cast the class fails verification with "Bad type on operand stack". This rule
+# anchors on the RELOAD and splices `checkcast A$Pair` between it and the call,
+# taking the class from the RIGHTMOST reference of the descriptor's parameter
+# list (the item), not the first one (a capture). The frame is untouched: the
+# cast runs long after it, so it still rightly declares Object.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/509-distill-state-item-cast-parked.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill-lambda,
+        static ↦ "true",
+        bridge-input ↦ "Ljava/lang/Object;",
+        consumer ↦ "Ljava/util/function/Consumer;",
+        target-method ↦ "distill_0",
+        captured ↦ "Ljava/util/List;",
+        body ↦ ⟦
+          g1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          g2 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+          g3 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+          g4 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Long" ⟧,
+          g5 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokevirtual,
+            i1 ↦ "java/lang/Long",
+            i2 ↦ "longValue",
+            i3 ↦ "()J",
+            i4 ↦ Φ.false
+          ⟧,
+          g6 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+          g7 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i1 ↦ "A",
+            i2 ↦ "lambda$main$0",
+            i3 ↦ "(JLA$Pair;)LA$Pair;",
+            i4 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "A$Pair" ⟧
+  - ⟦ 𝐵-p, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "A$Pair" ⟧, 𝜏-i ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i2 ↦ "lambda$main$0", 𝐵-y ⟧, 𝐵-q ⟧
+  - ⟦ 𝐵-b, 𝜏-f ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-fr ⟧, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝐵-a ⟧

@@ -1,0 +1,129 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The fourth member of the 505 family, and the only one that reaches a
+# CAPTURING operator (#817). 505 narrows the erased Object item that a
+# distinct()/skip()-led pipeline carries by splicing a `checkcast` between the
+# stateful guard's keep-frame and the first body opcode that consumes the item
+# as a NARROWER reference; 508 tolerates the one `dup` a filter or a peek puts
+# in that gap (#788) and 509 tolerates 310's sticky-latch prologue (#799). All
+# three anchor on the keep-frame and count opcodes forward from it, which works
+# only because every operator they cover eats the item WHERE THE FRAME LEFT IT,
+# on top of the stack.
+#
+# A capturing map or filter does not. 316 (and 314, its predicate mirror) lowers
+# one to a park/reload body — `astore 1` parks the incoming item in its own
+# now-dead parameter slot, one `fetch` per capture reads the captured values
+# back out of the shared state List, and `aload 1` reloads it on top — so the
+# consuming `invokestatic` sits behind a run whose length is the number of
+# captures, and the reference it eats is the RELOADED copy, not the one the
+# frame declared. `PAIRS.stream().distinct().map(p -> new Pair(p.key() + by,
+# p.text()))`, with `by` a captured long and `Pair` a small value class, is
+# therefore left uncast by all three rules, the erased Object reaches an
+# `invokestatic` typed "(JLPair;)LPair;", and the class dies at initialization
+# with "Bad type on operand stack: Type 'java/lang/Object' is not assignable to
+# 'Pair'" inside the synthesised distill. `skip(1L)` in place of `distinct()`
+# fails identically, and the same map runs clean with no stateful head — the
+# trigger is exactly a stateful head plus a capturing reference operator. 314
+# assembles the very same park/reload body for a capturing FILTER, so the
+# predicate shape is covered here by construction, even though a capturing
+# predicate directly behind a bare distinct()/skip() is left native today and
+# does not reach this rule.
+#
+# So this rule anchors on the RELOAD instead of the frame: an `aload 1`
+# immediately followed by the `invokestatic` onto the desugared `lambda$`, with
+# the cast spliced between them. That narrows exactly the copy the call
+# consumes, one opcode before it is needed, and it is indifferent to whatever
+# lies between the guard and the park — nothing, a `dup` from 283/431, 310's
+# latch prologue, or the whole body of another fused operator — which is why the
+# park/reload shape needs one rule where the frame-anchored shape needed three.
+# The frame is untouched, so it still rightly declares Object (the cast runs far
+# after it) and 503 is left unchanged, exactly as in 505, 508 and 509. Local 1
+# keeps its declared Object type too: the cast narrows the value on the stack
+# after the `aload`, not the slot it came from, so a second reload further down
+# a fused body gets its own cast rather than inheriting this one.
+#
+# The item is the LAST parameter of the target descriptor, because 316 pushes
+# the captures first and reloads the item on top of them. 112 and 113 admit a
+# capture only from the alphabet "[IJD]" and "L…;", so the parameter list is
+# always "([IJD]|L…;)*L…;" and the class to cast to is its RIGHTMOST reference —
+# the same descriptor walking 112 and 113 do with their own alternation. This is
+# also why 505's guard cannot be repaired by widening it to admit a capture
+# prefix: "(JLPair;)LPair;" does fail its `^\(L[^;]+;\)` test, but a guard that
+# admitted the prefix still would not fire, since what 505 anchors on — a frame
+# DIRECTLY followed by the call — never occurs once 316 has parked the item.
+#
+# The `when` guard is otherwise 505's: bridge-input must be Object (the
+# distinct / skip element-erasure signature) and the item parameter must be a
+# non-Object reference, so an Object-accepting body is left alone. The
+# invokestatic is spelled with the "i1 ↦ class … i4 ↦ is-interface" bindings 314
+# and 316 emit, not the "i2 ↦ class … i5 ↦ is-interface" ones the bodies 505
+# matches carry, so this rule sees the park/reload call and nothing else. It
+# runs before 512 (which wraps the distill-lambda body into a method) and 521
+# (which turns each `fetch` into a List.get plus a checkcast), applied at
+# fixpoint: the cast it inserts now sits between the `aload` and the
+# `invokestatic`, so the adjacency does not re-match.
+name: distill-state-item-cast-parked
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-invoke-class,
+        i2 ↦ 𝑒-invoke-method,
+        i3 ↦ 𝑒-invoke-signature,
+        i4 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-invoke-class,
+        i2 ↦ 𝑒-invoke-method,
+        i3 ↦ 𝑒-invoke-signature,
+        i4 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches: ['^\(([IJD]|L[^;]+;)*L[^;]+;\)', 𝑒-invoke-signature]
+    - not:
+        matches: ['^\(([IJD]|L[^;]+;)*Ljava/lang/Object;\)', 𝑒-invoke-signature]
+where:
+  - meta: 𝜏-cast
+    function: random-tau
+  # The rightmost reference of the parameter list, which is the item: the
+  # greedy prefix walks past every capture to the last "L…;" that still ends at
+  # the closing parenthesis, so a capture whose own class name sits earlier in
+  # the descriptor cannot be picked by mistake.
+  - meta: 𝑒-cast-class
+    function: sed
+    args:
+      - 𝑒-invoke-signature
+      - '"s/.*L([^;]*);\\).*/$1/g"'

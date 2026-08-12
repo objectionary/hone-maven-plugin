@@ -6,6 +6,7 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import com.yegor256.Jaxec;
+import com.yegor256.Jhome;
 import com.yegor256.MayBeSlow;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
@@ -303,7 +304,7 @@ final class OptimizeMojoTest {
     private static Result runs(final Path home, final String dir, final String name)
         throws IOException {
         return new Jaxec(
-            Paths.get(System.getProperty("java.home"), "bin", "java").toString(),
+            new Jhome().java().toString(),
             "-cp",
             home.resolve(dir).toString(),
             String.format("random.%s", name)

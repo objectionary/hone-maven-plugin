@@ -341,6 +341,18 @@ Because a `mapMulti` cannot honour cancellation, the cure mirrors the
   native call whenever the same method body reaches a `limit`, `takeWhile`,
   `findFirst`, `findAny`, `anyMatch`, `allMatch`, or `noneMatch` downstream of
   it, so those `flatMap`s stay unfused.
+Covering those seven names takes two rules, because by the time the 4xx pass
+  runs they no longer share a shape (#816):
+  `limit`, `findFirst` and `findAny` take no lambda and are still plain opcodes,
+  while `takeWhile`, `anyMatch`, `allMatch` and `noneMatch` each take one and
+  have therefore been folded into a `Φ.hone.lambda` by
+  `111-invokedynamic-to-lambda`.
+`454-flatMap-revert-on-short-circuit` matches the opcode shape and its sibling
+  `454-flatMap-revert-on-lifted-short-circuit` the folded one, with the same
+  guard and the same seven-name list in both;
+  until the second one existed the four lambda-taking names went unguarded, the
+  `flatMap` was fused anyway, and the hang above stayed reachable through
+  `.takeWhile(i -> i < 5)`.
 
 ## Why `skip` Is Only Fused on Sequential Pipelines
 

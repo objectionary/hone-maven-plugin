@@ -1,0 +1,170 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Resolves the Φ.hone.frame-item marker that 307 leaves at a distinct() guard's
+# keep-label when an operator was fused in AHEAD of that guard, so the survivor
+# waiting on the stack is no longer the value the wrapper was handed.
+#
+# 503 fills BOTH the local at slot 1 and the single stack item of the keep-frame
+# from the distill's `bridge-input`. The local is right — it is the bridge
+# method's declared parameter, the item 512 loads with `aload 1`. The stack item
+# is not: distinct is type-transparent, so the value alive at the keep-label is
+# whatever the body produced just before the guard, and 401 is free to fuse a
+# type-CHANGING map in ahead of it. For `Stream.of("a", "bb")
+# .map(s -> Long.valueOf(s.length())).distinct()` (#798) the distill still
+# receives a java/lang/String, the head `lambda$main$0:(Ljava/lang/String;)
+# Ljava/lang/Long;` has already retyped it, and the frame 503 writes promises a
+# java/lang/String over a java/lang/Long: "java.lang.VerifyError: Inconsistent
+# stackmap frames at branch target 29 ... Type 'java/lang/Long' (current frame,
+# stack[0]) is not assignable to 'java/lang/String' (stack map, stack[0])".
+# Keeping the element type identical hides it (`map(x -> x + 1).distinct()` in
+# `distinct.yml` always ran), which is why every other fixture passed.
+#
+# This is the stateful twin of #794, fixed by `506-distill-predicate-frame` for
+# the stateless filter branch: leave the LOCAL on bridge-input and derive only
+# the STACK item from the survivor. A filter names its survivor through the
+# predicate's own parameter; distinct's guard only ever sees `Set.add(Object)`,
+# so the name comes from the other side — the return type of the invokestatic
+# that produced the item, matched immediately in front of the guard's fetch
+# marker. That adjacency is exact: a distill body is emit-shaped (one item in,
+# one item out), so the last opcode before the guard IS the item's producer,
+# and 307 opens its guard with the fetch. It fires only for an object return
+# (`(...)L<type>;`); a void one (a peek fused ahead) or a primitive one leaves
+# the marker to 503, whose bridge-input is right for a type-preserving
+# neighbour and for a guard with nothing fused ahead of it at all.
+#
+# `503-distill-skip-frame` does the same for 308's countdown guard, which is
+# just as blind to the element type; `503-distill-dropwhile-frame` covers 310's
+# latch guard, which does not need the producer at all because its own
+# predicate names the survivor.
+#
+# Ordering: 503 claims EVERY frame-item in a stateful distill-lambda, so these
+# three have to reach the retyped ones first. No integer is free between 502 and
+# 503, so they share 503's number and rely on alphabetical filename order being
+# the schedule: `503-distill-distinct-frame` < `503-distill-dropwhile-frame` <
+# `503-distill-skip-frame` < `503-distill-state-frame`. It runs before 512 wraps
+# the lambda into a method (503 < 512), so the marker never reaches jeo. Scoped
+# to a distill-lambda WITH `captured`, like 503 itself, so stateless filter
+# keep-labels stay with 506/507.
+name: distill-distinct-frame
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-head ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-head-class,
+        i3 ↦ 𝑒-head-method,
+        i4 ↦ 𝑒-head-signature,
+        i5 ↦ 𝑒-head-is-interface
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ 𝑒-add-class,
+        i2 ↦ 𝑒-add-method,
+        i3 ↦ 𝑒-add-signature,
+        i4 ↦ 𝑒-add-is-interface
+      ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-ifne-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-head ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-head-class,
+        i3 ↦ 𝑒-head-method,
+        i4 ↦ 𝑒-head-signature,
+        i5 ↦ 𝑒-head-is-interface
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ 𝑒-add-class,
+        i2 ↦ 𝑒-add-method,
+        i3 ↦ 𝑒-add-signature,
+        i4 ↦ 𝑒-add-is-interface
+      ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-ifne-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ "integer"
+        ⟧,
+        stack ↦ ⟦
+          φ ↦ Φ.jeo.seq.of1,
+          x0 ↦ 𝑒-frame-item
+        ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^\(.*\)L[^;]+;$'
+        - 𝑒-head-signature
+where:
+  - meta: 𝑒-frame-item
+    function: sed
+    args:
+      - 𝑒-head-signature
+      - '"s/^\\(.*\\)L(.+);$/$1/g"'
+  - meta: 𝑒-frame-input
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^B$/byte/g"'
+      - '"s/^C$/char/g"'
+      - '"s/^D$/double/g"'
+      - '"s/^F$/float/g"'
+      - '"s/^I$/integer/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^S$/short/g"'
+      - '"s/^Z$/boolean/g"'
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-frame-captured
+    function: sed
+    args:
+      - 𝑒-captured
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-frame-consumer
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/^L(.+);$/$1/g"'

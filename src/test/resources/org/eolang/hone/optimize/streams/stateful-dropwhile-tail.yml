@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A dropWhile riding a pipeline that a distinct() or a skip() leads — the shape
+# #799 reports. distinct and skip erase the element type, so the fused stateful
+# distill carries bridge-input ↦ Ljava/lang/Object; and 503 frames the guard's
+# keep-label as Object; the dropWhile behind it opens with 310's sticky-latch
+# prologue (fetch the captured int[1], stash it in scratch slot 4, read cell 0
+# and branch to the keep-label when the latch is already set) and only then dups
+# the item for its desugared predicate, an (Ljava/lang/Long;)Z handle for a Long
+# element. That prologue breaks BOTH the frame → invokestatic adjacency 505
+# anchors on AND the frame → dup → invokestatic one 508 added for the filter
+# interleaving (#788), so before 509 no cast was spliced, the erased Object
+# reached the predicate, and the optimized class died in the verifier with "Bad
+# type on operand stack: Type 'java/lang/Object' is not assignable to
+# 'java/lang/Long'". 509 now splices the `checkcast` between the frame and the
+# prologue — the prologue leaves the stack as it found it, so the item is
+# narrowed on entry to the latch block and both copies the dup makes are
+# narrowed.
+#
+# Four pipelines, covering every axis the issue names:
+#   * boxed   — distinct-led, Long element (the reported reproduction, widened
+#     so the latch actually flips): distinct -> 3,5,1,2 -> drop while < 4 drops
+#     the leading 3, then 5 latches and 5,1,2 survive -> count 3.
+#   * text    — distinct-led, String element, proving it is not about Long:
+#     distinct -> "","x","yy" -> drop while empty drops the leading "" ->
+#     "x+yy". A re-evaluated predicate would wrongly drop nothing here, so the
+#     joined text also asserts the latch still sticks.
+#   * skipped — skip-led rather than distinct-led, the other element-erasing
+#     head: skip(1) -> "bb","ccc","dddd" -> drop while shorter than 3 drops
+#     "bb" -> count 2.
+#   * twice   — TWO dropWhiles behind one distinct, so the rule has to fire at
+#     fixpoint on the second latch block as well: distinct -> 1,2,9,3,8 -> drop
+#     while < 2 keeps 2,9,3,8 -> drop while < 9 keeps 9,3,8 -> count 3.
+# The `after` counts are left unasserted on purpose: this pack exists to prove
+# the optimized class VERIFIES and still computes the right answer, which the
+# printed line asserts end to end.
+java: |
+  package statefuldropwhiletail;
+  import java.util.stream.Collectors;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long boxed = Stream.of(3L, 5L, 1L, 2L, 5L)
+        .distinct()
+        .dropWhile(n -> n < 4L)
+        .count();
+      String text = Stream.of("", "x", "", "yy")
+        .distinct()
+        .dropWhile(s -> s.isEmpty())
+        .collect(Collectors.joining("+"));
+      long skipped = Stream.of("a", "bb", "ccc", "dddd")
+        .skip(1L)
+        .dropWhile(s -> s.length() < 3)
+        .count();
+      long twice = Stream.of(1L, 2L, 9L, 3L, 8L)
+        .distinct()
+        .dropWhile(n -> n < 2L)
+        .dropWhile(n -> n < 9L)
+        .count();
+      System.out.printf("The result is %d/%s/%d/%d\n", boxed, text, skipped, twice);
+    }
+  }
+# None of these pipelines carries a `map` or a `filter`, so the production
+# default grep-in (see #449/#671/#705) would skip the class outright; the pack
+# opts the pre-filter off with `.*` so the rewrite actually runs.
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3/x+yy/2/3"

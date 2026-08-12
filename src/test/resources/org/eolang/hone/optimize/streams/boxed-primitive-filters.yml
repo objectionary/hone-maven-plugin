@@ -19,9 +19,10 @@
 # `long`. A second filter's two-slot `dup2` (281 splices it from the primitive
 # `returned`) popped an empty stack — "java.lang.VerifyError: Operand stack
 # underflow", the message #811 reports — an interior map's (J)J body got the
-# wrapper instead ("Type 'java/lang/Long' is not assignable to long_2nd"), and an
-# int chain, whose one-slot widths happen to line up, handed its predicate an
-# Integer ("Type 'java/lang/Integer' is not assignable to integer").
+# wrapper instead ("Bad type on operand stack": a java/lang/Long where the
+# verifier wanted the upper half of a two-slot long), and an int chain, whose
+# one-slot widths happen to line up, handed its predicate an Integer ("Type
+# 'java/lang/Integer' is not assignable to integer").
 #
 # The fix moves the head-guard rule to 413, ahead of 421, so it reads the
 # primitive `accepted` and 421's unbox lands in FRONT of the guard: the run
@@ -43,7 +44,7 @@
 #     used to be handed the wrapper: evens {2,4,6,8,10} times three are
 #     {6,12,18,24,30}, of those the multiples of four -> "12+24".
 #   * headed  — a map AHEAD of the only filter, which is where 412's promotion
-#     mis-declared a primitive survivor as the wrapper: 1..6 plus ten is
+#     declared a primitive survivor to be the wrapper: 1..6 plus ten is
 #     {11..16}, the odd ones -> "11+13+15".
 #   * ints    — the int sibling: multiples of three in 1..10 are {3,6,9}, the
 #     even one -> "6".

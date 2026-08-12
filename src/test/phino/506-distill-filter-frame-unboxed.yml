@@ -10,12 +10,12 @@
 # keep-label is a two-slot `long`. The predicate is PRIMITIVE (J)Z and
 # bridge-input is a WRAPPER, so 506 fires and resolves the frame-item from the
 # primitive `returned` (J -> long) — 412 left it primitive because this shape's
-# `accepted` is a wrapper. Deriving from bridge-input (509's fallback, also
+# `accepted` is a wrapper. Deriving from bridge-input (507's fallback, also
 # listed but never reached here) would wrongly declare a one-slot java/lang/Long
 # and fail JVM verification with "Inconsistent stackmap frames".
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
-  - src/main/resources/org/eolang/hone/rules/streams/5xx/509-distill-filter-frame-fallback.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
 input: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,

@@ -1,0 +1,105 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Resolves the Φ.hone.frame-item marker that 304 leaves at a STATELESS filter
+# guard's keep-label, for the OBJECT-predicate filters — those whose target
+# signature is `(L<type>;)Z`. The survivor kept at the keep-label is the value
+# the guard's `dup` copied, which is exactly the value handed to the predicate,
+# so the predicate's own parameter type names it.
+#
+# While the filter sits at the head of the distill that type IS the distill's
+# `bridge-input` — 201/232 derive both from the same instantiated SAM type, and
+# 103/104/107 give their synthetic wrappers that very signature — which is why
+# 507 got away with bridge-input for so long. Fusion breaks the identity: when
+# 401 fuses a type-changing map in AHEAD of the filter, the distill's
+# bridge-input becomes the head map's input while the predicate keeps testing
+# the map's output. For `Stream.of(5L, 3L, 6L).map(Object::toString)
+# .filter(s -> !s.isEmpty())` (#794) the distill receives a java/lang/Long, the
+# head `lambda$hone$N:(Ljava/lang/Long;)Ljava/lang/String;` turns it into a
+# java/lang/String, and the stack at the keep-label holds that String — a frame
+# derived from bridge-input declares java/lang/Long and the class fails JVM
+# verification with "Type 'java/lang/String' ... is not assignable to
+# 'java/lang/Long'". The predicate's `(Ljava/lang/String;)Z` names the survivor
+# in both shapes, fused or not.
+#
+# Ordering: 506 claims the PRIMITIVE-predicate markers (#704, #713) and derives
+# them from `returned`; this rule claims the OBJECT-predicate ones; whatever is
+# left — a marker with no predicate in front of it — falls through to the 507
+# fallback and its bridge-input. Since alphabetical filename order IS the
+# schedule and no integer is free between 506 and 507, this rule shares 506's
+# number and relies on `506-distill-filter-frame` < `506-distill-predicate-frame`
+# < `507-distill-filter-frame-fallback`. The two 506 guards are disjoint anyway
+# (primitive vs object predicate signature), so only the position relative to
+# the fallback matters. A same-locals-1 frame is enough — a stateless wrapper
+# owns no per-call counter. Scoped to a distill-lambda WITHOUT `captured`, so
+# stateful keep-labels stay with 503/504.
+name: distill-predicate-frame
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-returned,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-predicate-class,
+        i3 ↦ 𝑒-predicate-method,
+        i4 ↦ 𝑒-predicate-signature,
+        i5 ↦ 𝑒-predicate-is-interface
+      ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-ifne-target ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-returned,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-predicate-class,
+        i3 ↦ 𝑒-predicate-method,
+        i4 ↦ 𝑒-predicate-signature,
+        i5 ↦ 𝑒-predicate-is-interface
+      ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-ifne-target ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 4,
+        nlocal ↦ 0,
+        locals ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧,
+        nstack ↦ 1,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ 𝑒-frame-item ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^\(L[^;]+;\)Z$'
+        - 𝑒-predicate-signature
+where:
+  - meta: 𝑒-frame-item
+    function: sed
+    args:
+      - 𝑒-predicate-signature
+      - '"s/^\\(L(.+);\\)Z$/$1/g"'

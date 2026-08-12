@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reproduction of #794: an object map that CHANGES the element type sitting in
+# front of an object-predicate filter. 401 fuses the map in ahead of the filter,
+# so the synthesized distill still receives the pipeline's element
+# (distill_501N(java.lang.Long, java.util.function.Consumer)) while the head
+# `lambda$hone$N:(Ljava/lang/Long;)Ljava/lang/String;` has already retyped it:
+# the guard's `dup` copies a java/lang/String, the predicate
+# `(Ljava/lang/String;)Z` tests it, and the survivor waiting at the keep-label
+# is that String.
+#
+# Before the fix the keep-frame came from 507 (the fallback), which reads the
+# distill's `bridge-input` unconditionally, so it promised a java/lang/Long over
+# a String and the class did not load: "java.lang.VerifyError: Inconsistent
+# stackmap frames at branch target 12 ... Type 'java/lang/String' (current
+# frame, stack[0]) is not assignable to 'java/lang/Long' (stack map, stack[0])".
+# 506 could not have claimed it either — its guard admits only PRIMITIVE
+# predicates. `506-distill-predicate-frame` now resolves such markers from the
+# predicate's own parameter type, which names the survivor whether or not a map
+# was fused ahead of the filter. Keeping the element type identical hides the
+# bug (`.map(n -> n + 1L).filter(n -> n > 0L)` in the same position always ran),
+# which is why every other fixture passed.
+#
+# Both retyping shapes are here, one per pipeline:
+#   * methodref map — Object::toString, desugared by 107 into a wrapper whose
+#     signature is (Ljava/lang/Long;)Ljava/lang/String;. {5, 3, 6} stringified,
+#     none empty, count = 3.
+#   * lambda map — an Integer -> String lambda. {1, 2, 3} become "x", "xx",
+#     "xxx", two of which are longer than one char, count = 2.
+# Each pipeline collapses its map + filter into a single Stream.mapMulti, so
+# invokedynamic drops 4 -> 2; the printed line asserts end to end that the
+# optimized class VERIFIES and still computes the right answer.
+java: |
+  package mapretypefilter;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long words = Stream.of(5L, 3L, 6L)
+        .map(Object::toString)
+        .filter(s -> !s.isEmpty())
+        .count();
+      long longer = Stream.of(1, 2, 3)
+        .map(n -> "x".repeat(n))
+        .filter(s -> s.length() > 1)
+        .count();
+      System.out.printf("The result is %d/%d\n", words, longer);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3/2"
+before:
+  invokedynamic: 4
+after:
+  invokedynamic: 2

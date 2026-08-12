@@ -2,22 +2,25 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The boxed-roundtrip shape, left to 509 (the fallback) by 506: a filter at the
+# The boxed-roundtrip shape, left to 507 (the fallback) by 506: a filter at the
 # head of the pipeline whose predicate takes an OBJECT, (Ljava/lang/Integer;)Z.
 # 232 still classifies an `(...)Z` target as a p-filter, so 304 leaves a
 # frame-item marker, but the survivor the dup keeps is the wrapper element
 # (java/lang/Integer) — NOT the distill's `returned`, which trailing
 # mapToLong/mapToDouble stages have driven to a primitive D. 506 declines this
 # marker because the predicate parameter (Ljava/lang/Integer;) is not a
-# primitive, and 507 declines because no map minted the element one opcode
-# earlier — the body opens with the guard `dup` — so 509 resolves it from
-# bridge-input (Ljava/lang/Integer; -> java/lang/Integer). Deriving from
-# `returned` here would wrongly declare `double` over a one-slot Integer and
-# fail JVM verification.
+# primitive, so 507 resolves it from bridge-input (Ljava/lang/Integer; ->
+# java/lang/Integer). Deriving from `returned` here would wrongly declare
+# `double` over a one-slot Integer and fail JVM verification.
+#
+# Only 506 and 507 are listed, so this pack pins the fallback's own derivation.
+# In the full pipeline `506-distill-predicate-frame` reaches this marker first
+# and reads java/lang/Integer off the predicate's `(Ljava/lang/Integer;)Z` —
+# the same type, since nothing is fused ahead of a head filter to move the
+# element away from bridge-input.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/5xx/506-distill-filter-frame.phr
-  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-after-map.phr
-  - src/main/resources/org/eolang/hone/rules/streams/5xx/509-distill-filter-frame-fallback.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/507-distill-filter-frame-fallback.phr
 input: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,

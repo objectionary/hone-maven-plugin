@@ -31,6 +31,10 @@ rule, how to test, and what to avoid*.
    places it correctly. Execution order is alphabetical by filename
    (`Collections.sort` in `Rules.discover()`), so the prefix *is* the
    schedule. Check `streams/` for the nearest neighbours before choosing.
+   When the slot you need is between two *consecutive* numbers, reuse the lower
+   one and let the name carry the ordering — the sort is over the whole
+   filename, so `506-distill-filter-frame` < `506-distill-predicate-frame` <
+   `507-distill-filter-frame-fallback` — and say so in the header comment.
 2. **Write the `.phr` file** under
    `src/main/resources/org/eolang/hone/rules/streams/Nxx/` (the `Nxx/`
    subdirectory whose digit matches the rule's hundreds prefix). Start from

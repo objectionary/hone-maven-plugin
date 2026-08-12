@@ -7,19 +7,20 @@
 # frame whose single stack item is the distill's `bridge-input`. This is the
 # right type for every filter whose survivor IS the element it received — the
 # common case — including a pure-primitive LongStream.filter (bridge-input J ->
-# `long`) and an OBJECT-predicate filter whose `(Ljava/lang/Integer;)Z` keeps a
-# wrapper survivor even when trailing maps drive the distill's `returned` to a
-# different (re-boxed or primitive) type (the boxed-roundtrip shape).
+# `long`).
 #
-# Runs AFTER 506, which has already claimed the two PRIMITIVE-predicate shapes
-# whose survivor is not bridge-input (#704 boxed filter, #713 head-fused
-# unboxing map) and resolved their markers from `returned`, and after 507, which
-# claims the filters whose element a fused map minted one opcode earlier (#794)
-# and resolves them from that map's return type. Whatever marker those two left
-# untouched lands here, so this rule needs no guard. By 509 the distill is
-# a Φ.hone.distill-lambda (501) whose bridge-input is final and 511 has not yet
-# wrapped it into a method, so the marker never reaches jeo. Scoped to a
-# distill-lambda WITHOUT `captured`, so stateful keep-labels stay with 503/504.
+# Runs AFTER both 506 rules, which have already claimed every marker sitting
+# behind a recognised predicate: `506-distill-filter-frame` takes the two
+# PRIMITIVE-predicate shapes whose survivor is not bridge-input (#704 boxed
+# filter, #713 head-fused unboxing map) and resolves them from `returned`, and
+# `506-distill-predicate-frame` takes the OBJECT-predicate ones and resolves
+# them from the predicate's parameter — the survivor the guard's `dup` copied,
+# which a type-changing map fused ahead of the filter drives away from
+# bridge-input (#794). Whatever marker they left untouched lands here, so this
+# rule needs no guard. By 507 the distill is a Φ.hone.distill-lambda (501) whose
+# bridge-input is final and 511 has not yet wrapped it into a method, so the
+# marker never reaches jeo. Scoped to a distill-lambda WITHOUT `captured`, so
+# stateful keep-labels stay with 503/504.
 name: distill-filter-frame-fallback
 pattern: |
   ⟦

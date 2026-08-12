@@ -17,10 +17,11 @@
 #
 #   dropWhile (208 -> 310 -> 502): captures a one-shot sticky latch (#718)
 #     inside its own java/util/List, which is the second `new`. The latch is
-#     an int[1] — hence the 1 `newarray`, and iaload/iastore rather than
-#     baload/bastore. Those two stay 0 and are still worth asserting: they
-#     pin the latch's array type, and the boolean[1] this comment used to
-#     predict would have driven them to 1 each instead.
+#     an int[1]: 1 `newarray` allocates it, and it is read with iaload and
+#     written with iastore. Those two are what pin the array type — since
+#     `newarray` covers every primitive type, it alone proves only that some
+#     primitive array was allocated. baload/bastore stay asserted at 0 to
+#     rule out the boolean[1] this comment used to predict.
 #     input [1, 2, 100, 4, 5, 6, 7] -> [100, 4, 5, 6, 7]; count() = 5
 #
 # takeWhile is NOT recognised, and not for want of a rule: a mapMulti body
@@ -55,10 +56,14 @@ log:
 before:
   new: 0
   newarray: 0
+  iaload: 0
+  iastore: 0
   baload: 0
   bastore: 0
 after:
   new: 2
   newarray: 1
+  iaload: 1
+  iastore: 1
   baload: 0
   bastore: 0

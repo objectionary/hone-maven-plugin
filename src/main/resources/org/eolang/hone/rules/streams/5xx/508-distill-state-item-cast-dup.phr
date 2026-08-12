@@ -38,6 +38,11 @@
 # distill-lambda body into a method), applied at fixpoint: the checkcast it
 # inserts now sits between the frame and the dup, so neither this rule nor 505
 # re-matches the same site.
+#
+# Only a BARE dup is tolerated here. A dropWhile also arrives with a dup in
+# front of its predicate, but 310 puts its sticky-latch prologue between the
+# keep-frame and that dup, so this adjacency does not match either; 509 is the
+# third twin, matching that prologue and casting in front of it (#799).
 name: distill-state-item-cast-dup
 pattern: |
   ⟦

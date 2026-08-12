@@ -37,6 +37,15 @@
 # locals (4 = latch array, 5 = notZ) are dead at KEEP, so 503's four-local frame
 # is still correct; 512's max-locals is widened to 6 to make room for them.
 #
+# The latch prologue (the first six opcodes, up to and including the `ifne`) is
+# spelled out opcode by opcode in 509, which narrows the erased Object item a
+# distinct()/skip() ahead of this dropWhile leaves on the stack (#799): the
+# prologue sits between that guard's keep-frame and the `dup` this body makes
+# for its predicate, so neither 505 nor 508 can reach the typed predicate. Any
+# change to the prologue — its opcodes, their order, or scratch slot 4 — must be
+# mirrored there, or the cast silently stops being spliced and the class fails
+# JVM verification again.
+#
 # v1 scope (see 208): object java/util/stream/Stream, a static predicate whose
 # target returns Z, the element type preserved across any fused neighbours. A
 # lone dropWhile is NOT reverted to a native Stream.dropWhile the way 442 reverts

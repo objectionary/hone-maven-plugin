@@ -1,0 +1,125 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The latch-tolerant third of the 505 family, closing the hole #799 reports.
+# 505 narrows the erased Object item that a distinct()/skip()-led pipeline
+# carries, by splicing a `checkcast` between the stateful guard's keep-frame and
+# the first body opcode that consumes the item as a NARROWER reference; it
+# anchors on a Φ.jeo.frame IMMEDIATELY followed by an invokestatic, and 508 is
+# the twin that tolerates the ONE `dup` a filter or a peek puts in that gap
+# (#788). A dropWhile riding the same pipeline breaks both adjacencies at once:
+# 310 opens its body with the sticky-latch prologue — fetch the captured int[1],
+# stash it in a scratch local, read cell 0 and jump straight to the keep-label
+# when the latch is already set — and only THEN dups the item for the predicate.
+# The joined body therefore reads frame → fetch [I → astore 4 → aload 4 →
+# iconst_0 → iaload → ifne → dup → invokestatic, neither 505 nor 508 matches, no
+# cast is spliced, and the Object item reaches the desugared predicate — typed
+# (Ljava/lang/Long;)Z for a Long element. The verifier rejects the class with
+# "Bad type on operand stack: Type 'java/lang/Object' is not assignable to
+# 'java/lang/Long'". It is not about Long: a String element fails identically,
+# and `distinct().dropWhile(...)` is ordinary code, not an exotic shape. The
+# prologue itself is happy with an Object — it never touches the item, it only
+# reads the latch array — and so is the guard above it (Set.add(Object), the
+# skip counter); only the first typed consumer is not.
+#
+# This rule matches exactly that interleaving and keeps 505's splice point: the
+# cast goes right after the frame, BEFORE the prologue, so the item is narrowed
+# on entry to the latch block and BOTH copies the `dup` makes are narrowed — the
+# one the predicate consumes and the one that survives on the keep path into the
+# rest of the fused body. The prologue leaves the stack exactly as it found it
+# ([item] in, [item] out: the fetch's array is stored away, the latch read is
+# consumed by the `ifne`), so casting in front of it is the same splice 508
+# makes in front of its `dup`, just one block earlier. The frame itself stays as
+# it is: the cast runs after it, so it still rightly declares Object, and 503 is
+# left unchanged, exactly as in 505 and 508. The latched branch jumps over the
+# `dup` to 310's own keep-label, where the frame 503 fills again declares Object
+# — correct, since a narrowed item is assignable to it.
+#
+# The prologue is spelled out opcode by opcode, including 310's fixed scratch
+# slot 4, so that only a dropWhile latch — not an arbitrary run of opcodes — is
+# tolerated in the gap; a body that computes something else between the frame
+# and the dup is deliberately left to fail loudly rather than be cast blindly.
+# The `when` guard is 505's and 508's: bridge-input must be Object (the distinct
+# / skip element-erasure signature) and the following invokestatic must take a
+# SINGLE non-Object reference argument, so an Object-accepting predicate is left
+# alone and a captured lambda$ (which takes the captured values plus the item) is
+# skipped. It runs after 503 (which turns the keep label's frame-item into a
+# Φ.jeo.frame) and before 512 (which wraps the distill-lambda body into a
+# method) and 521 (which resolves the Φ.hone.fetch this pattern anchors on),
+# applied at fixpoint: the checkcast it inserts now sits between the frame and
+# the fetch, so neither this rule nor 505 or 508 re-matches the same site, while
+# a second dropWhile further down the fused body still gets its own cast.
+name: distill-state-item-cast-latch
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
+      𝜏-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
+      𝜏-aload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-iaload ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-latched-target ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-invoke-class,
+        i3 ↦ 𝑒-invoke-method,
+        i4 ↦ 𝑒-invoke-signature,
+        i5 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
+      𝜏-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
+      𝜏-aload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-iaload ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-latched-target ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-invoke-class,
+        i3 ↦ 𝑒-invoke-method,
+        i4 ↦ 𝑒-invoke-signature,
+        i5 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches: ['^\(L[^;]+;\)', 𝑒-invoke-signature]
+    - not:
+        matches: ['^\(Ljava/lang/Object;\)', 𝑒-invoke-signature]
+where:
+  - meta: 𝜏-cast
+    function: random-tau
+  - meta: 𝑒-cast-class
+    function: sed
+    args:
+      - 𝑒-invoke-signature
+      - '"s/^\\(L([^;]+);.*/$1/g"'

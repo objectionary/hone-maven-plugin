@@ -7,11 +7,11 @@
 # Φ.hone.dup when the filter follows a map or another filter, but its
 # pattern is shaped for the map/filter pragma (opcode + target bindings)
 # and so never matches a stateful predecessor. A filter that follows a
-# distinct, skip or dropWhile — a stateful guard that leaves a single
-# (un-duplicated) item — would therefore be left without its dup, its
+# distinct, skip, dropWhile or capturing map — a stateful pragma that leaves a
+# single (un-duplicated) item — would therefore be left without its dup, its
 # predicate would eat the only item, and the keep-label frame would find an
 # empty stack. This rule plugs that gap: when 𝜏-first is one of those
-# stateful guards and 𝜏-second is a filter, it splices the same Φ.hone.dup
+# stateful pragmas and 𝜏-second is a filter, it splices the same Φ.hone.dup
 # between them. After
 # insertion the two are no longer adjacent, so it fires once per site.
 #
@@ -26,6 +26,25 @@
 # "Inconsistent stackmap frames" (#804). 𝐵-first-head absorbs whatever the
 # guard puts between `φ` and `class` — none of it is anything this rule reads
 # — so the ordering a fourth guard picks will not matter either.
+#
+# The capturing map is the fourth (#821). A `c-map` is pointwise, so 281 is
+# where it would belong by nature, but 112 gives it `state-acc`, `body-acc`
+# and `captures` ahead of `class` and no `opcode` at all, and 281 spells its
+# predecessor out binding for binding — so a plain filter behind a capturing
+# map reached 4xx with no guard, 401 fused it into a distill, the predicate
+# ate the only copy of the mapped item, and 503's keep-frame promised an
+# element the stack no longer had. It is stateful in the sense that matters
+# here — 316 folds it into a stateful distill, and its bindings are exactly
+# the ones this rule's 𝐵-first-head was written to absorb. `map(p -> new
+# Pair(p.key() + by, p.text())).filter(p -> p.key() > 1L)`, with `by`
+# captured, is the shape; streams/closure-map-filter.yml runs it.
+#
+# A c-map cannot reach the other two rules of this family. 241-243 pin
+# Φ.hone.map literally, so no `type` or `transform` is ever spliced behind a
+# capturing map and 282 has nothing to say about one; and 112 only lifts a
+# Stream.map, whose element stays a reference, so the filter that follows is
+# always an o-filter over one stack slot — the `dup` this rule reads off the
+# filter's `bridge-input`, never a `dup2`.
 name: insert-dup-before-filter-after-stateful
 pattern: |
   ⟦
@@ -82,6 +101,7 @@ when:
         - eq: [𝜏-one, 'distinct']
         - eq: [𝜏-one, 'skip']
         - eq: [𝜏-one, 'dropWhile']
+        - eq: [𝜏-one, 'c-map']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

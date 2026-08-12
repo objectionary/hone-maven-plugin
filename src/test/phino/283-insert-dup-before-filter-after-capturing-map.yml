@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The capturing half of #821: a plain filter behind the Φ.hone.c-map that 112
+# lifts and 114 gathers. The pragma is pointwise, so 281 is where it looks
+# like it belongs, but it carries `state-acc`, `body-acc` and `captures` ahead
+# of `class` and no `opcode` at all, and 281 spells its predecessor out
+# binding for binding — so the site was left without a dup, the predicate ate
+# the only copy of the mapped item and the keep label met an empty stack. 283's
+# 𝐵-first-head absorbs the three accumulators, which is why the fix is one
+# more name in its alternation and nothing else.
+#
+# The c-map here is a drained one — `captures` empty, both accumulators
+# already holding the unit 114 peeled — because that is the state the pragma
+# is in by the time the 2xx rules see it. The dup opcode is read off the
+# filter's `bridge-input`, an Object, so it is the one-slot `dup`; a c-map is
+# type-preserving over a reference element, so it is never a `dup2`.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/283-insert-dup-before-filter-after-stateful.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.c-map,
+        state-acc ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body-acc ↦ ⟦
+          b1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "J" ⟧,
+          ρ ↦ ∅
+        ⟧,
+        captures ↦ "",
+        class ↦ "cap/X",
+        bridge-input ↦ "Lcap/X$Pair;",
+        bridge-output ↦ "Lcap/X$Pair;",
+        accepted ↦ "Lcap/X$Pair;",
+        returned ↦ "Lcap/X$Pair;",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "cap/X",
+          method ↦ "lambda$run$0",
+          signature ↦ "(JLcap/X$Pair;)Lcap/X$Pair;",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.o-filter,
+        opcode ↦ "invokestatic",
+        class ↦ "cap/X",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        accepted ↦ "Lcap/X$Pair;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "cap/X",
+          method ↦ "lambda$run$1",
+          signature ↦ "(Lcap/X$Pair;)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-head, 𝜏-cmap ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-cmap ⟧, 𝜏-dup ↦ ⟦ φ ↦ Φ.hone.dup, opcode ↦ "dup", class ↦ "cap/X" ⟧, 𝜏-filter ↦ ⟦ φ ↦ Φ.hone.o-filter, 𝐵-filter ⟧, 𝐵-tail ⟧

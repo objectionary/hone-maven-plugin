@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A plain filter behind a CAPTURING map — the shape #821 reports. A filter
+# guard spends the item on its predicate, so it needs a throwaway copy
+# duplicated in front of it. 281 splices that Φ.hone.dup when a map, a filter
+# or a peek leads, and 283 when a stateful guard does, but a capturing map is
+# neither as far as their patterns go: 112 lifts it to a Φ.hone.c-map carrying
+# `state-acc`, `body-acc` and `captures` ahead of `class` and no `opcode` at
+# all, while 281 spells its predecessor out binding for binding. So no dup was
+# spliced, 401 fused the pair into one distill anyway, the predicate ate the
+# only copy of the mapped Pair, and 503 framed the keep label with a
+# `stack [Pair]` the stack no longer had: the class died at load with
+# "java.lang.VerifyError: Inconsistent stackmap frames at branch target".
+# It is the failure family of #790 and #804, one producer further along, and
+# the fix is one more name in 283's alternation — the 𝐵-first-head that #804
+# gave it already absorbs the three accumulator bindings.
+#
+# Three pipelines, one class, all three capturing the method argument `by` in
+# their map so 112 lifts it (a non-capturing map goes to 202 and was never
+# affected):
+#   * kept  — the reported reproduction: keys 0, 1, 2 shift to 1, 2, 3 and
+#     filter(key > 1) keeps two of them.
+#   * shown — the same pair with a forEach behind it, and the pipeline the
+#     verifier rejected first: its distill wrapper reached the `ifne` with
+#     only the predicate's own int on the stack, against a frame promising a
+#     Pair at the keep label. The printed text is also the proof that what
+#     survives the guard is the MAPPED item and not the original: "2:b 3:c",
+#     never "1:b 2:c".
+#   * twice — TWO filters behind the capturing map, so 283 has to leave the
+#     second pair for 281 to dup: filter(key > 1) keeps 2 and 3, filter
+#     (key < 3) keeps 2 -> count 1.
+# Nothing in the nested Pair mentions a stream method, so the default grep-in
+# skips its .xmir and only CMapFilter.phi is rewritten — 2 files walked, 1
+# modified.
+#
+# invokedynamic drops from 8 — three capturing maps, four predicates and the
+# forEach consumer — to 4: one Stream.mapMulti dispatch per pipeline, each
+# holding a map fused with the filters behind it, plus the forEach consumer,
+# which is a capturing Consumer and stays native. The four `ifne` are the four
+# guards, now lowered into the distill bodies where the spliced dup feeds them
+# their copy. What the fix is really about, though, is that the class LOADS at
+# all: the printed line is the end-to-end assertion, and without the dup there
+# is no line to read, only a VerifyError.
+java: |
+  package closure;
+  import java.util.List;
+  public class CMapFilter {
+    private static final List<Pair> PAIRS =
+      List.of(new Pair(0L, "a"), new Pair(1L, "b"), new Pair(2L, "c"));
+    static long kept(final long by) {
+      return PAIRS.stream()
+        .map(p -> new Pair(p.key() + by, p.text()))
+        .filter(p -> p.key() > 1L)
+        .count();
+    }
+    static String shown(final long by) {
+      final StringBuilder out = new StringBuilder();
+      PAIRS.stream()
+        .map(p -> new Pair(p.key() + by, p.text()))
+        .filter(p -> p.key() > 1L)
+        .forEach(p -> out.append(p.key()).append(':').append(p.text()).append(' '));
+      return out.toString().trim();
+    }
+    static long twice(final long by) {
+      return PAIRS.stream()
+        .map(p -> new Pair(p.key() + by, p.text()))
+        .filter(p -> p.key() > 1L)
+        .filter(p -> p.key() < 3L)
+        .count();
+    }
+    public static void main(final String... args) {
+      System.out.printf("The result is %d/%s/%d%n", kept(1L), shown(1L), twice(1L));
+    }
+    static final class Pair {
+      private final long num;
+      private final String word;
+      Pair(final long key, final String text) {
+        this.num = key;
+        this.word = text;
+      }
+      long key() {
+        return this.num;
+      }
+      String text() {
+        return this.word;
+      }
+    }
+  }
+log:
+  - "No grep-in match for 1/2 CMapFilter$Pair.xmir"
+  - "Modified 2/2 CMapFilter.phi"
+  - "Finished rewriting 2 file"
+  - "BUILD SUCCESS"
+  - "The result is 2/2:b 3:c/1"
+before:
+  invokedynamic: 8
+  ifne: 0
+after:
+  invokedynamic: 4
+  ifne: 4

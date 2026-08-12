@@ -12,7 +12,7 @@
 # "(Ljava/lang/Integer;)Ljava/lang/Integer;". 112's relaxed "\([IJD]+\)"
 # interface-guard branch admits the long capture and lifts it to a Φ.hone.c-map,
 # bumping the caller max-stack by 2 (a J capture's two-slot boxing append peaks one
-# slot higher than an int's). 116 peels the lone `lload` push, appending the long to
+# slot higher than an int's). 114 peels the lone `lload` push, appending the long to
 # the shared state List with a Long.valueOf box and reading it back via a `fetch`
 # typed java/lang/Long followed by longValue. 316 folds a stateful distill and 401
 # fuses it with the following NON-capturing map (n -> n * 2, empty state).

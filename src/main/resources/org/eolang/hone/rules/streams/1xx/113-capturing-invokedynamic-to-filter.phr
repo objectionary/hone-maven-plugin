@@ -7,31 +7,38 @@
 # descriptor — into a Φ.hone.cp-filter pragma, the capturing sibling of the
 # Φ.hone.p-filter that 201 produces for a predicate whose backing lambda$
 # returns Z. Exactly as 112 does for a capturing map, this rule grabs NO push:
-# it leaves the whole run of `iload k` pushes inline in front of the emitted
-# cp-filter and seeds two EMPTY accumulators (`state-acc`, `body-acc`). 118 then
-# peels the pushes one at a time (right-to-left, greedy-left makes the match
-# exact), prepending one boxed append to `state-acc` and one fetch+unbox to
-# `body-acc` per capture, so the captures land in the shared state List in
-# left-to-right order. 314 finally assembles the two accumulators into a stateful
+# it leaves the whole run of pushes inline in front of the emitted cp-filter and
+# seeds two EMPTY accumulators (`state-acc`, `body-acc`). 118 then peels the pushes
+# one at a time (right-to-left — it pins the binding immediately in front of the
+# pragma), prepending one append to `state-acc` and one fetch to `body-acc` per
+# capture, so the captures land in the shared state List in left-to-right order.
+# 314 finally assembles the two accumulators into a stateful
 # distill whose park/reload body holds every capture below the item exactly as
 # the static lambda$ (int…, Integer) signature wants — the same N-ary shape 316
 # gives a capturing map.
 #
-# Scope: one OR MORE category-1/2 PRIMITIVE captures (factory descriptor
-# "([IJD]+)L…Predicate;", every push a constant-index iload/lload/dload, gathered by
-# 118 for int and by its category-2 twins 120/122 for long/double) OR a SINGLE
-# reference capture (factory descriptor "(L…;)L…Predicate;", push an aload, gathered
-# by the reference branch 119), over a Stream<Integer> predicate (instantiated type
-# "(Ljava/lang/Integer;)Z"), a handle-6 static lambda$ target. So `filter(n -> n > t)`
-# (one int capture), `filter(n -> n > lo && n < hi)` (two int captures),
-# `filter(n -> n > x)` over a captured long (one J capture) and
-# `filter(n -> base.contains(n))` (one reference capture) all fuse exactly like the
-# original single-capture case, the filter mirror of 112's primitive/reference map
-# split. A category-2 (J/D) capture occupies two stack slots, so its relocated boxing
-# append (120/122) peaks one slot higher than an int's; this rule BUMPS the caller
-# max-stack by 2 whenever the factory descriptor carries a J or D capture, exactly as
-# 112 does for the map (see 112's header for the rationale and the still-deferred
-# generalisations).
+# Scope (issues #655, #659, #661, #668): ANY run of one or more category-1/2
+# PRIMITIVE captures (I, J, D — every push a constant-index iload/lload/dload) and
+# REFERENCE captures (L…; — an aload), MIXED in any order and any count, so the
+# factory descriptor is matched as "(([IJD]|L[^;]+;)+)L…Predicate;" — one guard over
+# the whole capture alphabet, the filter mirror of 112's. Arrays ("[…") stay out.
+# The predicate is over a Stream<Integer> (instantiated type
+# "(Ljava/lang/Integer;)Z") with a handle-6 static lambda$ target. So
+# `filter(n -> n > t)` (one int capture), `filter(n -> n > lo && n < hi)` (two int
+# captures), `filter(n -> n > x)` over a captured long (one J capture),
+# `filter(n -> base.contains(n))` (one reference capture) and
+# `filter(n -> base.contains(n) && n > lo)` (a reference and an int) all fuse
+# exactly like the original single-capture case.
+#
+# As in 112, the descriptor's parameter list rides onto the pragma as `captures`,
+# one code per capture, and 118 pops the last code off in step with the push it
+# peels — so each capture is gathered with its own type known positionally, rather
+# than guessed from target.signature's first L-type, which is only right for a lone
+# reference and is what limited the filter before #668. A category-2 (J/D) capture
+# occupies two stack slots, so its boxing append (123) peaks one slot higher than an
+# int's; this rule BUMPS the caller max-stack by 2 whenever the factory descriptor
+# carries a J or D capture, exactly as 112 does for the map (see its header for the
+# rationale, and for why the peel has to be a single rule).
 name: capturing-invokedynamic-to-filter
 pattern: |
   ⟦
@@ -149,6 +156,7 @@ result: |
           φ ↦ Φ.hone.cp-filter,
           state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
           body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          captures ↦ 𝑒-captures,
           class ↦ 𝑒-class,
           bridge-input ↦ "Ljava/lang/Integer;",
           bridge-output ↦ "Ljava/lang/Integer;",
@@ -176,16 +184,20 @@ when:
     - matches:
         - 'lambda\$.+'
         - 𝑒-target-method
-    - or:
-        - matches:
-            - '\([IJD]+\)Ljava/util/function/Predicate;'
-            - 𝑒-interface
-        - matches:
-            - '\(L[^;]+;\)Ljava/util/function/Predicate;'
-            - 𝑒-interface
+    - matches:
+        - '\(([IJD]|L[^;]+;)+\)Ljava/util/function/Predicate;'
+        - 𝑒-interface
 where:
+  # The factory descriptor's parameter list — one code per capture, in descriptor
+  # order — for 118 to peel positionally; the same channel 112 seeds for 114.
+  - meta: 𝑒-captures
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
   # Bump the caller max-stack by 2 when a category-2 (J/D) primitive capture is
-  # present (its relocated 2-slot boxing append, 120/122, peaks one slot higher
+  # present (its relocated 2-slot boxing append, 123, peaks one slot higher
   # than an int append); an int-only or reference capture bumps by 0. The same
   # machinery 112 uses for the capturing map — see its header for the rationale.
   - meta: 𝑒-cap-params

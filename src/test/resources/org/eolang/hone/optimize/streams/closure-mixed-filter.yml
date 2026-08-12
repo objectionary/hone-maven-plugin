@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# The filter mirror of closure-mixed.yml (issue #668): a MIXED capture run behind
+# a filter rather than a map.
+#
+#   Stream.of(...).filter(n -> base.contains(n) && n > lo).map(n -> n * 2)
+#
+# The predicate captures a reference and an int, so javac compiles the factory
+# descriptor as "(Ljava/util/List;I)L…Predicate;" — a shape 113's old
+# primitives-or-one-reference `or` rejected outright, leaving the filter native.
+# 113 now admits the whole capture alphabet and seeds `captures` with the
+# descriptor's parameter list; 118 drains both pushes right-to-left, taking the
+# matching code off the field each time, so the int is boxed and unboxed (123/125)
+# while the List rides through raw (124/126) and is fetched back with its own
+# checkcast. 314 folds a stateful distill whose state List holds base (slot 0) and
+# the boxed lo (slot 1), 401 fuses it with the following non-capturing map, and
+# 502/512/521/601 emit one Stream.mapMulti.
+#
+# invokedynamic: before = filter(capturing) + map + reduce-accumulator lambda = 3;
+# after = the single fused mapMulti + the untouched reduce lambda = 2. The runtime
+# line proves both captures land in the right slots: base = {2,3,5} and lo = 2, so
+# {1,2,3,4,5,6} -> keep {3,5} -> *2 -> {6,10} -> sum == 16.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class CMixedFilter {
+    static int run(List<Integer> base, int lo) {
+      return Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(n -> base.contains(n) && n > lo)
+        .map(n -> n * 2)
+        .reduce(0, (a, b) -> a + b);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run(Arrays.asList(2, 3, 5), 2));
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 16"

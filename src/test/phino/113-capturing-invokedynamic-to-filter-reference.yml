@@ -4,13 +4,12 @@
 # yamllint disable rule:line-length
 # The reference-capture variant of 113 (issue #659): a capturing primitive-filter
 # invokedynamic whose factory descriptor is "(Ljava/util/List;)L…Predicate;" — a
-# SINGLE reference capture pushed by the preceding aload, a handle-6 static lambda$
-# returning Z — is lifted to a Φ.hone.cp-filter pragma by the widened
-# "\(L[^;]+;\)L…Predicate;" guard branch, exactly as the int "(I+)" branch does.
-# 113 leaves the aload push inline in front of the cp-filter (119 gathers it) and
-# seeds two EMPTY accumulators. The lambda$ signature
-# "(Ljava/util/List;Ljava/lang/Integer;)Z" rides through verbatim so 119 can read
-# the capture type from its first L-slot.
+# reference capture pushed by the preceding aload, a handle-6 static lambda$
+# returning Z — is lifted to a Φ.hone.cp-filter pragma by the "L[^;]+;" alternative
+# of the capture-alphabet guard, exactly as an "I" is. 113 leaves the aload push
+# inline in front of the cp-filter (118 gathers it) and seeds two EMPTY
+# accumulators plus `captures`, the descriptor's parameter list, which names the
+# capture class so 118 can read it positionally (issue #668).
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/1xx/113-capturing-invokedynamic-to-filter.phr
 input: |
@@ -52,5 +51,6 @@ input: |
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-rc-head, captures ↦ "Ljava/util/List;", 𝐵-rc-tail ⟧
   - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(Ljava/util/List;Ljava/lang/Integer;)Z", 𝐵-i ⟧, 𝐵-j ⟧
   - ⟦ 𝐵-k, 𝜏-last ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, 𝜏-cf ↦ ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-l ⟧, 𝐵-m ⟧

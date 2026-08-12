@@ -8,7 +8,7 @@
 #
 #   Stream.of(...).map(n -> n + base.size()).reduce(0, ...)
 #
-# 112's "(L…;)" branch lifts the capturing map to a Φ.hone.c-map, 115 peels the
+# 112's capture-alphabet guard lifts the capturing map to a Φ.hone.c-map, 114 peels the
 # captured `aload` (the List) into the shared state, and 316 folds a lone stateful
 # distill. With no neighbour to fuse with, the distill is lowered to a standalone
 # mapMulti by 502/512/521/601 — there is no per-arity revert back to the native

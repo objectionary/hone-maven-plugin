@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 126 turns the Φ.hone.cap-fetch marker of a REFERENCE capture into a bare
+# Φ.hone.fetch — no unboxing call, because the reference went into the shared state
+# List as it was. The fetch's `type` is the class sed-extracted from the marker's
+# "L…;" descriptor, which is what 521 later emits the checkcast against.
+#
+# The two markers here carry DIFFERENT classes, which is the whole point of #668:
+# each one was taken off the end of `captures` in the same firing that peeled its
+# push, so a multi-reference run types each capture on its own instead of typing
+# them all from target.signature's first L-type. The int marker is 125's and must
+# survive untouched.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/126-cap-fetch-reference.phr
+input: |
+  ⟦
+    body-acc ↦ ⟦
+      f1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/util/ArrayList;" ⟧,
+      f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧,
+      f3 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/ArrayList" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧, 𝜏-f3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/String" ⟧, ρ ↦ ∅ ⟧ ⟧

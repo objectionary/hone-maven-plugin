@@ -5,11 +5,11 @@
 # A category-2 LONG-capturing map invokedynamic — descriptor "(J)L…Function;", the
 # captured long pushed by the preceding lload, a handle-6 static lambda$ target
 # whose signature is "(JLjava/lang/Integer;)Ljava/lang/Integer;" — is lifted to a
-# Φ.hone.c-map (116 later peels the lload). The instantiated type
+# Φ.hone.c-map (114 later peels the lload). The instantiated type
 # "(Ljava/lang/Integer;)Ljava/lang/Integer;" is type-preserving, so 112's
 # "(LX;)LX;" backreference admits it; the relaxed "\([IJD]+\)" interface guard now
 # admits the J capture. Because a J/D capture is present, 112 BUMPS the method's
-# max-stack by 2 (6 -> 8) to make room for the two-slot boxing append 116 will
+# max-stack by 2 (6 -> 8) to make room for the two-slot boxing append 114/123 will
 # relocate into the caller; max-locals (3) is untouched, and the generated maxs
 # binding names ride through unchanged.
 rules:
@@ -53,6 +53,7 @@ input: |
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.c-map, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.c-map, 𝐵-rc-head, captures ↦ "J", 𝐵-rc-tail ⟧
   - ⟦ φ ↦ Φ.hone.c-map, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(JLjava/lang/Integer;)Ljava/lang/Integer;", 𝐵-i ⟧, 𝐵-j ⟧
   - ⟦ φ ↦ Φ.jeo.maxs, m1 ↦ 8, m2 ↦ 3 ⟧
   - ⟦ 𝐵-k, 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 0 ⟧, 𝜏-cm ↦ ⟦ φ ↦ Φ.hone.c-map, 𝐵-l ⟧, 𝐵-m ⟧

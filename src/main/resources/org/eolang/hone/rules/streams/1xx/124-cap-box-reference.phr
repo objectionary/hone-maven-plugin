@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The reference half of 123: a captured REFERENCE is already an Object, so nothing
+# has to happen before `List.add` takes it. The Φ.hone.cap-box marker 114/118 left
+# in state-acc is simply dropped, leaving the append as `dup; aload k; List.add;
+# pop` — the same shape the dedicated reference peel produced before the marker
+# split, and one slot shorter than a primitive's boxed append.
+#
+# The type code is a whole "L…;" descriptor here, which is what tells this rule
+# apart from 123's "I"/"J"/"D". Neither rule depends on the other's fixpoint: each
+# clears its own markers wherever they stand.
+name: cap-box-reference
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ 𝑒-code ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝐵-after
+  ⟧
+when:
+  matches: ['^L[^;]*;$', 𝑒-code]

@@ -52,5 +52,6 @@ input: |
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦⟧, body-acc ↦ ⟦⟧, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-rc-head, captures ↦ "II", 𝐵-rc-tail ⟧
   - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-g, target ↦ ⟦ 𝐵-h, signature ↦ "(IILjava/lang/Integer;)Z", 𝐵-i ⟧, 𝐵-j ⟧
   - ⟦ 𝐵-k, 𝜏-last ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧, 𝜏-cf ↦ ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-l ⟧, 𝐵-m ⟧

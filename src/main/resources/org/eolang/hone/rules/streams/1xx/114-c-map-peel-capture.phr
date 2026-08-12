@@ -3,39 +3,54 @@
 ---
 # yamllint disable rule:line-length
 # Peels one captured push off a Φ.hone.c-map and folds it into the operator's
-# shared-List state. 112 emits the c-map with the whole run of `iload k` pushes
-# still inline in front of it and two EMPTY accumulators; this rule does the
-# gathering, one capture per firing, re-applying at fixpoint until the run is
-# gone (the same self-iteration 521 uses to resolve every fetch).
+# shared-List state. 112 emits the c-map with the whole run of pushes still inline
+# in front of it, two EMPTY accumulators, and `captures` — the factory descriptor's
+# parameter list, one code per capture ("Ljava/util/List;ID"). This rule does the
+# gathering, one capture per firing, re-applying at fixpoint until the run is gone
+# (the same self-iteration 521 uses to resolve every fetch).
 #
-# It matches the single `iload` directly in front of the c-map: phino's leading
-# `𝐵-h` group is greedy, so for a run "iload x; iload y; iload z; <c-map>" the
-# bound `𝜏-il` is always the LAST push (z), and the rule peels right-to-left
-# (z, then y, then x). Each peel PREPENDS its unit to the accumulators, so the
-# captures end up in left-to-right (x, y, z) order — exactly the order javac
-# pushed them and the order the static lambda$ expects, and the order in which
-# they are appended to the List (slot 0 = x, …) so guard k reads capture k.
+# It matches the binding IMMEDIATELY in front of the c-map, so for a run
+# "iload x; aload y; dload z; <c-map>" the peel runs right-to-left (z, then y,
+# then x). Each peel PREPENDS its unit to the accumulators, so the captures end up
+# in left-to-right (x, y, z) order — exactly the order javac pushed them, the order
+# the static lambda$ expects, and the order in which they are appended to the List
+# (slot 0 = x, …) so guard k reads capture k. The last code of `captures` is
+# dropped in step with the push, so the field always names the capture being
+# peeled; when it runs dry the `when` guard stops the rule, which is also what
+# keeps the peel off the receiver Stream's own `aload` when a pipeline starts from
+# a local variable.
 #
-# state-acc gains one boxing append `dup; iload k; Integer.valueOf; List.add;
-# pop` (begins and ends at [list], peak 3, so any number of them — across this
-# operator and any fused neighbours — join without growing the caller's stack).
-# body-acc gains one `fetch; intValue` (521 turns the fetch into List.get(counter++)
-# at emit, the intValue unboxes it). 316 wraps the finished body-acc as
-# `astore 1; <fetches>; aload 1; invokestatic lambda$`, so the unboxed captures
-# sit below the parked item exactly as the lambda$ (int…, Integer) signature wants.
+# ONE rule handles every capture type, and that is not cosmetic (issue #668): phino
+# applies each rule to its OWN fixpoint and then moves to the next one, and the
+# plugin runs a single cycle over the rule list (hone.max-cycles defaults to 1). A
+# per-type peel therefore only ever drains a run whose types happen to be sorted in
+# rule order: with a separate iload rule ahead of a separate aload rule, "iload x;
+# aload y" left x stranded on the stack in front of a pragma that no longer expects
+# it, and the class died with a VerifyError. Since the push rides through as a bound
+# expression, the only per-type difference left is the boxing, and that is deferred
+# to a Φ.hone.cap-box / Φ.hone.cap-fetch marker carrying the type code. 123-126
+# expand the markers in place afterwards, which is order-free because each marker is
+# rewritten where it stands.
 #
-# The run is always bounded on the left by the previous stream operator's
-# invokeinterface (which left a Stream ref on the stack), never by another
-# iload, so peeling stops cleanly once every capture has been gathered.
+# state-acc gains one append `dup; <push>; <cap-box>; List.add; pop` (begins and
+# ends at [list], so any number of them — across this operator and any fused
+# neighbours — join without growing the caller's stack; 123 makes the peak one slot
+# higher for a category-2 J/D box, which is why 112 bumps the caller's max-stack by
+# 2 for those). body-acc gains one `cap-fetch` (125/126 turn it into a Φ.hone.fetch
+# plus, for a primitive, its unboxing call; 521 later turns the fetch itself into
+# List.get(counter++)). 316 wraps the finished body-acc as `astore 1; <fetches>;
+# aload 1; invokestatic lambda$`, so the captures sit below the parked item exactly
+# as the lambda$ signature wants.
 name: c-map-peel-capture
 pattern: |
   ⟦
     𝐵-h,
-    𝜏-il ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, 𝐵-ilr ⟧,
+    𝜏-push ↦ 𝑒-push,
     𝜏-cm ↦ ⟦
       φ ↦ Φ.hone.c-map,
       state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
       body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      captures ↦ 𝑒-captures,
       𝐵-cm-tail
     ⟧,
     𝐵-t
@@ -47,14 +62,8 @@ result: |
       φ ↦ Φ.hone.c-map,
       state-acc ↦ ⟦
         𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-        𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, 𝐵-ilr ⟧,
-        𝜏-box ↦ ⟦
-          φ ↦ Φ.jeo.opcode.invokestatic,
-          i2 ↦ "java/lang/Integer",
-          i3 ↦ "valueOf",
-          i4 ↦ "(I)Ljava/lang/Integer;",
-          i5 ↦ Φ.false
-        ⟧,
+        𝜏-load ↦ 𝑒-push,
+        𝜏-box ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ 𝑒-code ⟧,
         𝜏-add ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
           i2 ↦ "java/util/List",
@@ -67,22 +76,35 @@ result: |
         ρ ↦ ∅
       ⟧,
       body-acc ↦ ⟦
-        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
-        𝜏-iv ↦ ⟦
-          φ ↦ Φ.jeo.opcode.invokevirtual,
-          i1 ↦ "java/lang/Integer",
-          i2 ↦ "intValue",
-          i3 ↦ "()I",
-          i4 ↦ Φ.false
-        ⟧,
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ 𝑒-code ⟧,
         𝐵-bacc,
         ρ ↦ ∅
       ⟧,
+      captures ↦ 𝑒-rest,
       𝐵-cm-tail
     ⟧,
     𝐵-t
   ⟧
+when:
+  matches: ['.+', 𝑒-captures]
 where:
+  # The LAST capture code — one of "I", "J", "D" or a whole "L…;" descriptor. The
+  # lazy prefix grows until the alternation can cover the rest of the string, so a
+  # capital I, J or D inside a class name (java/util/Date, java/lang/Integer) is
+  # never mistaken for a primitive code.
+  - meta: 𝑒-code
+    function: sed
+    args:
+      - 𝑒-captures
+      - '"s/^.*?([IJD]|L[^;]*;)$/$1/"'
+  # The same list minus the code peeled here, for the next firing. The leftmost
+  # match that reaches the end is the last code, so a "L" inside a class name
+  # (java/util/ArrayList) cannot split a descriptor in half.
+  - meta: 𝑒-rest
+    function: sed
+    args:
+      - 𝑒-captures
+      - '"s/([IJD]|L[^;]*;)$//"'
   - meta: 𝜏-dup
     function: random-tau
   - meta: 𝜏-load
@@ -94,6 +116,4 @@ where:
   - meta: 𝜏-pop
     function: random-tau
   - meta: 𝜏-fetch
-    function: random-tau
-  - meta: 𝜏-iv
     function: random-tau

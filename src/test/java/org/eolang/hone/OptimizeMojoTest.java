@@ -1463,9 +1463,10 @@ final class OptimizeMojoTest {
             walked.append(new RandomPipeline(seed).java("reached", "X"));
         }
         final List<String> missed = new ArrayList<>(0);
-        for (final String fragment : RandomPipeline.productions()) {
-            if (!walked.toString().contains(RandomPipeline.fragment(fragment))) {
-                missed.add(fragment);
+        final Grammar grammar = new Grammar();
+        for (final String production : grammar.fragments()) {
+            if (!walked.toString().contains(Grammar.fragment(production))) {
+                missed.add(production);
             }
         }
         MatcherAssert.assertThat(

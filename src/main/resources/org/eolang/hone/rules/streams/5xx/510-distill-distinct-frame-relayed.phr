@@ -1,0 +1,154 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Re-derives a distinct() keep-frame from the keep-frame of the operator fused
+# in AHEAD of it, when that operator relays the item instead of producing one
+# (#805).
+#
+# `503-distill-distinct-frame` reads the survivor off an invokestatic required
+# to sit IMMEDIATELY in front of 307's `Φ.hone.fetch` marker, and #798's fix
+# stops there. A filter, a dropWhile, a skip or another distinct fused in
+# between produces no value of its own: each ends its segment at a keep-label
+# with a stackmap frame on it, so what the fetch follows is that frame, the
+# adjacency fails, and `503-distill-state-frame` writes the frame from
+# `bridge-input` again — the very defect #798 closed, re-opened by anything at
+# all standing between the retyping map and the guard.
+# `Stream.of(1, 2).map(n -> n.toString()).distinct().distinct().count()` dies
+# with "Type 'java/lang/String' (current frame, stack[0]) is not assignable to
+# 'java/lang/Integer' (stack map, stack[0])", and so does the same pipeline with
+# a filter or a dropWhile in the middle.
+#
+# A relay does not retype the item, so the frame it left already names the
+# survivor — that is what a keep-frame's single stack slot IS. This rule copies
+# that slot into the frame of the guard behind it and leaves everything else,
+# the local at slot 1 included, exactly as it was.
+#
+# It runs as a CORRECTION, after the whole 503 family has resolved every
+# `Φ.hone.frame-item`, rather than as one more rule racing them for the marker.
+# The 503 rules are tried in one fixed alphabetical order while a chain of
+# relays has to be walked in BODY order, and the two do not agree: for
+# `map(...).skip(1L).distinct()` the fallback claims the distinct marker in the
+# same pass in which `503-distill-skip-frame` resolves the skip one, long before
+# any rule reading the skip's finished frame could get a turn. Correcting the
+# written frame instead makes the order irrelevant — every relay chain converges
+# because each application feeds the next, phino applying a rule to a fixpoint
+# before it moves to the next rule, and a frame that already agrees with its
+# neighbour rewrites to itself and stops.
+#
+# By 510 every keep-frame in a stateful distill-lambda is a FULL frame: 503 and
+# its family write one, and 504 has promoted the same-locals-1 frame 305 leaves
+# on an object filter. Nothing can wedge itself between the neighbour's frame
+# and this guard's fetch either — 505 / 508 / 509 splice their `checkcast` in
+# front of an invokestatic, a dup or 310's latch prologue, never in front of a
+# fetch — so the frame this rule reads is the item as the verifier sees it at
+# the branch. It runs before 512 wraps the lambda into a method (510 < 512).
+#
+# The one relay that leaves no frame is peek(), whose body 309 shapes as `dup` +
+# a void call; `503-distill-distinct-frame-peeked` names the survivor from that
+# call's own parameter instead, with no frame to read and no ordering to respect.
+name: distill-distinct-frame-relayed
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-relay ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-relay-captured,
+          x1 ↦ 𝑒-relay-input,
+          x2 ↦ 𝑒-relay-consumer,
+          x3 ↦ 𝑒-relay-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ 𝑒-add-class,
+        i2 ↦ 𝑒-add-method,
+        i3 ↦ 𝑒-add-signature,
+        i4 ↦ 𝑒-add-is-interface
+      ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-ifne-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ 𝑒-frame-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-stale ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-relay ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-relay-captured,
+          x1 ↦ 𝑒-relay-input,
+          x2 ↦ 𝑒-relay-consumer,
+          x3 ↦ 𝑒-relay-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
+      ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
+      𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i1 ↦ 𝑒-add-class,
+        i2 ↦ 𝑒-add-method,
+        i3 ↦ 𝑒-add-signature,
+        i4 ↦ 𝑒-add-is-interface
+      ⟧,
+      𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-ifne-target ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ 𝑒-frame-counter
+        ⟧,
+        stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧

@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Regression for #801: 2xx/241-type-primitive-to-primitive-after-map and
+# 2xx/271-remove-useless-types disagreed about a node neither of them needs.
+# 241 minted a Φ.hone.type between two adjacent primitive operations whenever
+# the first's `returned` was in [DFIJ] and the second's `accepted` in
+# [BCDFIJS], with nothing forbidding `from` from equalling `to`; 271 deletes
+# precisely the type nodes whose `from` equals its `to`. On an identity pair
+# the two took turns forever, and since the whole streams/* selection runs to
+# fixpoint inside ONE `phino rewrite` invocation, the expression returned to a
+# state it already had and phino's loop detector aborted the run
+# ("it seems rewriting is looping"), failing the optimize goal.
+#
+# Both maps below are `I -> I`, so 241 would derive `from ↦ "i", to ↦ "i"` —
+# exactly the no-op node the issue's small-steps dump caught being minted at
+# step 43 and deleted at step 49. 241 now carries the `having` guard its filter
+# twin 251 already had, so it declines, 271 finds nothing to remove and the
+# rewrite settles on the input. Loading BOTH rules is what makes this a
+# regression test: 241 alone terminates either way, because the minted node
+# separates the pair and stops the rule from matching a second time.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/241-type-primitive-to-primitive-after-map.phr
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/271-remove-useless-types.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.map,
+        opcode ↦ "invokestatic",
+        class ↦ "probe/R",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "I",
+        returned ↦ "I",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "probe/R",
+          method ↦ "lambda$main$0",
+          signature ↦ "(I)I",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.map,
+        opcode ↦ "invokestatic",
+        class ↦ "probe/R",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "I",
+        returned ↦ "I",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "probe/R",
+          method ↦ "lambda$main$1",
+          signature ↦ "(I)I",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-head, 𝜏-one ↦ ⟦ φ ↦ Φ.hone.map, 𝐵-one ⟧, 𝜏-two ↦ ⟦ φ ↦ Φ.hone.map, 𝐵-two ⟧, 𝐵-tail ⟧

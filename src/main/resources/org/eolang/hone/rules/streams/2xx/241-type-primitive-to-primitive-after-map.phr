@@ -2,6 +2,30 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# Where a primitive map hands its result to another primitive operation that
+# accepts a different primitive, the two need a conversion spliced between
+# them; this rule mints the Φ.hone.type node that performs it.
+#
+# It must NOT mint one when the conversion is an identity. 271 deletes every
+# type node whose `from` equals its `to`, so on a `from == to` pair the two
+# rules take turns — 241 minting the no-op node, 271 taking it away — and,
+# because the whole streams/* selection runs to fixpoint inside ONE `phino
+# rewrite` invocation, the expression comes back to a state it already had and
+# phino's loop detector aborts the run ("it seems rewriting is looping"),
+# killing the build (#801).
+#
+# An unboxing head is what exposes it: in
+# `INTEGERS.stream().mapToInt(Integer::intValue).map(n -> n + 2).sum()` the
+# oscillation is the only thing still changing the expression by the time it
+# starts, so the detector fires. Wherever some other rule is still rewriting,
+# the very same no-op node is minted and deleted harmlessly, which is why
+# `IntStream.of(1, 2, 3).map(n -> n + 2).map(n -> n * 3).sum()` finishes.
+#
+# The `having` below is that guard — the identical one the filter twin
+# 251-type-primitive-to-primitive-after-filter already carries. It costs
+# nothing else: with `from == to` the node is a no-op conversion, and the
+# `returned` / `bridge-output` updates this rule makes to 𝜏-second reduce to
+# the values it already holds.
 name: type-primitive-to-primitive-after-map
 pattern: |
   ⟦
@@ -140,3 +164,8 @@ where:
       - 𝑒-two
       - 𝑒-updated-filter-bridge-output-pattern
       - 𝑒-updated-map-bridge-output-pattern
+having:
+  not:
+    eq:
+      - 𝑒-type-from
+      - 𝑒-type-to

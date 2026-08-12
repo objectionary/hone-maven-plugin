@@ -2,6 +2,13 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# The filter twin of 241: the same Φ.hone.type conversion node, spliced in
+# behind a filter rather than behind a map.
+#
+# The `having` guard at the bottom is load bearing, for the reason 241's
+# header spells out: a type node whose `from` equals its `to` is deleted by
+# 271 the moment it is minted, and the pair then oscillates until phino's
+# loop detector aborts the whole rewrite (#801). Do not drop it as redundant.
 name: type-primitive-to-primitive-after-filter
 pattern: |
   ⟦

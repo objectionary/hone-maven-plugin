@@ -38,6 +38,17 @@
 # ignores the extra binding when assembling, so the bytecode is an ordinary
 # flatMap call.
 #
+# The short-circuit is bound below as a raw opcode, which reaches only the
+# three of the seven names that take no lambda: `limit`, `findFirst` and
+# `findAny`. The other four take one, so `111` has already folded them into a
+# `Φ.hone.lambda` and there is no opcode here to see — the sibling
+# `454-flatMap-revert-on-lifted-short-circuit` (which sorts just ahead of this
+# file) carries the identical guard with `𝜏-short` bound in that lifted shape
+# instead, and between the two every one of the seven is covered (#816). Keep
+# the name list in the two `when` blocks character-identical: a name that
+# cannot occur in one shape simply never matches there, and splitting the list
+# three/four would let the halves drift apart.
+#
 # Detection is intentionally over-broad: any matching short-circuit anywhere
 # after the flatMap in the method reverts it, even one on an unrelated,
 # locally-consumed stream. Over-reverting only forfeits the mapMulti fusion on
@@ -45,7 +56,7 @@
 # pass sound. Binding groups are order-preserving, and a short-circuit BEFORE
 # the flatMap is upstream of it — not reachable downstream — so a single
 # pattern with the flatMap ahead of the call is exactly the case to guard; the
-# mirror layout needs no sibling.
+# mirror layout needs no rule of its own.
 name: flatMap-revert-on-short-circuit
 pattern: |
   ⟦

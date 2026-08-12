@@ -1,0 +1,152 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The lifted half of the guard `454-flatMap-revert-on-short-circuit` opens; it
+# shares that rule's number and sorts ahead of it (`-lifted-` < `-short-`),
+# both ahead of 455. Read the sibling's header first: everything it says about
+# WHY a flatMap has to stay native once a short-circuiting operator is
+# reachable downstream of it (#736), about the dual positive route, and about
+# the `reverted ↦ Φ.true` marker that keeps the 111 → 454 → 701 cycle from
+# spinning, holds here word for word. Exactly one binding differs — the shape
+# the downstream short-circuit is matched in.
+#
+# The sibling binds that short-circuit as a raw `Φ.jeo.opcode.invokeinterface`
+# or `invokevirtual` and tests its method operand against the seven names. In
+# practice that reaches only the three which take no lambda — `limit`,
+# `findFirst`, `findAny`. The other four all take one, so by the time the 4xx
+# pass runs `111-invokedynamic-to-lambda` has folded each of their
+# invokedynamic + invokeinterface pairs into a single `Φ.hone.lambda` and there
+# is no opcode left for the sibling's pattern to see: `takeWhile`, `anyMatch`,
+# `allMatch` and `noneMatch` went unguarded, 455-458 converted the flatMap
+# anyway, and the traversal contract broke — a `.takeWhile(...)` pipeline
+# counted more peeks after optimization than before, and the hang #736 was
+# filed for stayed reachable through
+# `Stream.of(1L).flatMap(x -> Stream.iterate(x, i -> i + 1)).takeWhile(i -> i < 5)`
+# (#816).
+#
+# Matching the lifted form here closes that half: `𝜏-short` is bound as a
+# `Φ.hone.lambda` and the `method` of its `stream` block is tested against the
+# same seven names. Nothing between 111 and 701 claims those four operators —
+# no 2xx rule recognises them, so no distill ever swallows them — which is why
+# the lambda is still intact at this point and one pattern suffices. The name
+# list is kept character-identical in both rules rather than split three/four,
+# so the pair reads as one guard and neither drifts: `limit` cannot appear in
+# this form (it takes a `long`, not a functional interface) and the two
+# lambda-free terminals cannot either, so the extra names simply never match.
+# A capturing short-circuit — `takeWhile(n -> n < bound)` — is not lifted by
+# `111` either (its pattern requires a non-capturing `()...` interface), so it
+# arrives as the raw opcode the sibling already handles.
+name: flatMap-revert-on-lifted-short-circuit
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-flatmap ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ "true",
+      opcode ↦ 𝑒-opcode,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧
+    ⟧,
+    𝐵-between,
+    𝜏-short ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-sclass,
+      method ↦ 𝑒-smethod,
+      interface ↦ 𝑒-sinterface,
+      lambda-signature ↦ 𝑒-slambda-signature,
+      bridge-signature ↦ 𝑒-sbridge-signature,
+      static ↦ 𝑒-sstatic,
+      opcode ↦ 𝑒-sopcode,
+      target ↦ 𝑒-starget,
+      stream ↦ ⟦
+        class ↦ 𝑒-sstream-class,
+        method ↦ 𝑒-sstream-method,
+        signature ↦ 𝑒-sstream-signature
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-invokedynamic ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokedynamic,
+      i2 ↦ 𝑒-method,
+      i3 ↦ 𝑒-interface,
+      i4 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        i1 ↦ 6,
+        i2 ↦ "java/lang/invoke/LambdaMetafactory",
+        i3 ↦ "metafactory",
+        i4 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+        i5 ↦ Φ.false
+      ⟧,
+      i5 ↦ ⟦
+        φ ↦ Φ.jeo.type,
+        i1 ↦ 𝑒-lambda-signature
+      ⟧,
+      i6 ↦ ⟦
+        φ ↦ Φ.jeo.handle,
+        i1 ↦ 𝑒-target-handle,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      i7 ↦ ⟦
+        φ ↦ Φ.jeo.type,
+        i1 ↦ 𝑒-bridge-signature
+      ⟧
+    ⟧,
+    𝜏-invokeinterface ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ 𝑒-stream-method,
+      i4 ↦ 𝑒-stream-signature,
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-short ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-sclass,
+      method ↦ 𝑒-smethod,
+      interface ↦ 𝑒-sinterface,
+      lambda-signature ↦ 𝑒-slambda-signature,
+      bridge-signature ↦ 𝑒-sbridge-signature,
+      static ↦ 𝑒-sstatic,
+      opcode ↦ 𝑒-sopcode,
+      target ↦ 𝑒-starget,
+      stream ↦ ⟦
+        class ↦ 𝑒-sstream-class,
+        method ↦ 𝑒-sstream-method,
+        signature ↦ 𝑒-sstream-signature
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches: ['^flatMap(ToInt|ToLong|ToDouble)?$', 𝑒-stream-method]
+    - matches: ['^(limit|takeWhile|findFirst|findAny|anyMatch|allMatch|noneMatch)$', 𝑒-sstream-method]
+where:
+  - meta: 𝜏-invokedynamic
+    function: random-tau
+  - meta: 𝜏-invokeinterface
+    function: random-tau

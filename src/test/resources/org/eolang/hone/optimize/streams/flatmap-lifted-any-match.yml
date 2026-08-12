@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# The traversal-contract half of #816, on a finite source, where the symptom is
+# wasted work rather than a hang. `anyMatch` takes a lambda, so — exactly like
+# `takeWhile` in flatmap-lifted-short-circuit.yml — 111 folds it into a
+# Φ.hone.lambda long before the 4xx pass, and the raw-opcode pattern of
+# 454-flatMap-revert-on-short-circuit could not see it. 455 converted the
+# flatMap into a mapMulti whose `result.sequential().forEach(c)` cannot be
+# cancelled, so the optimized class kept pulling elements after the match had
+# already been found.
+#
+# The peek here counts every element that reaches it, and the count is printed
+# next to the answer, which makes the traversal contract observable rather than
+# merely argued. The inner streams have three elements each and the match lands
+# on the FIRST of one of them, which is what makes the difference visible: the
+# native flatMap stops mid-inner-stream as soon as anyMatch is satisfied and
+# reaches the peek 13 times, while a mapMulti adapter has to finish the inner
+# stream it is draining — its `result.sequential().forEach(c)` cannot be
+# cancelled — and reaches it 15. (Cancellation between OUTER elements works
+# either way, so a match on the last element of an inner stream would hide the
+# defect; that is why the order inside `Stream.of` is not the obvious one.)
+# The lifted sibling reverts the flatMap, so both runs print the same line;
+# without it the optimized run printed `after 15`.
+#
+# Counts: the flatMap goes back to native form while the peek/map pair behind
+# it still fuses, so the optimized class holds exactly four call sites —
+# List.stream, the native Stream.flatMap, one Stream.mapMulti in place of
+# Stream.peek and Stream.map, and Stream.anyMatch. invokedynamic falls from 4 to
+# 3: the peek and map lambdas are replaced by the single BiConsumer the fused
+# adapter is handed. invokeinterface stays at 5 because the slot the collapsed
+# peek/map pair frees is taken by the adapter body's own
+# Consumer.accept call. What matters is what is NOT in the tally: no
+# flatMap-to-mapMulti conversion, so the native Stream.flatMap survives.
+java: |
+  package flatmapliftedanymatch;
+  import java.util.List;
+  import java.util.stream.Stream;
+  public class X {
+    private static final List<Long> LIST = List.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L);
+    private static final long[] SEEN = {0L};
+    public static void main(String[] a) {
+      boolean found = LIST.stream()
+        .flatMap(n -> Stream.of(n + 2L, n, n + 1L))
+        .peek(n -> SEEN[0] += 1L)
+        .map(n -> n * 2L)
+        .anyMatch(n -> n > 12L);
+      System.out.printf("The result is %b after %d\n", found, SEEN[0]);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is true after 13"
+before:
+  invokedynamic: 4
+  invokeinterface: 5
+after:
+  invokedynamic: 3
+  invokeinterface: 5

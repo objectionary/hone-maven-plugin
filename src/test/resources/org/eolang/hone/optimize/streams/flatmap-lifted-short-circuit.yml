@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# The same unbounded flatMap as flatmap-short-circuit.yml, ending in the
+# short-circuit that takes a lambda instead of the one that takes a long
+# (issue #816). `Stream.of(1L).flatMap(x -> Stream.iterate(x, i -> i + 1))
+# .takeWhile(i -> i < 5)` yields 1+2+3+4 = 10 natively, because
+# ReferencePipeline.flatMap forwards cancellation and stops pulling from the
+# unbounded Stream.iterate once takeWhile has said no. A mapMulti adapter
+# cannot honour that cancellation, so fusing this flatMap (455) loops forever
+# — the very hang #736 was filed for.
+#
+# 454-flatMap-revert-on-short-circuit was supposed to prevent that, but it
+# binds the downstream short-circuit as a raw opcode, and `takeWhile` takes a
+# lambda: by the time the 4xx pass runs, 111 has already folded its
+# invokedynamic + invokeinterface pair into a Φ.hone.lambda, so there was no
+# opcode left to match and the guard silently covered only `limit`,
+# `findFirst` and `findAny`. This build therefore hung. Its lifted sibling
+# 454-flatMap-revert-on-lifted-short-circuit matches the folded form and
+# reverts the flatMap the same way, so the build finishes and prints 10.
+#
+# Counts: the guard reverts the flatMap to byte-identical native form and
+# nothing else in the chain fuses (takeWhile and reduce are not fusable, and
+# Stream.iterate's i -> i + 1 lambda is an argument to a static factory, not a
+# pipeline stage), so both opcode tallies are unchanged. invokedynamic stays at
+# 4 (the flatMap mapper, the iterate UnaryOperator, the takeWhile Predicate and
+# the Long::sum reduce accumulator). invokeinterface stays at 3
+# (Stream.flatMap, Stream.takeWhile, Stream.reduce); Stream.of and
+# Stream.iterate are static. Crucially there is no Stream.mapMulti call site —
+# the flatMap was left native rather than converted.
+java: |
+  package flatmapliftedshortcircuit;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      long n = Stream.of(1L)
+        .flatMap(x -> Stream.iterate(x, i -> i + 1))
+        .takeWhile(i -> i < 5)
+        .reduce(0L, Long::sum);
+      System.out.printf("The result is %d\n", n);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 10"
+before:
+  invokedynamic: 4
+  invokeinterface: 3
+after:
+  invokedynamic: 4
+  invokeinterface: 3

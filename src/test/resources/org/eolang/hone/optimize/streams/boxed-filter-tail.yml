@@ -1,0 +1,101 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The corner #822 reports: a primitive-domain filter whose boxed() is consumed
+# directly by a trailing mapToX, with nothing in between. The three packs that
+# come close all stop short of it — boxed-primitive-filters.yml continues into a
+# reference map before collecting, long-filter-boxed.yml ends at collect, and the
+# filter in all-ops.yml is a reference-stream filter sitting far ahead of that
+# file's boxed()/mapToX run — so until now the only thing covering the shape was
+# a seeded walk of RandomPipeline, and a seed that happens to reach a shape is
+# not a regression test for it.
+#
+# It is the filter guard's keep-label frame that has failed here, twice: as #704,
+# and again on 049a0735 (deep run 31597774925), where seed 9 emitted the `kept`
+# pipeline below and the class died at link time. The lowering that gets there:
+# 103 lifts the trailing `Double::intValue` methodref into a wrapper lambda and
+# 205 recognizes it as an unbox; 203 lifts the primitive filter, 206 turns the
+# user's boxed() into a box, 211 splits the filter into box +
+# boxed-primitive-filter + unbox, 221 cancels that compensating unbox against
+# the user's own box, and 232 promotes the filter into a p-filter whose
+# bridge-input is the wrapper Ljava/lang/Double; while accepted/returned stay the
+# primitive D its predicate takes. Because the user's boxed() is what consumed
+# the unbox, 411 never unwinds the sandwich and the distill 304 mints still
+# receives the wrapper: 421 prepends the head Double.doubleValue(), 413 puts the
+# guard's dup2 behind it so every copy is the primitive, 422 re-boxes the
+# survivor at the tail, and 451 fuses the trailing unbox — the user's mapToInt —
+# into that same distill, overwriting `returned` with its `int` output on the
+# way. 501 lowers the whole run to a single Stream.mapMultiToInt.
+#
+# Overwriting `returned` is what broke it. The `506-distill-filter-frame.phr` of
+# 049a0735 derived the keep-frame from `returned`, so the frame declared
+# `integer` while the stack held the value the guard's dup had kept, and the
+# class failed JVM verification with "Inconsistent stackmap frames at branch
+# target 12 ... Type 'java/lang/Double' is not assignable to integer". The #811
+# rewrite in 5246388 deleted that rule and 506 now reads every frame off the
+# predicate's own parameter (5xx/506-distill-predicate-frame.phr), which names
+# the survivor whatever fusion did to `returned`: `double` here, `long` and
+# `integer` for the siblings.
+#
+# Four pipelines, one class:
+#   * kept      — the seed-9 reproduction: the decimals over one, boxed,
+#     truncated to int, counted. {1.5, 2.25, 1.5, 8.125} survive -> 4.
+#   * truncated — the same shape summed rather than counted, so the values the
+#     fused body produced are pinned as well as how many there were:
+#     {1.5, 2.25, 8.125} truncate to {1, 2, 8} -> 11.
+#   * longs     — the LongStream sibling, mapToInt as well, so its keep-frame is
+#     `long` where the two above are `double`: the evens of 1..8 -> 20.
+#   * ints      — the IntStream sibling. Integer -> int would cancel the boxed()
+#     round-trip and unwind the sandwich back to a plain IntStream.mapMulti, a
+#     shape with no wrapper in it at all, so the tail that keeps this one in the
+#     boxed domain is mapToLong: {5, 9, 7} over two -> 21.
+# Every pipeline collapses into one mapMultiToX, which is what the after-count
+# asserts: the two invokedynamic each of them starts with — a predicate and a
+# methodref — become one, 8 -> 4.
+java: |
+  package boxedfiltertail;
+  import java.util.Arrays;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  public class X {
+    private static final double[] DECIMALS = {1.5, 2.25, 1.5, 8.125, 0.5};
+    public static void main(String[] a) {
+      long kept = Arrays.stream(DECIMALS)
+        .filter(d -> d > 1.0)
+        .boxed()
+        .mapToInt(Double::intValue)
+        .count();
+      int truncated = DoubleStream.of(0.5, 1.5, 2.25, 8.125, 0.75)
+        .filter(d -> d > 1.0)
+        .boxed()
+        .mapToInt(Double::intValue)
+        .sum();
+      int longs = LongStream.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L)
+        .filter(n -> n % 2L == 0L)
+        .boxed()
+        .mapToInt(Long::intValue)
+        .sum();
+      long ints = IntStream.of(5, 2, 9, 2, 7)
+        .filter(n -> n > 2)
+        .boxed()
+        .mapToLong(Integer::longValue)
+        .sum();
+      System.out.printf("The result is %d/%d/%d/%d\n", kept, truncated, longs, ints);
+    }
+  }
+# The production default grep-in (see #449/#671/#705) would already select this
+# class via its `filter` and `mapToInt` tokens, but the pack opts the pre-filter
+# off with `.*` so it stays decoupled from the exact set of method names the
+# default happens to include.
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 4/11/20/21"
+before:
+  invokedynamic: 8
+after:
+  invokedynamic: 4

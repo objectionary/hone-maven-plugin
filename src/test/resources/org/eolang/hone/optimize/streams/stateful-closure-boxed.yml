@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The companion of stateful-closure-tail.yml, and the one that pins WHICH class
+# 509-parked casts to. The rule takes the item from the LAST parameter of the
+# desugared lambda's descriptor, because 316 pushes the captures first and
+# reloads the item on top of them. Reading that as "the last L in the
+# descriptor" is wrong the moment the element's own internal name carries an L:
+# for the "(JLjava/lang/Long;)Ljava/lang/Long;" this pack produces, such a read
+# lands on the L of Long itself and casts to the three-letter suffix behind it,
+# a class that does not exist. The optimized class then dies at initialization
+# with NoClassDefFoundError instead of a VerifyError — a different failure from
+# the one #817 reports, out of the same rule. Long is not special: every element
+# whose name carries an L (List, ArrayList, LinkedList, a value class of one's
+# own) reaches it, while Integer, Double and String happen not to and hide it.
+#
+# So this is ordinary code, not an exotic shape: distinct() erases the element
+# type, the capturing map behind it takes the captured long first and the Long
+# item last, and the whole thing must simply run. The tally pins three
+# `checkcast` opcodes in the optimized class — the guard's KeySetView, the
+# capture's Long, and the item's Long — against none in what javac emits.
+#
+# LIST is {4, 8, 8, 15}, distinct leaves {4, 8, 15}, by=3 lifts them to
+# {7, 11, 18}, and forEach sums: 36.
+java: |
+  package statefulclosureboxed;
+  import java.util.List;
+  public class X {
+    private static final List<Long> LIST = List.of(4L, 8L, 8L, 15L);
+    static long shifted(long by) {
+      long[] sum = new long[1];
+      LIST.stream()
+        .distinct()
+        .map(n -> n + by)
+        .forEach(n -> sum[0] += n);
+      return sum[0];
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", shifted(3L));
+    }
+  }
+before:
+  invokedynamic: 2
+  checkcast: 0
+after:
+  invokedynamic: 2
+  checkcast: 3
+log:
+  - "BUILD SUCCESS"
+  - "The result is 36"

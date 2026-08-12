@@ -118,12 +118,20 @@ when:
 where:
   - meta: 𝜏-cast
     function: random-tau
-  # The rightmost reference of the parameter list, which is the item: the
-  # greedy prefix walks past every capture to the last "L…;" that still ends at
-  # the closing parenthesis, so a capture whose own class name sits earlier in
-  # the descriptor cannot be picked by mistake.
+  # The LAST parameter of the descriptor, which is the item. The walk is over
+  # the descriptor's own delimiters, never over its letters: isolate the
+  # parameter list, drop its final ";", cut everything through the last ";" that
+  # is left (which ends the second-to-last reference capture, if any), and strip
+  # the primitive captures and the "L" off what remains. Searching for the last
+  # "L" instead would find one INSIDE a class name — "Ljava/util/List;" and
+  # "LA$Level;" each carry one — and name the suffix after it instead of the
+  # class, splicing a checkcast onto a type that does not exist.
   - meta: 𝑒-cast-class
     function: sed
     args:
       - 𝑒-invoke-signature
-      - '"s/.*L([^;]*);\\).*/$1/g"'
+      - '"s/^[(]//"'
+      - '"s/[)].*$//"'
+      - '"s/;$//"'
+      - '"s/^.*;//"'
+      - '"s/^[IJD]*L//"'

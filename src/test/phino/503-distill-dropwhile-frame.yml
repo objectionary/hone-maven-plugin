@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The dropWhile() half of #798: a type-changing object map fused in AHEAD of
+# 310's latch guard. The wrapper receives a java/lang/String, the head
+# `lambda$main$0:(Ljava/lang/String;)Ljava/lang/Long;` retypes it, and the
+# survivor waiting at the keep-label — reachable from both `ifne` arms — is that
+# java/lang/Long, while the local at slot 1 stays the declared String. Unlike
+# distinct and skip, this guard names the survivor itself, through the predicate
+# `(Ljava/lang/Long;)Z` it tests the item with, so no producer anchor is needed.
+# 503 is listed too, to prove the alphabetical order gets the marker to the
+# dropWhile rule before the bridge-input fallback sees it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-distinct-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-dropwhile-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-skip-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/String;",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    target-method ↦ "distill_1",
+    captured ↦ "Ljava/util/List;",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/String;)Ljava/lang/Long;", i5 ↦ Φ.false ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$1", i4 ↦ "(Ljava/lang/Long;)Z", i5 ↦ Φ.false ⟧,
+      i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
+      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
+      i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i15 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
+      i17 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      i18 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i19 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i20 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i21 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 0, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Long" ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧

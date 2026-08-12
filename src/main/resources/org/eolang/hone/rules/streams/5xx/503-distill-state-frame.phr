@@ -21,9 +21,19 @@
 # COMPUTE_FRAMES on jeo:assemble would let every hone rule, this one and
 # filter's 305 alike, drop hand-built frames. Tracked as a jeo follow-up.)
 #
-# v1 reads the type off `bridge-input`, correct when every operator
-# before distinct in the fused body preserves the element type (true for
-# the map/filter pipelines exercised today).
+# This is the FALLBACK of the keep-frame family: it reads the stack item
+# off `bridge-input`, which names the survivor only while every operator
+# ahead of the guard in the fused body preserves the element type. When a
+# type-CHANGING map is fused ahead, bridge-input is the head map's INPUT
+# while the value at the keep-label is its OUTPUT, and the frame written
+# here fails JVM verification (#798). The three rules that sort in front
+# of this one — `503-distill-distinct-frame`,
+# `503-distill-dropwhile-frame`, `503-distill-skip-frame` — claim those
+# markers first and derive the stack item from the survivor, leaving this
+# rule the guards with a type-preserving neighbour or nothing fused ahead
+# of them at all, where bridge-input is right. The LOCAL at slot 1 is
+# bridge-input in every case: it is the bridge method's declared
+# parameter, whatever the body later does to the item.
 name: distill-state-frame
 pattern: |
   ⟦

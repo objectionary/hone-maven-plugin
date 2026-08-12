@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip() half of #798: the same type-changing object map, this time fused in
+# AHEAD of 308's countdown guard. The wrapper receives a java/lang/String, the
+# head `lambda$main$0:(Ljava/lang/String;)Ljava/lang/Long;` retypes it, and the
+# survivor left at the keep-label once the long[] counter is consumed is that
+# java/lang/Long — while the local at slot 1 stays the declared String. 503 is
+# listed too, to prove the alphabetical order gets the retyped marker to the
+# fused rule before the bridge-input fallback sees it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-distinct-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-dropwhile-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-skip-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ "true",
+    bridge-input ↦ "Ljava/lang/String;",
+    consumer ↦ "Ljava/util/function/Consumer;",
+    target-method ↦ "distill_1",
+    captured ↦ "Ljava/util/List;",
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/String;)Ljava/lang/Long;", i5 ↦ Φ.false ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.laload ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2_x2 ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.lastore ⟧,
+      i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_0 ⟧,
+      i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.lcmp ⟧,
+      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifle, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i15 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i16 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.frame, type ↦ 0, 𝐵-e ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Long" ⟧
+  - ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧

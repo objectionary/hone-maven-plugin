@@ -40,7 +40,9 @@
 # (spliced by 283, or by 431 after a fuse), breaking the frame → invokestatic
 # adjacency this rule anchors on; 508 is the twin that matches that
 # interleaving and casts in front of the dup, so both copies of the item are
-# narrowed (#788).
+# narrowed (#788). A dropWhile wedged there opens with 310's sticky-latch
+# prologue and only then dups, breaking both adjacencies at once; 509 is the
+# third twin, matching that prologue and casting in front of it (#799).
 name: distill-state-item-cast
 pattern: |
   ⟦

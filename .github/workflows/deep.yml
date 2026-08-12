@@ -40,6 +40,25 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 21
+      # The EC2 AMI carries no Maven and actions/setup-java installs only a
+      # JDK, so without this step every "mvn" below dies with "command not
+      # found" and the whole job is red in under a second (see #813).
+      - name: install-maven
+        env:
+          MAVEN_VERSION: 3.9.11
+        run: |
+          if command -v mvn > /dev/null; then
+            mvn --version
+            exit 0
+          fi
+          curl --silent --show-error --fail --location \
+            --output /tmp/maven.tgz \
+            "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+          mkdir -p "${HOME}/maven"
+          tar xzf /tmp/maven.tgz --strip-components=1 --directory "${HOME}/maven"
+          rm /tmp/maven.tgz
+          echo "${HOME}/maven/bin" >> "${GITHUB_PATH}"
+          "${HOME}/maven/bin/mvn" --version
       - uses: actions/cache@v6
         with:
           path: ~/.m2/repository

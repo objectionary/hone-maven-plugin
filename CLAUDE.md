@@ -117,7 +117,8 @@ covers the rest: `RandomPipeline` walks the typed grammar of the Stream API that
 `Grammar` holds — its productions, one per line, are where an operator or a
 terminal joins the walk — and emits one pipeline per class, seeded by its index,
 and the test compiles them, runs them, optimizes them, runs them again, and
-compares what the two runs printed line by line. A seed is the whole reproduction — `new RandomPipeline(7L)
+compares what the two runs printed line by line. A seed is the whole
+reproduction — `new RandomPipeline(7L)`
 .java("random", "P0007")` prints the very class that failed, ready to paste into
 a `.yml` fixture once the defect is understood. It walks 120 seeds by default;
 `-Dhone.random.pipelines=240` moves that either way, and the count is the number

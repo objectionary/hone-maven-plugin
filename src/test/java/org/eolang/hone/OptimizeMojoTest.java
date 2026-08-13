@@ -1681,6 +1681,18 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void matchesStandaloneDropWhileByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "default grep-in must match a standalone 'dropWhile' byte sequence, since the method is fused by the pipeline but absent from the default pre-filter (see #449)",
+            OptimizeMojoTest.grepInMatches(
+                dir, "<o as=\"data\">64-72-6F-70-57-68-69-6C-65</o>"
+            ),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
     void matchesStandaloneFlatMapByteSequenceInDefaultGrepIn(@Mktmp final Path dir)
         throws IOException {
         MatcherAssert.assertThat(

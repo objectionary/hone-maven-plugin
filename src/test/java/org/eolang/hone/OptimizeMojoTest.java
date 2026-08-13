@@ -1787,7 +1787,45 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void distinguishesGrepPatternErrorFromNoMatch(@Mktmp final Path dir)
+    void matchesWithAValidGrepInPattern(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "a valid pattern that matches must be reported as a match",
+            OptimizeMojoTest.grepInCode(dir, "(66-69-6C-74-65-72|6D-61-70)"),
+            Matchers.is(0)
+        );
+    }
+
+    @Test
+    void missesWithAGrepInPatternWithoutMatches(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "a valid pattern without matches must be reported as a miss",
+            OptimizeMojoTest.grepInCode(dir, "(99-99)"),
+            Matchers.is(1)
+        );
+    }
+
+    @Test
+    void failsOnAnInvalidGrepInPattern(@Mktmp final Path dir)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "an invalid pattern must be reported as an error, not as a miss (see #825)",
+            OptimizeMojoTest.grepInCode(dir, "("),
+            Matchers.is(2)
+        );
+    }
+
+    /**
+     * Run the {@code grep_in_check} sub-command of the real
+     * {@code rewrite.sh} against a sample XMIR and return its exit code.
+     * @param dir Temporary directory for the script and the sample file
+     * @param pattern The pattern to verify
+     * @return The exit code of {@code grep_in_check}: 0 = match,
+     *  1 = no match, 2 = invalid pattern
+     * @throws IOException If the script or the sample file cannot be written
+     */
+    private static int grepInCode(final Path dir, final String pattern)
         throws IOException {
         final Path script = dir.resolve("rewrite.sh");
         Files.write(
@@ -1803,30 +1841,9 @@ final class OptimizeMojoTest {
             file,
             "66-69-6C-74-65-72\n".getBytes(StandardCharsets.UTF_8)
         );
-        MatcherAssert.assertThat(
-            "a valid pattern that matches must be reported as a match",
-            new Jaxec(
-                "bash", script.toString(), "grep_in_check",
-                "(66-69-6C-74-65-72|6D-61-70)", file.toString()
-            ).withCheck(false).execUnsafe().code(),
-            Matchers.is(0)
-        );
-        MatcherAssert.assertThat(
-            "a valid pattern that does not match must be reported as a miss",
-            new Jaxec(
-                "bash", script.toString(), "grep_in_check",
-                "(99-99)", file.toString()
-            ).withCheck(false).execUnsafe().code(),
-            Matchers.is(1)
-        );
-        MatcherAssert.assertThat(
-            "an invalid pattern must be reported as an error, not as a miss (see #825)",
-            new Jaxec(
-                "bash", script.toString(), "grep_in_check",
-                "(", file.toString()
-            ).withCheck(false).execUnsafe().code(),
-            Matchers.is(2)
-        );
+        return new Jaxec(
+            "bash", script.toString(), "grep_in_check", pattern, file.toString()
+        ).withCheck(false).execUnsafe().code();
     }
 
     @Test

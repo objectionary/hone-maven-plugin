@@ -92,7 +92,7 @@ function rewrite {
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
   if [ -n "${HONE_GREP_IN}" ]; then
     rc=0
-    grep -qE "${HONE_GREP_IN}" "${xi}" || rc=$?
+    grep_in_check "${HONE_GREP_IN}" "${xi}" || rc=$?
     if [ "${rc}" -eq 2 ]; then
       echo "The grep-in pattern '${HONE_GREP_IN}' is invalid (grep exited with code 2); refusing to skip classes blindly" >&2
       exit 1
@@ -220,6 +220,14 @@ function rewrite_with_timeout {
   fi
 }
 
+function grep_in_check {
+  # Verify a grep-in pattern against a file. The exit code mirrors grep -E:
+  # 0 = the pattern matched, 1 = no match, 2 = the pattern is invalid.
+  local rc=0
+  grep -qE "${1}" "${2}" || rc=$?
+  return "${rc}"
+}
+
 if [ "${1}" == 'rewrite' ]; then
   rewrite "${@:2}"
   exit
@@ -227,6 +235,11 @@ fi
 
 if [ "${1}" == 'rewrite_with_timeout' ]; then
   rewrite_with_timeout "${@:2}"
+  exit
+fi
+
+if [ "${1}" == 'grep_in_check' ]; then
+  grep_in_check "${2}" "${3}"
   exit
 fi
 

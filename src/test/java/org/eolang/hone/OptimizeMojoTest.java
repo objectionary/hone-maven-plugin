@@ -1787,40 +1787,45 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void distinguishesGrepErrorFromNoMatchInRewriteScript() throws Exception {
-        MatcherAssert.assertThat(
-            "rewrite.sh must not treat grep exit code 2 (an invalid hone.grep-in pattern) as 'no match': the '!' used to invert it, so every class was silently copied through unoptimized while the build stayed green (see #825)",
+    void distinguishesGrepPatternErrorFromNoMatch(@Mktmp final Path dir)
+        throws IOException {
+        final Path script = dir.resolve("rewrite.sh");
+        Files.write(
+            script,
             new IoCheckedText(
                 new TextOf(
                     new ResourceOf("org/eolang/hone/scaffolding/rewrite.sh")
                 )
-            ).asString(),
-            Matchers.allOf(
-                Matchers.not(Matchers.containsString("&& ! grep -qE")),
-                Matchers.containsString("rc=$?"),
-                Matchers.containsString("-eq 2")
-            )
+            ).asString().getBytes(StandardCharsets.UTF_8)
         );
-    }
-
-    @Test
-    void failsOnAnInvalidGrepInPattern(@Mktmp final Path dir)
-        throws IOException {
         final Path file = dir.resolve("sample.xmir");
         Files.write(
             file,
             "66-69-6C-74-65-72\n".getBytes(StandardCharsets.UTF_8)
         );
         MatcherAssert.assertThat(
-            "an invalid ERE pattern must make grep exit with code 2, which rewrite.sh now turns into a hard failure instead of a silent skip (see #825)",
+            "a valid pattern that matches must be reported as a match",
             new Jaxec(
-                "bash", "-c",
-                String.format(
-                    "grep -qE '(' \"%s\" 2>/dev/null; test $? -eq 2",
-                    file
-                )
+                "bash", script.toString(), "grep_in_check",
+                "(66-69-6C-74-65-72|6D-61-70)", file.toString()
             ).withCheck(false).execUnsafe().code(),
             Matchers.is(0)
+        );
+        MatcherAssert.assertThat(
+            "a valid pattern that does not match must be reported as a miss",
+            new Jaxec(
+                "bash", script.toString(), "grep_in_check",
+                "(99-99)", file.toString()
+            ).withCheck(false).execUnsafe().code(),
+            Matchers.is(1)
+        );
+        MatcherAssert.assertThat(
+            "an invalid pattern must be reported as an error, not as a miss (see #825)",
+            new Jaxec(
+                "bash", script.toString(), "grep_in_check",
+                "(", file.toString()
+            ).withCheck(false).execUnsafe().code(),
+            Matchers.is(2)
         );
     }
 

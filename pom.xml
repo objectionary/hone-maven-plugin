@@ -75,6 +75,7 @@
     <maven.compiler.release>${jdk.version}</maven.compiler.release>
     <maven.compiler.source>${jdk.version}</maven.compiler.source>
     <maven.compiler.target>${jdk.version}</maven.compiler.target>
+    <maven.compiler.testRelease>17</maven.compiler.testRelease>
     <excludedGroups>deep</excludedGroups>
     <skipITs/>
   </properties>
@@ -403,7 +404,7 @@
           <plugin>
             <groupId>com.qulice</groupId>
             <artifactId>qulice-maven-plugin</artifactId>
-            <version>0.30.12</version>
+            <version>0.30.13</version>
             <configuration>
               <excludes>
                 <exclude>pmd:/src/it/.*</exclude>

@@ -38,11 +38,7 @@ import java.util.Random;
  * known to break — every shape behind #787, #788, #790, #794, #798, #799, #804,
  * #805 and #811 is still reachable, since a generator that avoids the defects we
  * already know about would only prove that we know about them, and nothing
- * about a regression. Nothing is quarantined at the moment: {@code
- * quarantined()} names the shapes that break the rewrite today, so that a suite
- * failing on them every night does not report what is already filed, and both
- * of the clauses it held have been deleted along with the issue that owned
- * them.</p>
+ * about a regression.</p>
  *
  * <p>A pipeline is more than the operators in it, so the walk also picks the
  * frame the pipeline sits in, and each frame opens productions the others
@@ -283,12 +279,6 @@ final class RandomPipeline {
     private static final int RACES = 5;
 
     /**
-     * How many times a seed may re-roll away from a quarantined shape before
-     * the generator gives up and says so.
-     */
-    private static final int ATTEMPTS = 32;
-
-    /**
      * The seed of the walk.
      */
     private final long seed;
@@ -330,31 +320,14 @@ final class RandomPipeline {
     }
 
     /**
-     * The walk this seed settles on, re-rolled away from every quarantined
-     * shape.
+     * The walk this seed settles on.
      * @param grammar The grammar to walk
      * @return The grammar lines the class is printed from, the frame first
      */
     private List<String> rolled(final Grammar grammar) {
-        List<String> found = new ArrayList<>(0);
-        for (int attempt = 0; attempt < RandomPipeline.ATTEMPTS; ++attempt) {
-            final List<String> walk = RandomPipeline.walk(
-                grammar, new Random(RandomPipeline.scrambled(this.seed * 31L + attempt))
-            );
-            if (RandomPipeline.quarantined(walk).isEmpty()) {
-                found = walk;
-                break;
-            }
-        }
-        if (found.isEmpty()) {
-            throw new IllegalStateException(
-                String.format(
-                    "seed %d walks into a quarantined shape %d times in a row",
-                    this.seed, RandomPipeline.ATTEMPTS
-                )
-            );
-        }
-        return found;
+        return RandomPipeline.walk(
+            grammar, new Random(RandomPipeline.scrambled(this.seed * 31L))
+        );
     }
 
     /**
@@ -540,31 +513,5 @@ final class RandomPipeline {
             call = "pipe(2L, 3, 1.5, \"z\")";
         }
         return call;
-    }
-
-    /**
-     * The issue that quarantines this walk, if one does.
-     *
-     * <p>A shape that breaks the rewrite today, emitting a class the verifier
-     * rejects, gets a clause here once it is reported upstream: a walk that
-     * reaches it is re-rolled from a derived seed instead of being generated, so
-     * the suite stays a net for regressions rather than a standing failure. Each
-     * clause is as narrow as the shape it owns and is named by its issue, so
-     * closing the issue widens the walk again by deleting one.</p>
-     *
-     * <p>There is nothing to quarantine right now. The two clauses this method
-     * held are both gone: #804's, a {@code filter} behind a {@code dropWhile},
-     * which lost the copy of the item its predicate eats, and #805's, a
-     * conversion into an object domain with a {@code peek}, a {@code filter} or
-     * another guard between it and a stateful guard, whose keep-frame was read
-     * off whatever opcode happened to sit in front of it. Add the next one the
-     * day the walk finds a shape we cannot fix at once.</p>
-     *
-     * @param walk The lines the walk picked, the frame first
-     * @return The issue that owns the shape, or an empty string
-     */
-    @SuppressWarnings("PMD.UnusedFormalParameter")
-    private static String quarantined(final List<String> walk) {
-        return "";
     }
 }

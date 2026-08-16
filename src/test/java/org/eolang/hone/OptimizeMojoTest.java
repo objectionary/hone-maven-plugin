@@ -263,7 +263,7 @@ final class OptimizeMojoTest {
 
     /**
      * What the two runs of one pipeline disagree about.
-     * @param before The run of the class as {@code javac} left it
+     * @param before The run of the class as the Java compiler left it
      * @param after The run of the same class after optimization
      * @param java The source of the class, printed when there is a complaint
      * @param name The name of the class

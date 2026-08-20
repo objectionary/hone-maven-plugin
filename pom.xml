@@ -407,16 +407,11 @@
             <version>0.30.13</version>
             <configuration>
               <excludes>
-                <exclude>pmd:/src/it/.*</exclude>
-                <exclude>checkstyle:/src/it/.*</exclude>
-                <exclude>checkstyle:/src/test/gradle/.*</exclude>
-                <exclude>pmd:/src/test/gradle/.*</exclude>
-                <exclude>checkstyle:/src/main/resources/.*</exclude>
-                <exclude>checkstyle:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
-                <exclude>checkstyle:/src/test/java/org/eolang/hone/OptimizeMojoTest.java</exclude>
-                <exclude>pmd:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
-                <exclude>errorprone:/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
-                <exclude>duplicatefinder:.*</exclude>
+                <!-- Synthetic sample code used as input data for the
+                     "streams" bytecode-rewrite rule test, not real code -->
+                <exclude>checkstyle:.*/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
+                <exclude>pmd:.*/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
+                <exclude>errorprone:.*/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
               </excludes>
             </configuration>
           </plugin>

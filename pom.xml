@@ -404,7 +404,7 @@
           <plugin>
             <groupId>com.qulice</groupId>
             <artifactId>qulice-maven-plugin</artifactId>
-            <version>0.30.13</version>
+            <version>0.31.2</version>
             <configuration>
               <excludes>
                 <!-- Synthetic sample code used as input data for the

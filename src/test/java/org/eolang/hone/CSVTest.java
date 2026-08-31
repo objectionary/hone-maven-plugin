@@ -44,6 +44,39 @@ final class CSVTest {
     }
 
     @Test
+    void readsAFileThatCarriesOnlyItsHeader(@Mktmp final Path temp) throws Exception {
+        final Path path = temp.resolve("empty.csv");
+        Files.write(
+            path,
+            "ID,Before,After,Changed,LinesPerSec\n".getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "a file with a header and no rows must count nothing, not fail",
+            new CSV(path).count("Changed", v -> Integer.parseInt(v) > 0),
+            Matchers.is(0)
+        );
+    }
+
+    @Test
+    void keepsTheColumnsOfAFileThatCarriesOnlyItsHeader(@Mktmp final Path temp) throws Exception {
+        final Path header = temp.resolve("header.csv");
+        Files.write(
+            header,
+            "ID,Before,After,Changed,LinesPerSec\n".getBytes(StandardCharsets.UTF_8)
+        );
+        final Path full = temp.resolve("full.csv");
+        Files.write(
+            full,
+            "ID,Before,After,Changed,LinesPerSec\n1/1,a.phi,b.phi,5,1000\n".getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "the columns of an empty file must survive being added to another one",
+            new CSV(header).add(new CSV(full)).count("Changed", v -> Integer.parseInt(v) > 0),
+            Matchers.is(1)
+        );
+    }
+
+    @Test
     void countsZeroWhenNoRowsMatch(@Mktmp final Path temp) throws Exception {
         final Path path = temp.resolve("test.csv");
         Files.write(

@@ -123,8 +123,9 @@ final class CSVTest {
 
     @Test
     void parsesLargeCsvWithoutResourceLeak(@Mktmp final Path temp) throws Exception {
-        final StringBuilder content = new StringBuilder();
-        content.append("ID,Before,After,Changed,LinesPerSec\n");
+        final StringBuilder content = new StringBuilder(8192);
+        content.append("ID,Before,After,Changed,LinesPerSec")
+            .append(System.lineSeparator());
         for (int idx = 0; idx < 200; idx += 1) {
             content.append(
                 String.format(

@@ -106,7 +106,7 @@ final class Rules {
             throw new IllegalStateException(
                 String.format(
                     "No rules matched the hone.rules pattern '%s', while the ones available are: %s",
-                    this.text, Rules.discover()
+                    this.text, String.join(", ", Rules.discover())
                 )
             );
         }

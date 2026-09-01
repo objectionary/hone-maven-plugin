@@ -51,6 +51,11 @@ final class Rules {
     private final Map<Pattern, Boolean> patterns;
 
     /**
+     * The patterns as the user wrote them, for the message of an empty match.
+     */
+    private final String text;
+
+    /**
      * Creates a rule manager that includes all rules.
      */
     Rules() {
@@ -64,6 +69,7 @@ final class Rules {
      */
     Rules(final String ptns) {
         this.patterns = Rules.regexs(ptns);
+        this.text = ptns;
     }
 
     @Override
@@ -96,6 +102,14 @@ final class Rules {
             files.add(name);
         }
         Logger.info(this, "Found %d rule(s) by: %s", files.size(), this.patterns);
+        if (files.isEmpty()) {
+            throw new IllegalStateException(
+                String.format(
+                    "No rules matched the hone.rules pattern '%s', while the ones available are: %s",
+                    this.text, Rules.discover()
+                )
+            );
+        }
         return files;
     }
 

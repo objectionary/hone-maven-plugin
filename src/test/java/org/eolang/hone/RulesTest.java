@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -69,11 +70,23 @@ final class RulesTest {
     }
 
     @Test
-    void discoversNothingWithSuffix() {
+    void refusesAPatternThatMatchesNothing() {
+        Assertions.assertThrows(
+            IllegalStateException.class,
+            () -> new Rules("none.yml").yamls(),
+            "A pattern that matches no rule must be refused, not answered with nothing"
+        );
+    }
+
+    @Test
+    void namesThePatternThatMatchedNothing() {
         MatcherAssert.assertThat(
-            "Should NOT discover none.yml from classpath",
-            new Rules("none.yml").yamls(),
-            Matchers.emptyIterable()
+            "The message must quote the pattern the user wrote",
+            Assertions.assertThrows(
+                IllegalStateException.class,
+                () -> new Rules("strrams/*").yamls()
+            ).getMessage(),
+            Matchers.containsString("strrams/*")
         );
     }
 

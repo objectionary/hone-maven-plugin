@@ -407,8 +407,10 @@
             <version>0.30.13</version>
             <configuration>
               <excludes>
-                <!-- Synthetic sample code used as input data for the
-                     "streams" bytecode-rewrite rule test, not real code -->
+                <!--
+                Synthetic sample code used as input data for the
+                "streams" bytecode-rewrite rule test, not real code
+                -->
                 <exclude>checkstyle:.*/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
                 <exclude>pmd:.*/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>
                 <exclude>errorprone:.*/src/test/resources/org/eolang/hone/rules/streams/.*</exclude>

@@ -291,6 +291,10 @@ if [ -n "${HONE_GREP_IN}" ]; then
 fi
 
 files=$(find "$("${RP}" "${HONE_XMIR_IN}")" -name '*.xmir' -type f -exec "${RP}" --relative-to="${HONE_XMIR_IN}" {} \; | LC_ALL=C sort)
+if [ -z "${files}" ]; then
+  echo "No XMIR files to process"
+  exit 0
+fi
 total=$(echo "${files}" | wc -l | xargs)
 tasks=${TARGET}/hone-tasks.txt
 mkdir -p "$(dirname "${tasks}")"

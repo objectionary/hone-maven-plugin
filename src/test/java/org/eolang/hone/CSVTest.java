@@ -120,4 +120,77 @@ final class CSVTest {
             Matchers.is(0)
         );
     }
+
+    @Test
+    void parsesLargeCsvWithoutResourceLeak(@Mktmp final Path temp) throws Exception {
+        final StringBuilder content = new StringBuilder(8192);
+        content.append("ID,Before,After,Changed,LinesPerSec")
+            .append(System.lineSeparator());
+        for (int idx = 0; idx < 200; idx += 1) {
+            content.append(
+                String.format(
+                    "%d/200,src%d.phi,dst%d.phi,%d,%d%n",
+                    idx, idx, idx, idx % 3, idx * 10
+                )
+            );
+        }
+        final Path path = temp.resolve("large.csv");
+        Files.write(path, content.toString().getBytes(StandardCharsets.UTF_8));
+        MatcherAssert.assertThat(
+            "large CSV must parse all 200 rows without resource leak",
+            new CSV(path).size(),
+            Matchers.is(200)
+        );
+    }
+
+    @Test
+    void flushesAndRereadsRoundTrip(@Mktmp final Path temp) throws Exception {
+        final Path source = temp.resolve("input.csv");
+        Files.write(
+            source,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/2,a.phi,b.phi,5,1000",
+                "2/2,c.phi,d.phi,3,800",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        final Path flushed = temp.resolve("output.csv");
+        new CSV(source).flush(flushed);
+        MatcherAssert.assertThat(
+            "round-trip through flush must preserve row count",
+            new CSV(flushed).size(),
+            Matchers.is(2)
+        );
+    }
+
+    @Test
+    void combinesTwoCsvFiles(@Mktmp final Path temp) throws Exception {
+        final Path first = temp.resolve("first.csv");
+        Files.write(
+            first,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/1,a.phi,b.phi,5,1000",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        final Path second = temp.resolve("second.csv");
+        Files.write(
+            second,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/1,c.phi,d.phi,3,800",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "combined CSV must contain rows from both files",
+            new CSV(first).add(new CSV(second)).size(),
+            Matchers.is(2)
+        );
+    }
 }

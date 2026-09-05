@@ -25,9 +25,7 @@ jobs:
       LANGUAGE: C
     steps:
       - uses: actions/checkout@v7
-      - run: |
-          sudo wget -q -O /usr/bin/phino http://phino.objectionary.com/releases/ubuntu-24.04/phino-latest
-          sudo chmod a+x /usr/bin/phino
+      - run: ./.github/install-phino.sh
       - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'

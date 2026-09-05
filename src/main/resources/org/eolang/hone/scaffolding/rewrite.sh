@@ -61,11 +61,11 @@ function atomic_write {
   # and atomically move it into place only on success. A crashed command
   # leaves no half-written file behind that a later skip-if-newer check
   # could mistake for a fresh result (see #837).
-  local target="${1}"
+  local destination="${1}"
   shift
-  local tmp="${target}.tmp.$$"
+  local tmp="${destination}.tmp.$$"
   if "${@}" > "${tmp}"; then
-    mv -f "${tmp}" "${target}"
+    mv -f "${tmp}" "${destination}"
   else
     rm -f "${tmp}"
     return 1

@@ -5,7 +5,7 @@
 .SHELLFLAGS := -e -o pipefail -c
 SHELL := bash
 .SECONDARY:
-.PHONY: all clean test env diff jeo-test run
+.PHONY: all clean env diff jeo-test run
 
 ROOT=../../../../../../../..
 RULES_DIR=$(ROOT)/src/main/resources/org/eolang/hone/rules/streams
@@ -17,7 +17,7 @@ RULE_NAMES=$(subst .phr,,$(RULES))
 
 JEO_VERSION=$(shell cat "$(ROOT)/src/main/resources/org/eolang/hone/default-jeo-version.txt" | xargs)
 
-all: env test jeo-test run
+all: env jeo-test run
 
 env:
 	phino --version

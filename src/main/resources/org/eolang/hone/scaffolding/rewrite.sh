@@ -56,6 +56,22 @@ function statistics_row {
   fi
 }
 
+function atomic_write {
+  # Run a command, capture its stdout into a temp file next to the target,
+  # and atomically move it into place only on success. A crashed command
+  # leaves no half-written file behind that a later skip-if-newer check
+  # could mistake for a fresh result (see #837).
+  local target="${1}"
+  shift
+  local tmp="${target}.tmp.$$"
+  if "${@}" > "${tmp}"; then
+    mv -f "${tmp}" "${target}"
+  else
+    rm -f "${tmp}"
+    return 1
+  fi
+}
+
 if [ "${HONE_DEBUG}" == 'true' ]; then
   set -x
 fi
@@ -103,7 +119,7 @@ function rewrite {
       return
     fi
   fi
-  phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}" > "${phi}"
+  atomic_write "${phi}" phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}"
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"
   pos=0
@@ -115,7 +131,7 @@ function rewrite {
       m=$(basename "${rule}" .yml)
       pos=$(( pos + 1 ))
       t="${pho}.$(printf '%002d' "${pos}")"
-      phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}" > "${t}"
+      atomic_write "${t}" phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}"
       if cmp -s "${pho}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"
       else
@@ -128,7 +144,7 @@ function rewrite {
     for rule in "${rules[@]}"; do
       opts+=("--rule=${rule}")
     done
-    phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}" > "${pho}"
+    atomic_write "${pho}" phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet "${opts[@]}" "${phi}"
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}" | xargs)
@@ -141,7 +157,7 @@ function rewrite {
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
   statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",${changed},${per}"
-  phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}" > "${xo}"
+  atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
   verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then
     verbose "No changes made to ${idx} $(basename "${xi}")"

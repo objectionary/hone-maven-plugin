@@ -5,13 +5,15 @@
 package org.eolang.hone;
 
 import com.jcabi.log.Logger;
-import com.jcabi.log.VerboseProcess;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Docker command executor with optional sudo support.
@@ -23,6 +25,13 @@ import java.util.logging.Level;
  * @since 0.1.0
  */
 final class Docker {
+
+    /**
+     * Hard deadline for any single docker command, in seconds. A hung daemon
+     * or a stalled pull must fail the build with a clear message instead of
+     * hanging forever (see #839).
+     */
+    private static final long TIMEOUT = 3600L;
 
     /**
      * Whether to prepend "sudo" to Docker commands.
@@ -94,27 +103,48 @@ final class Docker {
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));
-        try (
-            VerboseProcess proc = new VerboseProcess(
-                new ProcessBuilder(command),
-                Level.INFO,
-                Level.INFO
-            )
-        ) {
-            final VerboseProcess.Result ret = proc.waitFor();
-            Logger.info(
-                this, "+ %s -> 0x%04x in %[ms]s",
-                String.join(" ", command), ret.code(),
-                System.currentTimeMillis() - start
-            );
-            if (ret.code() != 0) {
-                throw new IOException(
-                    String.format("Failed to execute docker, code=0x%04x", ret.code())
-                );
-            }
+        final Process proc = new ProcessBuilder(command).start();
+        final Thread stdout = new Thread(
+            () -> new BufferedReader(
+                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8)
+            ).lines().forEach(line -> Logger.info(this, "  %s", line))
+        );
+        final Thread stderr = new Thread(
+            () -> new BufferedReader(
+                new InputStreamReader(proc.getErrorStream(), StandardCharsets.UTF_8)
+            ).lines().forEach(line -> Logger.info(this, "  %s", line))
+        );
+        stdout.start();
+        stderr.start();
+        final boolean done;
+        try {
+            done = proc.waitFor(Docker.TIMEOUT, TimeUnit.SECONDS);
         } catch (final InterruptedException ex) {
+            proc.destroyForcibly();
             Thread.currentThread().interrupt();
-            throw new IOException(ex);
+            throw new IOException(
+                String.format("Docker was interrupted: %s", String.join(" ", command)),
+                ex
+            );
+        }
+        if (!done) {
+            proc.destroyForcibly();
+            throw new IOException(
+                String.format(
+                    "Docker command timed out after %d seconds: %s",
+                    Docker.TIMEOUT, String.join(" ", command)
+                )
+            );
+        }
+        Logger.info(
+            this, "+ %s -> 0x%04x in %[ms]s",
+            String.join(" ", command), proc.exitValue(),
+            System.currentTimeMillis() - start
+        );
+        if (proc.exitValue() != 0) {
+            throw new IOException(
+                String.format("Failed to execute docker, code=0x%04x", proc.exitValue())
+            );
         }
         return 0;
     }

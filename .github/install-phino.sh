@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 set -e -o pipefail
 version=$(xargs < src/main/resources/org/eolang/hone/default-phino-version.txt)
-expected=$(xargs < .github/phino-sha512.txt)
+expected=$(grep -v '^#' .github/phino-sha512.txt | xargs)
 if command -v phino > /dev/null 2>&1 && phino --pin="${version}" --version > /dev/null 2>&1; then
   echo "phino ${version} is already installed"
   exit 0

@@ -120,4 +120,40 @@ final class CSVTest {
             Matchers.is(0)
         );
     }
+
+    @Test
+    void mergesHeadersWhenAddingCsvsWithDifferentColumns(@Mktmp final Path temp)
+        throws Exception {
+        final Path left = temp.resolve("left.csv");
+        final Path right = temp.resolve("right.csv");
+        final Path merged = temp.resolve("merged.csv");
+        Files.write(
+            left,
+            String.join(
+                System.lineSeparator(),
+                "ID,Changed",
+                "1,3",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        Files.write(
+            right,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before",
+                "2,5",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        new CSV(left).add(new CSV(right)).flush(merged);
+        MatcherAssert.assertThat(
+            "the merged CSV keeps the union of both headers (see #865)",
+            new String(Files.readAllBytes(merged), StandardCharsets.UTF_8),
+            Matchers.allOf(
+                Matchers.containsString("ID,Changed,Before"),
+                Matchers.containsString("1,3,"),
+                Matchers.containsString("2,,5")
+            )
+        );
+    }
 }

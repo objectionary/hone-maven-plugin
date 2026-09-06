@@ -405,7 +405,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(
                 this,
                 "Optimized %d/%d files",
-                csv.count("Changed", v -> Integer.parseInt(v) > 0),
+                csv.count("Changed", CSV::positive),
                 csv.size()
             );
         }

@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Guards the stateful dropWhile lifting against parallel pipelines (#862).
+#
+# `208-lambda-to-dropwhile` lifts every `.dropWhile(p)` into a Φ.hone.dropWhile
+# pragma, which `310` then folds into a stateful distill owning a one-cell
+# `int[1]` sticky latch, fused (`401`) into one `Stream.mapMulti` driven by a
+# captured array. That rewrite is sound only when the stream provably stays
+# sequential. On an ordered parallel stream several ForkJoin workers drive the
+# fused BiConsumer concurrently and read/write the shared latch with no
+# synchronisation, so the wrong items are dropped and the result is
+# non-deterministic — the exact race `222`/`223` (skip) and `224`/`225`
+# (distinct) already guard against. The native `Stream.dropWhile(p)` the JVM
+# already has honours the parallel/ordered contract, so on a parallel pipeline
+# the dropWhile must stay native and unfused.
+#
+# phino patterns cannot test a binding group for the ABSENCE of a parallel
+# call, so — exactly as `222` does for skip — this rule takes the dual,
+# positive route: once `208` has produced a Φ.hone.dropWhile, if the SAME
+# method body also contains a `parallel()` / `parallelStream()` invoke, the
+# dropWhile pragma is reverted back to a plain `invokeinterface
+# java/util/stream/Stream.dropWhile:(Ljava/util/function/Predicate;)…` before
+# `310` (3xx) ever folds it. Unlike skip/distinct, dropWhile carries a
+# predicate argument, so the revert also rebuilds the original `Φ.hone.lambda`
+# that 208 swallowed. Every field 208 keeps on the pragma is needed: the SAM
+# is a Predicate (method `test`, interface `()Ljava/util/function/Predicate;`,
+# lambda signature `(Ljava/lang/Object;)Z`, all constants for this rule), the
+# stream is `java/util/stream/Stream.dropWhile`, and the bridge signature is
+# recovered from the pragma's `bridge-input` as `(<bridge-input>)Z`. The
+# reverted opcode carries `reverted ↦ Φ.true`, so `208` (closed on the
+# lambda+stream shape jeo emits) cannot re-recognise it and the 208 → 226
+# cycle cannot spin; the rebuilt lambda is picked up by 7xx and lowered back
+# to an invokedynamic, exactly as if no lifting had happened.
+#
+# Detection is intentionally over-broad: any `parallel`/`parallelStream` call
+# anywhere in the method reverts every Φ.hone.dropWhile in it, even one on an
+# unrelated, locally-consumed stream. Over-reverting only forfeits the
+# dropWhile optimisation on that method (the native call stays correct), so
+# erring this way keeps the pass sound. This rule covers a parallel call that
+# appears BEFORE the dropWhile in the body
+# (`source.parallel().…dropWhile(p)`, `coll.parallelStream().…dropWhile(p)`);
+# its sibling `227` covers the call after the dropWhile
+# (`source.dropWhile(p).parallel()`). Binding groups are order-preserving, so
+# both layouts need their own rule.
+name: parallel-reverts-dropwhile
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-dropwhile ↦ ⟦
+      φ ↦ Φ.hone.dropWhile,
+      opcode ↦ 𝑒-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ "test",
+      interface ↦ "()Ljava/util/function/Predicate;",
+      lambda-signature ↦ "(Ljava/lang/Object;)Z",
+      bridge-signature ↦ 𝑒-bsig,
+      static ↦ "true",
+      opcode ↦ 𝑒-opcode,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ "java/util/stream/Stream",
+        method ↦ "dropWhile",
+        signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+where:
+  - meta: 𝑒-bsig
+    function: concat
+    # "(Ljava/lang/Integer;)Z" from bridge-input "Ljava/lang/Integer;"
+    args: ['"("', 𝑒-bridge-input, '")Z"']
+  - meta: 𝜏-lambda
+    function: random-tau

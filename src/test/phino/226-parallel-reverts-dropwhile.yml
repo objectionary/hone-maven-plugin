@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A Φ.hone.dropWhile in a method that also calls `.parallel()` BEFORE it must
+# be reverted back to the original `Φ.hone.lambda` predicate (carrying the
+# `reverted` guard so 208 cannot re-recognise it), and the native
+# `Stream.dropWhile` call is rebuilt by 701 from the lambda's stream — so 310
+# never folds it into a parallel-unsound latch distill (#862).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/226-parallel-reverts-dropwhile.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "parallel",
+        v2 ↦ "()Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.dropWhile,
+        opcode ↦ "invokestatic",
+        class ↦ "fusion/X",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$1",
+          signature ↦ "(Ljava/lang/Integer;)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.lambda, class ↦ "fusion/X", method ↦ "test", interface ↦ "()Ljava/util/function/Predicate;", lambda-signature ↦ "(Ljava/lang/Object;)Z", bridge-signature ↦ "(Ljava/lang/Integer;)Z", static ↦ "true", opcode ↦ "invokestatic", target ↦ ⟦ handle ↦ 6, class ↦ "fusion/X", method ↦ "lambda$main$1", signature ↦ "(Ljava/lang/Integer;)Z", is-interface ↦ Φ.false ⟧, stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "dropWhile", signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;" ⟧, reverted ↦ Φ.true, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, v1 ↦ "parallel", v2 ↦ "()Ljava/util/stream/Stream;", 𝐵-t ⟧

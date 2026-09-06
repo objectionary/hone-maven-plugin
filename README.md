@@ -375,8 +375,11 @@ The JDK's native `Stream.skip(n)` honours the ordered/parallel contract,
   rules `222-parallel-reverts-skip` and `223-parallel-reverts-skip-after`
   revert the recognised `skip` back to the native call before `308` can fold
   it (#719, #717).
-The same revert-on-parallel guard applies verbatim to a future `dropWhile`
-  lifting, which is order-dependent for the same reason.
+The same revert-on-parallel guard applies to `dropWhile`, which is
+  order-dependent for the same reason: the rules
+  `226-parallel-reverts-dropwhile` and `227-parallel-reverts-dropwhile-after`
+  revert the recognised `dropWhile` (rebuilding its predicate lambda) back to
+  the native call before `310` can fold it (#862).
 
 ## Why `distinct` Is Only Fused on Sequential Pipelines
 

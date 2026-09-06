@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# Regression for #862: a `.dropWhile(p)` on a PARALLEL stream must stay
+# correct. Lifted and fused (208 → 310 → 401 → 502) a dropWhile becomes a
+# single Stream.mapMulti whose one-shot sticky latch is a captured int[1]. On
+# a parallel stream several ForkJoin workers drive that one BiConsumer
+# concurrently and read/write the shared latch with no synchronisation, so the
+# wrong items are dropped and the result is non-deterministic. The guard
+# (226 / 227) detects the `.parallel()` call in the method and reverts the
+# dropWhile to a native Stream.dropWhile (rebuilding the predicate lambda)
+# before 310 can fold it, so the JVM's own ordered-parallel dropWhile runs and
+# the result is exact.
+#
+# The pipeline maps the ordered range 1..1_000_000 through an identity map (a
+# stateless neighbour that would otherwise fuse the dropWhile), drops everything
+# below 100_000 in encounter order, and sums the rest:
+# sum(100_000..1_000_000) = 500000500000 - 4999950000 = 495000550000. With the
+# buggy fused latch this sum was wrong and varied run to run; with the native
+# dropWhile it is deterministically 495000550000. The two scenarios cover both
+# layouts the two guards handle: `.parallel()` BEFORE the dropWhile (226) and
+# AFTER it (227).
+#
+# `before`/`after` opcode counts are intentionally omitted (as in
+# parallel-skip / parallel-distinct): this pack guards the RUNTIME result of
+# the optimised, parallel pipeline, not a particular opcode shape.
+java: |
+  package dropwhileparallel;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      long before = LongStream.rangeClosed(1, 1_000_000L)
+        .boxed().parallel().map(x -> x)
+        .dropWhile(x -> x < 100_000L).mapToLong(Long::longValue).sum();
+      long after = LongStream.rangeClosed(1, 1_000_000L)
+        .boxed().map(x -> x)
+        .dropWhile(x -> x < 100_000L).parallel().mapToLong(Long::longValue).sum();
+      System.out.printf("The result is %d %d%n", before, after);
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 495000550000 495000550000"

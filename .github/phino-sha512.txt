@@ -1,0 +1,3 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+0dc63269ae3aaaeae77ad04afd96fa3d1b4652136d0ef9658f36e680f5bf1e2abb16123aba5c993a006d16109f6c5fba7b035deb72a9647e0dbef67860c5688d

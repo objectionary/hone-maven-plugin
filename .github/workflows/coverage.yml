@@ -30,10 +30,7 @@ jobs:
           path: ~/.m2/repository
           key: ubuntu-jdk-23-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ubuntu-jdk-23-maven-
-      - run: |
-          version=$(xargs < src/main/resources/org/eolang/hone/default-phino-version.txt)
-          sudo wget -q -O /usr/bin/phino "http://phino.objectionary.com/releases/ubuntu-24.04/phino-${version}"
-          sudo chmod a+x /usr/bin/phino
+      - run: ./.github/install-phino.sh
       - run: |
           sudo apt-get update
           sudo apt-get install -y cloc

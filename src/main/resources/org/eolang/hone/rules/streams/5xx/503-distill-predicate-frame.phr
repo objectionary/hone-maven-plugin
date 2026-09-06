@@ -39,7 +39,7 @@
 # alphabetically, so the fallback is left only the markers nobody could name.
 # Scoped to a distill-lambda WITH `captured`, so stateless filter keep-labels
 # stay with 506/507.
-name: distill-predicate-frame
+name: 503-distill-predicate-frame
 pattern: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,

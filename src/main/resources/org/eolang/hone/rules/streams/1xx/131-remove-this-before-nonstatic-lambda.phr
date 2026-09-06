@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: nonstatic-invokedynamic-to-lambda
+name: 131-remove-this-before-nonstatic-lambda
 pattern: |
   ⟦
     𝐵-before,

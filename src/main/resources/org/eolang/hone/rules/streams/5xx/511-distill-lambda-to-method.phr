@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: distill-to-mapMulti
+name: 511-distill-lambda-to-method
 pattern: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,

@@ -41,6 +41,12 @@ fi
 
 SELF=$(dirname "$0")
 
+function now {
+  # Current time in seconds with sub-second precision. macOS's BSD date has
+  # no %N, so use perl's high-resolution clock when available (see #867).
+  perl -MTime::HiRes=time -e 'printf "%.6f\n", time' 2>/dev/null || date '+%s'
+}
+
 if [ "${LANG}" != 'en_US.UTF-8' ]; then
   echo "Setting locale to en_US.UTF-8 from '${LANG}'"
   LANG=en_US.UTF-8
@@ -205,10 +211,10 @@ function record_timing {
 }
 
 function elapsed {
-  awk -v start="${1}" -v end="$(date '+%s.%N')" 'BEGIN { printf "%.3f\n", end - start }'
+  awk -v start="${1}" -v end="$(now)" 'BEGIN { printf "%.3f\n", end - start }'
 }
 
-start=$(date '+%s.%N')
+start=$(now)
 (
   set -x
   mvn "${disassemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:disassemble"
@@ -232,7 +238,7 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   export HONE_THREADS="${THREADS}"
   export HONE_TIMEOUT="${TIMEOUT}"
   export HONE_STATISTICS
-  start=$(date '+%s.%N')
+  start=$(now)
   (
     set -x
     "${SELF}/rewrite.sh"
@@ -240,7 +246,7 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   record_timing "phino:rewrite (default-cli)" "$(elapsed "${start}")"
 fi
 
-start=$(date '+%s.%N')
+start=$(now)
 (
   set -x
   mvn "${assemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:assemble"

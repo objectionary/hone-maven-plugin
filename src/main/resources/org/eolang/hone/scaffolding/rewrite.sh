@@ -72,6 +72,17 @@ function atomic_write {
   fi
 }
 
+function now {
+  # Current time in seconds with sub-second precision. macOS's BSD date has
+  # no %N, so use perl's high-resolution clock when available (see #867).
+  perl -MTime::HiRes=time -e 'printf "%.6f\n", time' 2>/dev/null || date '+%s'
+}
+
+function q {
+  # Bash-compatible quoting of a single argument (portable printf %q).
+  printf '%q' "${1}"
+}
+
 if [ "${HONE_DEBUG}" == 'true' ]; then
   set -x
 fi
@@ -123,7 +134,7 @@ function rewrite {
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
   rm -f "${pho}.*"
   pos=0
-  start=$(date '+%s.%N')
+  start=$(now)
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
     cp "${phi}" "${pho}"
@@ -148,7 +159,7 @@ function rewrite {
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}" | xargs)
-  per=$(perl -E "say int(${s_lines} / ($(date '+%s.%N') - ${start}))")
+  per=$(perl -E "say int(${s_lines} / ($(now) - ${start}))")
   changed=0
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
@@ -186,7 +197,7 @@ function rewrite_with_timeout {
   pho=${3}
   xi=${4}
   xo=${5}
-  start=$(date '+%s.%N')
+  start=$(now)
   code=0
   # GNU "timeout" sends its signal only to its direct child (the bash
   # re-invocation of this script), not to the phino process that the "rewrite"
@@ -223,12 +234,12 @@ function rewrite_with_timeout {
   wait "${watchdog}" 2>/dev/null || true
   if [ -f "${flag}" ]; then
     rm -f "${flag}"
-    sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
+    sec=$(perl -E "say int($(now) - ${start})")
     echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
     cp "${xi}" "${xo}"
   elif [ "${code}" -ne 0 ]; then
     rm -f "${flag}"
-    sec=$(perl -E "say int($(date '+%s.%N') - ${start})")
+    sec=$(perl -E "say int($(now) - ${start})")
     echo "Failure (exit code ${code}) in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds; refusing to copy it through unoptimized" >&2
     exit "${code}"
   else
@@ -325,16 +336,16 @@ while IFS= read -r f; do
   xi="${HONE_XMIR_IN}/${f}.xmir"
   xo="${HONE_XMIR_OUT}/${f}.xmir"
   i="${idx}/${total}"
-  printf "%s rewrite_with_timeout %s %s %s %s %s\n" "${0@Q}" "${i@Q}" "${phi@Q}" "${pho@Q}" "${xi@Q}" "${xo@Q}" >> "${tasks}"
+  printf "%s rewrite_with_timeout %s %s %s %s %s\n" "$(q "${0}")" "$(q "${i}")" "$(q "${phi}")" "$(q "${pho}")" "$(q "${xi}")" "$(q "${xo}")" >> "${tasks}"
 done <<< "${files}"
 
 threads=${HONE_THREADS}
 if [ -z "${threads}" ] || [ "${threads}" == '0' ]; then
-  threads=$(nproc)
+  threads=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
   echo "Using ${threads} threads, by the number of CPU cores"
 fi
 
-start=$(date '+%s.%N')
+start=$(now)
 if [ "${threads}" -eq 1 ]; then
   echo "Starting to rewrite ${total} file(s)..."
   while IFS= read -r cmd; do
@@ -354,4 +365,4 @@ else
     --env _ \
     --halt-on-error=now,fail=1 --halt=now,fail=1 < "${tasks}"
 fi
-echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(date '+%s.%N') - ${start})") seconds"
+echo "Finished rewriting ${total} file(s) in $(perl -E "say int($(now) - ${start})") seconds"

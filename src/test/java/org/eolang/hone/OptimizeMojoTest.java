@@ -9,11 +9,13 @@ import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -141,6 +143,36 @@ final class OptimizeMojoTest {
     void optimizesSimpleApp(@Mktmp final Path home,
         @RandomImage final String image) throws Exception {
         new Farea(home).together(f -> OptimizeMojoTest.runSimpleApp(f, image));
+    }
+
+    @Test
+    void mountsUnixHostPath() {
+        MatcherAssert.assertThat(
+            "a plain Unix host path mounts as host:container (see #868)",
+            OptimizeMojo.mount(new File("/repo/target"), "/target"),
+            Matchers.equalTo("/repo/target:/target")
+        );
+    }
+
+    @Test
+    void rejectsWindowsDrivePathInMount() {
+        Assertions.assertThrows(
+            IllegalStateException.class,
+            () -> OptimizeMojo.mount(new File("C:\\repo\\target"), "/target"),
+            "a Windows drive path must be rejected for a Docker bind mount (see #868)"
+        );
+    }
+
+    @Test
+    void rewritesBothPrefixFormsInLocalPaths() {
+        MatcherAssert.assertThat(
+            "both /target and \\target prefixes must be rewritten (see #868)",
+            OptimizeMojo.localPaths(
+                "C:\\repo\\target",
+                "\\target\\a", "/target/b"
+            ),
+            Matchers.equalTo("C:\\repo\\target\\a,C:\\repo\\target/b")
+        );
     }
 
     /**

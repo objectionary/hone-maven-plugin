@@ -219,7 +219,13 @@ function rewrite_with_timeout {
   ) &
   watchdog=$!
   wait "${sid}" || code=$?
-  kill "${watchdog}" 2>/dev/null || true
+  # If the deadline fired, the watchdog is mid-escalation (TERM → grace →
+  # KILL) and killing it here would orphan phino again (#727, #863) — so only
+  # stop it when it is still in its initial sleep, i.e. the worker finished
+  # before the deadline.
+  if [ ! -f "${flag}" ]; then
+    kill "${watchdog}" 2>/dev/null || true
+  fi
   wait "${watchdog}" 2>/dev/null || true
   if [ -f "${flag}" ]; then
     rm -f "${flag}"

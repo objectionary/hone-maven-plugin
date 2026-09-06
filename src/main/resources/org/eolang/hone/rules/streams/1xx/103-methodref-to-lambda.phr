@@ -17,14 +17,12 @@
 #
 # Two important restrictions keep this from pessimising code:
 #
-#   1. It fires only when the method-ref directly follows a pointwise object
-#      operator (map / filter / peek). Those are exactly the predecessors
-#      451 can fuse a trailing unbox into (an empty-state distill), so the
-#      synthesised wrapper is always consumed by a fusion. A method-ref after
-#      a barrier, a stateful distinct/skip, or a boxed() roundtrip is left
-#      native — desugaring it there would only add a wrapper that never fuses
-#      and reverts (a strict pessimisation), the same "do not pessimise a lone
-#      operator" stance as the 441/442 reverts.
+#   1. It carries no predecessor gate: the pattern binds the body head
+#      directly before the invokedynamic, so it desugars a method-ref wherever
+#      it appears. A wrapper that ends up unfused is reverted to native by the
+#      711/712 revert rules, which is what actually protects a lone or
+#      barrier-separated method-ref from pessimisation, the same "do not
+#      pessimise a lone operator" stance as the 441/442 reverts.
 #
 #   2. It handles only the adaptation-free unbound-instance case: handle 5,
 #      the referenced method takes no arguments (the receiver is the single

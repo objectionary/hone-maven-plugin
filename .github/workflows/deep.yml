@@ -64,6 +64,18 @@ jobs:
           rm /tmp/maven.tgz
           echo "${HOME}/maven/bin" >> "${GITHUB_PATH}"
           "${HOME}/maven/bin/mvn" --version
+      # The @DisabledWithoutPhino tests (82 phino rule packs and friends)
+      # require phino of exactly the pinned version; without it they are
+      # silently skipped and never run anywhere in CI (see #835). The EC2
+      # AMI is not guaranteed to carry it, so install it here explicitly.
+      - name: install-phino
+        run: |
+          version=$(xargs < src/main/resources/org/eolang/hone/default-phino-version.txt)
+          if ! phino --pin="${version}" --version > /dev/null 2>&1; then
+            sudo wget -q -O /usr/bin/phino "http://phino.objectionary.com/releases/ubuntu-24.04/phino-${version}"
+            sudo chmod +x /usr/bin/phino
+          fi
+          phino --pin="${version}" --version
       - uses: actions/cache@v6
         with:
           path: ~/.m2/repository

@@ -68,6 +68,22 @@ final class SummaryTest {
         );
     }
 
+    @Test
+    void includesSymlinkedModuleStatistics(@Mktmp final Path temp) throws Exception {
+        Files.write(
+            Files.createSymbolicLink(
+                temp.resolve("linked"),
+                Files.createDirectories(temp.resolve("real"))
+            ).resolve("hone-statistics.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
+        );
+        MatcherAssert.assertThat(
+            "report must include statistics reached through a symlinked module (see #866)",
+            new TextOf(new Summary(temp).collect()).asString(),
+            Matchers.containsString("Server.phi")
+        );
+    }
+
     private static Path modular(final Path root) throws Exception {
         Files.createDirectories(root.resolve("server"));
         Files.createDirectories(root.resolve("client"));

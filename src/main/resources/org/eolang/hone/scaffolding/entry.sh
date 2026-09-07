@@ -93,7 +93,10 @@ after the 'compile' phase is finished; this is what is in the '${TARGET}' direct
   fi
 fi
 
-# In order to save them "as is", just in case:
+# In order to save them "as is", just in case. The previous copy goes first,
+# because "cp -R" puts the source inside a directory that already exists, and
+# a second run without "clean" would otherwise nest one backup in the other:
+rm -rf "${TARGET}/classes-before-hone"
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
 echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -print | wc -l | xargs) files)"
 

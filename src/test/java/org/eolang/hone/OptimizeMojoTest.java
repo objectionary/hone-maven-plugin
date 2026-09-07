@@ -338,6 +338,11 @@ final class OptimizeMojoTest {
             fea.files().file("target/hone/phi-optimized/Hello.phi").exists(),
             Matchers.is(true)
         );
+        MatcherAssert.assertThat(
+            "the backup must hold the classes, not an earlier backup of them (see #881)",
+            fea.files().file("target/classes-before-hone/classes").exists(),
+            Matchers.is(false)
+        );
     }
 
     /**

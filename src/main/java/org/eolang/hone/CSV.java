@@ -4,6 +4,7 @@
  */
 package org.eolang.hone;
 
+import com.jcabi.log.Logger;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -13,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -76,9 +78,22 @@ public final class CSV {
      * @return A new CSV instance containing the combined records of both CSVs
      */
     CSV add(final CSV other) {
+        final List<String> merged = new ArrayList<>(this.headers);
+        for (final String header : other.headers) {
+            if (!merged.contains(header)) {
+                merged.add(header);
+            }
+        }
+        if (!new HashSet<>(this.headers).equals(new HashSet<>(other.headers))) {
+            Logger.warn(
+                this,
+                "CSV headers differ (%s vs %s); merged to %s, missing cells will be empty",
+                this.headers, other.headers, merged
+            );
+        }
         final List<Map<String, String>> combined = new ArrayList<>(this.records);
         combined.addAll(other.records);
-        return new CSV(this.headers, combined);
+        return new CSV(merged, combined);
     }
 
     /**

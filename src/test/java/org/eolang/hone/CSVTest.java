@@ -38,8 +38,30 @@ final class CSVTest {
         );
         MatcherAssert.assertThat(
             "two files have Changed > 0",
-            new CSV(path).count("Changed", v -> Integer.parseInt(v) > 0),
+            new CSV(path).count("Changed", CSV::positive),
             Matchers.is(2)
+        );
+    }
+
+    @Test
+    void countsWithoutThrowingOnMalformedChangedCell(@Mktmp final Path temp)
+        throws Exception {
+        final Path path = temp.resolve("test.csv");
+        Files.write(
+            path,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/3,a.phi,b.phi,5,1000",
+                "2/3,c.phi,d.phi,,0",
+                "3/3,e.phi,f.phi,abc,0",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "an empty or non-numeric 'Changed' cell must not break the count (see #864)",
+            new CSV(path).count("Changed", CSV::positive),
+            Matchers.is(1)
         );
     }
 

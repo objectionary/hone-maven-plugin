@@ -112,16 +112,10 @@ public final class CSV {
      */
     int count(final String header, final Predicate<String> condition) {
         return (int) this.records.stream()
-            .filter(row -> condition.test(row.get(header)))
+            .filter(row -> CSV.test(row, header, condition))
             .count();
     }
 
-    /**
-     * Recomputes the values of a column using a transformation function.
-     * @param header The name of the column to recompute
-     * @param modification Transformation function
-     * @return A new CSV instance with the recomputed values
-     */
     CSV recompute(
         final String header,
         final Function<String, String> modification
@@ -162,6 +156,21 @@ public final class CSV {
         }
     }
 
+    /**
+     * Whether a cell, parsed as a positive integer, is greater than zero.
+     * @param value The cell content
+     * @return TRUE when the integer value is greater than zero
+     */
+    static boolean positive(final String value) {
+        boolean positive;
+        try {
+            positive = Integer.parseInt(value) > 0;
+        } catch (final NumberFormatException ex) {
+            positive = false;
+        }
+        return positive;
+    }
+
     private static List<Map<String, String>> rows(final Collection<CSVRecord> records) {
         return records.stream()
             .map(CSVRecord::toMap)
@@ -190,5 +199,21 @@ public final class CSV {
                 exception
             );
         }
+    }
+
+    /**
+     * Whether a row matches under the condition, tolerating a missing cell.
+     * @param row The CSV record
+     * @param header The column name
+     * @param condition The predicate on the cell value
+     * @return TRUE when the cell is present and the condition holds
+     */
+    private static boolean test(
+        final Map<String, String> row,
+        final String header,
+        final Predicate<String> condition
+    ) {
+        final String value = row.get(header);
+        return value != null && condition.test(value);
     }
 }

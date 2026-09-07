@@ -19,9 +19,10 @@
 # distill is emitted as a standalone mapMulti (501), which a method reference
 # (whose native form synthesises no method) would be pessimised by, and which
 # 711 cannot revert (the folded distill has dropped the SAM/instantiated types
-# the revert needs). So this rule keeps 103's original predecessor gate: it
-# fires only when the reference directly follows a pointwise map / filter /
-# peek, which is exactly the neighbour 401 fuses it into. A peek reference with
+# the revert needs). So this rule carries its own `𝜏-predecessor` gate (103
+# has none): it fires only when the reference directly follows a pointwise map
+# / filter / peek, which is exactly the neighbour 401 fuses it into. A peek
+# reference with
 # no fusable predecessor is left native — no wrapper, no pessimisation, the
 # same "do not pessimise a lone operator" stance as the 441/442 reverts.
 #

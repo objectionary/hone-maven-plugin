@@ -40,9 +40,11 @@
 # predicate names the survivor.
 #
 # Ordering: 503 claims EVERY frame-item in a stateful distill-lambda, so these
-# three have to reach the retyped ones first. No integer is free between 502 and
-# 503, so they share 503's number and rely on alphabetical filename order being
-# the schedule: `503-distill-distinct-frame` < `503-distill-dropwhile-frame` <
+# seven have to reach the retyped ones first. No integer is free between 502
+# and 503, so they share 503's number and rely on alphabetical filename order
+# being the schedule: `503-distill-distinct-frame-peeked` <
+# `503-distill-distinct-frame` < `503-distill-dropwhile-frame` <
+# `503-distill-predicate-frame` < `503-distill-skip-frame-peeked` <
 # `503-distill-skip-frame` < `503-distill-state-frame`. It runs before 512 wraps
 # the lambda into a method (503 < 512), so the marker never reaches jeo. Scoped
 # to a distill-lambda WITH `captured`, like 503 itself, so stateless filter

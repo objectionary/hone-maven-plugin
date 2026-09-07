@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: distill-to-mapMulti
+name: 501-distill-to-mapMulti
 pattern: |
   ⟦
     φ ↦ Φ.jeo.class,

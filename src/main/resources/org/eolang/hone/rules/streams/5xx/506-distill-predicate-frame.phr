@@ -41,7 +41,7 @@
 # `507-distill-filter-frame-fallback`. A same-locals-1 frame is enough — a
 # stateless wrapper owns no per-call counter. Scoped to a distill-lambda WITHOUT
 # `captured`, so stateful keep-labels stay with 503/504.
-name: distill-predicate-frame
+name: 506-distill-predicate-frame
 pattern: |
   ⟦
     φ ↦ Φ.hone.distill-lambda,

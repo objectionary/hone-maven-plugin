@@ -145,6 +145,34 @@ final class RulesTest {
     }
 
     @Test
+    void keepsRuleNamesUnique(@Mktmp final Path temp) throws IOException {
+        new Rules("*").copyTo(temp);
+        final Pattern key = Pattern.compile("^name:\\s*(.+)$", Pattern.MULTILINE);
+        final Map<String, Collection<String>> names = new HashMap<>(0);
+        final List<Path> files;
+        try (Stream<Path> walk = Files.walk(temp)) {
+            files = walk.filter(Files::isRegularFile).collect(Collectors.toList());
+        }
+        for (final Path file : files) {
+            final Matcher found = key.matcher(
+                Files.readString(file, StandardCharsets.UTF_8)
+            );
+            if (found.find()) {
+                names.computeIfAbsent(found.group(1).trim(), name -> new HashSet<>(0))
+                    .add(temp.relativize(file).toString());
+            }
+        }
+        MatcherAssert.assertThat(
+            "no two rules can share one name: field, since it is the rule's identity in phino logs and any future tooling (see #869)",
+            names.entrySet().stream()
+                .filter(entry -> entry.getValue().size() > 1)
+                .map(Map.Entry::toString)
+                .collect(Collectors.toList()),
+            Matchers.empty()
+        );
+    }
+
+    @Test
     void yamlsReturnsSortedList() {
         final Iterable<String> yamls = new Rules("*").yamls();
         String previous = null;

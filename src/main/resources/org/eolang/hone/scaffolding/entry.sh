@@ -231,6 +231,7 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   export HONE_MAX_CYCLES="${MAX_CYCLES}"
   export HONE_THREADS="${THREADS}"
   export HONE_TIMEOUT="${TIMEOUT}"
+  export HONE_KILL_GRACE="${KILL_GRACE}"
   export HONE_STATISTICS
   start=$(date '+%s.%N')
   (

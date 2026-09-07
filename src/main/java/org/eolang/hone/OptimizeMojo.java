@@ -261,6 +261,20 @@ public final class OptimizeMojo extends AbstractMojo {
     private int timeout;
 
     /**
+     * How many seconds to wait after the TERM signal before force-killing a
+     * timed-out phino process tree.
+     *
+     * <p>The watchdog of {@code rewrite.sh} sends TERM to the whole process
+     * group once the {@code hone.timeout} deadline passes, then gives the tree
+     * this grace window to clean up, and finally force-kills whatever survived,
+     * so no orphan phino is left burning CPU (see #863).</p>
+     *
+     * @since 0.38.0
+     */
+    @Parameter(property = "hone.kill-grace", defaultValue = "10")
+    private int killgrace;
+
+    /**
      * How many threads to use for rewriting?
      *
      * <p>By default, it is set to zero, which means the number of threads
@@ -508,7 +522,8 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         command.addAll(
             Arrays.asList(
-                "--env", String.format("TIMEOUT=%d", this.timeout)
+                "--env", String.format("TIMEOUT=%d", this.timeout),
+                "--env", String.format("KILL_GRACE=%d", this.killgrace)
             )
         );
         if (this.includes != null && this.includes.length > 0) {
@@ -662,6 +677,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
+                .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
                 .withEnv("RULES", this.rulesAsString());
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));

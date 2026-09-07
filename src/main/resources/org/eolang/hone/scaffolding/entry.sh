@@ -185,13 +185,13 @@ declare -a assemble_opts=(
   "-Djeo.assemble.xmir.verification=false"
   "-Djeo.assemble.skip.verification=true"
 )
+# Only the disassembly is filtered. The assemble goal has no such parameters,
+# and it does not need them: it takes back what the disassembly left behind.
 if [ -n "${INCLUDES}" ]; then
   disassemble_opts+=("-Djeo.disassemble.includes=${INCLUDES}")
-  assemble_opts+=("-Djeo.assemble.includes=${INCLUDES}")
 fi
 if [ -n "${EXCLUDES}" ]; then
   disassemble_opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
-  assemble_opts+=("-Djeo.assemble.excludes=${EXCLUDES}")
 fi
 if [ "${SKIP_PHINO}" == 'true' ]; then
   echo "Skipping the phino step as requested"

@@ -135,7 +135,11 @@ fi
 echo "Using JEO version ${JEO_VERSION}"
 
 if [ -z "${RULES}" ]; then
-  RULES=$(find "${SELF}/rules" -name '*.yml' -exec "${RP}" {} \;)
+  # Both extensions, the way Rules.discover() reads them on the Java side, and
+  # separated by spaces, because rewrite.sh splits this list with "read -a",
+  # which would stop at the first newline:
+  RULES=$(find "${SELF}/rules" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort | tr '\n' ' ')
+  RULES="${RULES% }"
 fi
 for rule in ${RULES}; do
   if [ ! -e "${rule}" ]; then

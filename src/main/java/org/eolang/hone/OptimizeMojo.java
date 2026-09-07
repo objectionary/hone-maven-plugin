@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -372,6 +373,46 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     /**
+     * Build a {@code host:container} bind mount for Docker, rejecting paths
+     * that Docker would misparse (Windows drive letters contain a colon).
+     * @param host The host path
+     * @param container The container path
+     * @return The bind-mount string
+     */
+    static String mount(final File host, final String container) {
+        final String path = host.toString();
+        if (path.indexOf(':') >= 0) {
+            throw new IllegalStateException(
+                String.format(
+                    "Docker bind mounts are not supported for paths containing ':' (Windows drives): %s",
+                    path
+                )
+            );
+        }
+        return String.format("%s:%s", path, container);
+    }
+
+    /**
+     * Rewrite the {@code /target} (or {@code \target}) prefixes to the real
+     * local path, tolerating backslash separators.
+     * @param target The local target directory
+     * @param paths The includes/excludes patterns
+     * @return The joined, rewritten patterns
+     */
+    static String localPaths(final String target, final String... paths) {
+        return String.join(
+            ",",
+            new Mapped<>(
+                p -> p.replaceAll(
+                    "^[/\\\\]target",
+                    Matcher.quoteReplacement(target)
+                ),
+                paths
+            )
+        );
+    }
+
+    /**
      * Check if the classes directory is absent or doesn't have classes.
      * @return True if there are no class files, false otherwise
      */
@@ -432,8 +473,8 @@ public final class OptimizeMojo extends AbstractMojo {
             Arrays.asList(
                 "run",
                 "--rm",
-                "--volume", String.format("%s:%s", this.target, tdir),
-                "--volume", String.format("%s:%s", this.cache, cdir),
+                "--volume", OptimizeMojo.mount(this.target, tdir),
+                "--volume", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
                 "--env", String.format("EO_CACHE=%s", cdir),
                 "--env", "WORKDIR=/hone"
@@ -684,10 +725,16 @@ public final class OptimizeMojo extends AbstractMojo {
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
             }
             if (this.includes != null && this.includes.length > 0) {
-                jaxec = jaxec.withEnv("INCLUDES", this.localPaths(this.includes));
+                jaxec = jaxec.withEnv(
+                    "INCLUDES",
+                    OptimizeMojo.localPaths(this.target.toString(), this.includes)
+                );
             }
             if (this.excludes != null && this.excludes.length > 0) {
-                jaxec = jaxec.withEnv("EXCLUDES", this.localPaths(this.excludes));
+                jaxec = jaxec.withEnv(
+                    "EXCLUDES",
+                    OptimizeMojo.localPaths(this.target.toString(), this.excludes)
+                );
             }
             if (this.cache != null) {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
@@ -700,16 +747,6 @@ public final class OptimizeMojo extends AbstractMojo {
             jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();
         }
-    }
-
-    private String localPaths(final String... paths) {
-        return String.join(
-            ",",
-            new Mapped<>(
-                p -> p.replaceAll("^/target", this.target.toString()),
-                paths
-            )
-        );
     }
 
     /**

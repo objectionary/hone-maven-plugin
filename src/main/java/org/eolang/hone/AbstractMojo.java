@@ -98,7 +98,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     private boolean skip;
 
     /**
-     * Skip the execution, if Docker is not available.
+     * Skip the execution, if there is no way to run: no Docker and no local phino.
      * @since 0.22.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -118,7 +118,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
         if (this.skip) {
             Logger.info(this, "Execution skipped due to hone.skip=true");
-        } else if (this.skipWithoutDocker && !new Docker(this.sudo).available()) {
+        } else if (this.skipWithoutDocker && this.helpless()) {
             Logger.info(this, "Execution skipped due to hone.skipWithoutDocker=true");
         } else if (this.skipOnWindows && AbstractMojo.windows()) {
             Logger.info(this, "Execution skipped due to hone.skipOnWindows=true");
@@ -164,6 +164,28 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
+
+    /**
+     * There is nothing to run with: no Docker, and no local phino either.
+     *
+     * <p>Every goal here takes the local {@code phino} when Docker is absent
+     * and the executable is of the version we expect, so the lack of Docker
+     * alone is not a reason to skip anymore.</p>
+     *
+     * @return TRUE if neither way of running is available
+     * @throws MojoExecutionException If the phino version cannot be read
+     */
+    private boolean helpless() throws MojoExecutionException {
+        boolean nothing = !new Docker(this.sudo).available();
+        if (nothing && !this.alwaysWithDocker) {
+            try {
+                nothing = !new Phino().available(this.phino());
+            } catch (final IOException ex) {
+                throw new MojoExecutionException(ex);
+            }
+        }
+        return nothing;
+    }
 
     /**
      * Check if the current operating system is Windows.

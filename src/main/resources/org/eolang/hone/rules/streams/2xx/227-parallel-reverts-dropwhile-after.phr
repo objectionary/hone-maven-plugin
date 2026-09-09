@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Positional sibling of `226`. `226` reverts a Φ.hone.dropWhile back to a
+# native `Stream.dropWhile` (rebuilding the predicate lambda) when a
+# `parallel()` / `parallelStream()` call sits BEFORE it in the method body;
+# this rule covers the mirror layout where the parallel call comes AFTER the
+# dropWhile, e.g. `source.dropWhile(p).parallel().…`. phino binding groups are
+# order-preserving (the same property `281` relies on to stay idempotent), so a
+# single pattern cannot match the call on either side of the dropWhile — the
+# two orderings need two rules. Everything else — the soundness rationale, the
+# rebuilt `Φ.hone.lambda` predicate (bridge signature recovered from
+# `bridge-input`), and the `reverted ↦ Φ.true` guard that stops `208`
+# re-recognising the result — is exactly as documented in `226`.
+name: parallel-reverts-dropwhile-after
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-dropwhile ↦ ⟦
+      φ ↦ Φ.hone.dropWhile,
+      opcode ↦ 𝑒-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝐵-between,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ "test",
+      interface ↦ "()Ljava/util/function/Predicate;",
+      lambda-signature ↦ "(Ljava/lang/Object;)Z",
+      bridge-signature ↦ 𝑒-bsig,
+      static ↦ "true",
+      opcode ↦ 𝑒-opcode,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ "java/util/stream/Stream",
+        method ↦ "dropWhile",
+        signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+where:
+  - meta: 𝑒-bsig
+    function: concat
+    # "(Ljava/lang/Integer;)Z" from bridge-input "Ljava/lang/Integer;"
+    args: ['"("', 𝑒-bridge-input, '")Z"']
+  - meta: 𝜏-lambda
+    function: random-tau

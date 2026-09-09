@@ -38,6 +38,10 @@
 #
 # When a future `dropWhile` lifting lands, the same revert-on-parallel guard
 # applies to its pragma verbatim.
+#
+# That promise was kept: `226`/`227` are the dropWhile twins of this rule
+# (they additionally rebuild the predicate lambda 208 swallowed, since — unlike
+# skip — dropWhile carries an argument).
 name: parallel-reverts-skip
 pattern: |
   ⟦

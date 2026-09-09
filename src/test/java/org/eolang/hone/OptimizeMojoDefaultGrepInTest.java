@@ -24,6 +24,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 /**
  * Test case for {@link OptimizeMojo}, against its default {@code grep-in}
  * pre-filter pattern and the {@code rewrite.sh} scaffolding script.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)
@@ -218,15 +219,11 @@ final class OptimizeMojoDefaultGrepInTest {
         );
     }
 
-    /**
-     * Runs the default {@code grep-in} pattern through the very tool that
-     * consumes it in {@code rewrite.sh} ({@code grep -E}), so the pattern's
-     * dialect is validated against its real consumer rather than against
-     * {@link java.util.regex.Pattern} (see #671).
-     * @param dir Temporary directory to hold the sample file
-     * @param content The line of XMIR to grep through
-     * @return TRUE if {@code grep -E} finds a match
-     * @throws IOException If the sample file cannot be written
+    /*
+     * Runs the default grep-in pattern through the very tool that consumes it
+     * in rewrite.sh (grep -E), so the pattern's dialect is validated against
+     * its real consumer rather than against java.util.regex.Pattern
+     * (see #671).
      */
     private static boolean grepInMatches(final Path dir, final String content)
         throws IOException {
@@ -237,14 +234,10 @@ final class OptimizeMojoDefaultGrepInTest {
         ).withCheck(false).execUnsafe().code() == 0;
     }
 
-    /**
-     * Run the {@code grep_in_check} sub-command of the real
-     * {@code rewrite.sh} against a sample XMIR and return its exit code.
-     * @param dir Temporary directory for the script and the sample file
-     * @param pattern The pattern to verify
-     * @return The exit code of {@code grep_in_check}: 0 = match,
-     *  1 = no match, 2 = invalid pattern
-     * @throws IOException If the script or the sample file cannot be written
+    /*
+     * Runs the grep_in_check sub-command of the real rewrite.sh against a
+     * sample XMIR and returns its exit code: 0 = match, 1 = no match,
+     * 2 = invalid pattern.
      */
     private static int grepInCode(final Path dir, final String pattern)
         throws IOException {

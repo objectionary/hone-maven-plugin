@@ -15,9 +15,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 /**
  * This annotation disables JUnit tests when phino is
  * not runnable in command line.
+ *
  * @since 0.1.0
  */
 public final class DisabledWithoutPhinoCondition implements ExecutionCondition {
+
+    /**
+     * Public ctor, for JUnit to call reflectively.
+     */
+    public DisabledWithoutPhinoCondition() {
+        // nothing to initialize
+    }
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext ctx) {

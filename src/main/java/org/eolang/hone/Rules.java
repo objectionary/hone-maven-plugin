@@ -64,6 +64,7 @@ final class Rules {
 
     /**
      * Creates a rule manager with specific patterns.
+     *
      * @param ptns Comma-separated patterns (e.g., "simple,b*,!abc")
      * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
@@ -115,6 +116,7 @@ final class Rules {
 
     /**
      * Copy all matching rule files to the specified directory.
+     *
      * @param dir Destination directory where rule files will be copied
      * @throws IOException If copying files fails
      */
@@ -140,11 +142,6 @@ final class Rules {
         }
     }
 
-    /**
-     * Check if a rule name matches the configured patterns.
-     * @param name The name of the rule, e.g. "thirty-three"
-     * @return TRUE if the rule matches and should be included
-     */
     private boolean matches(final CharSequence name) {
         boolean matches = false;
         for (final Map.Entry<Pattern, Boolean> ent : this.patterns.entrySet()) {
@@ -160,11 +157,6 @@ final class Rules {
         return matches;
     }
 
-    /**
-     * Convert pattern strings to compiled regular expressions.
-     * @param ptns Comma-separated pattern strings with optional negation
-     * @return Map of compiled patterns to inclusion flags
-     */
     private static Map<Pattern, Boolean> regexs(final String ptns) {
         final Map<Pattern, Boolean> list = new HashMap<>(0);
         Rules.SEPARATOR.splitAsStream(ptns).filter(ptn -> !ptn.isEmpty()).forEach(
@@ -190,10 +182,6 @@ final class Rules {
         return list;
     }
 
-    /**
-     * Discover all available rules from the classpath.
-     * @return Array of rule names discovered from classpath resources
-     */
     private static String[] discover() {
         final List<String> names = new ArrayList<>(0);
         try (

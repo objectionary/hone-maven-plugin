@@ -33,6 +33,7 @@ final class Greppable {
 
     /**
      * Ctor.
+     *
      * @param names Method names to match
      */
     Greppable(final String... names) {
@@ -48,12 +49,10 @@ final class Greppable {
         return String.format(">(%s)<", String.join("|", hexes));
     }
 
-    /**
-     * Convert a string to a dash-separated sequence of upper-case hex byte
-     * values, matching the way jeo encodes a string literal inside a
-     * {@code .xmir} file (for example, {@code "map"} becomes {@code "6D-61-70"}).
-     * @param text The string to convert
-     * @return Hex-byte representation, dash-separated
+    /*
+     * A dash-separated sequence of upper-case hex byte values, matching the
+     * way jeo encodes a string literal inside a .xmir file: "map" becomes
+     * "6D-61-70".
      */
     private static String hex(final String text) {
         final byte[] bytes = text.getBytes(StandardCharsets.UTF_8);

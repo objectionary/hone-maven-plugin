@@ -7,6 +7,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.cactoos.io.ResourceOf;
@@ -30,6 +31,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * The "target/" directory of Maven project.
+     *
      * @since 0.1.0
      */
     @Parameter(
@@ -40,6 +42,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * The base directory of the Maven project.
+     *
      * @since 0.1.0
      */
     @Parameter(
@@ -51,12 +54,14 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Timings tracker for performance measurements.
+     *
      * @since 0.1.0
      */
     protected Timings timings;
 
     /**
      * Docker image to use.
+     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.image", defaultValue = "yegor256/hone:latest")
@@ -64,6 +69,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Whether to use "sudo" when executing Docker commands.
+     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.sudo", defaultValue = "false")
@@ -84,6 +90,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Phino version to use.
+     *
      * @since 0.21.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -92,6 +99,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Skip the execution, if set to TRUE.
+     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.skip", defaultValue = "false")
@@ -99,6 +107,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Skip the execution, if there is no way to run: no Docker and no local phino.
+     *
      * @since 0.22.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -107,6 +116,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Skip the execution, if it's Windows.
+     *
      * @since 0.23.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -134,6 +144,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Returns the phino version to use.
+     *
      * @return The phino version
      * @throws IOException If reading the default version fails
      */
@@ -161,19 +172,16 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Execute the specific goal implementation.
+     *
      * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
 
-    /**
+    /*
      * There is nothing to run with: no Docker, and no local phino either.
-     *
-     * <p>Every goal here takes the local {@code phino} when Docker is absent
-     * and the executable is of the version we expect, so the lack of Docker
-     * alone is not a reason to skip anymore.</p>
-     *
-     * @return TRUE if neither way of running is available
-     * @throws MojoExecutionException If the phino version cannot be read
+     * Every goal here takes the local phino when Docker is absent and the
+     * executable is of the version we expect, so the lack of Docker alone
+     * is not a reason to skip anymore.
      */
     private boolean helpless() throws MojoExecutionException {
         boolean nothing = !new Docker(this.sudo).available();
@@ -187,13 +195,9 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         return nothing;
     }
 
-    /**
-     * Check if the current operating system is Windows.
-     * @return True if running on Windows
-     */
     private static boolean windows() {
         return System.getProperty("os.name")
-            .toLowerCase(java.util.Locale.ENGLISH)
+            .toLowerCase(Locale.ENGLISH)
             .startsWith("win");
     }
 }

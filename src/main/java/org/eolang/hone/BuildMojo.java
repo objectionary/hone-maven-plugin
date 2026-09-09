@@ -40,6 +40,7 @@ public final class BuildMojo extends AbstractMojo {
 
     /**
      * Shall we use buildx?
+     *
      * @since 0.8.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -48,6 +49,7 @@ public final class BuildMojo extends AbstractMojo {
 
     /**
      * JEO version to use.
+     *
      * @since 0.20.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -118,12 +120,6 @@ public final class BuildMojo extends AbstractMojo {
         }
     }
 
-    /**
-     * Get the JEO version to use.
-     * If not set, read it from the default resource file.
-     * @return JEO version
-     * @throws IOException If reading the version fails
-     */
     private String jeo() throws IOException {
         String ver = this.jeoVersion;
         if (ver == null) {

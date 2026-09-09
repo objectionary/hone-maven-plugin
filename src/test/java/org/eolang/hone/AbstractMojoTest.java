@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Test case for {@link AbstractMojo}.
+ *
  * @since 0.1.0
  */
 final class AbstractMojoTest {
@@ -36,6 +37,7 @@ final class AbstractMojoTest {
 
     /**
      * Fake implementation of AbstractMojo for testing.
+     *
      * @since 0.1.0
      */
     private static final class FakeAbstractMojo extends AbstractMojo {

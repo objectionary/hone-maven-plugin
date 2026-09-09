@@ -16,6 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Test case for {@link Phino}.
+ *
  * @since 0.17.0
  */
 final class PhinoTest {
@@ -60,13 +61,6 @@ final class PhinoTest {
         );
     }
 
-    /**
-     * Create a fake executable script in the given directory.
-     * @param dir The directory to create the script in
-     * @param body The body of the script, after the shebang line
-     * @return The path to the script
-     * @throws Exception If something goes wrong
-     */
     private static Path fake(final Path dir, final String body) throws Exception {
         final Path script = dir.resolve("phino");
         Files.write(

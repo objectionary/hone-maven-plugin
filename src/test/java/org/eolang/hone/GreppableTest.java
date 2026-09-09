@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Test case for {@link Greppable}.
+ *
  * @since 0.27.2
  */
 final class GreppableTest {

@@ -432,6 +432,7 @@ final class Grammar {
 
     /**
      * Ctor.
+     *
      * @param table The productions, indexed by domain and role
      */
     private Grammar(final Map<String, List<String>> table) {
@@ -440,6 +441,7 @@ final class Grammar {
 
     /**
      * One domain to start a pipeline in.
+     *
      * @param rnd The source of randomness
      * @return The domain, as the grammar names it
      */
@@ -449,6 +451,7 @@ final class Grammar {
 
     /**
      * Every fragment the grammar can reach, whatever domain it belongs to.
+     *
      * @return The fragments, as they are written in the grammar
      */
     List<String> fragments() {
@@ -461,6 +464,7 @@ final class Grammar {
 
     /**
      * One fragment of the given domain and role.
+     *
      * @param domain The element domain the pipeline is in
      * @param role What the fragment must be: a source, a stage, a turn, a peek
      * @param rnd The source of randomness
@@ -502,6 +506,7 @@ final class Grammar {
 
     /**
      * The Java code of one line of a walk.
+     *
      * @param line The line, as {@code domain|role|fragment}
      * @return What the pipeline appends for it
      */
@@ -511,6 +516,7 @@ final class Grammar {
 
     /**
      * The Java code of a fragment, without the marks the grammar wraps it in.
+     *
      * @param production The fragment, as it is written in the grammar
      * @return What the walk appends to a pipeline when it picks this fragment
      */
@@ -526,10 +532,6 @@ final class Grammar {
         return code;
     }
 
-    /**
-     * The productions, indexed by domain and role.
-     * @return Map from {@code domain|role} to the fragments it allows
-     */
     private static Map<String, List<String>> indexed() {
         final Map<String, List<String>> table = new HashMap<>();
         for (final String line : Grammar.LINES) {

@@ -30,6 +30,7 @@ final class Mktemp implements Closeable {
 
     /**
      * Creates a new temporary directory.
+     *
      * @throws IOException If directory creation fails
      * @checkstyle ConstructorsCodeFreeCheck (3 lines)
      */
@@ -49,6 +50,7 @@ final class Mktemp implements Closeable {
 
     /**
      * Get the path to the temporary directory.
+     *
      * @return Path of the temporary directory
      */
     Path path() {

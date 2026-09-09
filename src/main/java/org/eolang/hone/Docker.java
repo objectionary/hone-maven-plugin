@@ -47,6 +47,7 @@ final class Docker {
 
     /**
      * Creates a Docker executor with optional sudo.
+     *
      * @param root Whether to run Docker commands with sudo
      */
     Docker(final boolean root) {
@@ -55,6 +56,7 @@ final class Docker {
 
     /**
      * Execute a Docker command with the given arguments.
+     *
      * @param args Docker command arguments
      * @return Exit code (always 0 on success)
      * @throws IOException If the command fails or returns non-zero exit code
@@ -65,6 +67,7 @@ final class Docker {
 
     /**
      * Docker executable is available?
+     *
      * @return TRUE if Docker is here
      */
     boolean available() {
@@ -80,6 +83,7 @@ final class Docker {
 
     /**
      * Execute a Docker command with the given arguments.
+     *
      * @param args Docker command arguments as a collection
      * @return Exit code (always 0 on success)
      * @throws IOException If the command fails or returns non-zero exit code
@@ -94,12 +98,6 @@ final class Docker {
         return this.fire(command);
     }
 
-    /**
-     * Execute the assembled command and handle the process.
-     * @param command Complete command with all arguments
-     * @return Exit code (always 0 on success)
-     * @throws IOException If the command fails or returns non-zero exit code
-     */
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));

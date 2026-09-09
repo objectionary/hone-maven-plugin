@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * An abstraction of Phino in command line.
+ *
  * @since 0.17.0
  */
 final class Phino {
@@ -31,6 +32,7 @@ final class Phino {
 
     /**
      * Ctor.
+     *
      * @param executable The executable to run, instead of "phino"
      */
     Phino(final String executable) {
@@ -39,6 +41,7 @@ final class Phino {
 
     /**
      * Is it available?
+     *
      * @param expected This is the expected version
      * @return TRUE if available
      */
@@ -76,11 +79,6 @@ final class Phino {
         return available;
     }
 
-    /**
-     * Drain a process stdout into a buffer, byte by byte.
-     * @param stdout Where to collect the output
-     * @param input The input stream to drain
-     */
     private static void pump(final ByteArrayOutputStream stdout, final InputStream input) {
         try {
             final byte[] buffer = new byte[1024];
@@ -96,14 +94,6 @@ final class Phino {
         }
     }
 
-    /**
-     * Decide whether the probed phino is the expected one.
-     * @param proc The probed process
-     * @param stdout Collected version output
-     * @param expected The version we need
-     * @param self Logger target
-     * @return TRUE if the versions match
-     */
     private static boolean version(
         final Process proc, final ByteArrayOutputStream stdout,
         final String expected, final Phino self

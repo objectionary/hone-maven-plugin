@@ -269,22 +269,13 @@ final class RandomPipeline {
     );
 
     /**
-     * The largest number of intermediate operations in one pipeline.
-     */
-    private static final int STAGES = 7;
-
-    /**
-     * One walk in this many goes parallel, when it is allowed to.
-     */
-    private static final int RACES = 5;
-
-    /**
      * The seed of the walk.
      */
     private final long seed;
 
     /**
      * Ctor.
+     *
      * @param sed The seed, which fully determines the class produced
      */
     RandomPipeline(final long sed) {
@@ -293,6 +284,7 @@ final class RandomPipeline {
 
     /**
      * Print the Java source of the class.
+     *
      * @param pkg The package to put the class in
      * @param name The name of the class, also the label of its printed value
      * @return Java source code, ready for {@code javac}
@@ -319,31 +311,22 @@ final class RandomPipeline {
         );
     }
 
-    /**
-     * The walk this seed settles on.
-     * @param grammar The grammar to walk
-     * @return The grammar lines the class is printed from, the frame first
-     */
     private List<String> rolled(final Grammar grammar) {
         return RandomPipeline.walk(
             grammar, new Random(RandomPipeline.scrambled(this.seed * 31L))
         );
     }
 
-    /**
+    /*
      * The seed, mixed.
-     *
-     * <p>{@link Random} scrambles a seed by exclusive-or alone, which moves the
-     * state of two neighbouring seeds by so little that the first few bits they
-     * draw are the same bits — the first {@code nextInt(2)} of seeds 0 to 200
-     * answers the same way almost every time. The walk draws the frame it sits
-     * in first of all, so without a mix of its own three quarters of the seeds
-     * would land in one frame and the axis would be an axis in name only. This
-     * is SplitMix64's finalizer, which spreads one increment across all sixty
-     * four bits.</p>
-     *
-     * @param seed The seed, as the caller counted it
-     * @return A seed whose neighbours are nowhere near it
+     * Random scrambles a seed by exclusive-or alone, which moves the state of
+     * two neighbouring seeds by so little that the first few bits they draw
+     * are the same bits — the first nextInt(2) of seeds 0 to 200 answers the
+     * same way almost every time. The walk draws the frame it sits in first
+     * of all, so without a mix of its own three quarters of the seeds would
+     * land in one frame and the axis would be an axis in name only. This is
+     * SplitMix64's finalizer, which spreads one increment across all sixty
+     * four bits.
      */
     private static long scrambled(final long seed) {
         long mixed = seed + 0x9E37_79B9_7F4A_7C15L;
@@ -352,16 +335,13 @@ final class RandomPipeline {
         return mixed ^ mixed >>> 31;
     }
 
-    /**
+    /*
      * One walk through the grammar, as the lines of it that were picked.
-     *
-     * <p>The first line is not a step but the frame the pipeline sits in, as
-     * {@code frame|holder|guard}. The frame is picked before anything else
-     * because it decides which roles the walk may draw from.</p>
-     *
-     * @param grammar The grammar to walk
-     * @param rnd The source of randomness
-     * @return The grammar lines, a frame first, a source second, a terminal last
+     * The first line is not a step but the frame the pipeline sits in, as
+     * frame|holder|guard. The frame is picked before anything else because it
+     * decides which roles the walk may draw from.
+     * Seven is the largest number of intermediate operations one pipeline
+     * gets, and one walk in five goes parallel, when it is allowed to.
      */
     private static List<String> walk(final Grammar grammar, final Random rnd) {
         final String holder =
@@ -381,7 +361,7 @@ final class RandomPipeline {
         steps.add(
             String.join("|", domain, "source", grammar.pick(domain, "source", rnd))
         );
-        final int total = 1 + rnd.nextInt(RandomPipeline.STAGES);
+        final int total = 1 + rnd.nextInt(7);
         boolean observed = false;
         for (int stage = 0; stage < total; ++stage) {
             final String role = roles.get(rnd.nextInt(roles.size()));
@@ -394,30 +374,23 @@ final class RandomPipeline {
         }
         final String end = grammar.terminal(domain, observed, rnd);
         if (RandomPipeline.raceable(end, observed, domain)
-            && rnd.nextInt(RandomPipeline.RACES) == 0) {
+            && rnd.nextInt(5) == 0) {
             steps.add(String.join("|", domain, "race", "parallel()"));
         }
         steps.add(end);
         return steps;
     }
 
-    /**
+    /*
      * Whether this pipeline may go parallel.
-     *
-     * <p>Two things forbid it. A traversal that is counted, by a {@code peek}
-     * or by a {@code forEach} that accumulates, is counted by several ForkJoin
-     * workers at once into one unsynchronized slot, and what they lose is not
-     * the same on every run. And a terminal that reduces floating point adds in
+     * Two things forbid it. A traversal that is counted, by a peek or by a
+     * forEach that accumulates, is counted by several ForkJoin workers at
+     * once into one unsynchronized slot, and what they lose is not the same
+     * on every run. And a terminal that reduces floating point adds in
      * whatever order the splits happened to combine in. Everything else the
-     * grammar can build is ordered, so a parallel run prints what a sequential
-     * one prints — which is the very contract {@code 222}-{@code 225} keep by
-     * refusing to fuse a {@code skip} or a {@code distinct} into a parallel
-     * pipeline.</p>
-     *
-     * @param end The terminal line the walk picked
-     * @param observed TRUE if something counts the traversal
-     * @param domain The element domain the pipeline ended in
-     * @return TRUE if {@code parallel()} may be appended
+     * grammar can build is ordered, so a parallel run prints what a
+     * sequential one prints — which is the very contract 222-225 keep by
+     * refusing to fuse a skip or a distinct into a parallel pipeline.
      */
     private static boolean raceable(final String end, final boolean observed,
         final String domain) {
@@ -426,12 +399,6 @@ final class RandomPipeline {
             && !RandomPipeline.FLOATS.contains(domain);
     }
 
-    /**
-     * The template of the body of the method that holds the pipeline.
-     * @param guard Either {@code plain} or {@code guarded}
-     * @param role The role of the terminal, either {@code end} or {@code void}
-     * @return A template with one {@code %s} where the pipeline goes
-     */
     private static String shape(final String guard, final String role) {
         final String body;
         if ("void".equals(role)) {
@@ -448,17 +415,12 @@ final class RandomPipeline {
         return shape;
     }
 
-    /**
+    /*
      * The body of the method, with the pipeline in it.
-     *
-     * <p>The pipeline arrives with one step per line and no indentation at all,
-     * and every line but the first is pushed out to where the {@code %s} of the
-     * shape stands, so that the shapes carry their own layout and nothing has
-     * to be told twice how deep a body is nested.</p>
-     *
-     * @param shape The template of the body
-     * @param pipe The pipeline, one step per line
-     * @return The Java statements of the body
+     * The pipeline arrives with one step per line and no indentation at all,
+     * and every line but the first is pushed out to where the %s of the shape
+     * stands, so that the shapes carry their own layout and nothing has to be
+     * told twice how deep a body is nested.
      */
     private static String body(final String shape, final String pipe) {
         final int mark = shape.indexOf("%s");
@@ -473,22 +435,12 @@ final class RandomPipeline {
         );
     }
 
-    /**
-     * The same block, one level deeper.
-     * @param block The Java statements
-     * @return The very same statements, indented by four more spaces
-     */
     private static String deeper(final String block) {
         return "    ".concat(
             block.replace(RandomPipeline.EOL, RandomPipeline.EOL.concat("    "))
         );
     }
 
-    /**
-     * The modifiers of the method that holds the pipeline.
-     * @param holder Either {@code static} or {@code instance}
-     * @return What stands in front of the return type
-     */
     private static String modifier(final String holder) {
         final String modifier;
         if ("instance".equals(holder)) {
@@ -499,12 +451,6 @@ final class RandomPipeline {
         return modifier;
     }
 
-    /**
-     * The expression {@code main} reaches the pipeline by.
-     * @param holder Either {@code static} or {@code instance}
-     * @param name The name of the class
-     * @return The Java expression that runs the pipeline once
-     */
     private static String call(final String holder, final String name) {
         final String call;
         if ("instance".equals(holder)) {

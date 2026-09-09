@@ -27,6 +27,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link OptimizeMojo}.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)
@@ -165,11 +166,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    /**
-     * Body of {@link #doesNothingWhenNoClasses}.
-     * @param fea Fake Maven project
-     * @throws IOException If the build fails to run
-     */
     private static void runWithoutClasses(final Farea fea) throws IOException {
         fea.clean();
         fea.build()
@@ -194,12 +190,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    /**
-     * Body of {@link #transformsSimpleAppWithoutPhino}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runWithoutPhino(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()
@@ -249,12 +239,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesExecutableJavaApp}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runExecutableApp(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()
@@ -293,12 +277,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesTwice}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runTwice(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()
@@ -345,11 +323,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesSimpleAppWithoutDocker}.
-     * @param fea Fake Maven project
-     * @throws IOException If the build fails to run
-     */
     private static void runSimpleAppWithoutDocker(final Farea fea) throws IOException {
         fea.clean();
         fea.files()
@@ -398,12 +371,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesSimpleApp}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runSimpleApp(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()

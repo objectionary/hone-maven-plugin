@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Test case for {@link OptimizeMojo#whoami}.
+ *
  * @since 0.6.0
  */
 @SuppressWarnings("JTCOP.RuleEveryTestHasProductionClass")
@@ -30,6 +31,7 @@ final class OptimizeMojoWhoamiTest {
      * Fixed-value stub of {@link OptimizeMojo.CLibrary} that returns
      * distinct values for uid, euid, and gid so callers can be checked
      * for picking up the right one.
+     *
      * @since 0.6.0
      */
     private static final class FakeCLibrary implements OptimizeMojo.CLibrary {
@@ -51,6 +53,7 @@ final class OptimizeMojoWhoamiTest {
 
         /**
          * Ctor.
+         *
          * @param ruid Real user ID
          * @param reuid Effective user ID
          * @param rgid Group ID

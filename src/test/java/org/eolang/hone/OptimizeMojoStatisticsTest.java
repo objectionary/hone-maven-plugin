@@ -22,6 +22,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link OptimizeMojo}, against the statistics CSV it writes.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)
@@ -53,11 +54,6 @@ final class OptimizeMojoStatisticsTest {
         new Farea(home).together(f -> OptimizeMojoStatisticsTest.runWithDocker(f, image));
     }
 
-    /**
-     * Body of {@link #generatesStatisticsWithoutDocker}.
-     * @param fea Fake Maven project
-     * @throws IOException If the build fails to run
-     */
     private static void runWithoutDocker(final Farea fea) throws IOException {
         fea.clean();
         fea.files()
@@ -128,12 +124,6 @@ final class OptimizeMojoStatisticsTest {
         );
     }
 
-    /**
-     * Body of {@link #generatesStatisticsWithDocker}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runWithDocker(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()

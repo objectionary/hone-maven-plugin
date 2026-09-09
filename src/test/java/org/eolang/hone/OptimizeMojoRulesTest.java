@@ -30,6 +30,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 /**
  * Test case for {@link OptimizeMojo}, against extra optimization rules,
  * includes/excludes, and small-steps modes.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)
@@ -100,14 +101,6 @@ final class OptimizeMojoRulesTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesJustOneLargeJnaClass}.
-     * @param fea Fake Maven project
-     * @param path Path of the .class resource, relative to the project
-     * @param bin Path of the .class resource on disk
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runOneLargeJnaClass(final Farea fea, final String path,
         final Path bin, final String image) throws IOException {
         fea.clean();
@@ -189,12 +182,6 @@ final class OptimizeMojoRulesTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesWithIncludesAndExcludes}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runIncludesAndExcludes(final Farea fea, final String image)
         throws IOException {
         fea.clean();
@@ -260,12 +247,6 @@ final class OptimizeMojoRulesTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesWithExtraRules}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runExtraRules(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()
@@ -359,12 +340,6 @@ final class OptimizeMojoRulesTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesWithSmallSteps}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runSmallSteps(final Farea fea, final String image) throws IOException {
         fea.clean();
         fea.files()
@@ -457,12 +432,6 @@ final class OptimizeMojoRulesTest {
         );
     }
 
-    /**
-     * Body of {@link #optimizesWithSmallConsecutiveSteps}.
-     * @param fea Fake Maven project
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runSmallConsecutiveSteps(final Farea fea, final String image)
         throws IOException {
         fea.clean();

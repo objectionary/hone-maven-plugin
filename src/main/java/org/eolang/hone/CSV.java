@@ -28,6 +28,7 @@ import org.cactoos.list.ListOf;
 
 /**
  * CSV summary .
+ *
  * @since 0.1.0
  * @checkstyle AbbreviationAsWordInNameCheck (3 lines)
  */
@@ -45,6 +46,7 @@ public final class CSV {
 
     /**
      * Constructor.
+     *
      * @param root CSV file path
      */
     CSV(final Path root) {
@@ -53,6 +55,7 @@ public final class CSV {
 
     /**
      * Constructor.
+     *
      * @param other The CSV to copy fields from
      */
     private CSV(final CSV other) {
@@ -61,6 +64,7 @@ public final class CSV {
 
     /**
      * Constructor.
+     *
      * @param headers CSV headers
      * @param records CSV records
      */
@@ -74,6 +78,7 @@ public final class CSV {
 
     /**
      * Combines this CSV with another CSV, concatenating their records.
+     *
      * @param other The other CSV to combine with this one
      * @return A new CSV instance containing the combined records of both CSVs
      */
@@ -98,6 +103,7 @@ public final class CSV {
 
     /**
      * Number of records in the CSV.
+     *
      * @return The number of records in the CSV
      */
     int size() {
@@ -106,6 +112,7 @@ public final class CSV {
 
     /**
      * Counts rows where a column value matches the given condition.
+     *
      * @param header The column name to check
      * @param condition Predicate applied to the column value
      * @return Number of matching rows
@@ -134,6 +141,7 @@ public final class CSV {
 
     /**
      * Flushes the CSV content to the specified file path.
+     *
      * @param res The path to the file where the CSV content should be written
      */
     void flush(final Path res) {
@@ -158,6 +166,7 @@ public final class CSV {
 
     /**
      * Whether a cell, parsed as a positive integer, is greater than zero.
+     *
      * @param value The cell content
      * @return TRUE when the integer value is greater than zero
      */
@@ -201,13 +210,6 @@ public final class CSV {
         }
     }
 
-    /**
-     * Whether a row matches under the condition, tolerating a missing cell.
-     * @param row The CSV record
-     * @param header The column name
-     * @param condition The predicate on the cell value
-     * @return TRUE when the cell is present and the condition holds
-     */
     private static boolean test(
         final Map<String, String> row,
         final String header,

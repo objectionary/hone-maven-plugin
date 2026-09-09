@@ -12,9 +12,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 /**
  * This annotation disables JUnit tests when Docker is
  * not runnable in command line.
+ *
  * @since 0.1.0
  */
 public final class DisabledWithoutDockerCondition implements ExecutionCondition {
+
+    /**
+     * Public ctor, for JUnit to call reflectively.
+     */
+    public DisabledWithoutDockerCondition() {
+        // nothing to initialize
+    }
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext ctx) {

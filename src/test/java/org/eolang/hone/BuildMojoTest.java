@@ -21,6 +21,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Test case for {@link BuildMojo}.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)

@@ -33,6 +33,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 /**
  * Test case for {@link OptimizeMojo}, fuzzing it with randomly generated
  * stream pipelines from {@link RandomPipeline}.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)
@@ -265,14 +266,6 @@ final class RandomPipelineOptimizationTest {
         );
     }
 
-    /**
-     * Body of {@link #preservesWhatRandomPipelinesPrint}.
-     * @param fea Fake Maven project
-     * @param home The root of the fake Maven project
-     * @param pipelines How many random pipelines to generate
-     * @param image Docker image tag
-     * @throws IOException If the build fails to run
-     */
     private static void runRandomPipelines(final Farea fea, final Path home,
         final int pipelines, final String image) throws IOException {
         fea.clean();
@@ -345,14 +338,6 @@ final class RandomPipelineOptimizationTest {
         );
     }
 
-    /**
-     * What the two runs of one pipeline disagree about.
-     * @param before The run of the class as the Java compiler left it
-     * @param after The run of the same class after optimization
-     * @param java The source of the class, printed when there is a complaint
-     * @param name The name of the class
-     * @return The complaint, or an empty string when the two runs agree
-     */
     private static String differs(final Result before, final Result after,
         final String java, final String name) {
         final String complaint;
@@ -377,14 +362,6 @@ final class RandomPipelineOptimizationTest {
         return complaint;
     }
 
-    /**
-     * Run one class of the fake project, in the JVM that runs this test.
-     * @param home The root of the fake Maven project
-     * @param dir The directory with compiled classes, relative to the root
-     * @param name The name of the class in the {@code random} package
-     * @return What the JVM printed and the code it exited with
-     * @throws IOException If the JVM cannot be started
-     */
     private static Result runs(final Path home, final String dir, final String name)
         throws IOException {
         return new Jaxec(

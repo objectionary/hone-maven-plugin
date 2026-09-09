@@ -114,6 +114,7 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Location of {@code .class} files to optimize inside
      * the {@code target} directory.
+     *
      * @since 0.8.0
      */
     @Parameter(property = "hone.classes", defaultValue = "classes")
@@ -142,6 +143,7 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * List of extra rules to use for optimization, provided as
      * YAML files.
+     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.extra")
@@ -149,6 +151,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * EO version to use.
+     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -191,6 +194,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * Skip if no .class files found.
+     *
      * @since 0.16.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -291,6 +295,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * The list of all file extensions for the extra rules.
+     *
      * @since 0.5.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -325,6 +330,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * JEO version to use.
+     *
      * @since 0.1.0
      * @checkstyle MemberNameCheck (6 lines)
      */
@@ -333,6 +339,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * EO cache directory.
+     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.cache", defaultValue = "${user.home}/.eo")
@@ -361,6 +368,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     /**
      * Return the user and group IDs of the current user, using the given C library.
+     *
      * @param lib The C library to query for the IDs
      * @return A string in the format "uid:gid"
      */
@@ -375,6 +383,7 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Build a {@code host:container} bind mount for Docker, rejecting paths
      * that Docker would misparse (Windows drive letters contain a colon).
+     *
      * @param host The host path
      * @param container The container path
      * @return The bind-mount string
@@ -395,6 +404,7 @@ public final class OptimizeMojo extends AbstractMojo {
     /**
      * Rewrite the {@code /target} (or {@code \target}) prefixes to the real
      * local path, tolerating backslash separators.
+     *
      * @param target The local target directory
      * @param paths The includes/excludes patterns
      * @return The joined, rewritten patterns
@@ -412,10 +422,6 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
-    /**
-     * Check if the classes directory is absent or doesn't have classes.
-     * @return True if there are no class files, false otherwise
-     */
     private boolean withoutClasses() {
         final Path dir = this.target.toPath().resolve(this.classes);
         final boolean exists = dir.toFile().exists();
@@ -663,10 +669,6 @@ public final class OptimizeMojo extends AbstractMojo {
         }
     }
 
-    /**
-     * Return the user and group IDs of the current user.
-     * @return A string in the format "uid:gid"
-     */
     private static String whoami() {
         return OptimizeMojo.whoami(OptimizeMojo.CLibrary.INSTANCE);
     }
@@ -749,12 +751,6 @@ public final class OptimizeMojo extends AbstractMojo {
         }
     }
 
-    /**
-     * Get the JEO version to use.
-     * If not set, read it from the default resource file.
-     * @return JEO version
-     * @throws IOException If reading the version fails
-     */
     private String jeo() throws IOException {
         String ver = this.jeoVersion;
         if (ver == null) {
@@ -789,18 +785,21 @@ public final class OptimizeMojo extends AbstractMojo {
 
         /**
          * Get the user ID of the calling process.
+         *
          * @return The user ID
          */
         int getuid();
 
         /**
          * Get the effective user ID of the calling process.
+         *
          * @return The effective user ID
          */
         int geteuid();
 
         /**
          * Get the group ID of the calling process.
+         *
          * @return The group ID
          */
         int getgid();

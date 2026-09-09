@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Test case for {@link Docker}.
+ *
  * @since 0.1.0
  */
 @ExtendWith(RandomImageResolver.class)

@@ -12,9 +12,17 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * This class is instantiated and then called by JUnit when
  * an argument of a test method is marked with the {@link RandomImage}
  * annotation.
+ *
  * @since 0.1.0
  */
 public final class RandomImageResolver implements ParameterResolver {
+
+    /**
+     * Public ctor, for JUnit to call reflectively.
+     */
+    public RandomImageResolver() {
+        // nothing to initialize
+    }
 
     @Override
     public boolean supportsParameter(final ParameterContext context,

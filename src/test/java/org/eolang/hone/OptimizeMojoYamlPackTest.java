@@ -38,6 +38,7 @@ import org.yaml.snakeyaml.Yaml;
 /**
  * Test case for {@link OptimizeMojo}, against YAML packs of
  * {@code before}/{@code after} bytecode expectations.
+ *
  * @since 0.1.0
  */
 @Execution(ExecutionMode.SAME_THREAD)
@@ -168,6 +169,7 @@ final class OptimizeMojoYamlPackTest {
     /**
      * Source method for {@link #appliesPhinoRulesAsSpecifiedInYamlPack}.
      * Walks {@code src/test/phino/} and yields every {@code .yml} pack.
+     *
      * @return Stream of YAML pack paths in alphabetical order
      * @throws IOException If the directory cannot be listed
      */
@@ -187,18 +189,6 @@ final class OptimizeMojoYamlPackTest {
         return packs.stream();
     }
 
-    /**
-     * Body of {@link #optimizesAsSpecifiedInYamlPack}.
-     * @param fea Fake Maven project
-     * @param path Path of the Java source file to write, relative to the project
-     * @param code Java source of the class under test
-     * @param pack The full YAML pack, for its optional and expectation fields
-     * @param image Docker image tag
-     * @param slashed The pack's package name, with dots replaced by slashes
-     * @param klass The pack's class name
-     * @param pkgname The pack's package name
-     * @throws IOException If the build fails to run
-     */
     @SuppressWarnings("unchecked")
     private static void runYamlPack(final Farea fea, final String path, final String code,
         final Map<String, Object> pack, final String image, final String slashed,
@@ -258,13 +248,9 @@ final class OptimizeMojoYamlPackTest {
         );
     }
 
-    /**
-     * Assert that opcode counts in a compiled class match the YAML
+    /*
+     * Asserts that opcode counts in a compiled class match the YAML
      * expectations. A zero value asserts the opcode is absent.
-     * @param klass Path to the .class file
-     * @param expected Expected map of opcode to count, or null to skip
-     * @param stage Either "before" or "after" — used in the failure message
-     * @throws IOException If the class file cannot be read
      */
     private static void assertOpcodes(final Path klass,
         final Map<String, Integer> expected, final String stage) throws IOException {
@@ -287,12 +273,9 @@ final class OptimizeMojoYamlPackTest {
         );
     }
 
-    /**
-     * Build a single opcode matcher: presence with an exact count when
-     * the expected value is positive, absence when it is zero.
-     * @param opcode Opcode mnemonic
-     * @param count Expected occurrences (zero asserts absence)
-     * @return A Hamcrest matcher over the opcode tally
+    /*
+     * One opcode matcher: presence with an exact count when the expected
+     * value is positive, absence when it is zero.
      */
     private static org.hamcrest.Matcher<? super Map<String, Integer>> opcodeMatcher(
         final String opcode, final Integer count) {

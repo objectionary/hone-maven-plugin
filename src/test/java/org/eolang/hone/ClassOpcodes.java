@@ -41,6 +41,7 @@ final class ClassOpcodes {
 
     /**
      * Ctor.
+     *
      * @param src Path to the {@code .class} file to inspect
      */
     ClassOpcodes(final Path src) {
@@ -49,6 +50,7 @@ final class ClassOpcodes {
 
     /**
      * Count opcodes used inside the class.
+     *
      * @return Map from lowercase JVM mnemonic to its number of occurrences
      * @throws IOException If the file cannot be read
      */

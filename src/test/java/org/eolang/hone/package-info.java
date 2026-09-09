@@ -4,6 +4,7 @@
  */
 /**
  * Test cases.
+ *
  * @since 0.1.0
  */
 package org.eolang.hone;

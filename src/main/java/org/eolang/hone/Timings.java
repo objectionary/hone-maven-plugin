@@ -31,6 +31,7 @@ final class Timings {
 
     /**
      * Creates a new timings recorder.
+     *
      * @param file Path to the CSV file where timings will be recorded
      */
     Timings(final Path file) {
@@ -39,6 +40,7 @@ final class Timings {
 
     /**
      * Executes an action and records its execution time.
+     *
      * @param name Name of the action being timed
      * @param action The action to execute and measure
      * @throws IOException If recording the timing fails
@@ -64,6 +66,7 @@ final class Timings {
 
     /**
      * Functional interface for actions that can be timed.
+     *
      * @since 0.1.0
      */
     @FunctionalInterface
@@ -71,6 +74,7 @@ final class Timings {
 
         /**
          * Execute the action.
+         *
          * @throws IOException If execution fails
          */
         void exec() throws IOException;

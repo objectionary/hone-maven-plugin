@@ -66,14 +66,19 @@ final class Docker {
     }
 
     /**
-     * Docker executable is available?
+     * Docker is available?
+     *
+     * <p>The daemon is asked, not the client: {@code docker --version} prints
+     * the version of the binary and exits with zero without ever reaching the
+     * socket, so a machine with a stopped daemon answered that Docker was
+     * usable and the build failed later inside {@code docker run}.</p>
      *
      * @return TRUE if Docker is here
      */
     boolean available() {
         boolean yes = true;
         try {
-            this.exec("--version");
+            this.exec("info", "--format", "{{.ServerVersion}}");
         } catch (final IOException | IllegalStateException ex) {
             Logger.warn(this, "Docker is not available: %s", ex.getMessage());
             yes = false;

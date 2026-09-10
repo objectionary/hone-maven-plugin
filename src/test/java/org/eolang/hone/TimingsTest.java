@@ -23,7 +23,10 @@ final class TimingsTest {
     void dropsTheRowsOfAPreviousBuild() throws Exception {
         try (Mktemp temp = new Mktemp()) {
             final Path file = temp.path().resolve("bar.csv");
-            Files.write(file, "\"old\";1\n".getBytes(StandardCharsets.UTF_8));
+            Files.write(
+                file,
+                String.format("\"old\";1%n").getBytes(StandardCharsets.UTF_8)
+            );
             Files.setLastModifiedTime(file, FileTime.fromMillis(0L));
             new Timings(file).through("foo", () -> { });
             MatcherAssert.assertThat(

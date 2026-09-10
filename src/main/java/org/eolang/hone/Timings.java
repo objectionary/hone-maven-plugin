@@ -66,16 +66,10 @@ final class Timings {
         }
     }
 
-    /**
-     * Start the file when it does not belong to this build yet.
-     *
-     * <p>The rows of a build that ran before this JVM are of no use here and
-     * "target" survives between runs unless "clean" is used, so a file older
-     * than the JVM is replaced by a fresh one with a header. The goals of this
-     * build write after that moment and append to each other.</p>
-     *
-     * @throws IOException If the file cannot be written
-     */
+    // The rows of a build that ran before this JVM are of no use here and
+    // "target" survives between runs unless "clean" is used, so a file older
+    // than the JVM is replaced by a fresh one with a header. The goals of this
+    // build write after that moment and append to each other.
     private void started() throws IOException {
         final boolean stale;
         if (Files.exists(this.path)) {

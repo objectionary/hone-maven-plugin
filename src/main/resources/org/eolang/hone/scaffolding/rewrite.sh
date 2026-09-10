@@ -112,8 +112,8 @@ function rewrite {
   mkdir -p "$(dirname "${phi}")"
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
-  if [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ]; then
-    echo "Target $(basename "${pho}") is newer than source $(basename "${phi}") and output $(basename "${xo}") is present; skipping transformation for ${idx}"
+  if [ -f "${phi}" ] && [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ]; then
+    echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain; skipping transformation for ${idx}"
     return
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"

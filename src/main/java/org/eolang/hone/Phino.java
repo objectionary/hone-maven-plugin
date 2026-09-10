@@ -62,6 +62,8 @@ final class Phino {
                 available = Phino.version(proc, stdout, expected, this);
             } else {
                 proc.destroyForcibly();
+                pump.interrupt();
+                pump.join(TimeUnit.SECONDS.toMillis(1L));
                 Logger.info(
                     this,
                     "The 'phino --version' probe timed out, we must use Docker"

@@ -69,6 +69,12 @@ final class Collector extends SimpleFileVisitor<Path> {
                 "Symlink cycle detected at %s, skipping",
                 file
             );
+        } else {
+            Logger.warn(
+                this,
+                "Can't read %s, its statistics are missing from the summary: %s",
+                file, exc.getMessage()
+            );
         }
         return FileVisitResult.CONTINUE;
     }

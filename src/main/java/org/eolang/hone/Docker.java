@@ -34,6 +34,13 @@ final class Docker {
     private static final long TIMEOUT = 3600L;
 
     /**
+     * How long to wait for the readers of the output to reach its end, in
+     * seconds. They stop on their own when the pipes close, so this is only
+     * a guard against a child of the command that keeps them open.
+     */
+    private static final long DRAIN = 30L;
+
+    /**
      * Whether to prepend "sudo" to Docker commands.
      */
     private final boolean sudo;
@@ -98,6 +105,17 @@ final class Docker {
         return this.fire(command);
     }
 
+    private void drained(final Thread... pumps) throws IOException {
+        try {
+            for (final Thread pump : pumps) {
+                pump.join(TimeUnit.SECONDS.toMillis(Docker.DRAIN));
+            }
+        } catch (final InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Docker output was interrupted while being read", ex);
+        }
+    }
+
     private int fire(final List<String> command) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));
@@ -127,6 +145,7 @@ final class Docker {
         }
         if (!done) {
             proc.destroyForcibly();
+            this.drained(stdout, stderr);
             throw new IOException(
                 String.format(
                     "Docker command timed out after %d seconds: %s",
@@ -134,6 +153,7 @@ final class Docker {
                 )
             );
         }
+        this.drained(stdout, stderr);
         Logger.info(
             this, "+ %s -> 0x%04x in %[ms]s",
             String.join(" ", command), proc.exitValue(),

@@ -9,8 +9,11 @@ import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +47,13 @@ final class RmiMojoTest {
                     "the build must be successful",
                     f.log(),
                     RequisiteMatcher.SUCCESS
+                );
+                MatcherAssert.assertThat(
+                    "the rmi goal must be present in hone-timings.csv",
+                    Files.readString(dir.resolve("target/hone-timings.csv")),
+                    Matchers.matchesPattern(
+                        Pattern.compile("(?s).*^rmi,[0-9]+$.*", Pattern.MULTILINE)
+                    )
                 );
             }
         );

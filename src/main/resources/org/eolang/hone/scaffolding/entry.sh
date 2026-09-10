@@ -82,15 +82,19 @@ fi
 if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \
-after the 'compile' phase is finished; this is what is in the '${TARGET}' directory:"
-  tree "${TARGET}"
+after the 'compile' phase is finished"
   if [ "${SKIP_IF_NO_CLASSES}" == 'true' ]; then
     echo "We don't fail but quit quietly, because of skipIfNoClasses=true"
     exit
-  else
-    echo "We can't continue and must fail here. Set skipIfNoClasses to 'true' if you need a quiet pass."
-    exit 1
   fi
+  echo "This is what is in the '${TARGET}' directory:"
+  if command -v tree > /dev/null; then
+    tree "${TARGET}"
+  else
+    ls -R "${TARGET}"
+  fi
+  echo "We can't continue and must fail here. Set skipIfNoClasses to 'true' if you need a quiet pass."
+  exit 1
 fi
 
 # In order to save them "as is", just in case. The previous copy goes first,

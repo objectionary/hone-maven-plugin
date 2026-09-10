@@ -360,7 +360,7 @@
         in src/site/site.xml points to
         -->
         <artifactId>maven-plugin-report-plugin</artifactId>
-        <version>3.15.2</version>
+        <version>3.16.0</version>
         <reportSets>
           <reportSet>
             <reports>

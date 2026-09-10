@@ -48,14 +48,14 @@ final class RmiMojoTest {
                     f.log(),
                     RequisiteMatcher.SUCCESS
                 );
-                MatcherAssert.assertThat(
-                    "the rmi goal must be present in hone-timings.csv",
-                    Files.readString(dir.resolve("target/hone-timings.csv")),
-                    Matchers.matchesPattern(
-                        Pattern.compile("(?s).*^rmi,[0-9]+$.*", Pattern.MULTILINE)
-                    )
-                );
             }
+        );
+        MatcherAssert.assertThat(
+            "the rmi goal must be present in hone-timings.csv",
+            Files.readString(dir.resolve("target/hone-timings.csv")),
+            Matchers.matchesPattern(
+                Pattern.compile("(?s).*^rmi,[0-9]+$.*", Pattern.MULTILINE)
+            )
         );
     }
 }

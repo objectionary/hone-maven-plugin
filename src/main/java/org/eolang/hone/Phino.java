@@ -42,6 +42,12 @@ final class Phino {
     /**
      * Is it available?
      *
+     * <p>Both streams of the probe are read. A process that writes more to
+     * stderr than the pipe holds blocks on the write and never exits, so a
+     * phino that warns about anything at all would look like a phino that
+     * hangs, and the plugin would fall back to Docker with a message that
+     * says nothing about the executable it just found.</p>
+     *
      * @param expected This is the expected version
      * @return TRUE if available
      */
@@ -56,9 +62,14 @@ final class Phino {
                 () -> Phino.pump(stdout, proc.getInputStream())
             );
             pump.start();
+            final Thread errs = new Thread(
+                () -> Phino.pump(new ByteArrayOutputStream(), proc.getErrorStream())
+            );
+            errs.start();
             final boolean probed = proc.waitFor(3L, TimeUnit.SECONDS);
             if (probed) {
                 pump.join();
+                errs.join();
                 available = Phino.version(proc, stdout, expected, this);
             } else {
                 proc.destroyForcibly();

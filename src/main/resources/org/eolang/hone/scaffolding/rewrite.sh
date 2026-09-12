@@ -238,18 +238,22 @@ function rewrite_with_timeout {
     kill "${watchdog}" 2>/dev/null || true
   fi
   wait "${watchdog}" 2>/dev/null || true
-  if [ -f "${flag}" ]; then
+  # The worker finishing and the deadline passing are independent events, so
+  # both can be true for a file that finished just as the watchdog fired. The
+  # exit code decides: a worker that exited normally wrote its output, and
+  # copying the input over it would ship the class unoptimized (#893).
+  if [ "${code}" -eq 0 ]; then
+    rm -f "${flag}"
+  elif [ -f "${flag}" ]; then
     rm -f "${flag}"
     sec=$(perl -E "say int($(now) - ${start})")
     echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
     cp "${xi}" "${xo}"
-  elif [ "${code}" -ne 0 ]; then
+  else
     rm -f "${flag}"
     sec=$(perl -E "say int($(now) - ${start})")
     echo "Failure (exit code ${code}) in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds; refusing to copy it through unoptimized" >&2
     exit "${code}"
-  else
-    rm -f "${flag}"
   fi
 }
 

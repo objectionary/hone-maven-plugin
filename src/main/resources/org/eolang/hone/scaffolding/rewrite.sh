@@ -114,6 +114,7 @@ function rewrite {
   mkdir -p "$(dirname "${xo}")"
   if [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ]; then
     echo "Target $(basename "${pho}") is newer than source $(basename "${phi}") and output $(basename "${xo}") is present; skipping transformation for ${idx}"
+    statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",0,0"
     return
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
@@ -127,6 +128,7 @@ function rewrite {
     if [ "${rc}" -ne 0 ]; then
       cp "${xi}" "${xo}"
       echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
+      statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",0,0"
       return
     fi
   fi

@@ -152,7 +152,7 @@ for rule in ${RULES}; do
   fi
 done
 if [ -n "${EXTRA}" ]; then
-  e=$(find "${EXTRA}" -name '*.yml' -exec "${RP}" {} \; | sort | tr '\n' ' ')
+  e=$(find "${EXTRA}" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort | tr '\n' ' ')
   if [ -n "${e}" ]; then
     echo "Extra rules found in ${EXTRA}: ${e}"
     RULES="${RULES} ${e}"

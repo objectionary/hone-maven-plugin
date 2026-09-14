@@ -235,7 +235,9 @@ function rewrite_with_timeout {
   # stop it when it is still in its initial sleep, i.e. the worker finished
   # before the deadline.
   if [ ! -f "${flag}" ]; then
-    kill "${watchdog}" 2>/dev/null || true
+    # The watchdog is a subshell with a separate sleep child. Killing only
+    # the shell leaves that sleep orphaned until the timeout expires (see #933).
+    kill_tree TERM "${watchdog}"
   fi
   wait "${watchdog}" 2>/dev/null || true
   # The worker finishing and the deadline passing are independent events, so

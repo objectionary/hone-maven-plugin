@@ -132,7 +132,7 @@ function rewrite {
   fi
   atomic_write "${phi}" phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}"
   verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
-  rm -f "${pho}.*"
+  rm -f "${pho}".*
   pos=0
   start=$(now)
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then

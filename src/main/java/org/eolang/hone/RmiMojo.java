@@ -30,19 +30,24 @@ public final class RmiMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
-            Logger.info(
-                this,
-                "Docker image '%s' was probably NOT built, that's why not removed either",
-                this.image
-            );
-        } else {
-            new Docker(this.sudo).exec(
-                "rmi",
-                "--no-prune",
-                this.image
-            );
-            Logger.info(this, "Docker image '%s' was removed", this.image);
-        }
+        this.timings.through(
+            "rmi",
+            () -> {
+                if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
+                    Logger.info(
+                        this,
+                        "Docker image '%s' was probably NOT built, that's why not removed either",
+                        this.image
+                    );
+                } else {
+                    new Docker(this.sudo).exec(
+                        "rmi",
+                        "--no-prune",
+                        this.image
+                    );
+                    Logger.info(this, "Docker image '%s' was removed", this.image);
+                }
+            }
+        );
     }
 }

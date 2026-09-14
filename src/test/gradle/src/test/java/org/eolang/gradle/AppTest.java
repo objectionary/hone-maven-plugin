@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.is;
 
 /**
  * Tests for {@link App}.
+ *
  * @since 1.0
  */
 public final class AppTest {

@@ -9,6 +9,7 @@ package org.eolang.gradle;
  * is supposed to be modified by the Hone plugin. The number
  * 33 is used here as a placeholder that is expected to be
  * replaced by the number 42.
+ *
  * @since 1.0
  */
 public final class App {

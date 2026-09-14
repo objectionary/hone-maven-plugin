@@ -5,11 +5,12 @@
 package org.eolang.hone;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -40,11 +41,13 @@ final class Mktemp implements Closeable {
 
     @Override
     public void close() throws IOException {
+        final List<Path> files;
         try (Stream<Path> stream = Files.walk(this.dir)) {
-            stream
-                .map(Path::toFile)
-                .sorted(Comparator.reverseOrder())
-                .forEach(File::delete);
+            files = stream.sorted(Comparator.reverseOrder())
+                .collect(Collectors.toList());
+        }
+        for (final Path file : files) {
+            Files.delete(file);
         }
     }
 

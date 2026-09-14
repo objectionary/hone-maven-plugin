@@ -69,6 +69,13 @@ final class Collector extends SimpleFileVisitor<Path> {
                 "Symlink cycle detected at %s, skipping",
                 file
             );
+        } else {
+            Logger.warn(
+                this,
+                "Failed to visit %s, skipping: %s",
+                file,
+                exc.getMessage()
+            );
         }
         return FileVisitResult.CONTINUE;
     }

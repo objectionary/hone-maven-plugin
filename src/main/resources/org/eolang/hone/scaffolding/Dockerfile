@@ -36,7 +36,7 @@ RUN ghcup -v install ghc --isolate /usr/local --force "${GHC}" && \
 ARG PHINO_VERSION=0.0.0.0
 RUN cabal update \
   && cabal install --disable-tests --disable-coverage --overwrite-policy=always "phino-${PHINO_VERSION}" \
-  && find /root -name phino -type f 2>/dev/null | head -1 | xargs -I {} cp {} /usr/local/bin/phino \
+  && cp "$(find /root -name phino -type f 2>/dev/null | sort | tail -1)" /usr/local/bin/phino \
   && chmod +x /usr/local/bin/phino \
   && /usr/local/bin/phino --version
 

@@ -159,7 +159,7 @@ function rewrite {
   fi
   s_size=$(du -sh "${xi}" | cut -f1)
   s_lines=$(wc -l < "${pho}" | xargs)
-  per=$(perl -E "say int(${s_lines} / ($(now) - ${start}))")
+  per=$(perl -E 'my ($lines, $end, $from) = @ARGV; my $secs = $end - $from; $secs = 0.001 if $secs < 0.001; say int($lines / $secs)' "${s_lines}" "$(now)" "${start}")
   changed=0
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"

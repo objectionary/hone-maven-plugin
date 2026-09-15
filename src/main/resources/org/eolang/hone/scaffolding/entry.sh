@@ -102,7 +102,7 @@ fi
 # a second run without "clean" would otherwise nest one backup in the other:
 rm -rf "${TARGET}/classes-before-hone"
 cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
-echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -print | wc -l | xargs) files)"
+echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -type f -print | wc -l | xargs) files)"
 
 if [ -z "${PHINO_VERSION}" ]; then
   echo "PHINO_VERSION is not set"

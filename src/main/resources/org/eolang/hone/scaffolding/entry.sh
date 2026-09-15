@@ -158,8 +158,9 @@ done
 if [ -n "${EXTRA}" ]; then
   e=$(find "${EXTRA}" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort | tr '\n' ' ')
   if [ -n "${e}" ]; then
+    e="${e% }"
     echo "Extra rules found in ${EXTRA}: ${e}"
-    RULES="${RULES} ${e}"
+    RULES="${RULES:+${RULES} }${e}"
   else
     echo "No extra rules found in ${EXTRA}"
   fi
@@ -176,7 +177,7 @@ printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 printf 'Using GNU Parallel: %s\n' "$(parallel --version | head -1)"
 
 printf 'Using the following %d rules:\n\t%b\n' \
-  "$(( "$(echo "${RULES}" | grep -o ' ' | wc -l)" + 1))" \
+  "$(printf '%s' "${RULES}" | wc -w)" \
   "${RULES// /\\n\\t}"
 
 declare -a disassemble_opts=(

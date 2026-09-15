@@ -179,6 +179,8 @@ printf 'Using the following %d rules:\n\t%b\n' \
   "$(( "$(echo "${RULES}" | grep -o ' ' | wc -l)" + 1))" \
   "${RULES// /\\n\\t}"
 
+rm -rf "${TARGET}/hone/jeo-disassemble" "${TARGET}/hone/unphi"
+
 declare -a disassemble_opts=(
   "${opts[@]}"
   "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}"

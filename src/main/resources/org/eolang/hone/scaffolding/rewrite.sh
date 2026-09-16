@@ -210,22 +210,22 @@ function rewrite_with_timeout {
   rm -f "${flag}"
   "${SETSID}" --wait "${0}" rewrite "$@" &
   sid=$!
-  leader=""
+  group=""
   for _ in $(seq 1 100); do
-    leader=$(pgrep -P "${sid}" 2>/dev/null | head -n 1) || true
-    [ -n "${leader}" ] && break
+    group=$(ps -o pgid= -p "${sid}" 2>/dev/null | tr -d ' ') || true
+    [ -n "${group}" ] && break
     kill -0 "${sid}" 2>/dev/null || break
     sleep 0.05
   done
   (
     sleep "${HONE_TIMEOUT}"
     : > "${flag}"
-    if [ -n "${leader}" ]; then
-      kill_tree TERM "${leader}"
-      kill -TERM "-${leader}" 2>/dev/null || true
+    if [ -n "${group}" ]; then
+      kill_tree TERM "${sid}"
+      kill -TERM "-${group}" 2>/dev/null || true
       sleep "${HONE_KILL_GRACE:-10}"
-      kill_tree KILL "${leader}"
-      kill -KILL "-${leader}" 2>/dev/null || true
+      kill_tree KILL "${sid}"
+      kill -KILL "-${group}" 2>/dev/null || true
     fi
   ) &
   watchdog=$!

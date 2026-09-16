@@ -165,6 +165,28 @@ if [ -n "${EXTRA}" ]; then
   fi
 fi
 
+function streams_selected {
+  local rule
+  while IFS= read -r rule; do
+    if [[ "${rule}" == */streams/* ]]; then
+      return 0
+    fi
+  done <<< "${RULES}"
+  return 1
+}
+
+if streams_selected; then
+  while IFS= read -r classfile; do
+    [ -z "${classfile}" ] && continue
+    read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}")
+    class_version=$(( high * 256 + low ))
+    if [ "${class_version}" -lt 60 ]; then
+      echo "The streams rules require Java 16 bytecode (class version 60), but '${classfile}' is version ${class_version}; refusing to emit mapMulti for an older target"
+      exit 1
+    fi
+  done < <(find "${TARGET}/${CLASSES}" -type f -name '*.class' -print)
+fi
+
 if [ -e /proc/meminfo ]; then
   printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"
 fi

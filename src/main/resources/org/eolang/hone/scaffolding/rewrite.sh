@@ -109,7 +109,7 @@ if [ -n "${wanted}" ] && [ "${LANG}" != "${wanted}" ]; then
   export LANGUAGE
 fi
 
-IFS=' ' read -r -a rules <<< "${HONE_RULES}"
+mapfile -t rules < <(printf '%s\n' "${HONE_RULES}" | sed '/^$/d')
 
 # A fingerprint of everything that changes the result of a rewrite, except the
 # input file itself: the rules, their modification times, and the options. It

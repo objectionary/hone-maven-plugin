@@ -150,25 +150,25 @@ fi
 echo "Using JEO version ${JEO_VERSION}"
 
 if [ -z "${RULES}" ]; then
-  # Both extensions, the way Rules.discover() reads them on the Java side, and
-  # separated by spaces, because rewrite.sh splits this list with "read -a",
-  # which would stop at the first newline:
-  RULES=$(find "${SELF}/rules" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort | tr '\n' ' ')
-  RULES="${RULES% }"
+  # Keep one rule path per line so spaces in a path remain part of the path.
+  RULES=$(find "${SELF}/rules" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort)
 fi
-for rule in ${RULES}; do
+while IFS= read -r rule; do
+  [ -z "${rule}" ] && continue
   if [ ! -e "${rule}" ]; then
     echo "YAML rule file does not exist: ${rule}"
     tree "${SELF}"
     exit 1
   fi
-done
+done <<< "${RULES}"
 if [ -n "${EXTRA}" ]; then
-  e=$(find "${EXTRA}" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort | tr '\n' ' ')
+  e=$(find "${EXTRA}" \( -name '*.yml' -o -name '*.phr' \) -exec "${RP}" {} \; | sort)
   if [ -n "${e}" ]; then
-    e="${e% }"
     echo "Extra rules found in ${EXTRA}: ${e}"
-    RULES="${RULES:+${RULES} }${e}"
+    if [ -n "${RULES}" ]; then
+      RULES="${RULES}"$'\n'
+    fi
+    RULES="${RULES}${e}"
   else
     echo "No extra rules found in ${EXTRA}"
   fi
@@ -227,9 +227,12 @@ printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 
 printf 'Using GNU Parallel: %s\n' "$(parallel --version | head -1)"
 
-printf 'Using the following %d rules:\n\t%b\n' \
-  "$(printf '%s' "${RULES}" | wc -w)" \
-  "${RULES// /\\n\\t}"
+rule_count=$(printf '%s\n' "${RULES}" | sed '/^$/d' | wc -l)
+printf 'Using the following %d rules:\n' "${rule_count}"
+while IFS= read -r rule; do
+  [ -z "${rule}" ] && continue
+  printf '\t%s\n' "${rule}"
+done <<< "${RULES}"
 
 rm -rf "${TARGET}/hone/jeo-disassemble" "${TARGET}/hone/unphi"
 

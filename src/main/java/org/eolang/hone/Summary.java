@@ -74,6 +74,15 @@ public final class Summary {
         }
         if (!found.isEmpty()) {
             Summary.reduce(found).flush(destination);
+        } else {
+            try {
+                Files.deleteIfExists(destination);
+            } catch (final IOException exception) {
+                throw new IllegalStateException(
+                    "Failed to remove stale summary statistics",
+                    exception
+                );
+            }
         }
         return destination;
     }

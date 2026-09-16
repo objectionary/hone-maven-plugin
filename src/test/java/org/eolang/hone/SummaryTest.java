@@ -70,6 +70,22 @@ final class SummaryTest {
     }
 
     @Test
+    void removesPreviousSummaryWhenStatisticsDisappear(@Mktmp final Path temp) throws Exception {
+        final Path root = SummaryTest.modular(temp);
+        final Path target = Files.createDirectories(root.resolve("target"));
+        final Summary summary = new Summary(root, target);
+        summary.collect();
+        Files.deleteIfExists(root.resolve("server/hone-statistics.csv"));
+        Files.deleteIfExists(root.resolve("client/hone-statistics.csv"));
+        summary.collect();
+        MatcherAssert.assertThat(
+            "stale report must be removed when no current statistics are found",
+            target.resolve("hone-statistics.csv").toFile().exists(),
+            Matchers.is(false)
+        );
+    }
+
+    @Test
     void includesSymlinkedModuleStatistics(@Mktmp final Path temp) throws Exception {
         Files.write(
             Files.createSymbolicLink(

@@ -34,12 +34,8 @@ final class OptimizeMojoRuleChangeTest {
             if (!phino.toFile().setExecutable(true)) {
                 throw new IllegalStateException("Can't make the fake phino executable");
             }
-            final Path rule = home.resolve("simple.phr");
-            Files.write(rule, "rule".getBytes(StandardCharsets.UTF_8));
+            Files.write(home.resolve("simple.phr"), "rule".getBytes(StandardCharsets.UTF_8));
             Files.write(home.resolve("in.xmir"), "<xmir/>".getBytes(StandardCharsets.UTF_8));
-            final String script = Paths.get(
-                "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
-            ).toAbsolutePath().toString();
             MatcherAssert.assertThat(
                 "an edited rule must not be skipped",
                 new Jaxec(
@@ -57,7 +53,9 @@ final class OptimizeMojoRuleChangeTest {
                             "run"
                         ),
                         home,
-                        script
+                        Paths.get(
+                            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
+                        ).toAbsolutePath()
                     )
                 ).exec().stdout(),
                 Matchers.not(Matchers.containsString("skipping"))

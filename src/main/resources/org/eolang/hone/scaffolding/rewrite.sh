@@ -229,6 +229,7 @@ function rewrite_with_timeout {
   "${SETSID}" --wait "${0}" rewrite "$@" &
   sid=$!
   group=""
+  # shellcheck disable=SC2329
   function stop_worker {
     kill_tree TERM "${sid}"
     kill -TERM "-${sid}" 2>/dev/null || true

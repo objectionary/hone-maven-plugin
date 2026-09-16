@@ -61,11 +61,27 @@ count_streams() {
     | wc -l | tr -d ' '
 }
 
+supports_streams() {
+  local base=$1 classfile high low version
+  while IFS= read -r -d '' classfile; do
+    read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}")
+    version=$(( high * 256 + low ))
+    if [ "${version}" -lt 60 ]; then
+      return 1
+    fi
+  done < <(find "${base}" -type f -path '*/target/classes/*.class' -print0)
+  return 0
+}
+
 apply_hone() {
   local base=$1
   local cdir module
   while IFS= read -r -d '' cdir; do
     module=$(dirname "$(dirname "${cdir}")")
+    if ! supports_streams "${module}"; then
+      echo "skipping streams rules for ${module}: target bytecode is older than Java 16"
+      continue
+    fi
     echo "applying hone in ${module}"
     mvn -ntp -B -q --batch-mode -f "${module}" \
       "org.eolang:hone-maven-plugin:${version}:build" \

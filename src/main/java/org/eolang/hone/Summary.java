@@ -72,19 +72,23 @@ public final class Summary {
                 exception
             );
         }
-        if (!found.isEmpty()) {
-            Summary.reduce(found).flush(destination);
+        if (found.isEmpty()) {
+            Summary.remove(destination);
         } else {
-            try {
-                Files.deleteIfExists(destination);
-            } catch (final IOException exception) {
-                throw new IllegalStateException(
-                    "Failed to remove stale summary statistics",
-                    exception
-                );
-            }
+            Summary.reduce(found).flush(destination);
         }
         return destination;
+    }
+
+    private static void remove(final Path destination) {
+        try {
+            Files.deleteIfExists(destination);
+        } catch (final IOException exception) {
+            throw new IllegalStateException(
+                "Failed to remove stale summary statistics",
+                exception
+            );
+        }
     }
 
     private static CSV reduce(final List<CSV> csvs) {

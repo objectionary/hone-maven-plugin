@@ -37,12 +37,6 @@ final class OptimizeMojoLocaleTest {
         );
     }
 
-    /**
-     * The paragraph of the script that sets the locale.
-     *
-     * @return Lines of the script
-     * @throws IOException If fails to read the script
-     */
     private String paragraph() throws IOException {
         return Arrays.stream(
             new String(
@@ -51,8 +45,7 @@ final class OptimizeMojoLocaleTest {
                 ),
                 StandardCharsets.UTF_8
             ).split(String.format("%n%n"))
-        )
-            .filter(part -> part.contains("Setting locale to"))
+        ).filter(part -> part.contains("Setting locale to"))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No locale block found in rewrite.sh"));
     }

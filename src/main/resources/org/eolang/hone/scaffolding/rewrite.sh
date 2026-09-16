@@ -139,7 +139,8 @@ function rewrite {
     verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
     cp "${phi}" "${pho}"
     for rule in "${rules[@]}"; do
-      m=$(basename "${rule}" .yml)
+      m=$(basename "${rule}")
+      m="${m%.*}"
       pos=$(( pos + 1 ))
       t="${pho}.$(printf '%002d' "${pos}")"
       atomic_write "${t}" phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}"

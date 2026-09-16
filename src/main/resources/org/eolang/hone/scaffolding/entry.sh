@@ -47,13 +47,21 @@ function now {
   perl -MTime::HiRes=time -e 'printf "%.6f\n", time' 2>/dev/null || date '+%s'
 }
 
-if [ "${LANG}" != 'en_US.UTF-8' ]; then
-  echo "Setting locale to en_US.UTF-8 from '${LANG}'"
-  LANG=en_US.UTF-8
+wanted=''
+for candidate in en_US.UTF-8 C.UTF-8; do
+  if locale -a 2>/dev/null | tr -d '-' | tr '[:upper:]' '[:lower:]' \
+    | grep -qx "$(echo "${candidate}" | tr -d '-' | tr '[:upper:]' '[:lower:]')"; then
+    wanted=${candidate}
+    break
+  fi
+done
+if [ -n "${wanted}" ] && [ "${LANG}" != "${wanted}" ]; then
+  echo "Setting locale to ${wanted} from '${LANG}'"
+  LANG=${wanted}
   export LANG
-  LC_ALL=en_US.UTF-8
+  LC_ALL=${wanted}
   export LC_ALL
-  LANGUAGE=en_US.UTF-8
+  LANGUAGE=${wanted}
   export LANGUAGE
 fi
 

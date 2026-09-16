@@ -5,7 +5,6 @@
 package org.eolang.hone;
 
 import com.yegor256.Jaxec;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,7 +24,7 @@ import org.junit.jupiter.api.Test;
 final class OptimizeMojoTasksTest {
 
     @Test
-    void runsEveryTaskWhenOneOfThemReadsInput() throws IOException {
+    void runsEveryTaskWhenOneOfThemReadsInput() throws Exception {
         final Matcher matcher = Pattern.compile(
             "  while IFS= read -r cmd.*?done.*?\\n", Pattern.DOTALL
         ).matcher(
@@ -56,8 +55,6 @@ final class OptimizeMojoTasksTest {
                 ).exec().stdout().trim(),
                 Matchers.equalTo(String.format("one%nthree"))
             );
-        } catch (final Exception ex) {
-            throw new IllegalStateException("Failed to run the task loop", ex);
         }
     }
 }

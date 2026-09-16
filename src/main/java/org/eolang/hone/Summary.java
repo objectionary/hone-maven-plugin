@@ -72,8 +72,17 @@ public final class Summary {
                 exception
             );
         }
-        if (!found.isEmpty()) {
-            Summary.reduce(found).flush(destination);
+        try {
+            if (found.isEmpty()) {
+                Files.deleteIfExists(destination);
+            } else {
+                Summary.reduce(found).flush(destination);
+            }
+        } catch (final IOException exception) {
+            throw new IllegalStateException(
+                "Failed to write summary statistics",
+                exception
+            );
         }
         return destination;
     }

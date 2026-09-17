@@ -103,6 +103,17 @@ fi
 
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
+# A fingerprint of everything that changes the result of a rewrite, except the
+# input file itself: the rules, their modification times, and the options. It
+# is stored next to the output and compared on the next run, so that an edited
+# rule or a changed option is not skipped (see #943).
+stamp="${HONE_RULES}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
+for rule in "${rules[@]}"; do
+  if [ -f "${rule}" ]; then
+    stamp="${stamp}|$(date -r "${rule}" '+%s' 2>/dev/null || echo '0')"
+  fi
+done
+
 function rewrite {
   idx=${1}
   phi=${2}
@@ -116,8 +127,9 @@ function rewrite {
   mkdir -p "$(dirname "${phi}")"
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
-  if [ -f "${phi}" ] && [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ]; then
-    echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain; skipping transformation for ${idx}"
+  mark="${xo}.stamp"
+  if [ -f "${phi}" ] && [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ] && [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${stamp}" ]; then
+    echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain, with the same rules and options; skipping transformation for ${idx}"
     return
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
@@ -180,6 +192,7 @@ function rewrite {
   else
     verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
+  printf '%s' "${stamp}" > "${mark}"
 }
 
 # Kill a process together with its whole descendant tree, escalating from a

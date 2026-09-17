@@ -51,8 +51,12 @@ function statistics_header {
 function statistics_row {
   if [ "${HONE_STATISTICS}" == 'true' ]; then
     local csv="${1}"
-    local line="${2}"
-    echo "${line}" >> "${csv}"
+    local idx="${2}"
+    local phi="${3//\"/\"\"}"
+    local pho="${4//\"/\"\"}"
+    local changed="${5}"
+    local per="${6}"
+    printf '%s,"%s","%s",%s,%s\n' "${idx}" "${phi}" "${pho}" "${changed}" "${per}" >> "${csv}"
   fi
 }
 
@@ -168,7 +172,7 @@ function rewrite {
     changed=$(diff "${phi}" "${pho}" | grep -cE '^[><]' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
-  statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",${changed},${per}"
+  statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"
   atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
   verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then

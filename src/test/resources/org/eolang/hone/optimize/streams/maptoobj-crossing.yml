@@ -1,0 +1,78 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The crossing #984 reports: a chain that leaves a primitive stream through
+# mapToObj and carries on as a reference one. No rule named mapToObj at all, so
+# the Φ.hone.lambda carrying it was never recognised and the operators before
+# and after it stayed two independent runs with a native mapToObj wedged in
+# between. Recognising it was not enough on its own either, because the 5xx
+# emitters lower a distill into Stream.mapMulti and its siblings and IntStream
+# has no mapMultiToObj for an int-in/object-out distill to become.
+#
+# 208-mapToObj-to-boxed-map moves the crossing instead of emitting it: the
+# operator is rewritten into a Φ.hone.box (the boxed() 602 emits back as an
+# invokeinterface), the Φ.hone.transform of a Wrapper.xValue() and a plain
+# Φ.hone.map carrying the original mapper. The map sits on the reference side of
+# the crossing, so 281 gives it the dup the filter behind it eats, 306 folds it,
+# 401 fuses the run and 501/511 lower it to a single Stream.mapMulti — with one
+# surviving boxed() per crossing, which is a stage the JDK implements without a
+# lambda of its own.
+#
+# Four pipelines, one per shape:
+#   * ints    — the issue's own chain: IntStream.range, a method-reference
+#     mapper, then a filter and a map. "0!-1!-2!-3!-4!-5!".
+#   * longs   — the LongStream sibling, so the minted unwrapping is longValue
+#     and the box is on LongStream. 1, 2 and 4 keep their "L" tags.
+#   * doubles — the DoubleStream sibling, doubleValue, and a mapper that is a
+#     lambda rather than a reference. 1.5 and 3.5 survive.
+#   * chained — the crossing NOT at the head of a run: a mapToInt whose boxed()
+#     round-trip 209 has already folded into a distill sits in front of it, so
+#     421 never looks at the mapToObj and the unwrapping this rule emits is the
+#     only thing that hands the mapper the int it declares. 2, 3 and 4 times ten
+#     clear the filter: 90.
+java: |
+  package maptoobj;
+  import java.util.stream.Collectors;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  import java.util.stream.Stream;
+  public class X {
+    public static void main(String[] a) {
+      String ints = IntStream.range(0, 6)
+        .mapToObj(Integer::toString)
+        .filter(s -> !s.isEmpty())
+        .map(s -> s + "!")
+        .collect(Collectors.joining("-"));
+      String longs = LongStream.of(1L, 2L, 3L, 4L)
+        .mapToObj(n -> "L" + n)
+        .filter(s -> !s.endsWith("3"))
+        .collect(Collectors.joining("+"));
+      String doubles = DoubleStream.of(1.5, 2.5, 3.5)
+        .mapToObj(d -> String.format("%.1f", d))
+        .filter(s -> !s.startsWith("2"))
+        .collect(Collectors.joining(";"));
+      int chained = Stream.of(1, 2, 3, 4)
+        .mapToInt(n -> n.intValue())
+        .mapToObj(n -> n * 10)
+        .filter(n -> n > 10)
+        .mapToInt(n -> n.intValue())
+        .sum();
+      System.out.printf("The result is %s/%s/%s/%d\n", ints, longs, doubles, chained);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 0!-1!-2!-3!-4!-5!/L1+L2+L4/1.5;3.5/90"
+# Eleven of the thirteen invokedynamic are the operators: three on `ints`, two
+# each on `longs` and `doubles`, four on `chained`; the other two are the
+# makeConcatWithConstants of the two string-building mappers, which no rule
+# touches. Each of the four pipelines collapses into one mapMulti, so the
+# operators go 11 -> 4 and the class goes 13 -> 6.
+before:
+  invokedynamic: 13
+after:
+  invokedynamic: 6

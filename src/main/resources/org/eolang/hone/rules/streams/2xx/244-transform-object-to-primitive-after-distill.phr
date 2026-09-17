@@ -1,0 +1,146 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The distill-headed twin of 243. 243 splices a `Wrapper.xValue()` between two
+# pragmas whose types do not meet — a predecessor leaving a reference, a
+# successor whose target accepts a primitive — but its 𝜏-first is spelled out
+# as a Φ.hone.map, so it never looks at the one pragma in the 2xx phase that is
+# already a distill: the boxing distill 209 folds a `mapToX(lambda$).boxed()`
+# round-trip into.
+#
+# That distill ends in a `Wrapper.valueOf`, so what it leaves on the stack is a
+# wrapper, and until 208 there was nothing in the 2xx phase that could follow it
+# wanting a primitive. `list.stream().mapToInt(g).mapToObj(f)` is now exactly
+# that: 205 recognises the mapToInt as an unbox, 208 mints the crossing's box
+# right behind it, and 209 — which runs before 211 precisely so that every box
+# it sees is a real one — folds the two into `g; Integer.valueOf`. The map 208
+# left behind still declares the `int` its desugared `lambda$` takes, and
+# without this rule 401 would concatenate the two bodies and hand that mapper
+# the `Integer` the valueOf had just made: "Bad type on operand stack".
+#
+# The other two shapes 208 can land in never reach here. With nothing fusable in
+# front of the crossing the box survives alone and 421 prepends the unwrapping
+# at the head of the fused run; with a primitive operator in front, 221 cancels
+# 211's trailing unbox against the box and the element never leaves the
+# primitive domain at all. Only 209's fold takes the pair out of the map
+# vocabulary that 241-243 read, and this rule puts it back.
+#
+# It fires once per site: after the splice the distill and the map are no longer
+# adjacent, and the Φ.hone.transform between them is not a Φ.hone.map, so 243
+# has nothing to say about the new pair either.
+name: transform-object-to-primitive-after-distill
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      state ↦ 𝑒-first-state,
+      body ↦ 𝑒-first-body
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.map,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      start ↦ 𝑒-first-start,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      state ↦ 𝑒-first-state,
+      body ↦ 𝑒-first-body
+    ⟧,
+    𝜏-transform ↦ ⟦
+      φ ↦ Φ.hone.transform,
+      opcode ↦ "invokevirtual",
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-returned,
+      bridge-output ↦ 𝑒-transform-bridge-output,
+      target ↦ ⟦
+        class ↦ 𝑒-transform-target-class,
+        method ↦ 𝑒-transform-target-method,
+        signature ↦ 𝑒-transform-target-signature
+      ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.map,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches:
+        - '^L.+;$'
+        - 𝑒-first-returned
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-second-accepted
+where:
+  - meta: 𝜏-transform
+    function: random-tau
+  - meta: 𝑒-transform-target-class
+    function: sed
+    args:
+      - 𝑒-first-returned
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-transform-target-method-prefix
+    function: sed
+    args:
+      - 𝑒-second-accepted
+      - '"s/B/byte/g"'
+      - '"s/C/char/g"'
+      - '"s/D/double/g"'
+      - '"s/F/float/g"'
+      - '"s/I/int/g"'
+      - '"s/J/long/g"'
+      - '"s/S/short/g"'
+      - '"s/Z/boolean/g"'
+  - meta: 𝑒-transform-target-method
+    function: concat
+    args: [𝑒-transform-target-method-prefix, '"Value"']
+  - meta: 𝑒-transform-target-signature
+    function: concat
+    args: ['"()"', 𝑒-second-accepted]
+  - meta: 𝑒-transform-bridge-output
+    function: sed
+    args:
+      - 𝑒-second-accepted
+      - '"s/B/Ljava\\/lang\\/Byte;/g"'
+      - '"s/C/Ljava\\/lang\\/Character;/g"'
+      - '"s/D/Ljava\\/lang\\/Double;/g"'
+      - '"s/F/Ljava\\/lang\\/Float;/g"'
+      - '"s/I/Ljava\\/lang\\/Integer;/g"'
+      - '"s/J/Ljava\\/lang\\/Long;/g"'
+      - '"s/S/Ljava\\/lang\\/Short;/g"'
+      - '"s/Z/Ljava\\/lang\\/Boolean;/g"'

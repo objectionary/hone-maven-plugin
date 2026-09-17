@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A capturing operator riding behind a RETYPING head. 316 folds the capturing
+# map into a stateful distill whose body parks the item with `astore 1` — its
+# own, by then dead, parameter slot — so that the captures can be fetched off
+# the state list in front of it. Every frame in the 503/504/510 family, however,
+# names local 1 from the distill's `bridge-input`, and once something ahead of
+# the peel has retyped the item the two disagree: here `bridge-input` is
+# Ljava/lang/Integer;, the head `n -> n / 2.0` makes it a Double, and the filter
+# behind the peel needs a keep-label frame over that Double. The class died at
+# link time with "Inconsistent stackmap frames ... Type 'java/lang/Double'
+# (current frame, locals[1]) is not assignable to 'java/lang/Integer' (stack
+# map, locals[1])". 510-distill-parked-frame widens the parked slot to
+# java/lang/Object, which is all the merge needs.
+#
+# It was latent for as long as nothing could retype the head of a captured run,
+# and the mapToObj crossing 208 now recognises (#984) is one of the shapes that
+# can — seed 53 of RandomPipeline is `PROSE.chars().peek(...).mapToObj(n -> n /
+# 2.0).map(d -> d * frac).peek(...).filter(...)`. The pipelines here reach it
+# without one, so the pack stays a regression test for the frame and not for the
+# crossing:
+#   * retyped  — the plain reference-stream reproduction. 1..5 halve to
+#     0.5/1.0/1.5/2.0/2.5, times 1.5 gives 0.75/1.5/2.25/3.0/3.75, four of them
+#     over one.
+#   * crossing — the same shape entered through IntStream.mapToObj, which is
+#     what the seed walks into. 0..5 halve to 0.0..2.5, times 1.5 gives
+#     0.0/0.75/1.5/2.25/3.0/3.75, four of them over one.
+# Each pipeline is four operators, so eight invokedynamic between them, and each
+# collapses into one Stream.mapMulti: 8 -> 2, with the crossing's own
+# IntStream.boxed() the one invokeinterface the class gains.
+java: |
+  package parked;
+  import java.util.stream.IntStream;
+  import java.util.stream.Stream;
+  public class X {
+    private static final long[] SUM = new long[1];
+    private static int retyped(final double frac) {
+      return Stream.of(1, 2, 3, 4, 5)
+        .map(n -> n / 2.0)
+        .map(d -> d * frac)
+        .peek(d -> SUM[0] += d.longValue())
+        .filter(d -> d > 1.0)
+        .toList()
+        .size();
+    }
+    private static int crossing(final double frac) {
+      return IntStream.range(0, 6)
+        .mapToObj(n -> n / 2.0)
+        .map(d -> d * frac)
+        .peek(d -> SUM[0] += d.longValue())
+        .filter(d -> d > 1.0)
+        .toList()
+        .size();
+    }
+    public static void main(String[] a) {
+      System.out.printf(
+        "The result is %d/%d/%d\n", retyped(1.5), crossing(1.5), SUM[0]
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 4/4/18"
+before:
+  invokedynamic: 8
+  invokeinterface: 12
+after:
+  invokedynamic: 2
+  invokeinterface: 13

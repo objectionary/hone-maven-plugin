@@ -175,10 +175,23 @@ A `Φ.hone.lambda` immediately followed by an `invokeinterface`
 The paper calls these synthetic formations _pragmas_:
   they look like bytecode instructions
   but carry the information needed to reconstruct one later.
+One operation gets no pragma of its own:
+  `IntStream.mapToObj(...)` crosses from a primitive stream
+  to a reference one,
+  and there is no `IntStream.mapMultiToObj` for stage 5 to emit.
+Rule `208-mapToObj-to-boxed-map` moves the crossing instead,
+  rewriting it into two pragmas that already exist —
+  the `Φ.hone.box` of a `boxed()`
+  and a plain `Φ.hone.map` carrying the original mapper —
+  which puts the operation on the reference side of the crossing,
+  where everything downstream can fuse it.
 Rules `206-` through `261-` then tidy up the boxing and primitive
   conversions that the compiler inserted around the lambda
   (for example moving an `Integer.valueOf` call from outside the lambda
   into a `Φ.hone.box` pragma),
+  splicing a `Wrapper.xValue()` wherever one pragma leaves a reference
+  and the next one wants the primitive
+  (`241-` to `244-`),
   and `271-`, `272-` remove the now-useless `CHECKCAST` and
   object-to-primitive conversions that the pragma made redundant.
 Rules `281-` and `282-` insert a `DUP` in front of every `filter`
@@ -409,7 +422,7 @@ The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
 
 The sections above explain what the plugin refuses to fuse
   because fusing it would be wrong.
-These four it would like to fuse and cannot yet,
+These three it would like to fuse and cannot yet,
   and each one has an issue of its own.
 Each is a fusion barrier:
   the operations on either side of it still fuse into a `mapMulti`,
@@ -430,10 +443,6 @@ IntStream.of(1, 2, 3, 4).dropWhile(i -> i < 3)
 // Two adjacent PRIMITIVE mapMulti stages (#983). 461 composes two
 // bodies into one, but only in the reference form, Stream.mapMulti.
 intStream.mapMulti(first).mapMulti(second)
-
-// A chain that CROSSES from a primitive stream to an object one
-// (#984). There is no IntStream.mapMultiToObj to collapse it into.
-IntStream.range(0, n).mapToObj(Integer::toString).filter(s -> !s.isEmpty())
 ```
 
 A method reference is fused only when the wrapper the rules synthesise

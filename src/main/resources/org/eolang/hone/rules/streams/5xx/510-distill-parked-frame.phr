@@ -1,0 +1,103 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Widens the item local of a keep-label frame that a capture peel has written
+# over. Every frame in the 503/504/510 family names local 1 from the distill's
+# `bridge-input`, on the standing assumption that slot 1 still holds the item
+# the wrapper was handed. A capturing operator breaks it: 316 (and 314 for the
+# capturing filter) park the item mid-body with `astore 1` — its own, by then
+# dead, parameter slot — so that the captures can be fetched off the state list
+# in front of it. What sits in slot 1 from there on is the item AT THAT POINT
+# of the chain, which is only `bridge-input` when nothing ahead of the peel
+# retyped it.
+#
+# A retyping head ahead of a capture peel is what makes them disagree:
+#
+#   Stream.of(1, 2, 3).map(n -> n / 2.0).map(d -> d * frac)
+#     .peek(d -> ...).filter(d -> d > 1.0)
+#
+# fuses into one stateful distill whose `bridge-input` is Ljava/lang/Integer;,
+# whose head retypes the item to a Double, and whose capture peel then parks
+# that Double in slot 1. The keep-label frame the filter needs still promised
+# the Integer, and the class died at link time with "Inconsistent stackmap
+# frames ... Type 'java/lang/Double' (current frame, locals[1]) is not
+# assignable to 'java/lang/Integer' (stack map, locals[1])". It was latent for
+# as long as nothing could retype the head of a captured run; 208 made
+# `IntStream.chars().peek(...).mapToObj(n -> n / 2.0).map(d -> d * frac)
+# .filter(...)` — seed 53 of RandomPipeline — one of the shapes that can.
+#
+# `java/lang/Object` is what the frame is widened to, rather than the parked
+# type spelled out, because the merge does not need more than that and nothing
+# reads slot 1 expecting a narrower one: the peels are the only writers of that
+# slot and each of them stores before it loads, while 512's own `aload 1` is
+# the first opcode of the body, ahead of every frame. The item on the STACK is
+# untouched — 503/504/506 name it from the operator that consumes it, and that
+# is the binding those rules exist for.
+#
+# It runs at fixpoint behind every frame writer in the family (the 510 number
+# puts it behind the relayed pair as well, whichever of them writes first) and
+# the `having` below makes it idempotent, so a frame it has already widened is
+# not rewritten into itself forever.
+name: distill-parked-frame
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-body-head,
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝐵-body-mid,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 𝑒-frame-type,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-x0,
+          x1 ↦ 𝑒-x1,
+          x2 ↦ 𝑒-x2,
+          x3 ↦ 𝑒-x3
+        ⟧,
+        stack ↦ 𝑒-frame-stack
+      ⟧,
+      𝐵-body-tail,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-body-head,
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝐵-body-mid,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 𝑒-frame-type,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-x0,
+          x1 ↦ "java/lang/Object",
+          x2 ↦ 𝑒-x2,
+          x3 ↦ 𝑒-x3
+        ⟧,
+        stack ↦ 𝑒-frame-stack
+      ⟧,
+      𝐵-body-tail,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+having:
+  not:
+    eq:
+      - 𝑒-x1
+      - '"java/lang/Object"'

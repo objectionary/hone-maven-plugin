@@ -1,0 +1,157 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The crossing from a primitive stream to a reference one. Nothing recognised
+# `IntStream.mapToObj(...)` before, so `IntStream.range(0, n).mapToObj(f)
+# .filter(p)` stayed two independent runs with a native mapToObj wedged between
+# them (#984) — and recognition alone would not have helped, because the 5xx
+# emitters lower a distill into `Stream.mapMulti` and its siblings, and there is
+# no `IntStream.mapMultiToObj` for a distill that consumes ints and produces
+# objects to become.
+#
+# So the crossing is moved rather than emitted. It is rewritten into the two
+# pragmas the rest of the pipeline already speaks: the `Φ.hone.box` of a
+# `boxed()`, and a plain `Φ.hone.map` carrying the original mapper — one whose
+# `bridge-input` is the wrapper the box produces while its `accepted` is still
+# the primitive the desugared `lambda$` declares. That mismatch is not a lie the
+# rule has to resolve: it is the very shape 231 mints for a primitive operator
+# split by 211, and the rules that read it — 241-243 between two pragmas, 421 at
+# the head of a fused run — are exactly the ones that decide, once the chain
+# around it has settled, whether an unwrapping is needed and splice it in. The
+# map lands on the REFERENCE side of the crossing, so 281 also gives it the dup
+# a following filter eats, 306 folds it, 401 fuses it, and 501/511 lower the run
+# to one mapMulti dispatch. Not one of those rules learns a new shape.
+#
+# LETTING THEM DECIDE IS THE POINT, because whether the box survives at all
+# depends on what sits in front of the crossing, and the rule cannot see it:
+#
+#   * nothing fusable in front — `IntStream.range(0, n).mapToObj(f)`. The box is
+#     alone, 602 emits it as the `boxed()` invokeinterface, the element really
+#     does arrive as an `Integer`, and 421 prepends the `intValue()` at the head
+#     of the fused run.
+#   * a primitive operator in front — `LongStream.map(g).mapToObj(f)`. 211 has
+#     split that operator into box + boxed-primitive-func + unbox, and 221
+#     cancels its trailing unbox against the box minted here. Both disappear,
+#     the element never leaves the primitive domain, and the pair of maps 241
+#     leaves alone is right as it stands.
+#   * a `mapToX(lambda$)` in front — `list.stream().mapToInt(g).mapToObj(f)`.
+#     209 folds that unbox and this box into a boxing distill, which puts a
+#     `Wrapper.valueOf` in front of the mapper and takes the pair out of the map
+#     vocabulary 241-243 read. 244 is the sibling that covers that one case, and
+#     the reason it exists.
+#
+# ORDER MATTERS: it runs before 209 (and therefore before 211 and 221), so that
+# on all three shapes the box minted here is already in place, adjacent to
+# whatever precedes it, when those rules look.
+# Placed at 208 (behind 208-lambda-to-dropwhile, whose number it shares) because
+# the slot it needs is between two consecutive numbers.
+#
+# Only the non-capturing shape is taken: `interface` must be the bare
+# `()L...Function;` that 111 lifts and 121 has already marked static, and the
+# target must be a desugared `lambda$` — a method reference that 104 could not
+# wrap stays native, exactly as it does for every other operator.
+name: mapToObj-to-boxed-map
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ "apply",
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      opcode ↦ 𝑒-opcode,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ "mapToObj",
+        signature ↦ 𝑒-stream-signature
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ 𝑒-stream-class
+    ⟧,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.map,
+      opcode ↦ 𝑒-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-wrapper,
+      bridge-output ↦ 𝑒-bridge-output,
+      accepted ↦ 𝑒-primitive,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - or:
+        - and:
+            - matches: ['\(\)Ljava/util/function/IntFunction;', 𝑒-interface]
+            - eq: [𝑒-lambda-signature, '"(I)Ljava/lang/Object;"']
+            - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+            - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;"']
+            - matches: ['^\(I\)L.+;$', 𝑒-bridge-signature]
+            - matches: ['^\(I\)L.+;$', 𝑒-target-signature]
+        - and:
+            - matches: ['\(\)Ljava/util/function/LongFunction;', 𝑒-interface]
+            - eq: [𝑒-lambda-signature, '"(J)Ljava/lang/Object;"']
+            - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+            - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongFunction;)Ljava/util/stream/Stream;"']
+            - matches: ['^\(J\)L.+;$', 𝑒-bridge-signature]
+            - matches: ['^\(J\)L.+;$', 𝑒-target-signature]
+        - and:
+            - matches: ['\(\)Ljava/util/function/DoubleFunction;', 𝑒-interface]
+            - eq: [𝑒-lambda-signature, '"(D)Ljava/lang/Object;"']
+            - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+            - eq: [𝑒-stream-signature, '"(Ljava/util/function/DoubleFunction;)Ljava/util/stream/Stream;"']
+            - matches: ['^\(D\)L.+;$', 𝑒-bridge-signature]
+            - matches: ['^\(D\)L.+;$', 𝑒-target-signature]
+where:
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\((.*)\\).*/$1/g"'
+  - meta: 𝑒-wrapper
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/I/Ljava\\/lang\\/Integer;/g"'
+      - '"s/J/Ljava\\/lang\\/Long;/g"'
+      - '"s/D/Ljava\\/lang\\/Double;/g"'
+  - meta: 𝑒-bridge-output
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'
+  - meta: 𝑒-returned
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\(.*\\)(.+)/$1/g"'

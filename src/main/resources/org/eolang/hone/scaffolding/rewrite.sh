@@ -51,8 +51,12 @@ function statistics_header {
 function statistics_row {
   if [ "${HONE_STATISTICS}" == 'true' ]; then
     local csv="${1}"
-    local line="${2}"
-    echo "${line}" >> "${csv}"
+    local idx="${2}"
+    local phi="${3//\"/\"\"}"
+    local pho="${4//\"/\"\"}"
+    local changed="${5}"
+    local per="${6}"
+    printf '%s,"%s","%s",%s,%s\n' "${idx}" "${phi}" "${pho}" "${changed}" "${per}" >> "${csv}"
   fi
 }
 
@@ -99,6 +103,17 @@ fi
 
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
+# A fingerprint of everything that changes the result of a rewrite, except the
+# input file itself: the rules, their modification times, and the options. It
+# is stored next to the output and compared on the next run, so that an edited
+# rule or a changed option is not skipped (see #943).
+stamp="${HONE_RULES}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
+for rule in "${rules[@]}"; do
+  if [ -f "${rule}" ]; then
+    stamp="${stamp}|$(date -r "${rule}" '+%s' 2>/dev/null || echo '0')"
+  fi
+done
+
 function rewrite {
   idx=${1}
   phi=${2}
@@ -112,8 +127,9 @@ function rewrite {
   mkdir -p "$(dirname "${phi}")"
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
-  if [ -f "${phi}" ] && [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ]; then
-    echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain; skipping transformation for ${idx}"
+  mark="${xo}.stamp"
+  if [ -f "${phi}" ] && [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ] && [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${stamp}" ]; then
+    echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain, with the same rules and options; skipping transformation for ${idx}"
     return
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
@@ -168,7 +184,7 @@ function rewrite {
     changed=$(diff "${phi}" "${pho}" | grep -cE '^[><]' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
-  statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",${changed},${per}"
+  statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"
   atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
   verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   if cmp -s "${xi}" "${xo}"; then
@@ -176,6 +192,7 @@ function rewrite {
   else
     verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
   fi
+  printf '%s' "${stamp}" > "${mark}"
 }
 
 # Kill a process together with its whole descendant tree, escalating from a
@@ -211,22 +228,22 @@ function rewrite_with_timeout {
   rm -f "${flag}"
   "${SETSID}" --wait "${0}" rewrite "$@" &
   sid=$!
-  leader=""
+  group=""
   for _ in $(seq 1 100); do
-    leader=$(pgrep -P "${sid}" 2>/dev/null | head -n 1) || true
-    [ -n "${leader}" ] && break
+    group=$(ps -o pgid= -p "${sid}" 2>/dev/null | tr -d ' ') || true
+    [ -n "${group}" ] && break
     kill -0 "${sid}" 2>/dev/null || break
     sleep 0.05
   done
   (
     sleep "${HONE_TIMEOUT}"
     : > "${flag}"
-    if [ -n "${leader}" ]; then
-      kill_tree TERM "${leader}"
-      kill -TERM "-${leader}" 2>/dev/null || true
+    if [ -n "${group}" ]; then
+      kill_tree TERM "${sid}"
+      kill -TERM "-${group}" 2>/dev/null || true
       sleep "${HONE_KILL_GRACE:-10}"
-      kill_tree KILL "${leader}"
-      kill -KILL "-${leader}" 2>/dev/null || true
+      kill_tree KILL "${sid}"
+      kill -KILL "-${group}" 2>/dev/null || true
     fi
   ) &
   watchdog=$!

@@ -1,0 +1,238 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The dropWhile twin of 113. Lifts a CAPTURING dropWhile invokedynamic — one
+# 111 declines for its "(I)L…Predicate;" factory descriptor — into a
+# Φ.hone.cp-dropWhile pragma, the capturing sibling of the Φ.hone.dropWhile
+# that 208 produces for a predicate that captures nothing. A captured bound is
+# the ordinary way to write dropWhile, so before this rule the common shape was
+# the one that missed: 208 never saw a pragma, the call stayed native, and the
+# operators on either side of it each fused into a mapMulti of their own with
+# the native dropWhile between them (#981).
+#
+# Like 112 and 113 this rule grabs NO push: it leaves the whole run of pushes
+# inline in front of the emitted pragma and seeds EMPTY accumulators. 118's
+# dropWhile twin then peels the pushes one at a time, right-to-left, so the
+# captures land in the shared state List in left-to-right order, and 314's
+# dropWhile twin assembles them into the stateful distill.
+#
+# Two accumulators more than the filter needs. A capturing dropWhile is the one
+# operator whose body may SKIP its own capture fetches: once the latch is set
+# the predicate is never evaluated again, so the run of `Φ.hone.fetch` markers
+# is jumped over. Each fetch carries an `iinc` of the shared List cursor (521),
+# and that cursor is a RUNTIME counter — the whole reason two stateful distills
+# can fuse at all — so a jump over N fetches would leave every fetch after it,
+# including those of a stateful operator fused behind this one, reading N slots
+# too early. `skip-acc` and `undo-acc` are the balance: the peel puts one
+# `iinc 3, 1` in the first and one `iinc 3, -1` in the second per capture, 314's
+# twin runs the first before the latch branch and the second on the arm that
+# goes on to fetch, and the cursor lands on the same slot down either arm with
+# one keep-label between them.
+#
+# Scope, mirroring 113: ANY run of one or more category-1/2 PRIMITIVE captures
+# (I, J, D) and REFERENCE captures (L…;), mixed in any order and any count, so
+# the factory descriptor is matched as "(([IJD]|L[^;]+;)+)L…Predicate;". Arrays
+# stay out. Unlike 113, the element type is read off the instantiated type
+# rather than pinned to Ljava/lang/Integer;, so a dropWhile over a
+# Stream<String> lifts as readily as one over a Stream<Integer> — nothing in
+# the peel or the fold looks at it. The target must be a handle-6 static
+# lambda$ returning Z, as everywhere in this family.
+#
+# The max-stack bump is 112's, unchanged: a category-2 (J/D) capture's boxing
+# append peaks one slot higher than an int's, so the caller frame gains 2.
+name: capturing-invokedynamic-to-dropwhile
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ 𝑒-static,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        m1 ↦ 𝑒-max-stack,
+        m2 ↦ 𝑒-max-locals
+      ⟧,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokedynamic ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokedynamic,
+          𝜏3 ↦ 𝑒-method,
+          𝜏4 ↦ 𝑒-interface,
+          𝜏5 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏6 ↦ 6,
+            𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
+            𝜏8 ↦ "metafactory",
+            𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+            𝜏10 ↦ Φ.false,
+            ρ ↦ ∅
+          ⟧,
+          𝜏11 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏12 ↦ 𝑒-lambda-signature,
+            ρ ↦ ∅
+          ⟧,
+          𝜏13 ↦ ⟦
+            φ ↦ Φ.jeo.handle,
+            𝜏14 ↦ 6,
+            𝜏15 ↦ 𝑒-target-class,
+            𝜏16 ↦ 𝑒-target-method,
+            𝜏17 ↦ 𝑒-target-signature,
+            𝜏18 ↦ 𝑒-target-is-interface,
+            ρ ↦ ∅
+          ⟧,
+          𝜏19 ↦ ⟦
+            φ ↦ Φ.jeo.type,
+            𝜏21 ↦ 𝑒-instantiated,
+            ρ ↦ ∅
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏24 ↦ "java/util/stream/Stream",
+          𝜏25 ↦ "dropWhile",
+          𝜏26 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;",
+          𝜏27 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    version ↦ 𝑒-class-version,
+    access ↦ 𝑒-class-access,
+    modifiers ↦ 𝑒-class-modifiers,
+    name ↦ 𝑒-class,
+    supername ↦ 𝑒-class-supername,
+    interfaces ↦ 𝑒-class-interfaces,
+    𝐵-class-body-head,
+    𝜏-function ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      access ↦ 𝑒-method-access,
+      modifiers ↦ ⟦
+        𝐵-modifiers-before,
+        static ↦ 𝑒-static,
+        𝐵-modifiers-after
+      ⟧,
+      name ↦ 𝑒-function,
+      descriptor ↦ 𝑒-method-descriptor,
+      signature ↦ 𝑒-method-signature,
+      exceptions ↦ 𝑒-method-exceptions,
+      maxs ↦ ⟦
+        φ ↦ Φ.jeo.maxs,
+        m1 ↦ 𝑒-bumped-stack,
+        m2 ↦ 𝑒-max-locals
+      ⟧,
+      params ↦ 𝑒-method-params,
+      annotations ↦ 𝑒-annotations,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-cp-dropwhile ↦ ⟦
+          φ ↦ Φ.hone.cp-dropWhile,
+          state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          skip-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          undo-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          captures ↦ 𝑒-captures,
+          class ↦ 𝑒-class,
+          bridge-input ↦ 𝑒-element,
+          bridge-output ↦ 𝑒-element,
+          accepted ↦ 𝑒-element,
+          returned ↦ 𝑒-element,
+          static ↦ "true",
+          target ↦ ⟦
+            handle ↦ 6,
+            class ↦ 𝑒-target-class,
+            method ↦ 𝑒-target-method,
+            signature ↦ 𝑒-target-signature,
+            is-interface ↦ 𝑒-target-is-interface
+          ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
+      local-variable-table ↦ 𝑒-lvt,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-class-body-tail
+  ⟧
+when:
+  and:
+    - matches:
+        - 'lambda\$.+'
+        - 𝑒-target-method
+    - matches:
+        - '\(([IJD]|L[^;]+;)+\)Ljava/util/function/Predicate;'
+        - 𝑒-interface
+    - matches:
+        - '^\(L[^;]+;\)Z$'
+        - 𝑒-instantiated
+    - matches:
+        - '\)Z$'
+        - 𝑒-target-signature
+where:
+  # The element the predicate is instantiated over — the one thing 113 pins to
+  # Ljava/lang/Integer; and this rule reads instead, so a Stream<String>
+  # dropWhile lifts too.
+  - meta: 𝑒-element
+    function: sed
+    args:
+      - 𝑒-instantiated
+      - '"s/^\\((L[^;]+;)\\)Z$/$1/"'
+  # The factory descriptor's parameter list — one code per capture, in
+  # descriptor order — for the peel to drain positionally; 113's channel.
+  - meta: 𝑒-captures
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
+  - meta: 𝑒-cap-params
+    function: sed
+    args:
+      - 𝑒-interface
+      - '"s/[(]//"'
+      - '"s/[)].*//"'
+      - '"s/L[^;]*;//g"'
+  - meta: 𝑒-bump-str
+    function: sed
+    args:
+      - 𝑒-cap-params
+      - '"s/.*[JD].*/2/"'
+      - '"s/^[^2].*$/0/"'
+      - '"s/^$/0/"'
+  - meta: 𝑒-bump
+    function: number
+    args: [𝑒-bump-str]
+  - meta: 𝑒-bumped-stack
+    function: sum
+    args: [𝑒-max-stack, 𝑒-bump]
+  - meta: 𝜏-cp-dropwhile
+    function: random-tau

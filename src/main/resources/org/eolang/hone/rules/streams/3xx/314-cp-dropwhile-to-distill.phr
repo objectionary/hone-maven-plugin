@@ -1,0 +1,200 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a Φ.hone.cp-dropWhile (a capturing dropWhile recognised by 113's twin
+# and gathered by 118's) into a stateful Φ.hone.distill. It is 310's latch guard
+# and 314's capture park/reload in one body, which is the whole of #981: the
+# one-cell int[1] latch 310 builds cannot live beside the captures, it has to
+# live IN the same java/util/List the peel appends them to, because 502 builds
+# exactly one list per fused run and 401 joins the state blocks blindly.
+#
+# The latch is therefore appended FIRST and the captures behind it, so the cell
+# order in the list is [latch, c0 … cN-1] and the body reads them back in that
+# same order — which is what keeps the runtime cursor of 521 aligned.
+#
+# The body, entering with [item]:
+#
+#   fetch [I; astore 4            ; stash the latch array (cursor +1)
+#   aload 4; iconst_0; iaload     ; latch = array[0]
+#   <skip-acc: iinc 3,1 × N>      ; pay the cursor for the fetches below
+#   ifne KEEP                     ; latched -> keep, predicate never runs
+#   <undo-acc: iinc 3,-1 × N>     ; not latched: take the payment back
+#   dup; astore 1                 ; park a copy of the item in its own dead slot
+#   <body-acc: fetch; unbox × N>  ; push the captures above the item (cursor +N)
+#   aload 1                       ; reload the copy on top of them
+#   invokestatic lambda$          ; predicate(capture…, item)Z
+#   iconst_1; ixor; istore 5      ; notZ = !Z
+#   aload 4; iconst_0; iload 5; iastore   ; array[0] = notZ (sticks the latch)
+#   iload 5; ifne KEEP            ; predicate false -> keep (latch now set)
+#   return                        ; predicate true  -> drop
+#   KEEP: <frame-item>            ; [item] survives to the appended accept
+#
+# THE CURSOR BALANCE IS THE POINT. 521 turns every Φ.hone.fetch into
+# `aload 0; iload 3; List.get; iinc 3 1; checkcast`, and local 3 is a RUNTIME
+# counter — that is what lets two stateful distills fuse, each guard reading the
+# next slot in body order. This is the one operator whose body can jump OVER its
+# own fetches: once latched, the predicate is never evaluated again. Without the
+# balance the latched arm would leave the cursor N slots short for every fetch
+# behind it, including those of a stateful operator fused after this one, and
+# the wrong list cell would be read from the first latched element onward. The
+# peel emits one `iinc 3, 1` per capture ahead of the branch and one
+# `iinc 3, -1` per capture on the arm that goes on to fetch, so both arms reach
+# KEEP with the cursor on the same slot — and they reach the SAME label, so one
+# stackmap frame still describes the merge, exactly as in 310.
+#
+# Both scratch locals 310 borrows (4 = latch array, 5 = notZ) and the park slot
+# 314 borrows (1, the wrapper's own dead parameter) are as they are there, so
+# 512's widened max-locals already covers this body.
+#
+# `start` is "c-dropWhile" — neither "filter" nor "dropWhile" — so 413 and 281
+# leave the body alone, exactly as 314's "c-filter" does. The keep-label frame
+# is written by `503-distill-cp-dropwhile-frame`, which names the survivor from
+# the predicate's LAST parameter (the item; the others are captures).
+name: cp-dropwhile-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.cp-dropWhile,
+    state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+    body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+    skip-acc ↦ ⟦ 𝐵-kacc, ρ ↦ ∅ ⟧,
+    undo-acc ↦ ⟦ 𝐵-uacc, ρ ↦ ∅ ⟧,
+    captures ↦ 𝑒-captures,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "c-dropWhile",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ ⟦
+      𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-alen ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-new-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 10 ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      𝐵-sacc,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      𝜏-latch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
+      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
+      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-latch-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-read-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
+      𝐵-kacc,
+      𝜏-if-dropping ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      𝐵-uacc,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝐵-bacc,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-target-class,
+        i2 ↦ 𝑒-target-method,
+        i3 ↦ 𝑒-target-signature,
+        i4 ↦ 𝑒-target-is-interface
+      ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-if-keep ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L3141%d"']
+  - meta: 𝜏-dup-list
+    function: random-tau
+  - meta: 𝜏-alen
+    function: random-tau
+  - meta: 𝜏-new-latch
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-latch
+    function: random-tau
+  - meta: 𝜏-park-latch
+    function: random-tau
+  - meta: 𝜏-load-latch
+    function: random-tau
+  - meta: 𝜏-latch-index
+    function: random-tau
+  - meta: 𝜏-read-latch
+    function: random-tau
+  - meta: 𝜏-if-dropping
+    function: random-tau
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-park
+    function: random-tau
+  - meta: 𝜏-reload
+    function: random-tau
+  - meta: 𝜏-predicate
+    function: random-tau
+  - meta: 𝜏-one
+    function: random-tau
+  - meta: 𝜏-negate
+    function: random-tau
+  - meta: 𝜏-park-verdict
+    function: random-tau
+  - meta: 𝜏-reload-latch
+    function: random-tau
+  - meta: 𝜏-store-index
+    function: random-tau
+  - meta: 𝜏-load-verdict
+    function: random-tau
+  - meta: 𝜏-write-latch
+    function: random-tau
+  - meta: 𝜏-reload-verdict
+    function: random-tau
+  - meta: 𝜏-if-keep
+    function: random-tau
+  - meta: 𝜏-return
+    function: random-tau
+  - meta: 𝜏-keep-label
+    function: random-tau
+  - meta: 𝜏-frame
+    function: random-tau

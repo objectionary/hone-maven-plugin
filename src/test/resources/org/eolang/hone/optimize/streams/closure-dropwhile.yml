@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A dropWhile whose bound is CAPTURED — the ordinary way to write one, and the
+# shape that missed (#981). A capturing lambda compiles to an invokedynamic with
+# a non-empty factory descriptor, which 111 declines; `map` had a capturing path
+# (112/114/316) and `filter` had one (113/118/314), dropWhile had none, so 208
+# never saw a pragma, the call stayed native, and the operators on either side
+# of it each fused into a mapMulti of their own with the native dropWhile sitting
+# between them.
+#
+# `113-capturing-invokedynamic-to-dropwhile` lifts it, `118`'s twin peels the
+# captures into the shared state List, and `314`'s twin folds the pair into the
+# stateful distill — 310's one-cell int[1] latch and 314's capture park/reload in
+# one body, with the latch appended to the SAME List as the captures because 502
+# builds exactly one list per fused run.
+#
+# Six pipelines, one per thing that can go wrong:
+#   * one      — the issue's own shape, a captured int bound mid-run. 1,5,2,9,3,7
+#     each +1, drop while under 5, keep the odd ones, tag them: "v3".
+#   * longs    — a Long element behind a retyping map, so the survivor at the
+#     keep-label is NOT the distill's bridge-input and the frame has to be named
+#     from the predicate's last parameter: "L2+L3+L2".
+#   * mixed    — two captures of different kinds, a reference and an int, which
+#     is what the peel's positional draining of `captures` is for:
+#     "ccc,dd,e,ffff".
+#   * stateful — THE CURSOR CASE. A distinct() fuses in BEHIND the dropWhile, so
+#     its own fetch reads the List immediately after the latched arm has jumped
+#     over the capture fetches. Each fetch carries an `iinc` of the runtime
+#     cursor (521); without the skip/undo balance the peel emits, distinct would
+#     read the wrong cell from the first latched element on: "d5/d1/d7/d9/d2".
+#   * twice    — two capturing dropWhiles in one pipeline, so two latches and two
+#     capture runs share one List and one cursor: "t16|t6|t18|t10".
+#   * lone     — a capturing dropWhile with nothing to fuse into, lowered to a
+#     mapMulti of its own: 3.
+#
+# Eleven of the nineteen invokedynamic are the operators and eight are the
+# makeConcatWithConstants of the string-building mappers, which no rule touches.
+# Every one of the six runs collapses into a single Stream.mapMulti, so the
+# operators go 11 -> 6 and the class goes 19 -> 10. No native Stream.dropWhile
+# survives anywhere in it.
+java: |
+  package closuredropwhile;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.Stream;
+  public class X {
+    private static final List<String> WORDS =
+      List.of("a", "bb", "ccc", "dd", "e", "ffff");
+    private static String one(final int limit) {
+      return Stream.of(1, 5, 2, 9, 3, 7)
+        .map(n -> n + 1)
+        .dropWhile(n -> n < limit)
+        .filter(n -> n % 2 == 1)
+        .map(n -> "v" + n)
+        .collect(Collectors.joining("-"));
+    }
+    private static String longs(final long bound) {
+      return Stream.of("a", "bb", "ccc", "dd")
+        .map(s -> Long.valueOf(s.length()))
+        .dropWhile(v -> v < bound)
+        .map(v -> "L" + v)
+        .collect(Collectors.joining("+"));
+    }
+    private static String mixed(final String tag, final int cut) {
+      return WORDS.stream()
+        .dropWhile(s -> s.length() < cut && !s.equals(tag))
+        .collect(Collectors.joining(","));
+    }
+    private static String stateful(final int limit) {
+      return Stream.of(5, 1, 7, 1, 9, 7, 2)
+        .dropWhile(n -> n < limit)
+        .distinct()
+        .map(n -> "d" + n)
+        .collect(Collectors.joining("/"));
+    }
+    private static String twice(final int lo, final int hi) {
+      return Stream.of(1, 4, 2, 8, 3, 9, 5)
+        .dropWhile(n -> n < lo)
+        .map(n -> n * 2)
+        .dropWhile(n -> n < hi)
+        .map(n -> "t" + n)
+        .collect(Collectors.joining("|"));
+    }
+    private static long lone(final int limit) {
+      return Stream.of(1, 2, 3, 9, 1).dropWhile(n -> n < limit).count();
+    }
+    public static void main(String[] a) {
+      System.out.printf(
+        "The result is %s %s %s %s %s %d\n",
+        one(5), longs(2L), mixed("dd", 3), stateful(4), twice(3, 10), lone(3)
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is v3 L2+L3+L2 ccc,dd,e,ffff d5/d1/d7/d9/d2 t16|t6|t18|t10 3"
+before:
+  invokedynamic: 19
+after:
+  invokedynamic: 10
+  invokeinterface: 51

@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The keep-label of a CAPTURING dropWhile guard names its survivor from the
+# predicate's LAST parameter — the item; the ones ahead of it are the captures.
+# `503-distill-dropwhile-frame` cannot do it: it spells 310's guard out opcode
+# for opcode, and the capturing guard has the cursor balance, the park and the
+# run of capture fetches wedged into that same stretch, so the marker would
+# fall through to the bridge-input fallback and fail verification wherever a
+# type-changing map is fused in ahead (#794/#798).
+#
+# The anchor is the tail instead, which only the capturing guard has: `aload 1`
+# (the parked item, reloaded on top of the captures) immediately before the
+# predicate, with the latch update behind it. The item here is a Long while
+# `bridge-input` is a String — the retype the fallback would get wrong.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-cp-dropwhile-frame.phr
+input: |
+  ⟦
+    x ↦ ⟦
+      φ ↦ Φ.hone.distill-lambda,
+      static ↦ "true",
+      bridge-input ↦ "Ljava/lang/String;",
+      consumer ↦ "Ljava/util/function/Consumer;",
+      target-method ↦ "distill_1",
+      captured ↦ "Ljava/util/List;",
+      body ↦ ⟦
+        i0 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i1 ↦ "dw/X",
+          i2 ↦ "lambda$pipe$0",
+          i3 ↦ "(ILjava/lang/Long;)Z",
+          i4 ↦ Φ.false
+        ⟧,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+        i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
+        i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
+        i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+        i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+        i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+        i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
+        i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+        i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+        i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+        i12 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+        i13 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.jeo.frame, type ↦ 0, 𝐵-b, stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Long" ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.jeo.frame, 𝐵-b, locals ↦ ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/String", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧, 𝐵-c ⟧

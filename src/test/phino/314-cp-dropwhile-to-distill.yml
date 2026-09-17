@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A gathered Φ.hone.cp-dropWhile becomes a stateful Φ.hone.distill whose state
+# appends the one-cell int[1] latch FIRST and the captures behind it, so the
+# cell order in the shared List is [latch, c0 … cN-1] and the body reads them
+# back in that same order.
+#
+# The body is 310's latch guard with 314's park/reload wedged into it, and the
+# cursor balance between: `iinc 3, 1` per capture ahead of the latch branch and
+# `iinc 3, -1` per capture on the arm that goes on to fetch. That is what lets
+# both arms reach ONE keep label — the latched arm skips the fetches, each of
+# which carries an `iinc` of its own (521), so without the balance every fetch
+# behind this operator in a fused body would read the wrong List cell from the
+# first latched element onward.
+#
+# `start` is "c-dropWhile", so neither 413 nor 281 reads this body as a filter.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/314-cp-dropwhile-to-distill.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op ↦ ⟦
+        φ ↦ Φ.hone.cp-dropWhile,
+        state-acc ↦ ⟦
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 7 ⟧,
+          s3 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i1 ↦ "java/lang/Integer",
+            i2 ↦ "valueOf",
+            i3 ↦ "(I)Ljava/lang/Integer;",
+            i4 ↦ Φ.false
+          ⟧,
+          s4 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            i2 ↦ "java/util/List",
+            i3 ↦ "add",
+            i4 ↦ "(Ljava/lang/Object;)Z",
+            i5 ↦ Φ.true
+          ⟧,
+          s5 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+          ρ ↦ ∅
+        ⟧,
+        body-acc ↦ ⟦
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
+          b2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokevirtual,
+            i1 ↦ "java/lang/Integer",
+            i2 ↦ "intValue",
+            i3 ↦ "()I",
+            i4 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧,
+        skip-acc ↦ ⟦
+          k1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧,
+          ρ ↦ ∅
+        ⟧,
+        undo-acc ↦ ⟦
+          u1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧,
+          ρ ↦ ∅
+        ⟧,
+        captures ↦ "",
+        class ↦ "dw/X",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "dw/X",
+          method ↦ "lambda$pipe$0",
+          signature ↦ "(ILjava/lang/Integer;)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, start ↦ "c-dropWhile", 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, state ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧, 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 10 ⟧, 𝐵-e ⟧, 𝐵-f ⟧
+  - ⟦ 𝐵-a, body ↦ ⟦ 𝜏-latch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧, 𝐵-b ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, 𝜏-read ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧, 𝜏-tick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧, 𝜏-if ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, 𝐵-b ⟧, 𝜏-untick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧, 𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-park1 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, 𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-pred ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "dw/X", i2 ↦ "lambda$pipe$0", i3 ↦ "(ILjava/lang/Integer;)Z", i4 ↦ Φ.false ⟧, 𝐵-b ⟧
+  - ⟦ 𝐵-a, 𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, 𝐵-b ⟧, 𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧, 𝐵-c ⟧

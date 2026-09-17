@@ -1,0 +1,119 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Guards the CAPTURING dropWhile lifting against parallel pipelines, exactly as
+# 226/227 guard the non-capturing one (#862). The capturing path (#981) folds
+# into the same stateful distill owning the same one-cell `int[1]` sticky latch,
+# so it races the same way: on a parallel stream several ForkJoin workers drive
+# the fused BiConsumer concurrently and read and write that shared cell with no
+# synchronisation, and the wrong items are dropped. Native Stream.dropWhile
+# honours the contract, so on a parallel pipeline the operator must stay native.
+#
+# phino patterns cannot test a binding group for the ABSENCE of a parallel call,
+# so this takes 226's dual, positive route: once the pragma exists, if the SAME
+# method body also contains a `parallel()` / `parallelStream()` invoke, it is
+# reverted. This one matches the parallel call AHEAD of the pragma; 116 is its twin for a
+# parallel call behind it.
+#
+# ORDER MATTERS, and differently from 226. That rule sits in 2xx because the
+# pragma it reverts carries everything it needs. This one has to run in 1xx,
+# ahead of `118-cp-dropwhile-peel-capture`: the peel MOVES the captured pushes
+# off the body and into the pragma's accumulators and drains `captures` as it
+# goes, and a revert after that would have to put them back. Running at 115/116
+# — behind `113-capturing-invokedynamic-to-dropwhile` and 114, ahead of 118 —
+# means the pushes are still inline where javac left them and the factory
+# descriptor is still recoverable from `captures`.
+#
+# What comes back is the Φ.hone.lambda 701 lowers to an invokedynamic, not the
+# raw opcode: the SAM is a Predicate (method `test`, erased signature
+# `(Ljava/lang/Object;)Z`), the factory descriptor is `(<captures>)L…Predicate;`
+# with the captures still on the stack in front of it, the instantiated type is
+# `(<bridge-input>)Z`, and the stream call is Stream.dropWhile. `reverted ↦
+# Φ.true` rides along so that nothing re-recognises it — 111 declines a
+# capturing factory descriptor anyway, and 208 pins the non-capturing one — and
+# 701's trailing wildcard tolerates the marker, as it does 603's.
+name: parallel-reverts-cp-dropwhile
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-cd ↦ ⟦
+      φ ↦ Φ.hone.cp-dropWhile,
+      state-acc ↦ 𝑒-state-acc,
+      body-acc ↦ 𝑒-body-acc,
+      skip-acc ↦ 𝑒-skip-acc,
+      undo-acc ↦ 𝑒-undo-acc,
+      captures ↦ 𝑒-captures,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-bridge-output,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-returned,
+      static ↦ 𝑒-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ "test",
+      interface ↦ 𝑒-factory,
+      lambda-signature ↦ "(Ljava/lang/Object;)Z",
+      bridge-signature ↦ 𝑒-bsig,
+      static ↦ "true",
+      opcode ↦ "invokestatic",
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ "java/util/stream/Stream",
+        method ↦ "dropWhile",
+        signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+where:
+  - meta: 𝑒-bsig
+    function: concat
+    args: ['"("', 𝑒-bridge-input, '")Z"']
+  - meta: 𝑒-factory
+    function: concat
+    args: ['"("', 𝑒-captures, '")Ljava/util/function/Predicate;"']
+  - meta: 𝜏-lambda
+    function: random-tau

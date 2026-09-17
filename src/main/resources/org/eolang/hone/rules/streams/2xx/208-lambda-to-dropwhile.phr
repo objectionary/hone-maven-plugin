@@ -15,13 +15,17 @@
 # extra ingredient at 310 is a one-shot sticky latch, the dropWhile analogue of
 # skip's countdown counter.
 #
-# v1 scope (mirrors skip's narrow v1): only the object `java/util/stream/Stream`
-# is handled, the predicate must be `static` (the normalised lambda shape 121
-# leaves), and its target must return a primitive `Z`. A `static ↦ "true"` match
-# and a `\)Z$` guard on the target signature keep the remaining shape — a
-# dropWhile on a primitive stream (#982) — as plain bytecode, so no
-# Φ.hone.dropWhile pragma is ever produced that 310 cannot fold back to
-# assemblable code. A CAPTURED predicate never reaches this rule either, but it
+# Scope: only the object `java/util/stream/Stream` is handled here, the
+# predicate must be `static` (the normalised lambda shape 121 leaves), and its
+# target must return a primitive `Z`. The `\)Z$` guard on the target signature
+# keeps a predicate whose implementation returns a `Ljava/lang/Boolean;` as
+# plain bytecode, so no Φ.hone.dropWhile pragma is ever produced that 310
+# cannot fold back to assemblable code. A dropWhile on a PRIMITIVE stream does
+# not reach this rule and no longer stays native either:
+# `208-lambda-to-primitive-dropwhile` lifts an IntStream one the way 203 lifts a
+# primitive filter, 211 boxes it and 233 hands the result back to 310 (#982);
+# LongStream and DoubleStream are still native, for the local-slot reason that
+# rule's header gives. A CAPTURED predicate never reaches this rule either, but it
 # is no longer left native: 111 still declines the capturing invokedynamic, and
 # `113-capturing-invokedynamic-to-dropwhile` lifts it instead, straight to the
 # Φ.hone.cp-dropWhile that 118's and 314's twins gather and fold (#981).

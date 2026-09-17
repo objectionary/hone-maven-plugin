@@ -2,6 +2,19 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# `dropWhile` counts as an item-preserving operation here, alongside the two
+# filters (#982). It always did in principle — the guard 310 builds dups the
+# item, tests the copy and hands the original on — but until an IntStream
+# dropWhile could be lifted, every dropWhile had the same type on both sides and
+# no conversion was ever needed across it. A primitive one does not: `accepted`
+# is the raw `I` the predicate takes while the stream carries
+# Ljava/lang/Integer;, so 211's boxing seams meet a dropWhile and the
+# conversions have to be minted and cancelled across it exactly as they are
+# across a filter. Leaving it out left a stray `Integer.intValue` in the fused
+# body, unboxing an already-raw int. The name-keyed seds below therefore read
+# `dropWhile` as a filter too: what such an operation returns is what the
+# operation before it returned.
+#
 name: transform-object-to-primitive-after-filter
 pattern: |
   ⟦
@@ -80,10 +93,12 @@ when:
     - or:
         - eq: [𝜏-one, 'o-filter']
         - eq: [𝜏-one, 'p-filter']
+        - eq: [𝜏-one, 'dropWhile']
     - or:
         - eq: [𝜏-two, 'map']
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']
+        - eq: [𝜏-two, 'dropWhile']
 where:
   - meta: 𝜏-transform
     function: random-tau
@@ -142,7 +157,7 @@ where:
       - '"s/\\//\\\\\\//g"'
   - meta: 𝑒-updated-filter-returned-pattern
     function: concat
-    args: ['"s/^[op]-filter$/"', 𝑒-first-returned-pattern, '"/g"']
+    args: ['"s/^([op]-filter|dropWhile)$/"', 𝑒-first-returned-pattern, '"/g"']
   - meta: 𝑒-updated-map-returned-pattern
     function: concat
     args: ['"s/^map$/"', 𝑒-second-returned-pattern, '"/g"']
@@ -164,7 +179,7 @@ where:
       - '"s/\\//\\\\\\//g"'
   - meta: 𝑒-updated-filter-bridge-output-pattern
     function: concat
-    args: ['"s/^[op]-filter$/"', 𝑒-first-bridge-output-pattern, '"/g"']
+    args: ['"s/^([op]-filter|dropWhile)$/"', 𝑒-first-bridge-output-pattern, '"/g"']
   - meta: 𝑒-updated-map-bridge-output-pattern
     function: concat
     args: ['"s/^map$/"', 𝑒-second-bridge-output-pattern, '"/g"']

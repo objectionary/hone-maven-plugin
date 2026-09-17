@@ -46,8 +46,16 @@
 # mirrored there, or the cast silently stops being spliced and the class fails
 # JVM verification again.
 #
-# v1 scope (see 208): object java/util/stream/Stream, a static predicate whose
-# target returns Z, the element type preserved across any fused neighbours. A
+# Scope (see 208): a static predicate whose target returns Z, the element type
+# preserved across any fused neighbours. The stream is the object
+# java/util/stream/Stream or, since #982, an IntStream that 208's primitive
+# sibling lifted and 211/233 handed on boxed — in which case `accepted` is the
+# raw `I` the predicate takes while `bridge-input` is Ljava/lang/Integer;, and
+# the item is unboxed either by 411 collapsing the whole distill to a primitive
+# one or, when the run is not symmetric, at the top of the body. Either way the
+# value this guard dups is a raw int, which is why
+# `503-distill-dropwhile-frame` reads the keep-label survivor off the predicate
+# parameter rather than off bridge-input. A
 # lone dropWhile is NOT reverted to a native Stream.dropWhile the way 442 reverts
 # a lone skip — rebuilding the predicate lambda is left as a follow-up — so it
 # simply lowers to its own mapMulti (correct, just not faster than native).

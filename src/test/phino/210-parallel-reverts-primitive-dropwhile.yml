@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 226 for the primitive dropWhile (#982). 310's sticky latch is read and written
+# with no synchronisation by whichever ForkJoin worker runs the fused
+# BiConsumer, so a parallel pipeline must keep the native call — the race
+# 222/224/226 already guard against, reached by a new route.
+#
+# The guard runs at 210, BEFORE 211 boxes anything, so what goes back is the
+# primitive call exactly as javac wrote it: the IntPredicate SAM and the
+# IntStream signature, both rebuilt from the bridge signature and the stream
+# class the pragma carries, with no boxed() / mapToInt detour around it. The
+# reverted ↦ Φ.true marker is what stops 208's primitive sibling lifting the
+# result straight back again.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/210-parallel-reverts-primitive-dropwhile.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/IntStream",
+        v1 ↦ "parallel",
+        v2 ↦ "()Ljava/util/stream/IntStream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.primitive-dropWhile,
+        opcode ↦ "invokeinterface",
+        class ↦ "fusion/X",
+        stream-class ↦ "java/util/stream/IntStream",
+        bridge-signature ↦ "(I)Z",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(I)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.lambda, class ↦ "fusion/X", method ↦ "test", interface ↦ "()Ljava/util/function/IntPredicate;", lambda-signature ↦ "(I)Z", bridge-signature ↦ "(I)Z", static ↦ "true", opcode ↦ "invokeinterface", target ↦ ⟦ handle ↦ 6, class ↦ "fusion/X", method ↦ "lambda$main$0", signature ↦ "(I)Z", is-interface ↦ Φ.false ⟧, stream ↦ ⟦ class ↦ "java/util/stream/IntStream", method ↦ "dropWhile", signature ↦ "(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;" ⟧, reverted ↦ Φ.true, 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, v1 ↦ "parallel", 𝐵-t ⟧

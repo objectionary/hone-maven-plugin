@@ -1,0 +1,104 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive sibling of `208-lambda-to-dropwhile` (#982). That rule pins
+# `class ↦ "java/util/stream/Stream"` and the object
+# `(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;` signature, so
+# `IntStream.of(1, 2, 3, 4).dropWhile(i -> i < 3)` never became a pragma and
+# stayed a native call — the last predicate-carrying operation without the
+# primitive twin every other one already had (`203` beside `201`, `204` beside
+# `202`).
+#
+# It shares `203`'s shape, and for the same reason: a primitive stream carries
+# its own SAM (`IntPredicate`) over its own element type, so recognition cannot
+# read the element type off a single constant the way the object rule does. The
+# guard below is `203`'s Int arm with `filter` replaced by `dropWhile`, pinning
+# the SAM, both signatures, the stream class and the stream signature together,
+# so a mismatched quartet can never be lifted.
+#
+# IntStream ONLY, and that narrowness is the whole of what is left of #982.
+# `203` covers all three primitive streams because a filter is stateless: it
+# folds to a distill with no state, 511 lowers it, and the item lives on the
+# stack. A dropWhile folds to a STATEFUL distill (310's sticky latch), which
+# 512 lowers into a wrapper whose locals are laid out by hand — the captured
+# List at 0, the item at 1, the consumer at 2, 521's fetch counter at 3, 310's
+# latch scratch at 4 and 5. A `long` or a `double` item takes TWO slots and
+# slides every one of those by one. The counter slot is spelled out again in
+# `521`, which sees a bare fetch marker with no way to learn the width of the
+# item in the method it is being lowered into, and again in the local lists the
+# 503/504/506/507/510 frame rules emit, so widening the layout is a change to
+# the whole stateful family rather than to this rule. Until that happens
+# `LongStream.dropWhile` and `DoubleStream.dropWhile` stay native, exactly as
+# they were before this rule existed — correct, just not fused. 512's header
+# records the same boundary from the other side.
+#
+# The output is a Φ.hone.primitive-dropWhile that `211` boxes exactly as it
+# boxes `primitive-filter` — `Φ.hone.box`, the boxed pragma, `Φ.hone.unbox` —
+# and `233` then turns into the ordinary Φ.hone.dropWhile that `310` folds. The
+# element type reaches `310` through that boxing, which is precisely how `203`
+# feeds `304`: `233` reads `Ljava/lang/Integer;` off the `(I)Z` bridge and
+# leaves `accepted ↦ I`, so the fused body unboxes once and `411` cancels the
+# box/unbox pair back to a primitive distill when the whole run is primitive.
+#
+# Two guards keep this inside `208`'s v1 scope. `static ↦ "true"` matches the
+# normalised lambda shape `121` leaves. The `\)Z$` guard on the TARGET signature
+# keeps out a predicate whose implementation returns `Ljava/lang/Boolean;` — the
+# metafactory adapts it, but `310`'s latch does `iconst_1; ixor` on a raw int,
+# so such a target must stay native rather than become a pragma `310` would
+# lower to unverifiable code. A CAPTURED primitive predicate never reaches here
+# either: `111` declines the capturing invokedynamic and the capturing path
+# (`113`/`118`/`314`) is object-only, so it stays native as before.
+#
+# The parallel guard sits at `210`, not here, and reverts this pragma before
+# `211` can box it, so a parallel primitive pipeline stays exactly as javac
+# wrote it instead of acquiring a `boxed()`/`mapToInt` detour around a native
+# call. See `210` for why the latch cannot be shared across ForkJoin workers.
+name: lambda-to-primitive-dropwhile
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "test",
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-lambda-signature,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ 𝑒-opcode,
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ 𝑒-stream-class,
+      method ↦ "dropWhile",
+      signature ↦ 𝑒-stream-signature
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.primitive-dropWhile,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    target ↦ ⟦
+      handle ↦ 𝑒-target-handle,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧
+  ⟧
+when:
+  and:
+    - matches: ['\)Z$', 𝑒-target-signature]
+    - matches: ['\(\)Ljava/util/function/IntPredicate;', 𝑒-interface]
+    - eq: [𝑒-lambda-signature, '"(I)Z"']
+    - eq: [𝑒-bridge-signature, '"(I)Z"']
+    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+    - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"']

@@ -439,10 +439,11 @@ Each is a fusion barrier:
   and the code is correct, just not collapsed into a single pass.
 
 ```java
-// A dropWhile on a PRIMITIVE stream (#982). 208 matches the object
-// Stream only, and dropWhile has no primitive counterpart the way
-// filter has 203 next to 201.
-IntStream.of(1, 2, 3, 4).dropWhile(i -> i < 3)
+// A dropWhile on a LONG or DOUBLE stream (#982). IntStream is fused,
+// by 208's primitive sibling; a long or a double element takes two
+// local slots, which slides the counter 521 reads and the scratch
+// 310 borrows, so those two stay native until that layout is widened.
+LongStream.of(1L, 2L, 3L, 4L).dropWhile(n -> n < 3L)
 
 // Two adjacent PRIMITIVE mapMulti stages (#983). 461 composes two
 // bodies into one, but only in the reference form, Stream.mapMulti.

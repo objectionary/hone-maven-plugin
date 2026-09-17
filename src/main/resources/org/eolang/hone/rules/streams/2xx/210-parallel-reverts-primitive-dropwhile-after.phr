@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The `227` of the primitive pair — see
+# `210-parallel-reverts-primitive-dropwhile` for why the guard sits at `210`
+# rather than beside `226`, and for how the SAM is rebuilt from the bridge
+# signature. This rule is that one with the two operands swapped, covering a
+# parallel call that appears AFTER the dropWhile in the body
+# (`IntStream.of(..).dropWhile(p).parallel()`). Binding groups are
+# order-preserving, so the two layouts cannot share a rule.
+name: parallel-reverts-primitive-dropwhile-after
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-dropwhile ↦ ⟦
+      φ ↦ Φ.hone.primitive-dropWhile,
+      opcode ↦ 𝑒-opcode,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧,
+    𝐵-between,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ "test",
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-bridge-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      opcode ↦ 𝑒-opcode,
+      target ↦ ⟦
+        handle ↦ 𝑒-target-handle,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ "dropWhile",
+        signature ↦ 𝑒-stream-signature
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+where:
+  - meta: 𝑒-sam
+    function: sed
+    # "(I)Z" -> "Int", so the SAM follows from the bridge signature alone
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(I\\)Z/Int/g"'
+      - '"s/\\(J\\)Z/Long/g"'
+      - '"s/\\(D\\)Z/Double/g"'
+  - meta: 𝑒-interface
+    function: concat
+    # "()Ljava/util/function/IntPredicate;"
+    args: ['"()Ljava/util/function/"', 𝑒-sam, '"Predicate;"']
+  - meta: 𝑒-stream-signature
+    function: concat
+    # "(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"
+    args: ['"(Ljava/util/function/"', 𝑒-sam, '"Predicate;)L"', 𝑒-stream-class, '";"']
+  - meta: 𝜏-lambda
+    function: random-tau

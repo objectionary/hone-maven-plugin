@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The dropWhile twin of `232-boxed-primitive-filter-to-filter` (#982), and the
+# step that finally hands `310` the element type the issue asks for.
+#
+# By the time this fires, `208-lambda-to-primitive-dropwhile` has lifted the
+# primitive call and `211` has wrapped it in the boxing sandwich it builds for
+# every primitive operation — `Φ.hone.box`, the boxed pragma, `Φ.hone.unbox` —
+# so the stream at this point carries `Ljava/lang/Integer;` while the predicate
+# still takes the raw `I` that javac compiled it to take. That split is exactly
+# what `232` writes out for a filter, and it is the whole answer to "how does
+# the element type reach the fold": `bridge-input`/`bridge-output` name the
+# BOXED element the fused body passes around, `accepted` names the PRIMITIVE the
+# predicate wants, and `returned` matches `accepted` as it does on `p-filter`,
+# because a dropWhile, like a filter, hands its item on untouched.
+#
+# `232` has to choose between `p-filter` and `o-filter` on the target's return
+# type. This rule does not: `208`'s primitive sibling already refused anything
+# whose target does not end in `)Z`, so the output is always the one
+# Φ.hone.dropWhile name that `310` folds, and an `o-` variant that `310` could
+# not lower can never be minted here.
+#
+# It sits at `233` rather than beside its producer because everything between
+# `211` and here must see the pragma in its boxed form: `221` cancels the
+# unbox/box pairs between adjacent primitive operations first, so a run of them
+# ends up inside ONE sandwich, and `411` can then collapse that single pair back
+# into a primitive distill. The parallel guard does NOT wait this long — `210`
+# reverts the pragma before `211` boxes anything, so a parallel pipeline never
+# reaches this rule at all.
+name: boxed-primitive-dropwhile-to-dropwhile
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.boxed-primitive-dropWhile,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      𝐵-target-before,
+      signature ↦ 𝑒-target-signature,
+      𝐵-target-after
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.dropWhile,
+    opcode ↦ 𝑒-opcode,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-accepted,
+    static ↦ 𝑒-static,
+    target ↦ ⟦
+      𝐵-target-before,
+      signature ↦ 𝑒-target-signature,
+      𝐵-target-after
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-bridge-input
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/\\(I\\)Z/Ljava\\/lang\\/Integer;/g"'
+      - '"s/\\(D\\)Z/Ljava\\/lang\\/Double;/g"'
+      - '"s/\\(J\\)Z/Ljava\\/lang\\/Long;/g"'
+  - meta: 𝑒-accepted
+    function: sed
+    args:
+      - 𝑒-target-signature
+      - '"s/\\((.+)\\).+/$1/g"'

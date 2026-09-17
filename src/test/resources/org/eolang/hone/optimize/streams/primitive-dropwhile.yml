@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A dropWhile on a PRIMITIVE stream (#982). `208-lambda-to-dropwhile` pinned
+# `java/util/stream/Stream` and the object Predicate signature, so
+# `IntStream.of(1, 2, 3, 4).dropWhile(i -> i < 3)` never became a pragma and
+# stayed a native call — the one predicate-carrying operation left without the
+# primitive twin the others already had (`203` beside `201`, `204` beside
+# `202`), and a fusion barrier wherever it appeared.
+#
+# `208-lambda-to-primitive-dropwhile` lifts it, `211` boxes it exactly as it
+# boxes a primitive filter, and `233`'s twin of `232` turns the boxed pragma
+# into the ordinary Φ.hone.dropWhile that `310` folds. The element type reaches
+# the fold through that boxing, which is how `203` has always fed `304`.
+#
+# Eight pipelines, one per thing that can go wrong:
+#   * plain    — the issue's own line. 1,2,3,4 drop while under 3: 3+4 = 7.
+#   * run      — a dropWhile between a primitive map and a primitive filter.
+#     Each of the three is boxed on its own, so two unbox/box seams meet inside
+#     the run and `221` collapses each into an `Integer.intValue` map. `242`
+#     mints the `valueOf` that lets `272` cancel that map away again — and
+#     `242`/`272` only knew `map` and the two filters, so behind a dropWhile the
+#     stray intValue survived and unboxed an already-raw int: "Type integer is
+#     not assignable to 'java/lang/Integer'". The transform and type family
+#     (`241`-`243`, `251`, `252`, `261`) now counts dropWhile as the
+#     item-preserving operation it is. 1,5,2,9,3 each +1 is 2,6,3,10,4; the
+#     bound drops the leading 2 and latches on 6; of 6,3,10,4 only 3 is odd.
+#   * twice    — two dropWhiles in one primitive chain, so two latches share the
+#     one List `502` builds per fused run.
+#   * crossing — THE FRAME CASE. A dropWhile whose run ends in `mapToObj`, so
+#     the distill is not symmetric and `411` cannot make it primitive: the item
+#     arrives boxed and is unboxed at the top of the body, leaving a RAW INT at
+#     the keep-label while `bridge-input` still says Ljava/lang/Integer;.
+#     `503-distill-dropwhile-frame` took only an object predicate, so this fell
+#     through to `503-distill-state-frame` and its bridge-input, and the class
+#     died verifying. It now reads the predicate parameter for a primitive too.
+#   * par      — `IntStream.parallel()` BEFORE the dropWhile. 310's latch is
+#     shared mutable state, so this must stay native, exactly as `226` keeps the
+#     object one native. `210` reverts it before `211` can box anything, so what
+#     is left is the primitive call javac wrote, with no boxed()/mapToInt
+#     detour around it.
+#   * parAfter — the same with `parallel()` AFTER the dropWhile, which needs its
+#     own rule because binding groups are order-preserving.
+#   * longs    — LongStream.dropWhile, which stays NATIVE on purpose. A long
+#     item takes two local slots and slides every hand-written slot in the
+#     stateful lowering (512's counter, 310's latch scratch, the frame rules'
+#     local lists), so the lifting rule matches IntStream alone. This pipeline
+#     is here to pin that boundary: if someone widens the rule without widening
+#     the layout, the counts below move and this fixture says so.
+#   * chars    — a `String.chars()` source, the IntStream nobody writes as one.
+#
+# Thirteen of the fourteen invokedynamic are the operators and the fourteenth is
+# the makeConcatWithConstants of `"v" + n`, which no rule touches. Afterwards
+# nine are left: that concat, one per surviving native predicate (`par`,
+# `parAfter`, `longs`) and one mapMulti for each of the five sequential runs
+# that fused — `plain`, `run`, `twice`, `crossing` and `chars`.
+java: |
+  package primitivedropwhile;
+  import java.util.stream.Collectors;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  public class X {
+    private static int plain() {
+      return IntStream.of(1, 2, 3, 4).dropWhile(i -> i < 3).sum();
+    }
+    private static int run() {
+      return IntStream.of(1, 5, 2, 9, 3)
+        .map(n -> n + 1)
+        .dropWhile(n -> n < 5)
+        .filter(n -> n % 2 == 1)
+        .sum();
+    }
+    private static int twice() {
+      return IntStream.of(1, 4, 2, 8, 3, 9)
+        .dropWhile(n -> n < 3)
+        .map(n -> n * 2)
+        .dropWhile(n -> n < 10)
+        .sum();
+    }
+    private static String crossing() {
+      return IntStream.of(1, 5, 2, 9)
+        .dropWhile(n -> n < 4)
+        .mapToObj(n -> "v" + n)
+        .collect(Collectors.joining(","));
+    }
+    private static int par() {
+      return IntStream.of(1, 5, 2, 9, 3).parallel().dropWhile(n -> n < 4).sum();
+    }
+    private static int parAfter() {
+      return IntStream.of(1, 5, 2, 9, 3).dropWhile(n -> n < 4).parallel().sum();
+    }
+    private static long longs() {
+      return LongStream.of(1L, 5L, 2L, 9L).dropWhile(n -> n < 4L).sum();
+    }
+    private static long chars() {
+      return "hello world".chars().dropWhile(c -> c != ' ').count();
+    }
+    public static void main(String[] a) {
+      System.out.printf(
+        "The result is %d %d %d %s %d %d %d %d%n",
+        plain(), run(), twice(), crossing(), par(), parAfter(), longs(), chars()
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 7 3 40 v5,v2,v9 19 19 16 6"
+before:
+  invokedynamic: 14
+  invokeinterface: 23
+after:
+  invokedynamic: 9
+  invokeinterface: 36

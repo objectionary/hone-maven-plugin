@@ -25,8 +25,19 @@
 # describes both. The scratch locals 4 and 5 that 310 borrows are dead by then,
 # so the four-local frame 512 sizes for still holds.
 #
-# Fires only for an object predicate (`(L<type>;)Z`); anything else falls
-# through to 503 and its bridge-input. Ordering: shares 503's number, since no
+# The predicate parameter may be PRIMITIVE as well as a reference, since #982:
+# an IntStream.dropWhile keeps its `(I)Z` predicate, and when the fused run is
+# not symmetric enough for 411 to make the whole distill primitive the item is
+# unboxed at the top of the body instead, so the value the guard dups — and
+# therefore the survivor at the keep-label — is a raw int while `bridge-input`
+# is still Ljava/lang/Integer;. Falling through to `503-distill-state-frame`
+# there wrote the boxed name over a primitive stack slot and the class died with
+# "Type integer (current frame, stack[0]) is not assignable to
+# 'java/lang/Integer'". Reading the parameter and mapping it the way
+# `𝑒-frame-input` maps local 1 covers both.
+#
+# Anything that is not a one-argument `)Z` predicate still falls through to 503
+# and its bridge-input. Ordering: shares 503's number, since no
 # integer is free between 502 and 503, and relies on
 # `503-distill-dropwhile-frame` < `503-distill-state-frame` alphabetically.
 # Scoped to a distill-lambda WITH `captured`, so stateless keep-labels stay
@@ -129,14 +140,25 @@ result: |
 when:
   and:
     - matches:
-        - '^\(L[^;]+;\)Z$'
+        - '^\((L[^;]+;|[BCDFIJSZ])\)Z$'
         - 𝑒-predicate-signature
 where:
   - meta: 𝑒-frame-item
     function: sed
+    # "(Ljava/lang/Long;)Z" -> java/lang/Long, "(I)Z" -> integer: the parameter
+    # first, then the same verification-type mapping 𝑒-frame-input uses.
     args:
       - 𝑒-predicate-signature
-      - '"s/^\\(L(.+);\\)Z$/$1/g"'
+      - '"s/^\\((.+)\\)Z$/$1/g"'
+      - '"s/^B$/byte/g"'
+      - '"s/^C$/char/g"'
+      - '"s/^D$/double/g"'
+      - '"s/^F$/float/g"'
+      - '"s/^I$/integer/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^S$/short/g"'
+      - '"s/^Z$/boolean/g"'
+      - '"s/^L(.+);$/$1/g"'
   - meta: 𝑒-frame-input
     function: sed
     args:

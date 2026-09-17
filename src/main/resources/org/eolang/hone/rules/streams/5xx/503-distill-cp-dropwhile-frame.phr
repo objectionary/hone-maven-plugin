@@ -1,0 +1,170 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The capturing member of the dropWhile frame family. `503-distill-dropwhile-frame`
+# names the survivor at the keep-label from the predicate 310's guard tests the
+# item with, and it spells that guard out opcode for opcode — `ifne`, `dup`,
+# then the predicate. The capturing guard 314's dropWhile twin builds (#981) has
+# the cursor balance, the park and the run of capture fetches wedged into that
+# same stretch, so the run no longer matches and the marker would fall through
+# to `503-distill-state-frame` and its `bridge-input` — the map-retype defect of
+# #794/#798 all over again, on the branch where the predicate captures.
+#
+# The anchor here is the tail instead, which is the capturing guard's alone:
+# `aload 1` (the parked item, reloaded on top of the captures) immediately
+# before the predicate, and the latch update behind it. 310's guard reloads
+# nothing — it dups — and 314's capturing FILTER has no latch update, so
+# neither can be claimed by mistake.
+#
+# The survivor is the predicate's LAST parameter, not its only one: the call is
+# `lambda$(capture…, item)Z`, so the extraction below walks the captures off
+# with a LAZY prefix and stops on the item. Lazy is load-bearing: a greedy one
+# takes the last `L` in the whole descriptor rather than the last parameter, and
+# on `(ILjava/lang/Long;)Z` that is the L of `Long`, which names the survivor
+# `ong`. Because `[^;]*` cannot cross a `;`, the shortest prefix that still
+# leaves `L…;)Z` is exactly the run of captures. Everything else is 503's: a FULL
+# frame rather than same-locals-1, because a same-locals frame would drop the
+# cursor 512 keeps at slot 3 and the next guard's `iload 3` would read an
+# undefined local; the scratch locals (1 parked item, 4 latch array, 5 verdict)
+# are dead at the keep-label, so the four-local frame still holds.
+#
+# An ERASED item is left to the fallback on purpose. When a distinct() or a
+# skip() leads the run, `bridge-input` is Ljava/lang/Object; and the item the
+# guard preserves at the bottom of the stack is never narrowed: 505 splices the
+# checkcast onto the RELOADED copy, between the `aload 1` and the predicate, so
+# the predicate gets its type while the survivor stays an Object. Naming that
+# survivor from the predicate then promises more than the stack holds — seed 48
+# of RandomPipeline, `DOUBLES.stream().skip(1L).dropWhile(d -> d < frac)
+# .map(d -> d + 0.25)`, dies with "Type 'java/lang/Object' (current frame,
+# stack[0]) is not assignable to 'java/lang/Double'". `503-distill-state-frame`
+# writes Object there, which is what the stack really has, and the operator
+# behind the label casts for itself as it already does after any erased guard.
+#
+# Ordering: shares 503's number, since no integer is free between 502 and 503,
+# and `503-distill-cp-dropwhile-frame` sorts ahead of every other member of the
+# family, so the fallback is left the erased case and the markers nobody could
+# name.
+name: distill-cp-dropwhile-frame
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-predicate-class,
+        i2 ↦ 𝑒-predicate-method,
+        i3 ↦ 𝑒-predicate-signature,
+        i4 ↦ 𝑒-predicate-is-interface
+      ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-if-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-keep-target ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ 𝑒-bridge-input,
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i1 ↦ 𝑒-predicate-class,
+        i2 ↦ 𝑒-predicate-method,
+        i3 ↦ 𝑒-predicate-signature,
+        i4 ↦ 𝑒-predicate-is-interface
+      ⟧,
+      𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-if-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-keep-target ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
+      𝜏-frame ↦ ⟦
+        φ ↦ Φ.jeo.frame,
+        type ↦ 0,
+        locals ↦ ⟦
+          φ ↦ Φ.jeo.seq.of4,
+          x0 ↦ 𝑒-frame-captured,
+          x1 ↦ 𝑒-frame-input,
+          x2 ↦ 𝑒-frame-consumer,
+          x3 ↦ "integer"
+        ⟧,
+        stack ↦ ⟦
+          φ ↦ Φ.jeo.seq.of1,
+          x0 ↦ 𝑒-frame-item
+        ⟧
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches:
+        - '^\(([IJD]|L[^;]+;)+L[^;]+;\)Z$'
+        - 𝑒-predicate-signature
+    - not:
+        eq:
+          - 𝑒-bridge-input
+          - '"Ljava/lang/Object;"'
+where:
+  - meta: 𝑒-frame-item
+    function: sed
+    args:
+      - 𝑒-predicate-signature
+      - '"s/^\\(.*?(L[^;]*;)\\)Z$/$1/"'
+      - '"s/^L//"'
+      - '"s/;$//"'
+  - meta: 𝑒-frame-input
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^B$/byte/g"'
+      - '"s/^C$/char/g"'
+      - '"s/^D$/double/g"'
+      - '"s/^F$/float/g"'
+      - '"s/^I$/integer/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^S$/short/g"'
+      - '"s/^Z$/boolean/g"'
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-frame-captured
+    function: sed
+    args:
+      - 𝑒-captured
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝑒-frame-consumer
+    function: sed
+    args:
+      - 𝑒-consumer
+      - '"s/^L(.+);$/$1/g"'

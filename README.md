@@ -163,6 +163,13 @@ Rule `101-remove-self-reference-labels` deletes labels and line-number
   of the produced lambda,
   and `141-set-opcode-in-lambda` records the original opcode
   on the pragma so that later stages can reverse the lowering.
+A lambda that CAPTURES something has a non-empty factory descriptor,
+  which `111-` declines,
+  so each capturing operator gets a lifting rule of its own —
+  `112-` for `map`, `113-capturing-invokedynamic-to-filter` for `filter`,
+  and `113-capturing-invokedynamic-to-dropwhile` for `dropWhile` —
+  paired with a `11x-` rule that peels the captured pushes
+  into the shared state list the fused body reads them back from.
 
 **Stage 2 (rules `201-` to `282-`): recognise stream operations as pragmas.**
 A `Φ.hone.lambda` immediately followed by an `invokeinterface`
@@ -196,7 +203,9 @@ Rules `206-` through `261-` then tidy up the boxing and primitive
   object-to-primitive conversions that the pragma made redundant.
 Rules `281-` and `282-` insert a `DUP` in front of every `filter`
   so the value can be both tested and forwarded
-  without re-running the predicate.
+  without re-running the predicate,
+  and `283-` does the same behind an operator that carries state
+  (a `distinct`, a `skip`, a `dropWhile` or a capturing one).
 
 **Stage 3 (rules `301-` to `311-`): fold every operation into `distill`.**
 Mapping and filtering still look different at this point:
@@ -422,7 +431,7 @@ The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
 
 The sections above explain what the plugin refuses to fuse
   because fusing it would be wrong.
-These three it would like to fuse and cannot yet,
+These two it would like to fuse and cannot yet,
   and each one has an issue of its own.
 Each is a fusion barrier:
   the operations on either side of it still fuse into a `mapMulti`,
@@ -430,11 +439,6 @@ Each is a fusion barrier:
   and the code is correct, just not collapsed into a single pass.
 
 ```java
-// A dropWhile over a CAPTURED predicate (#981). A capturing lambda
-// compiles to an invokedynamic that 111 declines; filter has a
-// capturing path of its own (113, 118 and 314), dropWhile has none.
-stream.dropWhile(x -> x < limit)
-
 // A dropWhile on a PRIMITIVE stream (#982). 208 matches the object
 // Stream only, and dropWhile has no primitive counterpart the way
 // filter has 203 next to 201.

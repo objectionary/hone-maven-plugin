@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The cp-dropWhile mirror of 118: peels one captured push off a
+# Φ.hone.cp-dropWhile and folds it into the operator's shared-List state. 113's
+# dropWhile twin emits the pragma with the whole run of pushes still inline in
+# front of it, empty accumulators, and `captures` — the factory descriptor's
+# parameter list, one code per capture.
+#
+# Everything 114's and 118's headers explain applies verbatim: the binding
+# immediately in front of the pragma is the one peeled, so the run is consumed
+# right-to-left and the prepends leave the captures in left-to-right order;
+# `captures` loses its last code in step with the push and stops the rule when
+# it runs dry; and ONE rule covers every capture type, because phino gives each
+# rule its own fixpoint and the plugin runs a single cycle over the rule list,
+# so per-type peel rules could only ever drain a run whose types were already
+# sorted in rule order (#668). The boxing is deferred to a Φ.hone.cap-box /
+# Φ.hone.cap-fetch marker that 123-126 expand in place.
+#
+# The two accumulators 118 does not have are the cursor balance. 314's dropWhile
+# twin jumps over the whole run of fetches once the latch is set, and each fetch
+# carries an `iinc` of the shared List cursor at local 3 (521), so the jump would
+# desynchronise every fetch behind it — including a stateful operator fused after
+# this one. One `iinc 3, 1` per capture goes into `skip-acc`, which runs BEFORE
+# the latch branch, and one `iinc 3, -1` into `undo-acc`, which runs on the arm
+# that goes on to fetch. Down the latched arm the cursor moves +N and stops;
+# down the evaluating arm it moves +N, -N, then +1 per fetch. Both arms reach
+# the keep label with the cursor on the same slot, and no second stackmap frame
+# is needed to get there.
+name: cp-dropwhile-peel-capture
+pattern: |
+  ⟦
+    𝐵-h,
+    𝜏-push ↦ 𝑒-push,
+    𝜏-cd ↦ ⟦
+      φ ↦ Φ.hone.cp-dropWhile,
+      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      skip-acc ↦ ⟦ 𝐵-kacc, ρ ↦ ∅ ⟧,
+      undo-acc ↦ ⟦ 𝐵-uacc, ρ ↦ ∅ ⟧,
+      captures ↦ 𝑒-captures,
+      𝐵-cd-tail
+    ⟧,
+    𝐵-t
+  ⟧
+result: |
+  ⟦
+    𝐵-h,
+    𝜏-cd ↦ ⟦
+      φ ↦ Φ.hone.cp-dropWhile,
+      state-acc ↦ ⟦
+        𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+        𝜏-load ↦ 𝑒-push,
+        𝜏-box ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ 𝑒-code ⟧,
+        𝜏-add ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/List",
+          i3 ↦ "add",
+          i4 ↦ "(Ljava/lang/Object;)Z",
+          i5 ↦ Φ.true
+        ⟧,
+        𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+        𝐵-sacc,
+        ρ ↦ ∅
+      ⟧,
+      body-acc ↦ ⟦
+        𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ 𝑒-code ⟧,
+        𝐵-bacc,
+        ρ ↦ ∅
+      ⟧,
+      skip-acc ↦ ⟦
+        𝜏-tick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧,
+        𝐵-kacc,
+        ρ ↦ ∅
+      ⟧,
+      undo-acc ↦ ⟦
+        𝜏-untick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧,
+        𝐵-uacc,
+        ρ ↦ ∅
+      ⟧,
+      captures ↦ 𝑒-rest,
+      𝐵-cd-tail
+    ⟧,
+    𝐵-t
+  ⟧
+when:
+  matches: ['.+', 𝑒-captures]
+where:
+  # The LAST capture code, and the list without it — see 114 for why the
+  # alternation and the end-anchor keep class names intact.
+  - meta: 𝑒-code
+    function: sed
+    args:
+      - 𝑒-captures
+      - '"s/^.*?([IJD]|L[^;]*;)$/$1/"'
+  - meta: 𝑒-rest
+    function: sed
+    args:
+      - 𝑒-captures
+      - '"s/([IJD]|L[^;]*;)$//"'
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-load
+    function: random-tau
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-tick
+    function: random-tau
+  - meta: 𝜏-untick
+    function: random-tau

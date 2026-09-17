@@ -18,11 +18,15 @@
 # v1 scope (mirrors skip's narrow v1): only the object `java/util/stream/Stream`
 # is handled, the predicate must be `static` (the normalised lambda shape 121
 # leaves), and its target must return a primitive `Z`. A `static ↦ "true"` match
-# and a `\)Z$` guard on the target signature keep the two other shapes —
-# primitive streams and captured predicates, whose lifting 111 declines and for
-# which no capturing twin of 113/118/314 exists (#974) — as plain bytecode, so
-# no Φ.hone.dropWhile pragma is ever produced that 310 cannot fold back to
-# assemblable code. A method reference to a `Boolean`-returning method reaches
+# and a `\)Z$` guard on the target signature keep the remaining shape — a
+# dropWhile on a primitive stream (#982) — as plain bytecode, so no
+# Φ.hone.dropWhile pragma is ever produced that 310 cannot fold back to
+# assemblable code. A CAPTURED predicate never reaches this rule either, but it
+# is no longer left native: 111 still declines the capturing invokedynamic, and
+# `113-capturing-invokedynamic-to-dropwhile` lifts it instead, straight to the
+# Φ.hone.cp-dropWhile that 118's and 314's twins gather and fold (#981).
+#
+# A method reference to a `Boolean`-returning method reaches
 # this rule as a `)Z` target like any other, because 108 has already desugared
 # it into a wrapper that unboxes.
 name: lambda-to-dropwhile

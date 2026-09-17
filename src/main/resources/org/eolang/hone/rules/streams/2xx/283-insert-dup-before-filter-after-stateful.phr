@@ -45,6 +45,15 @@
 # Stream.map, whose element stays a reference, so the filter that follows is
 # always an o-filter over one stack slot — the `dup` this rule reads off the
 # filter's `bridge-input`, never a `dup2`.
+#
+# The capturing dropWhile is the fifth (#981). 113's dropWhile twin mints a
+# Φ.hone.cp-dropWhile carrying the same accumulators the capturing filter does,
+# so `𝐵-first-head` absorbs them and `class` still lines up; the plain
+# `dropWhile` above it is the non-capturing shape 208 mints, and neither spells
+# the other. Without it the filter behind a captured bound reached 4xx with no
+# guard, 401 fused it into the latch distill, and the predicate ate the only
+# copy of the item: "Current frame's stack size doesn't match stackmap" at the
+# keep-label the dropWhile had just merged into.
 name: insert-dup-before-filter-after-stateful
 pattern: |
   ⟦
@@ -102,6 +111,7 @@ when:
         - eq: [𝜏-one, 'skip']
         - eq: [𝜏-one, 'dropWhile']
         - eq: [𝜏-one, 'c-map']
+        - eq: [𝜏-one, 'cp-dropWhile']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

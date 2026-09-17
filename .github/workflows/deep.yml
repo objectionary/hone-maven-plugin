@@ -68,11 +68,18 @@ jobs:
       # require phino of exactly the pinned version; without it they are
       # silently skipped and never run anywhere in CI (see #835). The EC2
       # AMI is not guaranteed to carry it, so install it here explicitly.
+      #
+      # The binary is the ubuntu-22.04 one, for the reason .github/install-phino.sh
+      # already gives: the ubuntu-24.04 leg of phino's release workflow has been
+      # failing since 0.0.116, so nothing is published there and the download
+      # answers 403. This step kept asking for 24.04 after that script moved, so
+      # wget exited 8, and because it is the step ahead of them BOTH `mvn -Pdeep`
+      # steps were skipped — the deep suite has not run on master since.
       - name: install-phino
         run: |
           version=$(xargs < src/main/resources/org/eolang/hone/default-phino-version.txt)
           if ! phino --pin="${version}" --version > /dev/null 2>&1; then
-            sudo wget -q -O /usr/bin/phino "http://phino.objectionary.com/releases/ubuntu-24.04/phino-${version}"
+            sudo wget -q -O /usr/bin/phino "http://phino.objectionary.com/releases/ubuntu-22.04/phino-${version}"
             sudo chmod +x /usr/bin/phino
           fi
           phino --pin="${version}" --version

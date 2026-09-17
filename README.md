@@ -409,29 +409,30 @@ The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
 
 The sections above explain what the plugin refuses to fuse
   because fusing it would be wrong.
-These four it would like to fuse and cannot yet (#974).
-Each one is a fusion barrier:
+These four it would like to fuse and cannot yet,
+  and each one has an issue of its own.
+Each is a fusion barrier:
   the operations on either side of it still fuse into a `mapMulti`,
   the unrecognised call stays native between them,
   and the code is correct, just not collapsed into a single pass.
 
 ```java
-// A dropWhile over a CAPTURED predicate. A capturing lambda compiles
-// to an invokedynamic that 111 declines; filter has a capturing path
-// of its own (113, 118 and 314) and dropWhile has no twin of it.
+// A dropWhile over a CAPTURED predicate (#981). A capturing lambda
+// compiles to an invokedynamic that 111 declines; filter has a
+// capturing path of its own (113, 118 and 314), dropWhile has none.
 stream.dropWhile(x -> x < limit)
 
-// A dropWhile on a PRIMITIVE stream. 208 matches the object Stream
-// only, and dropWhile has no primitive counterpart the way filter
-// has 203 next to 201.
+// A dropWhile on a PRIMITIVE stream (#982). 208 matches the object
+// Stream only, and dropWhile has no primitive counterpart the way
+// filter has 203 next to 201.
 IntStream.of(1, 2, 3, 4).dropWhile(i -> i < 3)
 
-// Two adjacent PRIMITIVE mapMulti stages. 461 composes two bodies
-// into one, but only in the reference form, Stream.mapMulti.
-stream.mapMultiToInt(first).mapMultiToInt(second)
+// Two adjacent PRIMITIVE mapMulti stages (#983). 461 composes two
+// bodies into one, but only in the reference form, Stream.mapMulti.
+intStream.mapMulti(first).mapMulti(second)
 
-// A chain that CROSSES from a primitive stream to an object one.
-// There is no IntStream.mapMultiToObj to collapse it into.
+// A chain that CROSSES from a primitive stream to an object one
+// (#984). There is no IntStream.mapMultiToObj to collapse it into.
 IntStream.range(0, n).mapToObj(Integer::toString).filter(s -> !s.isEmpty())
 ```
 

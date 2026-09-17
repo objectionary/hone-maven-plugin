@@ -9,7 +9,9 @@
 # (see #813): 208/310 folding dropWhile into a stateful distill (#718), and
 # the try-with-resources that 455-458 wrap around the inner stream of each
 # flatMap variant — its four Throwable.addSuppressed calls, one per flatMap
-# below, are four of the 18 invokevirtual.
+# below, are four of the invokevirtual. A third has now joined them: 208
+# recognises the mapToObj crossing (#984), so the mapToInt/mapToObj/mapToLong
+# run collapses further and invokedynamic drops 14 -> 12.
 java: |
   package allops;
   import java.util.*;
@@ -62,7 +64,7 @@ before:
   return: 7
 after:
   invokespecial: 3
-  invokestatic: 32
-  invokevirtual: 18
-  invokedynamic: 14
+  invokestatic: 36
+  invokevirtual: 20
+  invokedynamic: 12
   return: 19

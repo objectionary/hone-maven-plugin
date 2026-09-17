@@ -1,0 +1,84 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# A method reference to a method that returns a WRAPPER where the functional
+# interface wants the primitive — `Boolean small(Integer)` behind a Predicate,
+# `Integer length(String)` behind a ToIntFunction — is the shape LambdaMetafactory
+# adapts by inserting the `booleanValue()` / `intValue()` itself, so the
+# invokedynamic's instantiated type and its target signature differ. 104 declines
+# exactly that difference, so before #974 no Φ.hone.lambda was ever produced for
+# such a reference and it acted as a fusion barrier: the operations on either
+# side of it fused into two separate mapMulti calls with the native reference
+# still between them. 108 now synthesises the wrapper with the unboxing call
+# spelled out, and from there the reference is an ordinary lifted lambda.
+#
+# Four pipelines, one class:
+#
+#   dropped : map(+1) / dropWhile(X::small) / map(*2) — the case #974 names.
+#             [1..6] -> +1 -> [2..7] -> dropWhile(<4) keeps from the first >=4 ->
+#             [4,5,6,7] -> *2 -> count 4. Three invokedynamic collapse to one.
+#   kept    : map(+1) / filter(X::small) — the same reference behind a filter,
+#             which had the same barrier. [2..7] filtered to [2,3] -> count 2.
+#   sized   : map / mapToInt(X::length) — an Integer-returning reference, proving
+#             the rule is not Boolean-only; folds to one mapMultiToInt -> 9.
+#   widened : map / mapToLong(X::widen) — an Integer-returning reference where
+#             the SAM wants a LONG. That needs `intValue()` AND an `i2l`, which
+#             108 refuses to build, so this reference stays native and its two
+#             invokedynamic survive. It is here to pin that refusal: were the
+#             wrapper/primitive pairing loosened, the wrapper would call
+#             java/lang/Integer.longValue and the class would die at link time.
+#
+# The `after` counts assert all of it: invokedynamic 11 -> 7 (the first three
+# pipelines each lose one factory, the fourth loses none), exactly one int[1]
+# latch for the fused dropWhile (newarray 0 -> 1) inside its one captured
+# java/util/ArrayList (new 0 -> 1), invokestatic 26 -> 37 as the three
+# synthesised wrappers and the relocated boxing land in the class, and
+# invokeinterface 13 -> 15 as the fused dropWhile gains a List.add and a
+# List.get.
+java: |
+  package unbox;
+  import java.util.stream.Stream;
+  public class X {
+    static Boolean small(Integer i) {
+      return i < 4;
+    }
+    static Integer length(String s) {
+      return s.length();
+    }
+    static Integer widen(String s) {
+      return s.length();
+    }
+    public static void main(String[] a) {
+      long dropped = Stream.of(1, 2, 3, 4, 5, 6)
+        .map(x -> x + 1)
+        .dropWhile(X::small)
+        .map(x -> x * 2)
+        .count();
+      long kept = Stream.of(1, 2, 3, 4, 5, 6)
+        .map(x -> x + 1)
+        .filter(X::small)
+        .count();
+      int sized = Stream.of("a", "bb", "ccc").map(s -> s + "!").mapToInt(X::length).sum();
+      long widened = Stream.of("a", "bb", "ccc").map(s -> s + "!").mapToLong(X::widen).sum();
+      System.out.printf("The result is %d %d %d %d%n", dropped, kept, sized, widened);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 4 2 9 9"
+before:
+  invokedynamic: 11
+  invokeinterface: 13
+  invokestatic: 26
+  invokevirtual: 7
+  newarray: 0
+  new: 0
+after:
+  invokedynamic: 7
+  invokeinterface: 15
+  invokestatic: 37
+  invokevirtual: 10
+  newarray: 1
+  new: 1

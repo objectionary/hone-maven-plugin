@@ -58,13 +58,15 @@ final class SummaryTest {
     }
 
     @Test
-    void skipsModulesWithoutStatistics(@Mktmp final Path temp) throws Exception {
+    void removesPreviousSummaryWhenNoStatistics(@Mktmp final Path temp) throws Exception {
         final Path dir = SummaryTest.modular(temp);
+        final Summary summary = new Summary(dir);
+        summary.collect();
         Files.deleteIfExists(dir.resolve("server/hone-statistics.csv"));
         Files.deleteIfExists(dir.resolve("client/hone-statistics.csv"));
         MatcherAssert.assertThat(
-            "report shouldn't be generated if no statistics found",
-            new Summary(dir).collect().toFile().exists(),
+            "stale report shouldn't remain if no statistics are found",
+            summary.collect().toFile().exists(),
             Matchers.is(false)
         );
     }

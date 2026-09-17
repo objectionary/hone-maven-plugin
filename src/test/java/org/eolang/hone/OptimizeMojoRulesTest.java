@@ -253,32 +253,32 @@ final class OptimizeMojoRulesTest {
             .file("src/rules/first.yaml").write(
                 """
                 name: fifty-to-sixty
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/second.yaml").write(
                 """
                 name: thirty-three-to-one
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/a-few/001.yaml").write(
                 """
                 name: hello-to-bye
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/a-few/002.yaml").write(
                 """
                 name: mama-to-papa
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
@@ -346,32 +346,32 @@ final class OptimizeMojoRulesTest {
             .file("src/rules/first.yaml").write(
                 """
                 name: fifty-to-sixty
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-49-00-00-00-00-00-00 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-4E-00-00-00-00-00-00 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/second.yaml").write(
                 """
                 name: thirty-three-to-one
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-40-80-00-00-00-00-00 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 3F-F0-00-00-00-00-00-00 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/a-few/001.yaml").write(
                 """
                 name: hello-to-bye
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 62-79-65 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/a-few/002.yaml").write(
                 """
                 name: mama-to-papa
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 70-61-70-61 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
@@ -439,16 +439,16 @@ final class OptimizeMojoRulesTest {
             .file("src/rules/first.yaml").write(
                 """
                 name: 321-to-567
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-74-10-00-00-00-00-00 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
             .file("src/rules/second.yaml").write(
                 """
                 name: 567-to-987
-                pattern: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
-                result: 'Φ.bytes ( data ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
+                pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-81-B8-00-00-00-00-00 ⟧ )'
+                result: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 40-8E-D8-00-00-00-00-00 ⟧ )'
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()

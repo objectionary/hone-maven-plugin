@@ -29,9 +29,22 @@
 # undefined local; the scratch locals (1 parked item, 4 latch array, 5 verdict)
 # are dead at the keep-label, so the four-local frame still holds.
 #
+# An ERASED item is left to the fallback on purpose. When a distinct() or a
+# skip() leads the run, `bridge-input` is Ljava/lang/Object; and the item the
+# guard preserves at the bottom of the stack is never narrowed: 505 splices the
+# checkcast onto the RELOADED copy, between the `aload 1` and the predicate, so
+# the predicate gets its type while the survivor stays an Object. Naming that
+# survivor from the predicate then promises more than the stack holds — seed 48
+# of RandomPipeline, `DOUBLES.stream().skip(1L).dropWhile(d -> d < frac)
+# .map(d -> d + 0.25)`, dies with "Type 'java/lang/Object' (current frame,
+# stack[0]) is not assignable to 'java/lang/Double'". `503-distill-state-frame`
+# writes Object there, which is what the stack really has, and the operator
+# behind the label casts for itself as it already does after any erased guard.
+#
 # Ordering: shares 503's number, since no integer is free between 502 and 503,
 # and `503-distill-cp-dropwhile-frame` sorts ahead of every other member of the
-# family, so the fallback is left only the markers nobody could name.
+# family, so the fallback is left the erased case and the markers nobody could
+# name.
 name: distill-cp-dropwhile-frame
 pattern: |
   ⟦
@@ -120,6 +133,10 @@ when:
     - matches:
         - '^\(([IJD]|L[^;]+;)+L[^;]+;\)Z$'
         - 𝑒-predicate-signature
+    - not:
+        eq:
+          - 𝑒-bridge-input
+          - '"Ljava/lang/Object;"'
 where:
   - meta: 𝑒-frame-item
     function: sed

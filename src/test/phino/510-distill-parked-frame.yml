@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A capture peel parks the item mid-body with `astore 1`, so from there on slot
+# 1 holds the item AT THAT POINT of the chain rather than the one the wrapper
+# was handed. Every frame in the 503/504/510 family names that slot from
+# `bridge-input`, which is only right while nothing ahead of the peel has
+# retyped the item — here the head turns the Integer into a Double and the
+# keep-label frame still promises the Integer. This rule widens the parked slot
+# to java/lang/Object, which is all the merge needs; the item on the STACK is
+# left exactly as the frame writer named it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/510-distill-parked-frame.phr
+input: |
+  ⟦
+    x ↦ ⟦
+      φ ↦ Φ.hone.distill-lambda,
+      static ↦ "true",
+      bridge-input ↦ "Ljava/lang/Integer;",
+      consumer ↦ "Ljava/util/function/Consumer;",
+      target-method ↦ "distill_1",
+      captured ↦ "Ljava/util/List;",
+      body ↦ ⟦
+        i1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ "X",
+          i3 ↦ "lambda$pipe$0",
+          i4 ↦ "(Ljava/lang/Integer;)Ljava/lang/Double;",
+          i5 ↦ Φ.false
+        ⟧,
+        p1 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+        p2 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+        i6 ↦ ⟦
+          φ ↦ Φ.jeo.frame,
+          type ↦ 0,
+          locals ↦ ⟦
+            φ ↦ Φ.jeo.seq.of4,
+            x0 ↦ "java/util/List",
+            x1 ↦ "java/lang/Integer",
+            x2 ↦ "java/util/function/Consumer",
+            x3 ↦ "integer"
+          ⟧,
+          stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Double" ⟧
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.jeo.frame, 𝐵-b, locals ↦ ⟦ 𝐵-c, x1 ↦ "java/lang/Object", 𝐵-d ⟧, 𝐵-e ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.jeo.frame, 𝐵-b, stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Double" ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.jeo.frame, 𝐵-b, locals ↦ ⟦ φ ↦ Φ.jeo.seq.of4, x0 ↦ "java/util/List", x1 ↦ "java/lang/Object", x2 ↦ "java/util/function/Consumer", x3 ↦ "integer" ⟧, 𝐵-c ⟧

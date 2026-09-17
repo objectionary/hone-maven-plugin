@@ -2,27 +2,50 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The static-method-reference twin of 103. A static method reference
-# (Integer::valueOf, X::keep, X::triple) compiles to an invokedynamic whose
-# target handle is kind 6 (invokestatic) pointing straight at the referenced
-# static method, so 111 leaves it native. This rule desugars it into the
-# lambda the compiler could have emitted: a private-static lambda$hone$N
-# wrapper that just forwards the argument to the referenced method, with the
-# invokedynamic repointed at the wrapper. 111 then lifts it; 205/451 fuse it
-# where a pointwise predecessor allows, otherwise 712 reverts it to the native
-# reference (so nothing is pessimised).
+# The unboxing twin of 104. A static method reference whose referenced method
+# returns a wrapper where the SAM wants the primitive — `Stream<Integer>
+# .dropWhile(X::big)` with `static Boolean big(Integer)`, or `.mapToInt(X::size)`
+# with `static Integer size(String)` — compiles to an invokedynamic whose
+# instantiated type `(Ljava/lang/Integer;)Z` differs from the target signature
+# `(Ljava/lang/Integer;)Ljava/lang/Boolean;`, and LambdaMetafactory inserts the
+# `booleanValue()` itself. 104 declines it for exactly that difference
+# (`eq: [bridge-signature, target-signature]`), so nothing downstream ever sees
+# a Φ.hone.lambda and the whole pipeline splits in two around the reference
+# (#974).
 #
-# It handles only the adaptation-free case: a SINGLE argument whose type the
-# referenced method accepts unchanged and whose return the SAM accepts
-# unchanged — i.e. the instantiated SAM type equals the target signature. The
-# wrapper body is the straight line `<load arg>; invokestatic C.m (arg)R;
-# Xreturn` (single basic block, no frames). The one adaptation that IS covered,
-# by the sibling 108, is a return the SAM unboxes (`static Boolean big(Integer)`
-# behind a Predicate), which 108 desugars with the `booleanValue()` spelled out.
-# Multi-argument refs (Integer::sum), constructor refs, argument boxing and
-# return widening do not match either rule and stay native; those are follow-up
-# puzzles.
-name: static-methodref-to-lambda
+# This rule synthesises the wrapper the compiler could have emitted and that
+# 104 emits for the adaptation-free case, with the unboxing call spelled out:
+#
+#   <load arg>                            ; the SAM parameter
+#   invokestatic C.m (arg)Ljava/lang/Boolean;
+#   invokevirtual java/lang/Boolean.booleanValue ()Z
+#   ireturn
+#
+# The wrapper's descriptor IS the instantiated type, so 111 lifts the repointed
+# invokedynamic exactly as it lifts 104's, and 201/208 read a `)Z` target off
+# it — the ordinary p-filter / dropWhile shape, folded by the ordinary 304/310.
+# Nothing in 2xx or 3xx needs to know that a wrapper was ever involved. As with
+# 104, a wrapper that does not fuse is reverted to the native reference by 712,
+# which keys on the `origin ↦ Φ.true` marker this rule leaves on the forwarding
+# call; the unboxing call carries no marker, so 711 cannot mistake it for one.
+#
+# Only an EXACT unbox is matched. A guard cannot read a `where` meta — phino
+# binds those after the match is accepted — so the pairing is spelled out as an
+# eight-way alternation over the two signatures rather than computed once and
+# compared: `)Ljava/lang/Boolean;` against `)Z`, `)Ljava/lang/Integer;` against
+# `)I`, and so on for the other six. An unbox followed by a widening (a `static
+# Integer` used as a `ToLongFunction`, where the JDK does `intValue()` then
+# `i2l`) pairs with no clause and stays native, which is the point: emitting
+# `Integer.longValue()` there would link against a method that does not exist.
+#
+# The single parameter must be a reference type on BOTH sides, because that is
+# the only argument adaptation the straight `aload 0` survives — a reference the
+# metafactory would widen (`Integer` where the method takes `Number`) verifies,
+# while a primitive one it would box or unbox does not. Boxing the return the
+# other way (a primitive-returning method where the SAM wants the wrapper),
+# primitive parameters, multi-argument refs and constructor refs stay native;
+# those are follow-up puzzles, as they are for 104.
+name: static-methodref-unbox-to-lambda
 pattern: |
   ⟦
     φ ↦ Φ.jeo.class,
@@ -183,12 +206,12 @@ result: |
       maxs ↦ ⟦
         φ ↦ Φ.jeo.maxs,
         max-stack ↦ 𝑒-max-stack,
-        max-locals ↦ 𝑒-max-locals
+        max-locals ↦ 1
       ⟧,
       params ↦ ⟦ φ ↦ Φ.jeo.params ⟧,
       body ↦ ⟦
         φ ↦ Φ.jeo.seq.of,
-        w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load, v0 ↦ 0 ⟧,
+        w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧,
         w-call ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokestatic,
           v0 ↦ 𝑒-target-class,
@@ -196,6 +219,13 @@ result: |
           v2 ↦ 𝑒-target-signature,
           v3 ↦ Φ.false,
           origin ↦ Φ.true
+        ⟧,
+        w-unbox ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          v0 ↦ 𝑒-box-class,
+          v1 ↦ 𝑒-unbox-method,
+          v2 ↦ 𝑒-unbox-signature,
+          v3 ↦ Φ.false
         ⟧,
         w-return ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-return ⟧,
         ρ ↦ ∅
@@ -211,38 +241,65 @@ when:
           - 'lambda\$.+'
           - 𝑒-target-method
     - matches: ['\(\).+', 𝑒-interface]
-    - eq: [𝑒-bridge-signature, 𝑒-target-signature]
+    - matches: ['^\(L[^;]*;\)', 𝑒-bridge-signature]
+    - matches: ['^\(L[^;]*;\)', 𝑒-target-signature]
     - or:
-        - matches: ['\(L[^;]*;\)', 𝑒-bridge-signature]
-        - matches: ['\(.\)', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Boolean;$', 𝑒-target-signature]
+            - matches: ['\)Z$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Byte;$', 𝑒-target-signature]
+            - matches: ['\)B$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Character;$', 𝑒-target-signature]
+            - matches: ['\)C$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Short;$', 𝑒-target-signature]
+            - matches: ['\)S$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Integer;$', 𝑒-target-signature]
+            - matches: ['\)I$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Long;$', 𝑒-target-signature]
+            - matches: ['\)J$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Float;$', 𝑒-target-signature]
+            - matches: ['\)F$', 𝑒-bridge-signature]
+        - and:
+            - matches: ['\)Ljava/lang/Double;$', 𝑒-target-signature]
+            - matches: ['\)D$', 𝑒-bridge-signature]
 where:
   - meta: 𝜏-wrapper
     function: random-tau
   - meta: 𝑒-wrapper-name
     function: random-string
-    args: ['"lambda$hone$104%d"']
-  - meta: 𝑒-param
-    function: sed
-    args:
-      - 𝑒-bridge-signature
-      - '"s/\\((.*)\\).*/$1/g"'
+    args: ['"lambda$hone$108%d"']
   - meta: 𝑒-return
     function: sed
     args:
       - 𝑒-bridge-signature
       - '"s/\\(.*\\)(.+)/$1/g"'
-  - meta: 𝑒-load-op
+  # "(Ljava/lang/Integer;)Ljava/lang/Boolean;" -> "java/lang/Boolean"
+  - meta: 𝑒-box-class
     function: sed
     args:
-      - 𝑒-param
-      - '"s/^[IZBCS]$/iload/g"'
-      - '"s/^J$/lload/g"'
-      - '"s/^D$/dload/g"'
-      - '"s/^F$/fload/g"'
-      - '"s/^(L.+;|\\[.+)$/aload/g"'
-  - meta: 𝜏-load
-    function: tau
-    args: [𝑒-load-op]
+      - 𝑒-target-signature
+      - '"s/\\(.*\\)L(.+);/$1/g"'
+  - meta: 𝑒-unbox-method
+    function: sed
+    args:
+      - 𝑒-return
+      - '"s/^Z$/booleanValue/g"'
+      - '"s/^B$/byteValue/g"'
+      - '"s/^C$/charValue/g"'
+      - '"s/^S$/shortValue/g"'
+      - '"s/^I$/intValue/g"'
+      - '"s/^J$/longValue/g"'
+      - '"s/^F$/floatValue/g"'
+      - '"s/^D$/doubleValue/g"'
+  - meta: 𝑒-unbox-signature
+    function: concat
+    args: ['"()"', 𝑒-return]
   - meta: 𝑒-return-op
     function: sed
     args:
@@ -251,29 +308,15 @@ where:
       - '"s/^J$/lreturn/g"'
       - '"s/^D$/dreturn/g"'
       - '"s/^F$/freturn/g"'
-      - '"s/^(L.+;|\\[.+)$/areturn/g"'
   - meta: 𝜏-return
     function: tau
     args: [𝑒-return-op]
-  - meta: 𝑒-param-width
-    function: sed
-    args:
-      - 𝑒-param
-      - '"s/^[JD]$/2/g"'
-      - '"s/^[^2].*$/1/g"'
-  - meta: 𝑒-max-locals
-    function: number
-    args: [𝑒-param-width]
-  - meta: 𝑒-widths
-    function: concat
-    args: [𝑒-param-width, 𝑒-return]
   - meta: 𝑒-max-stack-str
     function: sed
     args:
-      - 𝑒-widths
-      - '"s/^2.*$/2/g"'
-      - '"s/^1[JD]$/2/g"'
-      - '"s/^1.*$/1/g"'
+      - 𝑒-return
+      - '"s/^[JD]$/2/g"'
+      - '"s/^[^2].*$/1/g"'
   - meta: 𝑒-max-stack
     function: number
     args: [𝑒-max-stack-str]

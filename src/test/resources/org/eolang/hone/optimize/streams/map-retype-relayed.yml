@@ -40,23 +40,27 @@
 # written by the peek and deliberately left out of the output, because
 # `count()` may skip the traversal altogether on a SIZED pipeline and what the
 # peek accumulated therefore differed between the two runs — which is exactly
-# the defect #973 describes, worked around here rather than fixed. The guard
-# `101-mark-traversing-count` and `142-count-keeps-elidable-stage-native` now
-# keep such a chain native, so the peek accumulates nothing either way and
-# `SUM` is an oracle like the counts beside it.
+# the defect #973 describes, worked around here rather than fixed.
 #
-# That is also why `peeked` is the one pipeline here that no longer fuses. Its
-# `skip` preserves SIZED — SliceOps computes the new size from the old — so the
-# whole chain is elidable and the map and peek stay as they were written. The
-# other four each carry a `filter`, a `dropWhile` or a `distinct`, all of which
-# clear SIZED, so the JVM has to walk them regardless and they collapse into one
-# Stream.mapMulti as before: invokedynamic drops 8 -> 6, the four remaining
-# captured java/util/List holders push new from 3 to 7, and one skip countdown
-# plus the dropWhile latch push newarray from 1 to 3. The printed line asserts
-# end to end that the optimized class VERIFIES and still computes the right
-# answers.
+# `peeked` now ends in `collect(Collectors.counting())` instead, which counts
+# the same elements and prints the same number but traverses. Two things follow.
+# The peek accumulates 1 + 2 + 3 either way, so `SUM` is an oracle like the
+# counts beside it. And the chain still FUSES: with a bare `count()` the guard
+# #973 added would keep it native — every stage in it, `map`, `peek` and `skip`,
+# preserves SIZED — and this pack would have been left asserting that nothing
+# fuses, quietly deleting the `503-distill-skip-frame-peeked` regression it
+# exists for. The other four pipelines each carry a `filter`, a `dropWhile` or a
+# `distinct`, which clear SIZED, so a bare `count()` is harmless there and they
+# are left as they were.
+#
+# Every pipeline collapses its map + operators into one Stream.mapMulti:
+# invokedynamic drops 8 -> 5, the five captured java/util/List holders push new
+# from 3 to 8, and the two skip countdowns plus the dropWhile latch push newarray
+# from 1 to 4. The printed line asserts end to end that the optimized class
+# VERIFIES and still computes the right answers.
 java: |
   package mapretyperelayed;
+  import java.util.stream.Collectors;
   import java.util.stream.Stream;
   public class X {
     private static final long[] SUM = new long[1];
@@ -65,7 +69,7 @@ java: |
         .map(s -> new Pair((long) s.length(), s))
         .peek(p -> SUM[0] += p.key())
         .skip(1L)
-        .count();
+        .collect(Collectors.counting());
       long picked = Stream.of("a", "bb", "cc", "ddd")
         .map(s -> new Pair((long) s.length(), s))
         .filter(p -> p.key() > 1L)
@@ -113,20 +117,20 @@ log:
   - "Modified 2/2 X.phi"
   - "Finished rewriting 2 file"
   - "BUILD SUCCESS"
-  - "The result is 2/3/2/3/3 peeked=0"
+  - "The result is 2/3/2/3/3 peeked=6"
 before:
   invokedynamic: 8
   invokeinterface: 20
-  invokestatic: 19
-  invokevirtual: 9
+  invokestatic: 20
+  invokevirtual: 10
   new: 3
   newarray: 1
-  checkcast: 0
+  checkcast: 1
 after:
-  invokedynamic: 6
-  invokeinterface: 30
-  invokestatic: 30
-  invokevirtual: 14
-  new: 7
-  newarray: 3
-  checkcast: 7
+  invokedynamic: 5
+  invokeinterface: 31
+  invokestatic: 33
+  invokevirtual: 15
+  new: 8
+  newarray: 4
+  checkcast: 9

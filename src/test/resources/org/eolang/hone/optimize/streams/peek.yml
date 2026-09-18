@@ -27,6 +27,14 @@
 #   [1,2,3,4,5] --map(+1)--> [2,3,4,5,6] --peek({})--> (forwarded unchanged)
 #               --peek(Integer::intValue)--> (intValue called, result dropped)
 #               --map(*2)--> [4,6,8,10,12] --count()--> 5
+# The terminal is `collect(Collectors.counting())` rather than `count()`, and
+# that is deliberate (#973). A bare `count()` may skip the pipeline altogether
+# when the source is SIZED and nothing clears it, so the guard added for that
+# issue keeps such a chain NATIVE — which would have left this pack asserting
+# that nothing fuses, quietly deleting the coverage it was written for. The
+# collector counts the same elements and prints the same number, but it
+# traverses, so every operator below is fused exactly as before.
+#
 java: |
   package peek;
   import java.util.stream.*;
@@ -37,7 +45,7 @@ java: |
         .peek(x -> {})
         .peek(Integer::intValue)
         .map(x -> x * 2)
-        .count();
+        .collect(Collectors.counting());
       System.out.printf("The result is %d\n", n);
     }
   }
@@ -49,12 +57,12 @@ log:
 before:
   invokedynamic: 4
   invokeinterface: 5
-  invokestatic: 9
-  invokevirtual: 3
+  invokestatic: 10
+  invokevirtual: 4
   return: 3
 after:
   invokedynamic: 1
   invokeinterface: 3
-  invokestatic: 13
-  invokevirtual: 4
+  invokestatic: 14
+  invokevirtual: 5
   return: 5

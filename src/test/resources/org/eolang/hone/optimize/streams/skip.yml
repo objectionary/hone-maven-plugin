@@ -28,6 +28,14 @@
 # wrappers (invokestatic 27 -> 31). Primitive-stream skip (IntStream/
 # LongStream/DoubleStream) is out of scope for v1 — only
 # java/util/stream/Stream.skip is recognised — exactly as for distinct.
+# The terminal is `collect(Collectors.counting())` rather than `count()`, and
+# that is deliberate (#973). A bare `count()` may skip the pipeline altogether
+# when the source is SIZED and nothing clears it, so the guard added for that
+# issue keeps such a chain NATIVE — which would have left this pack asserting
+# that nothing fuses, quietly deleting the coverage it was written for. The
+# collector counts the same elements and prints the same number, but it
+# traverses, so every operator below is fused exactly as before.
+#
 java: |
   package skip;
   import java.util.stream.*;
@@ -37,12 +45,12 @@ java: |
         .map(x -> x + 1)
         .skip(2L)
         .map(x -> x * 2)
-        .count();
+        .collect(Collectors.counting());
       long inline = Stream.of(1, 2, 3, 4, 5, 6)
-        .map(x -> x + 1).skip(2L).map(x -> x * 2).count();
+        .map(x -> x + 1).skip(2L).map(x -> x * 2).collect(Collectors.counting());
       long lone = Stream.of(1, 2, 3, 4, 5)
         .skip(2L)
-        .count();
+        .collect(Collectors.counting());
       System.out.printf("The result is %d %d %d%n", multi, inline, lone);
     }
   }
@@ -54,14 +62,14 @@ log:
 before:
   invokedynamic: 4
   invokeinterface: 10
-  invokestatic: 27
-  invokevirtual: 5
+  invokestatic: 30
+  invokevirtual: 8
   newarray: 0
   new: 0
 after:
   invokedynamic: 2
   invokeinterface: 12
-  invokestatic: 31
-  invokevirtual: 5
+  invokestatic: 34
+  invokevirtual: 8
   newarray: 2
   new: 2

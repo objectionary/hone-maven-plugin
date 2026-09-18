@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive sibling of 208 (#982). An IntStream.dropWhile — an IntPredicate
+# SAM, "(I)Z" on both signatures, the IntStream class and its own stream
+# signature — becomes a Φ.hone.primitive-dropWhile that carries the stream
+# class and the primitive bridge through to 211, exactly as 203 does for a
+# primitive filter.
+#
+# The second operation is the SCOPE guard, and it is the more interesting half
+# of this pack: the same shape over LongStream must NOT be lifted. A long item
+# takes two local slots, which slides every hand-written slot in the stateful
+# lowering (512's counter, 310's latch scratch, the frame rules' local lists),
+# so the rule matches IntStream alone and a LongStream.dropWhile has to come
+# out of this rewrite still a Φ.hone.lambda, native as it was before.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/208-lambda-to-primitive-dropwhile.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      ints ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "fusion/X",
+        method ↦ "test",
+        interface ↦ "()Ljava/util/function/IntPredicate;",
+        lambda-signature ↦ "(I)Z",
+        bridge-signature ↦ "(I)Z",
+        static ↦ "true",
+        opcode ↦ "invokeinterface",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(I)Z",
+          is-interface ↦ Φ.false
+        ⟧,
+        stream ↦ ⟦
+          class ↦ "java/util/stream/IntStream",
+          method ↦ "dropWhile",
+          signature ↦ "(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"
+        ⟧
+      ⟧,
+      longs ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "fusion/X",
+        method ↦ "test",
+        interface ↦ "()Ljava/util/function/LongPredicate;",
+        lambda-signature ↦ "(J)Z",
+        bridge-signature ↦ "(J)Z",
+        static ↦ "true",
+        opcode ↦ "invokeinterface",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$1",
+          signature ↦ "(J)Z",
+          is-interface ↦ Φ.false
+        ⟧,
+        stream ↦ ⟦
+          class ↦ "java/util/stream/LongStream",
+          method ↦ "dropWhile",
+          signature ↦ "(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.primitive-dropWhile, opcode ↦ "invokeinterface", class ↦ "fusion/X", stream-class ↦ "java/util/stream/IntStream", bridge-signature ↦ "(I)Z", static ↦ "true", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.primitive-dropWhile, 𝐵-h, target ↦ ⟦ 𝐵-t1, method ↦ "lambda$main$0", 𝐵-t2 ⟧, 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-l1, interface ↦ "()Ljava/util/function/LongPredicate;", 𝐵-l2, stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "dropWhile", 𝐵-l3 ⟧, 𝐵-l4 ⟧

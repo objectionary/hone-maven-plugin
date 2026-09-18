@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The dropWhile twin of 232 (#982), and the step that hands 310 the element
+# type. 211 has already wrapped the lifted primitive call in its box/unbox
+# sandwich, so the stream carries Ljava/lang/Integer; while the predicate still
+# takes the raw I that javac compiled it to take. This rule writes that split
+# out the way 232 writes it for a filter: bridge-input and bridge-output name
+# the BOXED element the fused body passes around, accepted names the PRIMITIVE
+# the predicate wants, and returned matches accepted because a dropWhile hands
+# its item on untouched.
+#
+# Unlike 232 there is no p-/o- choice to make: 208's primitive sibling refuses
+# anything whose target does not end in ")Z", so the output is always the one
+# Φ.hone.dropWhile name 310 folds.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/233-boxed-primitive-dropwhile-to-dropwhile.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op ↦ ⟦
+        φ ↦ Φ.hone.boxed-primitive-dropWhile,
+        opcode ↦ "invokeinterface",
+        class ↦ "fusion/X",
+        bridge-signature ↦ "(I)Z",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(I)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.dropWhile, opcode ↦ "invokeinterface", class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "I", returned ↦ "I", static ↦ "true", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.hone.dropWhile, 𝐵-h, target ↦ ⟦ 𝐵-t1, signature ↦ "(I)Z", 𝐵-t2 ⟧, 𝐵-t ⟧

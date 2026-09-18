@@ -52,6 +52,7 @@ when:
   or:
     - eq: [𝜏-primitive-func, 'primitive-map']
     - eq: [𝜏-primitive-func, 'primitive-filter']
+    - eq: [𝜏-primitive-func, 'primitive-dropWhile']
 where:
   - meta: 𝜏-box
     function: random-tau

@@ -18,12 +18,30 @@
 # holds. The two extra slots are unused by stateless distinct/skip guards and
 # cost nothing there.
 #
-# The INPUT item is always a reference (v1 stateful operators are object
-# streams — distinct is Stream<T>), so the leading load is a fixed aload 1.
-# The OUTPUT may differ: when 451 fuses a trailing mapToX into this stateful
-# distill the body ends on a primitive, so the closing dup / Consumer.accept
-# follow the consumer type (Int/Long/DoubleConsumer), exactly as 511 does for
-# a stateless type-transition distill. A primitive INPUT item is future work.
+# The INPUT item is no longer always a reference. It was while the only
+# stateful operators were object-stream ones (distinct and skip pin
+# java/util/stream/Stream; the object dropWhile does too), but 208's primitive
+# sibling (#982) lifts an IntStream.dropWhile, 411 collapses the box/unbox pair
+# around the distill it folds into, and the item then arrives as a raw int. So
+# the leading load follows `bridge-input` rather than being a fixed aload 1 —
+# `iload` for I, `aload` for a reference — and the frame rules name local 1
+# "integer" for the same reason.
+#
+# Only a NARROW item is reachable, and deliberately: a long or a double occupies
+# TWO local slots, which slides the consumer from 2 to 3, the counter from 3 to
+# 4 and 310's latch scratch from 4/5 to 5/6. The counter slot is spelled out
+# again in 521, which sees a bare fetch marker and has no way to learn the
+# width of the item in the method it is being lowered into, so widening this
+# layout is not a change to one rule but to the whole stateful family (512,
+# 521, 310, 509 and every frame rule that emits a local list). 208's primitive
+# sibling therefore matches IntStream only and leaves LongStream and
+# DoubleStream native, exactly as before. The lload/dload arms below are here so
+# the mapping is right, not because anything can reach them yet.
+#
+# The OUTPUT may differ from the input: when 451 fuses a trailing mapToX into
+# this stateful distill the body ends on a primitive, so the closing dup /
+# Consumer.accept follow the consumer type (Int/Long/DoubleConsumer), exactly
+# as 511 does for a stateless type-transition distill.
 name: distill-state-lambda-to-method
 pattern: |
   ⟦
@@ -56,7 +74,7 @@ result: |
       φ ↦ Φ.jeo.seq.of,
       i-init-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       i-store-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 3 ⟧,
-      i-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      i-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load-item, i1 ↦ 1 ⟧,
       𝐵-body,
       i-load-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
       i-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x ⟧,
@@ -82,6 +100,19 @@ where:
       - 𝑒-bridge-input
       - 𝑒-consumer
       - '")V"'
+  # The leading load follows the INPUT item: a raw int since 411 may now hand
+  # this wrapper a primitive item (#982), a reference otherwise.
+  - meta: 𝑒-load-item
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^I$/iload/g"'
+      - '"s/^J$/lload/g"'
+      - '"s/^D$/dload/g"'
+      - '"s/^L.+;$/aload/g"'
+  - meta: 𝜏-load-item
+    function: tau
+    args: [𝑒-load-item]
   - meta: 𝑒-consumer-class
     function: sed
     args:
@@ -93,7 +124,7 @@ where:
   # type-transition distill (object in, primitive out, produced when 451 fuses
   # a trailing mapToX into a stateful distill), or the object Consumer for a
   # symmetric distinct/skip. The item is always an object (v1 stateful limit),
-  # so the leading aload 1 is unchanged.
+  # so only the leading load has to follow the input.
   - meta: 𝑒-dup-x
     function: sed
     args:

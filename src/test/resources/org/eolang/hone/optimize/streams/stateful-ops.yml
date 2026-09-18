@@ -5,18 +5,18 @@
 # the distill today — distinct and dropWhile — and each fuses with the
 # .map(n -> n) in front of it into one Stream.mapMulti backed by a captured
 # java/util/List that carries its state, so the pinned `new` count is one
-# ArrayList per fused operator.
+# ArrayList per fused operator, plus the distinct's own HashSet.
 #
-#   distinct (216 -> 307 -> 502): captures a newKeySet() seen-set
-#     inside the wrapper's java/util/List. The seen-set itself is a
-#     ConcurrentHashMap.newKeySet() built by a static factory (thread-safe,
-#     so a parallel run cannot race — see #715), which is an invokestatic
-#     rather than a `new`.
+#   distinct (216 -> 307 -> 502): captures a java/util/HashSet seen-set
+#     inside the wrapper's java/util/List. A bare HashSet is enough because
+#     224/225 revert every distinct in a method that mentions parallel(), so
+#     this fold never runs wide (#715), and it is what lets a null through
+#     the way distinct() does (#970).
 #     input [1, 2, 2, 3, 1, 3, 4] -> [1, 2, 3, 4]; count() = 4
-#     emits 1 `new` (the ArrayList) and a KeySetView.add call.
+#     emits 2 `new` (the ArrayList and the HashSet) and a HashSet.add call.
 #
 #   dropWhile (208 -> 310 -> 502): captures a one-shot sticky latch (#718)
-#     inside its own java/util/List, which is the second `new`. The latch is
+#     inside its own java/util/List, which is the third `new`. The latch is
 #     an int[1]: 1 `newarray` allocates it, and it is read with iaload and
 #     written with iastore. Those two are what pin the array type — since
 #     `newarray` covers every primitive type, it alone proves only that some
@@ -61,7 +61,7 @@ before:
   baload: 0
   bastore: 0
 after:
-  new: 2
+  new: 3
   newarray: 1
   iaload: 1
   iastore: 1

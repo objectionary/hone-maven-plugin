@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 307 is CLOSED on the unmarked pragma, so a pragma 217 has stamped
+# `unordered ↦ Φ.true` is left for its sibling to fold and never picks up the
+# bare HashSet, which would race on a parallel pipeline (#715, #970).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/307-distinct-to-distill.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream",
+        unordered ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦
+      φ ↦ Φ.hone.distinct,
+      class ↦ "Foo",
+      stream-class ↦ "java/util/stream/Stream",
+      unordered ↦ Φ.true
+    ⟧

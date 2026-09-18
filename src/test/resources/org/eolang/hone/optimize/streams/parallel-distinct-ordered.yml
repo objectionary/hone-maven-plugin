@@ -4,8 +4,8 @@
 # Regression for #738: a `.distinct()` on an ORDERED PARALLEL stream must keep
 # the encounter-order-FIRST element among equals. Lifted and fused
 # (216 -> 307 -> 401 -> 502) a distinct becomes a single Stream.mapMulti whose
-# seen-set is a captured ConcurrentHashMap.newKeySet(). #715 made that set
-# thread-safe, but a concurrent set only fixes the data race — it keeps
+# seen-set is captured into ONE BiConsumer. #715 made that set thread-safe,
+# but thread safety only fixes the data race — the set keeps
 # whichever equal element wins the race to add(), i.e. ARRIVAL-order-first,
 # which on an ordered parallel stream is neither encounter-order-first nor
 # deterministic across runs. The JDK's native distinct() is documented STABLE

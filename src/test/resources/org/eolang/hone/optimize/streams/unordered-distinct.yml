@@ -10,7 +10,7 @@
 # element wins the race to `add()`. That contract is conditional on the stream
 # being ordered, and `BaseStream.unordered()` removes the condition — an
 # unordered `distinct()` may keep ANY element among equals, which is exactly
-# what the concurrent set already delivers. `217-unordered-permits-distinct`
+# what a single shared seen-set already delivers. `217-unordered-permits-distinct`
 # stamps the pragma so `224`/`225`, closed on the unmarked form, leave it alone.
 #
 # Five pipelines, one per branch of the decision:
@@ -42,13 +42,18 @@
 # be a flake, not an oracle.
 #
 # The pinned `invokeinterface` total goes UP, not down, and that is the point:
-# a fused distinct trades ONE `Stream.distinct` dispatch for the seen-set calls
-# inside the body it fused into, so each re-permitted pipeline is worth +1. With
-# `217` the class ends at 52; with the rule taken away it ends at 50 and five
-# native `Stream.distinct` calls survive instead of three. So the number is not
-# decoration — it moves by exactly the two pipelines this change re-permits,
-# and it moves the other way if the relaxation ever over-applies to the three
-# that must stay reverted.
+# a fused distinct trades ONE `Stream.distinct` dispatch for the seen-set and
+# state calls inside the body it fused into. With `217` the class ends at 55;
+# with the rule taken away it ends at 50 and five native `Stream.distinct`
+# calls survive instead of three. So the number is not decoration — it moves
+# with exactly the pipelines this rule re-permits, and it moves the other way
+# if the relaxation ever over-applies to the three that must stay reverted.
+#
+# Note which set each fold builds (#970): the three marked pipelines here go
+# through `307-unordered-distinct-to-distill`, whose seen-set is a
+# `Collections.synchronizedSet(new HashSet<>())` reached by `invokeinterface`
+# — the sequential fold's bare HashSet would race across ForkJoin workers.
+# That is part of why the delta is +5 and not +2.
 java: |
   package unordereddistinct;
   import java.util.List;
@@ -98,4 +103,4 @@ before:
   invokeinterface: 42
 after:
   invokedynamic: 12
-  invokeinterface: 52
+  invokeinterface: 55

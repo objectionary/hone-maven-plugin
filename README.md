@@ -408,10 +408,13 @@ The same revert-on-parallel guard applies to `dropWhile`, which is
 `distinct()` is fused (it lowers to a seen-set check inside the `mapMulti`
   body, see `307-distinct-to-distill`), but only when the pipeline provably
   stays sequential.
-The fused seen-set is a thread-safe `ConcurrentHashMap.newKeySet()`, which
-  #715 introduced to close the data race on parallel streams; making `add()`
-  atomic, however, only fixes _whether_ duplicates leak, not _which_ element
-  survives among equals.
+The fused seen-set is a plain `java.util.HashSet`, and the fold that builds
+  it (`307-distinct-to-distill`) is reached only on a pipeline that stays on
+  one thread; the one fold that can run wide builds a
+  `Collections.synchronizedSet(new HashSet<>())` instead, which is what #715
+  asked for when it closed the data race on parallel streams.
+Making `add()` atomic, however, only fixes _whether_ duplicates leak, not
+  _which_ element survives among equals.
 The JDK's `distinct()` is documented _stable_ on an ordered stream: among
   equal elements it keeps the one first in encounter order.
 A single shared set populated by several `ForkJoin` workers instead keeps
@@ -430,7 +433,7 @@ The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
 That stability contract, however, holds only while the stream is _ordered_,
   and `BaseStream.unordered()` is exactly the call that drops it:
   an unordered `distinct()` is specified to keep _any_ element among equals,
-  which is precisely what the concurrent seen-set already delivers.
+  which is precisely what a single shared seen-set already delivers.
 So `217-unordered-permits-distinct` gives the fusion back
   when an explicit `unordered()` call precedes the `distinct()`,
   by stamping the pragma with a mark that `224` and `225` decline (#975):
@@ -446,6 +449,25 @@ WORDS.stream().unordered().parallel().map(s -> s + "!").distinct()
 // so a distinct ahead of it still ran on an ordered stream
 WORDS.stream().parallel().map(s -> s + "!").distinct().unordered()
 ```
+
+Whichever of the two folds fires, the set has to accept `null`, because
+  `distinct()` does:
+  the JDK runs the sequential ordered case through a `LinkedHashSet`,
+  which holds one `null` happily.
+Both folds used to build the set with `ConcurrentHashMap.newKeySet()`,
+  whose `add()` throws `NullPointerException` on `null` —
+  and it threw from inside the synthetic `distill_…` lambda,
+  so a pipeline that carried nulls before the rewrite died after it
+  with a stack trace pointing nowhere near the user's code (#970):
+
+```java
+// 2 before the rewrite, NullPointerException after it
+Stream.of("a", null, "a", null).distinct().map(s -> s).count();
+```
+
+`HashSet` restores that behaviour and costs less per element,
+  and `Collections.synchronizedSet` keeps it on the unordered fold,
+  which is the only one that pays for a lock.
 
 `skip()` and `dropWhile()` have unordered contracts of their own
   — any _n_ elements, any subset of the matching prefix —

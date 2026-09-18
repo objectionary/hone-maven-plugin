@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# A distinct distill that still carries only the bare guard (it never
-# fused) reverts to a plain Stream.distinct() opcode tagged with the
-# `reverted` marker, so 216 cannot re-recognise it and re-enter the
-# fold/revert cycle.
+# The same revert for the guard `307-unordered-distinct-to-distill` builds
+# (#970): its seen-set is a synchronized java/util/Set, so the `add` is an
+# `invokeinterface` and not the sibling's `invokevirtual` on a HashSet. 441
+# takes that opcode as a metavariable, so both unfused distincts revert.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/4xx/441-unfused-distinct-to-invokeinterface.phr
 input: |
@@ -20,17 +20,17 @@ input: |
         accepted ↦ "Ljava/lang/Object;",
         returned ↦ "Ljava/lang/Object;",
         static ↦ "true",
-        state ↦ ⟦ s ↦ ⟦ set ↦ "HashSet" ⟧, ρ ↦ ∅ ⟧,
+        state ↦ ⟦ s ↦ ⟦ set ↦ "synchronizedSet" ⟧, ρ ↦ ∅ ⟧,
         body ↦ ⟦
-          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/Set" ⟧,
           b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
           b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
           b4 ↦ ⟦
-            φ ↦ Φ.jeo.opcode.invokevirtual,
-            i1 ↦ "java/util/HashSet",
+            φ ↦ Φ.jeo.opcode.invokeinterface,
+            i1 ↦ "java/util/Set",
             i2 ↦ "add",
             i3 ↦ "(Ljava/lang/Object;)Z",
-            i4 ↦ Φ.false
+            i4 ↦ Φ.true
           ⟧,
           b5 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
           b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,

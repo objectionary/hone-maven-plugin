@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Sibling of `307-distinct-to-distill`, for the one distinct pragma that can
+# still reach a PARALLEL pipeline: the one `217-unordered-permits-distinct` has
+# stamped `unordered ↦ Φ.true`. It sorts after `307-distinct-to-distill` and
+# both are closed on their own form, so exactly one of them fires and the order
+# between them does not matter; the number stays 307 because the two folds are
+# one scheduling step (CLAUDE.md, "reuse the lower one and let the name carry
+# the ordering").
+#
+# Everything is identical to its sibling except the seen-set. `224`/`225`
+# revert every distinct in a method that mentions `parallel()`, so the unmarked
+# fold only ever runs on one thread and builds a bare java/util/HashSet. This
+# one is the exemption `217` carves out: an explicitly unordered stream may
+# keep any element among equals, so the fusion survives even when the pipeline
+# runs wide, and several ForkJoin workers then invoke the ONE BiConsumer that
+# 502 builds — and therefore Set.add — concurrently. A bare HashSet races there
+# (two threads both see an element as "unseen" and let the duplicate through),
+# which is #715.
+#
+# So this fold needs a set that is thread-safe AND accepts null, because
+# `distinct()` accepts null. `ConcurrentHashMap.newKeySet()` — what both folds
+# used before — gives the first and refuses the second: it throws
+# NullPointerException on `add(null)`, inside the synthetic lambda, pointing
+# nowhere near the user's code (#970). No public concrete JDK class gives both,
+# so the set is built as `Collections.synchronizedSet(new HashSet<>())`: one
+# monitor per `add`, which is a fair price on the pipeline that opted into
+# running wide, and it is the only fold that pays it.
+#
+# That wrapper is typed by the java/util/Set INTERFACE, so the guard reaches it
+# with `invokeinterface` where the sibling uses `invokevirtual`. `441` and the
+# three distinct frame rules (`503-distill-distinct-frame`, its `-peeked`
+# variant and `510-distill-distinct-frame-relayed`) take the guard's add opcode
+# as a metavariable for that reason, with a `when` pinning it to those two
+# invokes.
+#
+# The state block assumes the List 502 builds is already on the stack, builds
+# the wrapped set, calls List.add and pops the boolean — so it begins and ends
+# at [list] with a peak of 4, well inside the 6 that 502 adds to the declared
+# max-stack. The opcode names are random so two distinct() calls in one method
+# do not collide when their blocks land in the same body.
+name: unordered-distinct-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distinct,
+    class ↦ 𝑒-class,
+    stream-class ↦ 𝑒-stream-class,
+    unordered ↦ Φ.true
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    start ↦ "distinct",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Object;",
+    static ↦ "true",
+    state ↦ ⟦
+      𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-new-set ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
+      𝜏-dup-set ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-init-set ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokespecial,
+        i2 ↦ "java/util/HashSet",
+        i3 ↦ "<init>",
+        i4 ↦ "()V",
+        i5 ↦ Φ.false
+      ⟧,
+      𝜏-sync-set ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ "java/util/Collections",
+        i3 ↦ "synchronizedSet",
+        i4 ↦ "(Ljava/util/Set;)Ljava/util/Set;",
+        i5 ↦ Φ.false
+      ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/Set" ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
+      i4 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i1 ↦ "java/util/Set",
+        i2 ↦ "add",
+        i3 ↦ "(Ljava/lang/Object;)Z",
+        i4 ↦ Φ.true
+      ⟧,
+      i5 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      i9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L307u%d"']
+  - meta: 𝜏-dup-list
+    function: random-tau
+  - meta: 𝜏-new-set
+    function: random-tau
+  - meta: 𝜏-dup-set
+    function: random-tau
+  - meta: 𝜏-init-set
+    function: random-tau
+  - meta: 𝜏-sync-set
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau

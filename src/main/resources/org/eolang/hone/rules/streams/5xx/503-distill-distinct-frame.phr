@@ -49,6 +49,13 @@
 # the lambda into a method (503 < 512), so the marker never reaches jeo. Scoped
 # to a distill-lambda WITH `captured`, like 503 itself, so stateless filter
 # keep-labels stay with 506/507.
+#
+# The guard's `add` opcode is a metavariable pinned by the `when` to the two
+# invokes a distinct guard can use, because the two distinct folds build two
+# different seen-sets (#970): `307` a java/util/HashSet, called with
+# `invokevirtual`, and `307-unordered-distinct-to-distill` a synchronized
+# java/util/Set, called with `invokeinterface`. Everything else about the call
+# — class, method, signature, flag — was already generic here.
 name: distill-distinct-frame
 pattern: |
   ⟦
@@ -71,7 +78,7 @@ pattern: |
       𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       𝜏-add ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokevirtual,
+        φ ↦ Φ.jeo.opcode.𝜏-add-op,
         i1 ↦ 𝑒-add-class,
         i2 ↦ 𝑒-add-method,
         i3 ↦ 𝑒-add-signature,
@@ -107,7 +114,7 @@ result: |
       𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       𝜏-add ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokevirtual,
+        φ ↦ Φ.jeo.opcode.𝜏-add-op,
         i1 ↦ 𝑒-add-class,
         i2 ↦ 𝑒-add-method,
         i3 ↦ 𝑒-add-signature,
@@ -138,6 +145,9 @@ result: |
   ⟧
 when:
   and:
+    - or:
+        - eq: [𝜏-add-op, 'invokevirtual']
+        - eq: [𝜏-add-op, 'invokeinterface']
     - matches:
         - '^\(.*\)L[^;]+;$'
         - 𝑒-head-signature

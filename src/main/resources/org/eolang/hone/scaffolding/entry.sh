@@ -184,17 +184,38 @@ function streams_selected {
   return 1
 }
 
+# A class below Java 16 cannot receive a mapMulti, which is what #930 asked
+# the guard to prevent. Ending the build was too broad an answer: the "self"
+# profile selects streams/* over this project's own classes, where the
+# generated HelpMojo.class is compiled at Java 8, and one such class stopped
+# every other class from being optimized. The offending classes go into
+# EXCLUDES instead, which reaches jeo as a glob of absolute paths below,
+# so they are never disassembled and the rest of the project still is.
 if streams_selected; then
+  declare -a outdated=()
   while IFS= read -r classfile; do
     [ -z "${classfile}" ] && continue
     read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}")
     class_version=$(( high * 256 + low ))
     if [ "${class_version}" -lt 60 ]; then
-      echo "The streams rules require Java 16 bytecode (class version 60), but '${classfile}' is version ${class_version}; refusing to emit mapMulti for an older target"
-      exit 1
+      outdated+=("${classfile}")
+      echo "The streams rules require Java 16 bytecode (class version 60), but '${classfile}' is version ${class_version}, so it stays out of the pipeline"
     fi
   done < <(find "${TARGET}/${CLASSES}" -type f -name '*.class' -print)
+  if [ "${#outdated[@]}" -gt 0 ]; then
+    EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${outdated[*]}")"
+    echo "Excluded ${#outdated[@]} class(es) older than Java 16 from the disassembly, leaving the rest to the streams rules"
+  fi
 fi
+
+# @todo #1007:30min Let CI run the two integration projects this guard used to
+#  abort. "src/it/bench/pom.xml" and "src/it/modular/pom.xml" set
+#  maven.compiler.target to 1.8 while selecting streams/*, so before this change
+#  they died here; now their classes are excluded and the build goes on. Nobody
+#  sees either outcome, because ".github/workflows/mvn.yml" passes
+#  "-Dinvoker.skip", so neither project can turn a build red when it breaks.
+#  Dropping that flag, or running the invoker in a job of its own, would put the
+#  exclusion path under test instead of trusting it.
 
 if [ -e /proc/meminfo ]; then
   printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"

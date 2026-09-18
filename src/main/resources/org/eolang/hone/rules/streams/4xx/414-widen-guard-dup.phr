@@ -12,8 +12,8 @@
 # the item they see is the WRAPPER, one slot wide. `411` is what changes the
 # answer. It collapses the sandwich and retypes the whole run onto the raw
 # primitive, and from that point the stack holds a two-slot value that a `dup`
-# cannot copy — "Type long_2nd (current frame, stack[1]) is not assignable to
-# category1 type".
+# cannot copy: the verifier names the second half of that value on the stack
+# and rejects it as "not assignable to category1 type".
 #
 # `281` and `413` already read a primitive rather than a wrapper and get this
 # right on their own, which is why a stateless `LongStream.filter` has always

@@ -245,7 +245,7 @@ public final class OptimizeMojo extends AbstractMojo {
      *
      * <p>This number doesn't need to be changed. However, it may be used for debugging.
      * The larger the number, the longer optimization might take. We pass
-     * this number to {@code phino} as the {@code --max-depth} argument.</p>
+     * this number to {@code phino} as the {@code --max-cycles} argument.</p>
      *
      * @since 0.4.0
      * @checkstyle MemberNameCheck (6 lines)

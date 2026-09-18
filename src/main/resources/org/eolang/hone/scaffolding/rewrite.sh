@@ -399,9 +399,9 @@ fi
 start=$(now)
 if [ "${threads}" -eq 1 ]; then
   echo "Starting to rewrite ${total} file(s)..."
-  while IFS= read -r cmd; do
-    /bin/bash -c "${cmd}"
-  done <<< "$(cat "${tasks}")"
+  while IFS= read -r cmd <&3; do
+    env bash -c "${cmd}" < /dev/null
+  done 3< "${tasks}"
 else
   if ! parallel --version >/dev/null; then
     echo "The system doesn't have GNU Parallel installed, can't rewrite in ${threads} threads"

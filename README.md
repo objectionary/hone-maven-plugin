@@ -454,6 +454,47 @@ WORDS.stream().parallel().map(s -> s + "!").distinct().unordered()
   a countdown `long[1]` and a sticky `int[1]` are raced on a parallel stream,
   not merely unstable, so those two stay reverted on any parallel pipeline.
 
+## Why Nothing Is Fused Ahead of an Elidable `count()`
+
+`ReferencePipeline.count()` is allowed to skip the pipeline altogether
+  when the source is SIZED and nothing clears it,
+  and it does — it just asks the spliterator for its size.
+So under a bare `count()` the lambdas never run:
+
+```java
+// prints nothing: the map is never executed
+Stream.of("a", "bb").map(s -> { log(s); return s.length(); }).count();
+```
+
+`mapMulti` clears SIZED by design,
+  so a fused chain forces the traversal the JVM was going to skip,
+  and every `map` and `peek` lambda starts running.
+An exception thrown inside one goes the same way:
+  invisible before the rewrite, thrown after it.
+
+Both forms are within the specification,
+  since `count()` is documented as possibly not executing the pipeline,
+  so this is a question of what the plugin promises.
+It promises not to add work:
+  `101-mark-traversing-count` and
+  `142-count-keeps-elidable-stage-native` keep the chain native
+  whenever the terminal is one the JVM can elide (#973).
+Nothing is forfeited by doing so —
+  in exactly that case the fused `mapMulti`
+  would have optimised a pipeline that was never going to run.
+
+The dividing line is whether a stage clears SIZED,
+  which is **not** the same as whether it changes the element count:
+
+| keeps the elision | clears SIZED, so the fusion is kept |
+| --- | --- |
+| `limit`, `skip`, `sorted`, `peek`, `map`, `boxed`, `unordered` | `filter`, `distinct`, `takeWhile`, `dropWhile`, `flatMap`, `mapMulti` |
+
+`limit(3)` drops elements and still elides,
+  because `SliceOps` computes the new size from the old one.
+Where a stage on the right is present the JVM has to walk the stream anyway,
+  so the fusion costs nothing and is kept.
+
 ## Which Sink-Free Shapes Are Not Fused Yet
 
 The sections above explain what the plugin refuses to fuse

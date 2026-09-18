@@ -1,0 +1,121 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Half one of the `count()` guard (#973). This rule decides, and records, whether
+# a `count()` in this method body is one the JVM can ELIDE; `142`'s half then
+# keeps the pipeline native when it is.
+#
+# `ReferencePipeline.count()` is allowed to skip the pipeline entirely when the
+# source is SIZED and no stage changes the element count, and it does — it just
+# asks the spliterator for its size. `map`, `peek` and `boxed` all preserve
+# SIZED, so under a bare `count()` their lambdas never run:
+#
+#   Stream.of("a", "bb").map(s -> { log(s); return s.length(); }).count()
+#
+# never calls `log`. `mapMulti` clears SIZED by design, so once the chain is
+# fused into one the same terminal has to traverse and `log` runs for every
+# element — an exception thrown in such a lambda goes the same way, invisible
+# before the rewrite and thrown after it. Both are within the specification,
+# since `count()` is documented as possibly not executing the pipeline, but it
+# is the one case where fusing ADDS work instead of removing it, and in exactly
+# that case the fusion buys nothing at all: the pipeline it optimises was never
+# going to run.
+#
+# So the guard is free where it fires, and that is the whole argument for
+# taking the conservative branch the issue offers rather than only documenting
+# the behaviour.
+#
+# WHY THIS RUNS FIRST, ahead of even the label cleanups: `142` needs to know
+# that NO count-changing stage sits in front of the terminal, and a phino
+# pattern cannot test a binding group for an ABSENCE. The dual, positive route
+# every other guard here takes (`222`, `224`, `454`) is to match the thing that
+# is present — so this rule matches a RESIZING call and stamps the `count()`
+# with `traverses ↦ Φ.true`, and `142` is closed on the unstamped opcode and
+# therefore fires only when no such call was found. That works only while every
+# operation is still a raw opcode carrying its own name: by `111` a `filter`,
+# `takeWhile`, `flatMap` or `mapMulti` has been swallowed into a Φ.hone.lambda
+# and its `invokeinterface` is gone, and `103`-`108` swallow a method-reference
+# one even earlier. Sorting before `101-remove-self-reference-labels` puts this
+# rule ahead of all of them, where the body is still exactly what jeo read out
+# of the class file.
+#
+# The name list is every operation that CLEARS SIZED, which is not the same as
+# every operation that changes the element count, and the difference is the
+# whole subtlety here. `limit` and `skip` change the count and yet keep the
+# elision, because the JDK's SliceOps can compute the new size from the old
+# one; `sorted` reorders and keeps it too. Measured against the JDK rather than
+# reasoned about — `s.limit(3).map(f).count()` runs `f` zero times, while
+# `s.filter(p).map(f).count()` runs it once per element — the dividing line is:
+#
+#   keeps the elision   none limit skip sorted peek unordered parallel
+#   clears it           filter distinct takeWhile dropWhile flatMap mapMulti
+#
+# so `limit` and `skip` belong on neither this list nor nowhere: they are
+# handled by `142` leaving the stages around them native. Getting the list wrong
+# is safe in one direction only, and that is the direction it errs: a
+# SIZED-clearing operation MISSING from it means no stamp, so `142` keeps the
+# chain native and a fusion that would have been free is forfeited — an
+# optimisation lost, never a behaviour changed. A SIZED-preserving one wrongly
+# ADDED would suppress the guard and let the regression back in, so nothing
+# joins this list that has not been measured to clear SIZED.
+#
+# Detection is method-local and over-broad, exactly as `224`'s and `454`'s are,
+# and here too that errs safe: a `filter` on an unrelated, locally-consumed
+# stream in the same method stamps this `count()` as well, which only means the
+# chain in front of it keeps a fusion it could have kept anyway.
+#
+# The stamp is a fifth operand on the opcode, the same trick `441`/`442`/`454`
+# use: jeo ignores it when assembling, so the bytecode is an ordinary
+# `Stream.count()` call. The pattern is closed on the four-operand form jeo
+# emits, so a stamped opcode stops matching here and this rule cannot re-fire on
+# its own output.
+name: mark-traversing-count
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-resize ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-rop,
+      𝜏-rclass ↦ 𝑒-rclass,
+      𝜏-rmethod ↦ 𝑒-rmethod,
+      𝐵-resize-rest
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-resize ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-rop,
+      𝜏-rclass ↦ 𝑒-rclass,
+      𝜏-rmethod ↦ 𝑒-rmethod,
+      𝐵-resize-rest
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface,
+      traverses ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-rop, 'invokeinterface']
+        - eq: [𝜏-rop, 'invokevirtual']
+    - matches:
+        - '^(filter|distinct|takeWhile|dropWhile|flatMap|flatMapTo(Int|Long|Double)|mapMulti|mapMultiTo(Int|Long|Double|Obj))$'
+        - 𝑒-rmethod

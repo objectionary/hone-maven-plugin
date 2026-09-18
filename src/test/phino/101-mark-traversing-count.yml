@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 101 stamps a `count()` the JVM cannot elide, so that 142 — closed on the
+# unstamped opcode — knows to stand down and let the chain in front of it fuse
+# (#973).
+#
+# A `filter` ahead of the terminal clears SIZED, so the JDK has to traverse and
+# the lambdas run whether or not the plugin fuses them. The stamp records that,
+# and the fusion is kept.
+#
+# A rewrite replaces what it matched, so asserting the five-operand form is
+# also what proves the four-operand one is gone — and that is the form 142 keys
+# on. The second expectation pins the `filter` itself as untouched: this rule
+# reads the resizing call, it must never consume or alter it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/101-mark-traversing-count.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-stage ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "filter",
+        v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op-count ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "count",
+        v2 ↦ "()J",
+        v3 ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "count", v2 ↦ "()J", v3 ↦ Φ.true, traverses ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "filter", 𝐵-f ⟧

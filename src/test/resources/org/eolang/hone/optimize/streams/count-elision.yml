@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Fusing ahead of a bare `count()` used to make elided lambdas run (#973).
+#
+# `ReferencePipeline.count()` may skip the pipeline entirely when the source is
+# SIZED and nothing clears it — it just asks the spliterator for its size. So
+# `W.stream().map(s -> { R[0]++; return s.length(); }).count()` never calls the
+# lambda. `mapMulti` clears SIZED by design, so once the chain was fused the
+# same terminal had to traverse and the lambda ran once per element. An
+# exception thrown inside one behaved the same way: invisible before the
+# rewrite, thrown after it. Both forms are within the specification, since
+# `count()` is documented as possibly not executing the pipeline, so what this
+# fixture pins is a decision rather than a violation — and the decision is that
+# the plugin does not make a pipeline run that the JVM was going to skip.
+#
+# `101-mark-traversing-count` and `142-count-keeps-elidable-stage-native` are
+# that guard. The whole test is the `runs` array in the printed line: it is the
+# count of how many times each lambda executed, it is asserted verbatim, and it
+# is identical before and after optimisation. Nothing else in this pack matters
+# as much — opcode counts would let a regression through, since a rewrite that
+# starts running the lambdas need not change a single opcode tally.
+#
+# Nine pipelines, split by what the JDK does with them:
+#
+# ELIDED, so the guard fires and the chain stays native (runs 0):
+#   * bare       — the issue's own line, one map ahead of a bare count.
+#   * twoStages  — a map and a peek, so the revert has to catch both.
+#   * limited    — THE SUBTLE ONE. `limit` changes the element count and yet
+#     keeps the elision, because SliceOps computes the new size from the old.
+#     It is why 101's list is of SIZED-clearing operations and not of
+#     count-changing ones; with `limit` on that list this pipeline runs its
+#     lambda three times.
+#   * skipped    — `skip` is the same story, and it is also lifted and folded by
+#     220/308, so the guard is not enough on its own here: 442 reverts the
+#     now-unfused skip and the whole chain lands back native.
+#   * sortedThen — `sorted` reorders without resizing and keeps SIZED.
+#   * prims      — the same on an IntStream, whose `count()` elides too.
+#
+# TRAVERSED anyway, so the guard stands down and the fusion is KEPT (runs > 0):
+#   * filtered     — `filter` clears SIZED, the JDK must walk the stream, and
+#     fusing costs nothing. Three elements survive, so the map runs 3 times.
+#   * distinctThen — `distinct` clears SIZED as well; all four elements reach
+#     the map.
+#   * collected    — no `count()` at all, so none of this applies and the chain
+#     fuses exactly as it did before.
+#
+# The three that keep fusing are the reason this guard is not simply "never
+# fuse ahead of count()": that would forfeit a fusion on every pipeline the JVM
+# has to traverse regardless, which is most of them.
+#
+# Measured with the guard taken away, this same class prints
+# `runs [4, 4, 4, 3, 3, 4, 3, 3, 4, 4]` — every elided lambda executing — while
+# the nine `count()` RESULTS are unchanged either way. That is the shape of the
+# defect: not a wrong answer, but work that was never going to happen. The
+# opcode totals move too (invokedynamic 17 rather than 16 after, since three
+# chains stay native), but they are the weaker signal and are pinned only as a
+# second line of defence.
+java: |
+  package countelision;
+  import java.util.Arrays;
+  import java.util.List;
+  import java.util.stream.IntStream;
+  import java.util.stream.Stream;
+  public class X {
+    private static final int[] R = new int[10];
+    private static final List<String> W = List.of("a", "bb", "ccc", "dddd");
+    private static long bare() {
+      return W.stream().map(s -> { R[0]++; return s.length(); }).count();
+    }
+    private static long twoStages() {
+      return W.stream().map(s -> { R[1]++; return s + "!"; }).peek(s -> R[2]++).count();
+    }
+    private static long limited() {
+      return W.stream().limit(3).map(s -> { R[3]++; return s + "!"; }).count();
+    }
+    private static long skipped() {
+      return W.stream().skip(1).map(s -> { R[4]++; return s + "!"; }).count();
+    }
+    private static long sortedThen() {
+      return W.stream().sorted().map(s -> { R[5]++; return s + "!"; }).count();
+    }
+    private static long prims() {
+      return IntStream.of(1, 2, 3).map(n -> { R[6]++; return n * 2; }).count();
+    }
+    private static long filtered() {
+      return W.stream().filter(s -> s.length() > 1)
+        .map(s -> { R[7]++; return s + "!"; }).count();
+    }
+    private static long distinctThen() {
+      return W.stream().distinct().map(s -> { R[8]++; return s + "!"; }).count();
+    }
+    private static int collected() {
+      return W.stream().map(s -> { R[9]++; return s + "?"; })
+        .filter(s -> s.length() > 2).toList().size();
+    }
+    public static void main(String[] a) {
+      System.out.printf(
+        "R %d %d %d %d %d %d %d %d %d runs %s%n",
+        bare(), twoStages(), limited(), skipped(), sortedThen(), prims(),
+        filtered(), distinctThen(), collected(), Arrays.toString(R)
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "R 4 4 3 3 4 3 3 4 3 runs [0, 0, 0, 0, 0, 0, 0, 3, 4, 4]"
+before:
+  invokedynamic: 19
+  invokeinterface: 34
+after:
+  invokedynamic: 17
+  invokeinterface: 36

@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The SIZED boundary of 101 (#973), and the case that makes this rule's list a
+# list of SIZED-clearing operations rather than count-changing ones.
+#
+# `limit` changes how many elements reach the terminal and yet the elision
+# survives it, because the JDK's SliceOps computes the new size from the old:
+# `s.limit(3).map(f).count()` runs `f` ZERO times. So `limit` must not stamp,
+# 142 must still fire, and the map in front of such a count stays native.
+#
+# The expectation is closed on the four-operand opcode jeo emits, so it fails
+# the moment `limit` — or `skip`, or `sorted` — creeps into 101's list.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/101-mark-traversing-count.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-stage ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "limit",
+        v2 ↦ "(J)Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op-count ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "count",
+        v2 ↦ "()J",
+        v3 ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "count", v2 ↦ "()J", v3 ↦ Φ.true ⟧

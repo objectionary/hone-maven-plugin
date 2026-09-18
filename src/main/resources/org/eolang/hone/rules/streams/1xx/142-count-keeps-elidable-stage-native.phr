@@ -1,0 +1,105 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Half two of the `count()` guard (#973) — see `101-mark-traversing-count` for
+# the defect and for why the decision is split across two rules.
+#
+# A `count()` that `101` did NOT stamp is one the JVM can elide: the source is
+# SIZED and nothing between it and the terminal changes the element count, so
+# the pipeline never runs. Fusing the chain in front of it into a `mapMulti`
+# clears SIZED and forces the traversal, which makes every `map` and `peek`
+# lambda execute where none executed before. This rule keeps them native
+# instead, by stamping each count-preserving stage `reverted ↦ Φ.true` — every
+# 2xx recogniser is closed on the shape `111` emits, so a stamped lambda stops
+# matching them, never becomes a pragma, never folds into a distill, and `701`
+# lowers it back to the invokedynamic it came from.
+#
+# Nothing is lost by doing so. In precisely the case this fires, the fused
+# `mapMulti` would have optimised a pipeline the JVM was going to skip
+# altogether, so the fusion had no upside to forfeit — it only turned an O(1)
+# terminal into an O(n) one. Where a resizing stage IS present the JVM must
+# traverse anyway, `101` stamps the terminal, this rule stands down and the
+# fusion is kept.
+#
+# It runs at 142 rather than beside its partner because it works on the LIFTED
+# form: `111` must have produced the Φ.hone.lambda, `121` must have normalised a
+# non-static one and `141` must have set its `opcode`, all of which are closed
+# patterns that this rule's marker would otherwise block. 151 only strips line
+# numbers and does not care.
+#
+# The stage list is the mirror of `101`'s and holds only operations that pass
+# every element through exactly once, which is what makes reverting them enough
+# to restore the elision. `boxed()`, `sorted()` and `asLongStream()` preserve
+# the count too but carry no lambda, so there is nothing here to revert and
+# nothing that fuses on its own: `206` lifts `boxed` to a Φ.hone.box and `602`
+# lowers a leftover one straight back.
+#
+# Like `101` this is closed on the unmarked lambda, so it cannot re-fire on its
+# own output, and the marker is never removed — the pair is monotone and cannot
+# oscillate with the recognisers it steers.
+name: count-keeps-elidable-stage-native
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-stage ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      opcode ↦ 𝑒-opcode,
+      target ↦ 𝑒-target,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-stage ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      opcode ↦ 𝑒-opcode,
+      target ↦ 𝑒-target,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  matches:
+    - '^(map|mapTo(Int|Long|Double|Obj)|peek)$'
+    - 𝑒-stream-method

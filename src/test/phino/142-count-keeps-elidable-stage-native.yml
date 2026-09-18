@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 142 keeps a count-preserving stage native when the `count()` behind it is one
+# the JVM elides — an unstamped one, in 101's terms (#973).
+#
+# Fusing the map into a mapMulti would clear SIZED and force a traversal that
+# was never going to happen, so the lambda would start running where it ran zero
+# times before. The mark `reverted ↦ Φ.true` is what stops it: every 2xx
+# recogniser is closed on the shape 111 emits, so a marked lambda never becomes
+# a pragma, never folds, and 701 lowers it straight back.
+#
+# The first expectation spells every binding out rather than wildcarding them,
+# which pins that the mark was APPENDED and nothing else moved — a revert that
+# quietly dropped `opcode` or rewrote `target` would still carry the mark and
+# would still lower, just to the wrong call. The second is closed on the
+# four-operand `count()`, pinning both that this rule leaves the terminal as it
+# found it and that the input really was the unstamped shape it fires on.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/142-count-keeps-elidable-stage-native.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-map ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "fusion/X",
+        method ↦ "apply",
+        interface ↦ "()Ljava/util/function/Function;",
+        lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+        bridge-signature ↦ "(Ljava/lang/String;)Ljava/lang/Integer;",
+        static ↦ "true",
+        opcode ↦ "invokestatic",
+        target ↦ ⟦ handle ↦ 6, class ↦ "fusion/X", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/String;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧,
+        stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "map", signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;" ⟧
+      ⟧,
+      op-count ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "count",
+        v2 ↦ "()J",
+        v3 ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.lambda, class ↦ "fusion/X", method ↦ "apply", interface ↦ "()Ljava/util/function/Function;", lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;", bridge-signature ↦ "(Ljava/lang/String;)Ljava/lang/Integer;", static ↦ "true", opcode ↦ "invokestatic", target ↦ 𝑒-t, stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "map", signature ↦ 𝑒-g ⟧, reverted ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "count", v2 ↦ "()J", v3 ↦ Φ.true ⟧

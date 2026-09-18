@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A stateful operator on a chain whose parallelism is decided somewhere else
+# (#971). The guards added for #715, #717, #738 and #862 all look for a
+# `parallel()` or `parallelStream()` call in the ENCLOSING METHOD, which is safe
+# in the over-broad direction and blind in the other: a stream can be parallel
+# without the word appearing anywhere in the method that fuses it.
+#
+# `291-local-chain-permits-stateful` supplies the missing half of the
+# precondition — a recognised sequential source ahead of the pragma and a
+# terminal behind it, in one body — and `292`'s siblings revert whatever cannot
+# be proved local.
+#
+# Four pipelines, one per way the chain can escape the method:
+#   * handed     — the stream arrives as a PARAMETER. Nothing here says
+#     parallel, and nothing here can know; `handed(items.parallelStream())` is a
+#     legal call. Measured on 20000 elements before this guard, the same shape
+#     over `skip` returned the wrong size on 3 runs in 25. The distinct stays
+#     native; the map behind it still fuses, being stateless and therefore
+#     parallel-safe.
+#   * returned   — the pipeline leaves UNTERMINATED, so the caller finishes it
+#     and may add `parallel()` first. No terminal in this body, so no rename.
+#   * local      — source and terminal both here. Fuses, exactly as before: this
+#     is the case the guard must not cost anything, and it is what the other
+#     seven stateful packs in this directory are made of.
+#   * viaSupport — `StreamSupport.stream(spliterator, flag)` is the one JDK
+#     factory that hands back a parallel stream without either method name in
+#     it, so it is deliberately absent from the source list and this chain stays
+#     native even though the flag here is `false`. The conservative direction:
+#     a fusion forfeited, never a race admitted.
+#
+# The printed line is deterministic — every stream in `main` is sequential, so
+# the four sizes are fixed — and the counts carry the structural claim. Three of
+# the four distincts survive as native `Stream.distinct()` calls where before
+# all four were folded away.
+java: |
+  package nonlocalstream;
+  import java.util.List;
+  import java.util.Spliterator;
+  import java.util.stream.Collectors;
+  import java.util.stream.Stream;
+  import java.util.stream.StreamSupport;
+  public class X {
+    private static final List<String> W = List.of("a", "bb", "a", "ccc", "bb");
+    // the stream is a PARAMETER: the caller decides whether it is parallel
+    private static int handed(final Stream<String> in) {
+      return in.distinct().map(s -> s + "!").toList().size();
+    }
+    // no terminal here: the CALLER finishes the pipeline, and may add parallel()
+    private static Stream<String> returned() {
+      return W.stream().distinct().map(s -> s + "?");
+    }
+    // source and terminal both here, so the chain cannot be made parallel elsewhere
+    private static int local() {
+      return W.stream().distinct().map(s -> s + "*").toList().size();
+    }
+    // StreamSupport.stream(sp, flag) can hand back a parallel stream without
+    // saying so, so it is not a recognised source and this stays native
+    private static int viaSupport() {
+      final Spliterator<String> sp = W.spliterator();
+      return StreamSupport.stream(sp, false).distinct().map(s -> s + "-").toList().size();
+    }
+    public static void main(String[] a) {
+      System.out.printf(
+        "The result is %d/%d/%d/%d%n",
+        handed(W.stream()), returned().toList().size(), local(), viaSupport()
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3/3/3/3"
+before:
+  invokedynamic: 8
+  invokeinterface: 20
+after:
+  invokedynamic: 8
+  invokeinterface: 25

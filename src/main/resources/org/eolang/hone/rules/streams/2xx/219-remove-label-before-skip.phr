@@ -23,6 +23,14 @@
 # removed its line-number. (The earlier blanket "drop every label before an
 # opcode" rule was withdrawn precisely because it also deleted method-entry
 # and try-catch labels that real classes do reference.)
+#
+# The interface is a metavariable pinned by the `when` to the two `skip`
+# signatures a recogniser reads: the object one `220` takes, and the
+# `IntStream` one `212-recognize-primitive-skip` takes (#996). Both need the
+# same normalisation, and the argument that makes the label dead — no
+# statement boundary, try-region edge or variable scope falls between the two
+# opcodes of a single `push; skip` expression — does not depend on which
+# stream interface the call is on.
 name: remove-label-before-skip
 pattern: |
   ⟦
@@ -31,9 +39,9 @@ pattern: |
     𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, 𝐵-label-rest ⟧,
     𝜏-call ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
-      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏1 ↦ 𝑒-stream-class,
       𝜏2 ↦ "skip",
-      𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏3 ↦ 𝑒-signature,
       𝜏4 ↦ Φ.true,
       ρ ↦ ∅
     ⟧,
@@ -45,11 +53,19 @@ result: |
     𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
     𝜏-call ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
-      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏1 ↦ 𝑒-stream-class,
       𝜏2 ↦ "skip",
-      𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏3 ↦ 𝑒-signature,
       𝜏4 ↦ Φ.true,
       ρ ↦ ∅
     ⟧,
     𝐵-after
   ⟧
+when:
+  or:
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/Stream"']
+        - eq: [𝑒-signature, '"(J)Ljava/util/stream/Stream;"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-signature, '"(J)Ljava/util/stream/IntStream;"']

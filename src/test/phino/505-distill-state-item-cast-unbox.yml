@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The unwrapping twin of 505 (#996). 505 anchors on an invokestatic onto a
+# desugared lambda$ and takes the wrapper from the call's first ARGUMENT; an
+# unwrapping call is an invokevirtual that takes no argument at all, so the
+# type it needs is its RECEIVER. 246 mints exactly such a call directly behind
+# a distinct or a skip inside 212's boxing sandwich, and without the cast the
+# Object the guard hands on is rejected: "Type 'java/lang/Object' is not
+# assignable to 'java/lang/Integer'".
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/503-distill-state-frame.phr
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/505-distill-state-item-cast-unbox.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill-lambda,
+        static ↦ "true",
+        bridge-input ↦ "Ljava/lang/Object;",
+        consumer ↦ "Ljava/util/function/Consumer;",
+        target-method ↦ "distill_0",
+        captured ↦ "Ljava/util/List;",
+        body ↦ ⟦
+          g1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+          g2 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+          g3 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokevirtual,
+            i2 ↦ "java/lang/Integer",
+            i3 ↦ "intValue",
+            i4 ↦ "()I",
+            i5 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "java/lang/Integer" ⟧
+  - ⟦ 𝐵-p, 𝜏-f ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-fr ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "java/lang/Integer" ⟧, 𝜏-i ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, 𝐵-x, i3 ↦ "intValue", 𝐵-y ⟧, 𝐵-q ⟧

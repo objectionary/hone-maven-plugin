@@ -1,0 +1,114 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The right-hand half of the seam `245-transform-primitive-to-object-before-
+# stateful` opens, and its header carries the argument (#996).
+#
+# A `Φ.hone.distinct` or `Φ.hone.skip` leaves a reference — inside `212`'s
+# boxing sandwich the stream really is a `Stream<Integer>` — while a primitive
+# map or filter behind it declares the raw `I` its desugared `lambda$` takes.
+# `243` and `261` mint the `Wrapper.xValue()` for that crossing when the
+# predecessor is a typed pragma; these two are not, so the conversion is minted
+# from the SUCCESSOR's side: its `bridge-input` names the wrapper the stream
+# carries and its `accepted` the primitive its target wants, which is exactly
+# the pair the unwrapping call needs.
+name: transform-object-to-primitive-after-stateful
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-first-stream-class,
+      𝐵-first-rest
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-first-stream-class,
+      𝐵-first-rest
+    ⟧,
+    𝜏-transform ↦ ⟦
+      φ ↦ Φ.hone.transform,
+      opcode ↦ "invokevirtual",
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-input,
+      target ↦ ⟦
+        class ↦ 𝑒-transform-target-class,
+        method ↦ 𝑒-transform-target-method,
+        signature ↦ 𝑒-transform-target-signature
+      ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-second-bridge-input,
+      bridge-output ↦ 𝑒-second-bridge-output,
+      accepted ↦ 𝑒-second-accepted,
+      returned ↦ 𝑒-second-returned,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches:
+        - '^L.+;$'
+        - 𝑒-second-bridge-input
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-second-accepted
+    - or:
+        - eq: [𝜏-one, 'distinct']
+        - eq: [𝜏-one, 'skip']
+    - or:
+        - eq: [𝜏-two, 'map']
+        - eq: [𝜏-two, 'o-filter']
+        - eq: [𝜏-two, 'p-filter']
+        - eq: [𝜏-two, 'dropWhile']
+where:
+  - meta: 𝜏-transform
+    function: random-tau
+  - meta: 𝑒-transform-target-class
+    function: sed
+    args:
+      - 𝑒-second-bridge-input
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-transform-target-method-prefix
+    function: sed
+    args:
+      - 𝑒-second-accepted
+      - '"s/B/byte/g"'
+      - '"s/C/char/g"'
+      - '"s/D/double/g"'
+      - '"s/F/float/g"'
+      - '"s/I/int/g"'
+      - '"s/J/long/g"'
+      - '"s/S/short/g"'
+      - '"s/Z/boolean/g"'
+  - meta: 𝑒-transform-target-method
+    function: concat
+    args: [𝑒-transform-target-method-prefix, '"Value"']
+  - meta: 𝑒-transform-target-signature
+    function: concat
+    args: ['"()"', 𝑒-second-accepted]

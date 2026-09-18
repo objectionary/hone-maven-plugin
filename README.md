@@ -182,6 +182,21 @@ A `Φ.hone.lambda` immediately followed by an `invokeinterface`
 The paper calls these synthetic formations _pragmas_:
   they look like bytecode instructions
   but carry the information needed to reconstruct one later.
+Two operations carry no lambda at all —
+  `distinct()` and `skip(n)` —
+  so there is no pair to match:
+  rules `216-recognize-distinct` and `220-recognize-skip`
+  lift the bare call instead,
+  and `212-recognize-primitive-distinct` and
+  `212-recognize-primitive-skip` lift the `IntStream` ones (#996).
+Because those two carry no signature to read an element type off,
+  `211-box-unbox-primitive-function` cannot wrap them
+  the way it wraps every other primitive operation,
+  so `214-box-unbox-primitive-stateful` builds
+  the `boxed()` / `mapToInt` sandwich around them from the stream
+  interface instead,
+  and the object folds take it from there unchanged.
+
 One operation gets no pragma of its own:
   `IntStream.mapToObj(...)` crosses from a primitive stream
   to a reference one,
@@ -198,7 +213,9 @@ Rules `206-` through `261-` then tidy up the boxing and primitive
   into a `Φ.hone.box` pragma),
   splicing a `Wrapper.xValue()` wherever one pragma leaves a reference
   and the next one wants the primitive
-  (`241-` to `244-`),
+  (`241-` to `246-`, where `245-` and `246-` are the two sides
+  of the seam a lifted primitive `distinct` or `skip` opens,
+  since neither pragma carries a type to read),
   and `271-`, `272-` remove the now-useless `CHECKCAST` and
   object-to-primitive conversions that the pragma made redundant.
 Rules `281-` and `282-` insert a `DUP` in front of every `filter`
@@ -535,6 +552,10 @@ It is a fusion barrier:
 // local slots, which slides the counter 521 reads and the scratch
 // 310 borrows, so those two stay native until that layout is widened.
 LongStream.of(1L, 2L, 3L, 4L).dropWhile(n -> n < 3L)
+
+// A distinct() or a skip(n) on a LONG or DOUBLE stream, for the same
+// reason and with the same IntStream exception (#996).
+LongStream.of(1L, 2L, 2L).distinct()
 ```
 
 A CAPTURING `mapMulti` stage is also left as two calls,

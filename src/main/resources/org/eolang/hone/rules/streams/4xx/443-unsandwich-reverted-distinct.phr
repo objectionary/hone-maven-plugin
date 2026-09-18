@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Undoes `212-recognize-primitive-distinct` when the distinct it lifted ends up
+# reverted (#996). Without this rule the primitive twin could make a pipeline
+# SLOWER than the one it started from.
+#
+# `212` writes `IntStream.distinct()` out as a boxing sandwich — `Φ.hone.box`,
+# `Φ.hone.distinct`, `Φ.hone.unbox` — so the object folds take it. Three rules
+# can then hand the middle back as a native call: `441` when the distinct found
+# no neighbour to fuse with, and `224`/`225` when the method mentions
+# `parallel()`. Each of them stamps `reverted ↦ Φ.true`. What is left is
+# `boxed().distinct().mapToInt(Integer::intValue)`, which is correct — the
+# stream really is a `Stream<Integer>` between the two — but it is a boxing
+# round-trip per element bought for nothing, where the input was one native
+# `IntStream.distinct()`.
+#
+# So when the sandwich still holds nothing but the reverted call, it collapses
+# back to the call `212` started from. The match is CLOSED on the three
+# adjacent objects: if anything fused into the sandwich (another distill, a
+# second operator's pragma) the three are no longer neighbours, the rule
+# declines, and the boxing is the price of the fusion that did happen.
+#
+# The call this rule emits carries `reverted ↦ Φ.true`, the same fifth-operand
+# guard the rest of the pass uses. `212` is closed on the four-operand opcode
+# jeo emits, so it cannot lift this one again — and it must not: the whole set
+# runs to fixpoint inside one phino invocation, so an unmarked call would be
+# re-lifted, reverted and collapsed on every pass, and because each pass mints
+# fresh random names the tree would never settle. jeo ignores the extra binding
+# when assembling.
+#
+# A parallel pipeline never reaches here: `213` reverts the pragma ahead of
+# `214`'s boxing, so the sandwich is never built in the first place. What is
+# left for this rule is the `441`/`442` case — an operation that found nothing
+# to fuse with.
+#
+# Sorted after `441` and `442` so the revert it cleans up has already happened;
+# `443-unsandwich-reverted-skip` does the same for `212`'s skip sibling.
+name: unsandwich-reverted-distinct
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ "java/util/stream/IntStream"
+    ⟧,
+    𝜏-distinct ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏2 ↦ "distinct",
+      𝜏3 ↦ "()Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      reverted ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-unbox-opcode,
+      class ↦ 𝑒-unbox-class,
+      bridge-signature ↦ "(Ljava/lang/Integer;)I",
+      static ↦ "true",
+      target ↦ 𝑒-unbox-target
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-native ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/IntStream",
+      i3 ↦ "distinct",
+      i4 ↦ "()Ljava/util/stream/IntStream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-native
+    function: random-tau

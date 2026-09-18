@@ -1,0 +1,84 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The unwrapping twin of `505-distill-state-item-cast` (#996). Its header
+# carries the whole argument: a distinct()/skip()-led stateful distill erases
+# the element type, so it runs on `bridge-input ↦ Ljava/lang/Object;`, `512`
+# loads the item with a fixed `aload 1`, `503` frames it as Object, and the
+# first body opcode that wants a NARROWER reference is rejected — "Bad type on
+# operand stack: Type 'java/lang/Object' is not assignable to
+# 'java/lang/Integer'". `505` splices the `checkcast` in front of that opcode,
+# where the item is first needed and after the frame that rightly still says
+# Object.
+#
+# `505` anchors on an `invokestatic` onto a desugared `lambda$` wrapper and
+# takes the wrapper from the call's first ARGUMENT. An unwrapping call is the
+# other shape with the same problem and neither half of that recipe: it is an
+# `invokevirtual`, and the type it needs is its RECEIVER — `Integer.intValue()`
+# takes no argument at all. `246-transform-object-to-primitive-after-stateful`
+# mints exactly such a call directly behind a distinct or a skip inside `212`'s
+# boxing sandwich, so `IntStream.distinct().mapToObj(Integer::toString)` lands
+# on it: the guard hands the Object on, `intValue` wants an Integer, and
+# nothing in between narrows it.
+#
+# The `when` keeps this to a genuine unwrapping — a no-argument call returning
+# a primitive, onto a class that is not java/lang/Object — so an ordinary
+# no-argument object method riding the same position is left alone, and the
+# cast can never be minted onto Object itself. Everything else, including the
+# fixpoint argument for why the spliced cast does not re-match (it breaks the
+# frame → invoke adjacency this rule anchors on), is `505`'s.
+name: distill-state-item-cast-unbox
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i2 ↦ 𝑒-invoke-class,
+        i3 ↦ 𝑒-invoke-method,
+        i4 ↦ 𝑒-invoke-signature,
+        i5 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill-lambda,
+    static ↦ 𝑒-static,
+    bridge-input ↦ "Ljava/lang/Object;",
+    consumer ↦ 𝑒-consumer,
+    target-method ↦ 𝑒-target-method,
+    captured ↦ 𝑒-captured,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-invoke-class ⟧,
+      𝜏-invoke ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        i2 ↦ 𝑒-invoke-class,
+        i3 ↦ 𝑒-invoke-method,
+        i4 ↦ 𝑒-invoke-signature,
+        i5 ↦ 𝑒-invoke-is-interface
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+when:
+  and:
+    - matches: ['^\(\)[BCDFIJSZ]$', 𝑒-invoke-signature]
+    - not:
+        eq: [𝑒-invoke-class, '"java/lang/Object"']
+where:
+  - meta: 𝜏-cast
+    function: random-tau

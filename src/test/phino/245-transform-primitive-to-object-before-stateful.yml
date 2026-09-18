@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The seam 212's sandwich opens on the left (#996). A primitive map hands on
+# the raw `I` its desugared lambda$ returns; the seen-set guard 307 builds
+# calls Set.add(Object). 242 and 252 mint the Wrapper.valueOf for that crossing
+# by reading both types off two typed pragmas, and Φ.hone.distinct carries
+# none — so the conversion is minted from the predecessor's `returned` alone,
+# which is sound because a distinct hands its item on untouched.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/245-transform-primitive-to-object-before-stateful.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.map,
+        opcode ↦ "invokestatic",
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "I",
+        returned ↦ "I",
+        static ↦ "true",
+        target ↦ ⟦ class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(I)I" ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦
+      φ ↦ Φ.hone.transform,
+      opcode ↦ "invokestatic",
+      class ↦ "Foo",
+      bridge-input ↦ "Ljava/lang/Integer;",
+      bridge-output ↦ "Ljava/lang/Integer;",
+      target ↦ ⟦
+        class ↦ "java/lang/Integer",
+        method ↦ "valueOf",
+        signature ↦ "(I)Ljava/lang/Integer;"
+      ⟧
+    ⟧
+  - ⟦ 𝐵-a, 𝜏-m ↦ ⟦ φ ↦ Φ.hone.map, 𝐵-b ⟧, 𝜏-t ↦ ⟦ φ ↦ Φ.hone.transform, 𝐵-c ⟧, 𝜏-d ↦ ⟦ φ ↦ Φ.hone.distinct, 𝐵-d ⟧, 𝐵-e ⟧

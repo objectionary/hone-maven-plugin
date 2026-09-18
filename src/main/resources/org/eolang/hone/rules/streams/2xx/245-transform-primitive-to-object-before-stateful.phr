@@ -1,0 +1,122 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The conversion seam `212-recognize-primitive-distinct` and its skip sibling
+# open on their left (#996), and the reason those two rules are not enough on
+# their own.
+#
+# `242` and `252` mint a `Wrapper.valueOf` when a pragma leaving a PRIMITIVE is
+# followed by one whose target accepts an OBJECT. They read both types off the
+# two pragmas, which works because every pragma they know carries
+# `accepted`/`returned`. `Φ.hone.distinct` and `Φ.hone.skip` carry neither:
+# they are type-transparent and, until #996, only ever appeared on an object
+# stream where no conversion was possible. Inside the boxing sandwich `212`
+# writes they sit directly behind a primitive map or filter, whose lambda hands
+# on the raw `I` that javac compiled it to return, and the seen-set guard `307`
+# builds calls `Set.add(Object)`. Without this rule `401` concatenates the two
+# bodies and the guard gets an int where a reference belongs: "Bad type on
+# operand stack".
+#
+# So the successor's missing type is not read, it is KNOWN: a distinct and a
+# skip hand their item on untouched, so what arrives is what the predecessor
+# left, and the wrapper for it is fixed by the predecessor's own `returned`.
+# That is the whole rule — the conversion is minted from one side.
+#
+# `246-transform-object-to-primitive-after-stateful` closes the seam on the
+# right. Both sit in the 24x conversion band, ahead of `271`/`272`, so a
+# conversion this rule mints against one that is already there cancels like any
+# other.
+name: transform-primitive-to-object-before-stateful
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      opcode ↦ 𝑒-first-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      target ↦ 𝑒-first-target
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-second-stream-class,
+      𝐵-second-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.𝜏-one,
+      opcode ↦ 𝑒-first-opcode,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-first-bridge-input,
+      bridge-output ↦ 𝑒-first-bridge-output,
+      accepted ↦ 𝑒-first-accepted,
+      returned ↦ 𝑒-first-returned,
+      static ↦ 𝑒-first-static,
+      target ↦ 𝑒-first-target
+    ⟧,
+    𝜏-transform ↦ ⟦
+      φ ↦ Φ.hone.transform,
+      opcode ↦ "invokestatic",
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-transform-bridge,
+      bridge-output ↦ 𝑒-transform-bridge,
+      target ↦ ⟦
+        class ↦ 𝑒-transform-target-class,
+        method ↦ "valueOf",
+        signature ↦ 𝑒-transform-target-signature
+      ⟧
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-second-stream-class,
+      𝐵-second-rest
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches:
+        - '^[BCDFIJSZ]$'
+        - 𝑒-first-returned
+    - or:
+        - eq: [𝜏-one, 'map']
+        - eq: [𝜏-one, 'o-filter']
+        - eq: [𝜏-one, 'p-filter']
+        - eq: [𝜏-one, 'dropWhile']
+    - or:
+        - eq: [𝜏-two, 'distinct']
+        - eq: [𝜏-two, 'skip']
+where:
+  - meta: 𝜏-transform
+    function: random-tau
+  - meta: 𝑒-transform-bridge
+    function: sed
+    args:
+      - 𝑒-first-returned
+      - '"s/B/Ljava\\/lang\\/Byte;/g"'
+      - '"s/C/Ljava\\/lang\\/Character;/g"'
+      - '"s/D/Ljava\\/lang\\/Double;/g"'
+      - '"s/F/Ljava\\/lang\\/Float;/g"'
+      - '"s/I/Ljava\\/lang\\/Integer;/g"'
+      - '"s/J/Ljava\\/lang\\/Long;/g"'
+      - '"s/S/Ljava\\/lang\\/Short;/g"'
+      - '"s/Z/Ljava\\/lang\\/Boolean;/g"'
+  - meta: 𝑒-transform-target-class
+    function: sed
+    args:
+      - 𝑒-transform-bridge
+      - '"s/L(.+);/$1/g"'
+  - meta: 𝑒-transform-target-signature
+    function: concat
+    args: ['"("', 𝑒-first-returned, '")"', 𝑒-transform-bridge]

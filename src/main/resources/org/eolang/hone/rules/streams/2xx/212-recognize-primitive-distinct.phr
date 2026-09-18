@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive twin of `216-recognize-distinct` (#996). `216` pins
+# `java/util/stream/Stream` on both the call and the pragma, so an
+# `IntStream.distinct()` never became a pragma at all: it stayed a native call
+# and split the pipeline into two independently fused runs around it.
+#
+# Every other fusible operation already had its primitive twin — `203`/`232`
+# for filter, `204`/`231` for map, `208`/`233` for dropWhile since #982 — and
+# each of them goes through the same boxing sandwich `211` builds: a
+# `Φ.hone.box` in front, the operation in the middle, a `Φ.hone.unbox` behind.
+# This rule mints the primitive pragma; `214-box-unbox-primitive-stateful`
+# builds the sandwich around it and puts `216`'s own pragma in the middle, so
+# `307` folds it unchanged. The two steps are separate for the reason `210`
+# keeps them separate for dropWhile: `213` reverts a pragma on a parallel
+# pipeline BEFORE anything is boxed, so such a pipeline never enters the
+# sandwich and ends up exactly the native call it started as.
+#
+# `211` cannot do the boxing itself, which is why `214` exists: it derives the
+# unbox from the lifted lambda's `bridge-signature`, and distinct carries no
+# lambda — there is no signature to read, and the element type is already fixed
+# by the stream interface.
+#
+# SCOPE IS `IntStream`. A `long` or a `double` occupies two local slots, which
+# slides the wrapper locals `512` lays out by hand and the counter `521` keeps
+# — the same reason `208`'s primitive twin stopped at `IntStream` (#982) and
+# `LongStream`/`DoubleStream` are left native on purpose.
+#
+# NUMBERED 212, not beside `216`, because `214`'s sandwich must land after
+# `209-unbox-box-to-distill`, which folds a user `mapToX(...).boxed()`
+# round-trip and whose header spells out why a synthetic box must never be in
+# the tree when it runs, and after `211`, so the sandwich is one `221` can
+# cancel against its neighbours like any other.
+#
+# The pattern matches at class scope to capture the enclosing class name, which
+# `307` needs on the resulting distill so `401-fuse` can compose it with the
+# neighbouring distills (they share one `class`), and which the unbox needs as
+# the class that will own its synthesised lambda.
+name: recognize-primitive-distinct
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏1 ↦ "java/util/stream/IntStream",
+          𝜏2 ↦ "distinct",
+          𝜏3 ↦ "()Ljava/util/stream/IntStream;",
+          𝜏4 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-distinct ↦ ⟦
+          φ ↦ Φ.hone.primitive-distinct,
+          class ↦ 𝑒-class-name,
+          stream-class ↦ "java/util/stream/IntStream"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-distinct
+    function: random-tau

@@ -403,7 +403,7 @@ The same revert-on-parallel guard applies to `dropWhile`, which is
   revert the recognised `dropWhile` (rebuilding its predicate lambda) back to
   the native call before `310` can fold it (#862).
 
-## Why `distinct` Is Only Fused on Sequential Pipelines
+## Why `distinct` Is Only Fused on Sequential or Unordered Pipelines
 
 `distinct()` is fused (it lowers to a seen-set check inside the `mapMulti`
   body, see `307-distinct-to-distill`), but only when the pipeline provably
@@ -426,6 +426,33 @@ The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
   `parallelStream()` call the rules `224-parallel-reverts-distinct` and
   `225-parallel-reverts-distinct-after` revert the recognised `distinct` back
   to the native call before `307` can fold it (#738).
+
+That stability contract, however, holds only while the stream is _ordered_,
+  and `BaseStream.unordered()` is exactly the call that drops it:
+  an unordered `distinct()` is specified to keep _any_ element among equals,
+  which is precisely what the concurrent seen-set already delivers.
+So `217-unordered-permits-distinct` gives the fusion back
+  when an explicit `unordered()` call precedes the `distinct()`,
+  by stamping the pragma with a mark that `224` and `225` decline (#975):
+
+```java
+// reverted: parallel and ordered, so stability applies
+WORDS.stream().parallel().map(s -> s + "!").distinct()
+
+// fused: unordered before the distinct, so any survivor is legal
+WORDS.stream().unordered().parallel().map(s -> s + "!").distinct()
+
+// reverted: unordered() marks the stream unordered from that point ON,
+// so a distinct ahead of it still ran on an ordered stream
+WORDS.stream().parallel().map(s -> s + "!").distinct().unordered()
+```
+
+`skip()` and `dropWhile()` have unordered contracts of their own
+  — any _n_ elements, any subset of the matching prefix —
+  so the same relaxation would extend to `222`/`223` and `226`/`227`,
+  but only once their state is atomic:
+  a countdown `long[1]` and a sticky `int[1]` are raced on a parallel stream,
+  not merely unstable, so those two stay reverted on any parallel pipeline.
 
 ## Which Sink-Free Shapes Are Not Fused Yet
 

@@ -22,9 +22,9 @@
 # declared max-stack has to grow with it (issue #787). javac sized max_stack for
 # the unfused invokeinterface chain — usually just [stream, function] — while the
 # prologue peaks well above that: with the source stream already on the stack the
-# `new`/`dup` pair alone reaches two cells above it, 307's append (dup;
-# newKeySet; List.add; pop) three, and 308's (the long[1] seed, two slots per
-# push) six. jeo never recomputes maxs — BytecodeMaxs.compute() gives up unless
+# `new`/`dup` pair alone reaches two cells above it, 307's append (dup; new
+# HashSet; dup; <init>; List.add; pop) four, and 308's (the long[1] seed, two
+# slots per push) six. jeo never recomputes maxs — BytecodeMaxs.compute() gives up unless
 # BOTH maxs are -1, which never holds for a method disassembled from an existing
 # class, so BytecodeMethod.write re-emits whatever number was there — and no
 # later rule repairs it either; the "bounded peak" 307 and 308 talk about is

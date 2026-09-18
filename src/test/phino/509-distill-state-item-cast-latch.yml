@@ -31,7 +31,7 @@ input: |
         target-method ↦ "distill_0",
         captured ↦ "Ljava/util/List;",
         body ↦ ⟦
-          g1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
+          g1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
           g2 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
           g3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
           g4 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,

@@ -27,10 +27,10 @@ input: |
     captured ↦ "Ljava/util/List;",
     body ↦ ⟦
       i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(Ljava/lang/String;)Ljava/lang/Long;", i5 ↦ Φ.false ⟧,
-      i2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
       i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
-      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView", i2 ↦ "add", i3 ↦ "(Ljava/lang/Object;)Z", i4 ↦ Φ.false ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/util/HashSet", i2 ↦ "add", i3 ↦ "(Ljava/lang/Object;)Z", i4 ↦ Φ.false ⟧,
       i6 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
       i7 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       i8 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,

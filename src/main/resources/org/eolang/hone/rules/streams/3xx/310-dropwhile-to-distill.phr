@@ -62,7 +62,7 @@
 name: dropwhile-to-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.local-dropWhile,
+    φ ↦ Φ.hone.dropWhile,
     opcode ↦ 𝑒-opcode,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,

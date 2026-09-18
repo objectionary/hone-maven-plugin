@@ -15,16 +15,16 @@
 # map into it, and 502 lowers the pair to one Stream.mapMulti — splicing `new
 # java/util/ArrayList`, `dup`, `invokespecial <init>` and the relocated seen-set
 # append ahead of the dispatch, with the source stream already on the stack. That
-# prologue peaks at 4, two cells above what javac declared. jeo re-emits maxs
+# prologue peaks at 5, three cells above what javac declared. jeo re-emits maxs
 # verbatim (BytecodeMaxs.compute() only fires when both are -1, never true for a
 # disassembled method), so before the fix the class died at load with
 # "VerifyError: Exceeded max stack size" and the run never printed anything —
 # hence "BUILD SUCCESS" and the result line are the assertion that matters here.
 #
 # [1, 2, 2, 3] --map(+1)--> [2, 3, 3, 4] --distinct--> [2, 3, 4] --count()--> 3.
-# `new` goes 0 -> 1: the one allocation is the ArrayList holding the captured
-# state, which is also the proof that 502 fired at all (the seen-set itself comes
-# from the static ConcurrentHashMap.newKeySet() factory, not from a `new`).
+# `new` goes 0 -> 2: the ArrayList holding the captured state — which is also
+# the proof that 502 fired at all — and the java/util/HashSet that is the
+# seen-set, which 307 allocates directly since #970.
 java: |
   package maxstack;
   import java.util.List;
@@ -44,4 +44,4 @@ log:
 before:
   new: 0
 after:
-  new: 1
+  new: 2

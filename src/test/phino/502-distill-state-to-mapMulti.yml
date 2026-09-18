@@ -47,13 +47,13 @@ input: |
           static ↦ "true",
           state ↦ ⟦
             s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-            s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/util/concurrent/ConcurrentHashMap", i3 ↦ "newKeySet", i4 ↦ "()Ljava/util/concurrent/ConcurrentHashMap$KeySetView;", i5 ↦ Φ.false ⟧,
+            s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
             s3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
             s4 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
             ρ ↦ ∅
           ⟧,
           body ↦ ⟦
-            b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
+            b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
             b2 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
           ⟧
         ⟧,
@@ -67,6 +67,6 @@ input: |
 expected:
   - ⟦ φ ↦ Φ.jeo.maxs, m1 ↦ 8, m2 ↦ 3 ⟧
   - ⟦ 𝐵-a, 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/ArrayList" ⟧, 𝐵-b ⟧
-  - ⟦ 𝐵-c, 𝜏-set ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/util/concurrent/ConcurrentHashMap", i3 ↦ "newKeySet", i4 ↦ "()Ljava/util/concurrent/ConcurrentHashMap$KeySetView;", i5 ↦ Φ.false ⟧, 𝐵-d ⟧
+  - ⟦ 𝐵-c, 𝜏-set ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧, 𝐵-d ⟧
   - ⟦ φ ↦ Φ.hone.mapMulti, 𝐵-e, captured ↦ "Ljava/util/List;", 𝐵-f ⟧
   - ⟦ φ ↦ Φ.hone.distill-lambda, 𝐵-g, captured ↦ "Ljava/util/List;", 𝐵-h ⟧

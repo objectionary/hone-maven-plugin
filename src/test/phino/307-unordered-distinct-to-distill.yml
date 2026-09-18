@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/307-unordered-distinct-to-distill.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream",
+        unordered ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "distinct", 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/Set" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/util/Collections", i3 ↦ "synchronizedSet", i4 ↦ "(Ljava/util/Set;)Ljava/util/Set;", i5 ↦ Φ.false ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i1 ↦ "java/util/Set", i2 ↦ "add", i3 ↦ "(Ljava/lang/Object;)Z", i4 ↦ Φ.true ⟧

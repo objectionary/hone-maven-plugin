@@ -5,32 +5,41 @@
 # Folds Φ.hone.distinct (produced by 216) into a Φ.hone.distill, exactly
 # like 305 folds a filter — distinct is "a filter that owns a seen-set".
 #
-# The trailing 𝐵-marks wildcard in the pattern is what lets this rule fold the
-# pragma whether or not `217-unordered-permits-distinct` has stamped it
-# `unordered ↦ Φ.true` (#975). That mark exists to steer 224/225, which are
-# closed on the unmarked form and therefore leave a marked pragma alone; it
-# says nothing this fold needs, and nothing ever strips it, so the wildcard
-# absorbs it here and the distill comes out the same either way.
+# This rule takes the pragma in the form `216` emits it, with no marks on it,
+# which is the pipeline that `224`/`225` have already proven SEQUENTIAL: they
+# revert every distinct in a method that mentions `parallel()`, and the one
+# exemption is `217`'s `unordered ↦ Φ.true`, which its own sibling
+# `307-unordered-distinct-to-distill` folds instead. A sequential fold needs no
+# thread safety at all, so the seen-set here is a plain java/util/HashSet.
 #
-# The per-element state, a thread-safe seen-set built by
-# java.util.concurrent.ConcurrentHashMap.newKeySet(), is carried as the
-# `state` binding: a block of bytecode that APPENDS a fresh set to the
-# captured java/util/List that 502 builds in front of the dispatch. A
-# concurrent set (rather than a plain java/util/HashSet) is mandatory
-# because 502 captures this single set into the ONE BiConsumer that backs
-# the fused Stream.mapMulti dispatch; on a parallel stream several
-# ForkJoin workers invoke that BiConsumer — and therefore Set.add —
-# concurrently, and a non-thread-safe HashSet races (two threads both see
-# an element as "unseen" and let the duplicate through), yielding wrong,
-# non-deterministic results (see #715). The block assumes the List is
-# already on the stack, pushes a fresh set via the static newKeySet
-# factory, calls List.add and pops the boolean — so it begins and ends at
-# [list], leaving the stack peak bounded (3) no matter how many state
-# blocks 401-fuse joins ahead of it. That bounded peak is the whole point:
-# N fused stateful operators append N elements to ONE list rather than
-# stacking N arrays, so the caller's max-stack never overflows. The opcode
-# names are random so two distinct() calls in one method do not collide
-# when their blocks land in the same body.
+# THE SET MUST ACCEPT null. `distinct()` does: the JDK runs the sequential
+# ordered case through a LinkedHashSet, which holds one null happily, so
+# `Stream.of("a", null, "a", null).distinct()` yields two elements. The
+# concurrent set this rule used to build (`ConcurrentHashMap.newKeySet()`)
+# rejects null, and a pipeline that carried nulls before the rewrite died
+# afterwards with a NullPointerException raised inside the synthetic lambda,
+# pointing nowhere near the user's code (#970). HashSet restores the null
+# behaviour and costs less per element; the sibling rule pays for a
+# null-tolerant SYNCHRONIZED set only on the one pipeline that can run wide.
+#
+# Both this rule and its sibling are CLOSED on the pragma — no trailing
+# wildcard — because the set they build differs and the mark is what chooses.
+# That is the same closedness `217`, `224` and `225` already depend on, so a
+# new mark on a distinct pragma has to be taught to all five rules at once; if
+# it is not, the pragma folds nowhere, survives into 4xx and `441` never sees a
+# distill to revert.
+#
+# The per-element state is carried as the `state` binding: a block of bytecode
+# that APPENDS a fresh set to the captured java/util/List that 502 builds in
+# front of the dispatch. The block assumes the List is already on the stack,
+# builds a fresh HashSet, calls List.add and pops the boolean — so it begins
+# and ends at [list], leaving the stack peak bounded (4) no matter how many
+# state blocks 401-fuse joins ahead of it. That bounded peak is the whole
+# point: N fused stateful operators append N elements to ONE list rather than
+# stacking N arrays, so the caller's max-stack never overflows — and 502 bumps
+# the declared max-stack by 6, which still covers this block. The opcode names
+# are random so two distinct() calls in one method do not collide when their
+# blocks land in the same body.
 #
 # The body itself is index-agnostic (auto emit-shape, like a filter
 # guard): it opens with a Φ.hone.fetch marker meaning "push my seen-set
@@ -42,10 +51,9 @@
 name: distinct-to-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.local-distinct,
+    φ ↦ Φ.hone.distinct,
     class ↦ 𝑒-class,
-    stream-class ↦ 𝑒-stream-class,
-    𝐵-marks
+    stream-class ↦ 𝑒-stream-class
   ⟧
 result: |
   ⟦
@@ -59,11 +67,13 @@ result: |
     static ↦ "true",
     state ↦ ⟦
       𝜏-dup-list ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝜏-new-set ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokestatic,
-        i2 ↦ "java/util/concurrent/ConcurrentHashMap",
-        i3 ↦ "newKeySet",
-        i4 ↦ "()Ljava/util/concurrent/ConcurrentHashMap$KeySetView;",
+      𝜏-new-set ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
+      𝜏-dup-set ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-init-set ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokespecial,
+        i2 ↦ "java/util/HashSet",
+        i3 ↦ "<init>",
+        i4 ↦ "()V",
         i5 ↦ Φ.false
       ⟧,
       𝜏-add ↦ ⟦
@@ -77,12 +87,12 @@ result: |
       ρ ↦ ∅
     ⟧,
     body ↦ ⟦
-      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView" ⟧,
+      i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
       i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       i4 ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokevirtual,
-        i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView",
+        i1 ↦ "java/util/HashSet",
         i2 ↦ "add",
         i3 ↦ "(Ljava/lang/Object;)Z",
         i4 ↦ Φ.false
@@ -104,6 +114,10 @@ where:
   - meta: 𝜏-dup-list
     function: random-tau
   - meta: 𝜏-new-set
+    function: random-tau
+  - meta: 𝜏-dup-set
+    function: random-tau
+  - meta: 𝜏-init-set
     function: random-tau
   - meta: 𝜏-add
     function: random-tau

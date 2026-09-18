@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A fused `distinct()` over a stream that carries null (#970).
+#
+# `distinct()` accepts null: the JDK runs the sequential ordered case through a
+# LinkedHashSet, which holds one null happily, so `Stream.of("a", null, "a",
+# null).distinct()` yields two elements. Both folds used to build the seen-set
+# with `ConcurrentHashMap.newKeySet()`, whose `add` throws
+# NullPointerException on null — and it threw from inside the synthetic
+# `distill_…` lambda, with a stack trace pointing nowhere near the user's code.
+#
+# `307-distinct-to-distill` now builds a plain java/util/HashSet, which is what
+# the sequential fold needs and all it needs: `224`/`225` revert every distinct
+# in a method that mentions `parallel()`. The one exemption is `217`'s
+# `unordered ↦ Φ.true`, and `307-unordered-distinct-to-distill` folds that one
+# with `Collections.synchronizedSet(new HashSet<>())` — thread-safe for the
+# ForkJoin workers that share the single BiConsumer (#715) and null-tolerant
+# like the JDK's own. So both folds go through this fixture:
+#   * sequential — the HashSet fold, nulls and all.
+#   * unordered  — `unordered().parallel()`, the synchronized-Set fold, on a
+#     source long enough to actually split across workers.
+#   * guarded    — a filter that PASSES null fused in beside the distinct, so
+#     the fused body carries the filter's guard, `283`'s `dup`, and a seen-set
+#     that a null reaches through both.
+#
+# Every result is `sorted()` after the nulls have been mapped to a printable
+# token, so the unordered pipeline cannot print differently on two runs; the
+# elements are plain strings, substitutable under `equals`, so which survivor
+# the unordered distinct keeps is unobservable. Without the fix the class does
+# not merely print the wrong thing — it dies with a NullPointerException, so
+# the `log` line below is the whole assertion.
+java: |
+  package nulldistinct;
+  import java.util.ArrayList;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  public class X {
+    private static List<String> source() {
+      final List<String> src = new ArrayList<>(0);
+      for (int idx = 0; idx < 64; ++idx) {
+        src.add(idx % 4 == 0 ? null : "v" + (idx % 4));
+      }
+      return src;
+    }
+    private static String sequential() {
+      return source().stream().distinct().map(s -> s == null ? "-" : s)
+        .sorted().collect(Collectors.joining(","));
+    }
+    private static String unordered() {
+      return source().stream().unordered().parallel().distinct()
+        .map(s -> s == null ? "-" : s).sorted().collect(Collectors.joining(","));
+    }
+    private static String guarded() {
+      return source().stream().filter(s -> s == null || !"v2".equals(s))
+        .distinct().map(s -> s == null ? "-" : s).sorted()
+        .collect(Collectors.joining(","));
+    }
+    public static void main(String[] a) {
+      System.out.printf("R %s %s %s%n", sequential(), unordered(), guarded());
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "R -,v1,v2,v3 -,v1,v2,v3 -,v1,v3"
+before:
+  invokedynamic: 5
+  invokeinterface: 19
+  invokestatic: 9
+  invokespecial: 2
+  new: 1
+after:
+  invokedynamic: 4
+  invokeinterface: 25
+  invokestatic: 14
+  invokespecial: 8
+  new: 7

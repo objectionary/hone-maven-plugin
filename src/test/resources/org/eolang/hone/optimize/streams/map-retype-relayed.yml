@@ -129,8 +129,8 @@ before:
 after:
   invokedynamic: 5
   invokeinterface: 31
-  invokestatic: 33
+  invokestatic: 28
   invokevirtual: 15
-  new: 8
+  new: 13
   newarray: 4
   checkcast: 9

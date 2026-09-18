@@ -22,7 +22,7 @@
 #
 # The opcode tally is where the cast is pinned. `checkcast` is absent from what
 # javac emits here and the optimized class carries exactly three: the
-# ConcurrentHashMap$KeySetView the distinct guard reads out of the captured
+# java/util/HashSet the distinct guard reads out of the captured
 # List, the java/lang/Long the capture is unboxed from, and the Pair this fix
 # adds — drop the fix and the count is two. The two invokedynamics are
 # unchanged: the capturing map's indy becomes the fused mapMulti's, and forEach

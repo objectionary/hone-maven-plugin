@@ -19,6 +19,13 @@
 # The body match below is closed (exactly the nine guard bindings, no
 # 𝐵-rest), so a fused distinct — whose body holds additional opcodes —
 # is left for 502 to lower.
+#
+# The guard's `add` is matched generically — class, is-interface flag and the
+# opcode itself are metavariables — because the two folds build two different
+# seen-sets (#970): `307` a java/util/HashSet, reached by `invokevirtual`, and
+# `307-unordered-distinct-to-distill` a synchronized java/util/Set, reached by
+# `invokeinterface`. The `when` pins the opcode to those two invokes so the
+# match stays a distinct guard and not any three-argument call.
 name: unfused-distinct-to-invokeinterface
 pattern: |
   ⟦
@@ -36,11 +43,11 @@ pattern: |
       𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       𝜏-dupx ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       𝜏-add ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokevirtual,
-        i1 ↦ "java/util/concurrent/ConcurrentHashMap$KeySetView",
+        φ ↦ Φ.jeo.opcode.𝜏-add-op,
+        i1 ↦ 𝑒-add-class,
         i2 ↦ "add",
         i3 ↦ "(Ljava/lang/Object;)Z",
-        i4 ↦ Φ.false
+        i4 ↦ 𝑒-add-is-interface
       ⟧,
       𝜏-ifne ↦ ⟦
         φ ↦ Φ.jeo.opcode.ifne,
@@ -62,3 +69,7 @@ result: |
     i5 ↦ Φ.true,
     reverted ↦ Φ.true
   ⟧
+when:
+  or:
+    - eq: [𝜏-add-op, 'invokevirtual']
+    - eq: [𝜏-add-op, 'invokeinterface']

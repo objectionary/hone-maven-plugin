@@ -7,11 +7,16 @@
 # into a single Stream.mapMulti dispatch whose seen-set is captured into ONE
 # BiConsumer. Because the source is a parallel stream, several ForkJoin
 # workers drive that BiConsumer — and therefore the seen-set's add() —
-# concurrently. With the old java/util/HashSet this raced: two threads both
+# concurrently. With a bare java/util/HashSet this raced: two threads both
 # saw an element as "unseen", duplicates leaked, and the sum came out wrong
 # and non-deterministic (observed 2350048338543, 2346109911864, … instead of
-# the correct 19999900000). With the thread-safe ConcurrentHashMap.newKeySet()
-# seen-set the dedup is exact, so the sum is deterministically 19999900000.
+# the correct 19999900000). #715 answered that with a thread-safe seen-set and
+# #738 then took the whole fusion away on a parallel pipeline, so this
+# pipeline's distinct is reverted to the native call today and the sum is
+# deterministically 19999900000 either way. The one parallel pipeline that
+# still fuses is the explicitly unordered one #975 re-permitted, and it is the
+# only fold that builds a thread-safe set (a synchronized HashSet, since the
+# concurrent one refused null — #970).
 #
 # `before`/`after` opcode counts are intentionally omitted: this pack guards
 # the RUNTIME result of the optimised, parallel pipeline (the real symptom of

@@ -47,6 +47,13 @@
 # The one relay that leaves no frame is peek(), whose body 309 shapes as `dup` +
 # a void call; `503-distill-distinct-frame-peeked` names the survivor from that
 # call's own parameter instead, with no frame to read and no ordering to respect.
+#
+# The guard's `add` opcode is a metavariable pinned by the `when` to the two
+# invokes a distinct guard can use, because the two distinct folds build two
+# different seen-sets (#970): `307` a java/util/HashSet, called with
+# `invokevirtual`, and `307-unordered-distinct-to-distill` a synchronized
+# java/util/Set, called with `invokeinterface`. Everything else about the call
+# — class, method, signature, flag — was already generic here.
 name: distill-distinct-frame-relayed
 pattern: |
   ⟦
@@ -74,7 +81,7 @@ pattern: |
       𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       𝜏-add ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokevirtual,
+        φ ↦ Φ.jeo.opcode.𝜏-add-op,
         i1 ↦ 𝑒-add-class,
         i2 ↦ 𝑒-add-method,
         i3 ↦ 𝑒-add-signature,
@@ -126,7 +133,7 @@ result: |
       𝜏-swap ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup_x1 ⟧,
       𝜏-add ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokevirtual,
+        φ ↦ Φ.jeo.opcode.𝜏-add-op,
         i1 ↦ 𝑒-add-class,
         i2 ↦ 𝑒-add-method,
         i3 ↦ 𝑒-add-signature,
@@ -152,3 +159,7 @@ result: |
       ρ ↦ ∅
     ⟧
   ⟧
+when:
+  or:
+    - eq: [𝜏-add-op, 'invokevirtual']
+    - eq: [𝜏-add-op, 'invokeinterface']

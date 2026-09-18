@@ -83,7 +83,7 @@ before:
 after:
   invokedynamic: 4
   invokeinterface: 20
-  invokestatic: 23
+  invokestatic: 21
   invokevirtual: 8
-  new: 4
+  new: 6
   newarray: 2

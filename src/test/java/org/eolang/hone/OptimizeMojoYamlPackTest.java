@@ -200,6 +200,7 @@ final class OptimizeMojoYamlPackTest {
             grepin = OptimizeMojo.DEFAULT_GREP_IN;
         }
         fea.clean();
+        fea.properties().set("maven.compiler.release", "17");
         fea.files()
             .file(path)
             .write(code.getBytes(StandardCharsets.UTF_8));

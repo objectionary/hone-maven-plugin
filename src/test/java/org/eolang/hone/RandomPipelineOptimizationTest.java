@@ -269,6 +269,7 @@ final class RandomPipelineOptimizationTest {
     private static void runRandomPipelines(final Farea fea, final Path home,
         final int pipelines, final String image) throws IOException {
         fea.clean();
+        fea.properties().set("maven.compiler.release", "17");
         for (int seed = 0; seed < pipelines; ++seed) {
             final String name = String.format("P%04d", seed);
             fea.files()

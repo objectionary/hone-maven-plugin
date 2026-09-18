@@ -1,0 +1,87 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `skip(n)` whose count is not a compile-time constant (#969).
+#
+# `220-recognize-skip` captures whatever opcode sits immediately in front of
+# the call as the count push, and `𝜏-pop` is a metavariable over the opcode
+# NAME — so it matched `lsub`, `i2l` or `lload` as happily as `lconst_1`.
+# `308` then splices whatever was captured verbatim into the state prologue,
+# at a point where the stack holds the captured java/util/List: the prologue
+# tries to widen a list reference to a long, the arithmetic's own operands are
+# left orphaned, and the class fails verification. `442` replays the same wrong
+# opcode when reverting, so the fallback path did not rescue it either. The
+# rule's header always claimed such streams were "left unoptimised"; nothing
+# enforced it until the `when` guard this fixture pins.
+#
+# Four pipelines:
+#   * computed  — `skip(WORDS.size() - 3L)`, where the opcode in front of the
+#     call is the `lsub` that finishes the arithmetic. This is the reported
+#     shape, and before the guard it produced
+#     "VerifyError: Bad type on operand stack ... at computed()J @42: lsub".
+#   * parameter — `skip(n)` over a method parameter, where the opcode is an
+#     `lload`. The issue asks for both halves, and they fail differently:
+#     the `lload` reads slot 0 inside the state prologue, which is a different
+#     value there, so this one miscompiles rather than failing to load.
+#   * primitive — the same over an `IntStream`, because
+#     `212-recognize-primitive-skip` (#996) lifts with the same pattern and
+#     needs the same guard. Without it the primitive path reopens the hole the
+#     object path just closed.
+#   * constant  — `skip(2L)` beside them, which must still FUSE. It is what
+#     stops the guard being written too tightly: jeo normalises javac's
+#     `ldc2_w` to `ldc`, so admitting `lconst_0`, `lconst_1` and `ldc` covers
+#     every constant count, and this pipeline is what proves it.
+#
+# The printed line is most of the assertion, since `computed()` did not load at
+# all before the guard. What the disassembly shows is the intended shape: the
+# three unliftable skips each stay NATIVE with the operators on either side
+# fused into a mapMulti of their own — a fusion barrier, which is what the rule
+# always claimed to leave — while `constant()` comes out as ONE
+# `Stream.mapMulti` with no skip left in it. The counts pin the second half:
+# `invokedynamic` 10 -> 9 and `invokeinterface` 18 -> 25 both move only because
+# fusion still happens around and through the constant count, so a guard
+# written tightly enough to refuse `ldc` would show up here.
+java: |
+  package skipcomputed;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.IntStream;
+  import java.util.stream.Stream;
+  public class X {
+    private static final List<String> WORDS = List.of("a", "bb", "ccc", "dddd", "ee");
+    private static long computed() {
+      return WORDS.stream().map(s -> s + "!").skip(WORDS.size() - 3L)
+        .map(s -> s + "?").collect(Collectors.counting());
+    }
+    private static long parameter(long n) {
+      return Stream.of(1, 2, 3, 4, 5).map(x -> x + 1).skip(n)
+        .map(x -> x * 2).collect(Collectors.counting());
+    }
+    private static int primitive(long n) {
+      return IntStream.of(5, 2, 9, 2, 7).map(x -> x + 1).skip(n)
+        .filter(x -> x > 3).sum();
+    }
+    private static long constant() {
+      return Stream.of(1, 2, 3, 4, 5, 6).map(x -> x + 1).skip(2L)
+        .map(x -> x * 2).collect(Collectors.counting());
+    }
+    public static void main(String[] a) {
+      System.out.printf("R %d %d %d %d%n",
+        computed(), parameter(2L), primitive(1L), constant());
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "R 3 3 18 4"
+before:
+  invokedynamic: 10
+  invokeinterface: 18
+  invokestatic: 30
+after:
+  invokedynamic: 9
+  invokeinterface: 25
+  invokestatic: 38

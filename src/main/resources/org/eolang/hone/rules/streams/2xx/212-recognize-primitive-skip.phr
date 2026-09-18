@@ -17,8 +17,11 @@
 # mistaken for it — `151` has already stripped line-numbers and
 # `219-remove-label-before-skip` (widened to this interface by #996) has
 # removed the own-line label, so the push always sits immediately before the
-# call. A computed count would miscapture only the last opcode of its
-# expression, so, exactly as in `220`, this rule is for compile-time constants.
+# call. The count must be a COMPILE-TIME CONSTANT, and the `when` below is what
+# makes that true rather than merely intended: `220`'s header carries the
+# argument (#969), and the guard here is the same one — `lconst_0`, `lconst_1`
+# or `ldc`, the three opcodes that push a long on their own. Anything computed
+# is left plain bytecode.
 #
 # `IntStream` only, for the slot-width reason
 # `212-recognize-primitive-distinct` records.
@@ -77,3 +80,8 @@ result: |
 where:
   - meta: 𝜏-skip
     function: random-tau
+when:
+  or:
+    - eq: [𝜏-pop, 'lconst_0']
+    - eq: [𝜏-pop, 'lconst_1']
+    - eq: [𝜏-pop, 'ldc']

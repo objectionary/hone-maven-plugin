@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The filter half of 317 (#635). The `state` block is the mapper's, verbatim —
+# the predicate object is appended to the shared List once — and the body is a
+# guard rather than a replacement: `dup` keeps a copy of the item at the BOTTOM
+# of the stack, the top copy is parked in local 1, the fetched Predicate is
+# pushed above the kept copy, the parked item is reloaded above it, `test` eats
+# both, and `ifne` either falls through to a void `return` (drop) or lands on a
+# label carrying Φ.hone.frame-item — the same lone-item frame 503 gives a
+# distinct and a skip. `start` is "named-filter", so 413 leaves the body alone.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/317-named-filter-to-distill.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.named-filter,
+    class ↦ "Foo",
+    object ↦ "Good",
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Object;",
+    static ↦ "true"
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.distill, class ↦ "Foo", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", start ↦ "named-filter", 𝐵-rest ⟧
+  - ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-n ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Good" ⟧, 𝐵-state ⟧
+  - ⟦ 𝜏-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Predicate" ⟧, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/function/Predicate", i3 ↦ "test", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧, 𝜏-if ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-l ⟧ ⟧, 𝜏-ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧, 𝜏-lab ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-l ⟧, 𝜏-fr ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧, ρ ↦ ∅ ⟧

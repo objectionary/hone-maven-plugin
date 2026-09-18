@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognises a `.map(new Foo())` — a map whose mapper is an OBJECT built at the
+# call site rather than a lambda — and abstracts the four-opcode run
+# `new Foo; dup; invokespecial Foo.<init>()V; invokeinterface Stream.map` into a
+# single Φ.hone.named-map pragma (#635).
+#
+# Every other map recogniser starts from a Φ.hone.lambda, which 111 mints out of
+# an invokedynamic. An object mapper carries no invokedynamic at all, so 111
+# never fires, no lambda is ever formed, and the operation was invisible to the
+# whole 2xx pass — the gap was total, not partial. This rule is the front door
+# for that shape: like 216 and 220 it lifts bare opcodes, so it matches at class
+# scope to read the enclosing class name, which 317 puts on the resulting
+# distill so 401-fuse can compose it with its neighbours (they share one
+# `class`).
+#
+# The object is created ONCE, when the pipeline is built, and its `apply` is
+# called per element — so the fused body cannot rebuild it and cannot read it
+# from the caller's locals either, since 511/512 lift that body into a method of
+# its own. It is, in exactly the sense 112-114 mean, a CAPTURE: 317 appends the
+# constructed object to the shared state List in the `state` block and reads it
+# back per element through a Φ.hone.fetch, so a named map fuses with a capturing
+# one, with a distinct and with a skip on 401's blind state+body join.
+#
+# The element type cannot be read off anything here. A lambda carries an
+# instantiated descriptor that 202 seds the element type out of; `Foo` declares
+# its type argument in its OWN class file, which phino never sees, and the call
+# site is erased to (Ljava/lang/Object;)Ljava/lang/Object;. So all four type
+# fields are pinned to Ljava/lang/Object; — the same erasure a distinct or a skip
+# carries — and 247 narrows them when the next pragma says what it accepts.
+#
+# The no-argument constructor is the whole of v1 (#635). `new Foo()` pushes
+# nothing between the `dup` and the `invokespecial`, which is what makes the run
+# a fixed four opcodes this pattern can pin; binding 𝑒-object on both the `new`
+# and the `<init>` owner proves the two belong together, and the `()V` descriptor
+# proves nothing was pushed in between.
+#
+# @todo #635:60min Fuse a map whose object argument CAPTURES something. A
+#  `map(new Foo(k))` compiles to `new Foo; dup; <pushes>; invokespecial
+#  Foo.<init>(I)V`, so the run is no longer four opcodes and the pushes have to
+#  be peeled the way 114 peels a capturing lambda's. The same goes for an object
+#  that arrives as a method argument or a field read (`filter(p)`, the refArg
+#  case in streams/closures.yml), where there is no `new` to anchor on at all and
+#  the lone `aload` cannot be told apart from the receiver Stream's. Both were
+#  left out to keep the front door to one provable shape; the next step is a
+#  peel rule of 114's kind, driven by the constructor descriptor instead of the
+#  factory one.
+name: recognize-named-map
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-new ↦ ⟦
+          φ ↦ Φ.jeo.opcode.new,
+          𝜏1 ↦ 𝑒-object,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-dup ↦ ⟦
+          φ ↦ Φ.jeo.opcode.dup,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-init ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokespecial,
+          𝜏2 ↦ 𝑒-object,
+          𝜏3 ↦ "<init>",
+          𝜏4 ↦ "()V",
+          𝜏5 ↦ Φ.false,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏6 ↦ "java/util/stream/Stream",
+          𝜏7 ↦ "map",
+          𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+          𝜏9 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-named ↦ ⟦
+          φ ↦ Φ.hone.named-map,
+          class ↦ 𝑒-class-name,
+          object ↦ 𝑒-object,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-named
+    function: random-tau

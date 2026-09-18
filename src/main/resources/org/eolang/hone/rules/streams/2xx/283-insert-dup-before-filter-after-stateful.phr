@@ -54,6 +54,15 @@
 # guard, 401 fused it into the latch distill, and the predicate ate the only
 # copy of the item: "Current frame's stack size doesn't match stackmap" at the
 # keep-label the dropWhile had just merged into.
+#
+# The map over an object mapper is the sixth (#635). 215 mints a
+# Φ.hone.named-map whose mapper rides the shared state List, so 317 folds it
+# into a stateful distill exactly as 316 folds a capturing map, whose body
+# leaves one un-duplicated item — so a plain filter behind it would eat the
+# only copy of the mapped element and reach the keep label empty. It puts
+# `class` directly behind `φ`, so 𝐵-first-head binds the empty run the way it
+# does for a distinct, and 𝐵-first-rest swallows the mapper's own class, the
+# four type fields and the static flag that follow.
 name: insert-dup-before-filter-after-stateful
 pattern: |
   ⟦
@@ -112,6 +121,7 @@ when:
         - eq: [𝜏-one, 'dropWhile']
         - eq: [𝜏-one, 'c-map']
         - eq: [𝜏-one, 'cp-dropWhile']
+        - eq: [𝜏-one, 'named-map']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

@@ -197,6 +197,19 @@ Because those two carry no signature to read an element type off,
   interface instead,
   and the object folds take it from there unchanged.
 
+An operation whose argument is an OBJECT rather than a lambda
+  carries no `invokedynamic` either:
+  `.map(new Foo())` compiles to
+  `new` / `dup` / `invokespecial` / `invokeinterface`,
+  so `111-` never fires
+  and nothing downstream could see the operation at all (#635).
+Rules `215-recognize-named-map` and `215-recognize-named-filter`
+  lift that four-opcode run the way `216-` lifts a bare `distinct`,
+  and because `Function.apply` is erased —
+  the call site javac emits says only `java.lang.Object` —
+  `247-` reads the element type off the pragma that consumes it
+  and `317-` narrows the item there with a single `CHECKCAST`.
+
 One operation gets no pragma of its own:
   `IntStream.mapToObj(...)` crosses from a primitive stream
   to a reference one,
@@ -222,7 +235,8 @@ Rules `281-` and `282-` insert a `DUP` in front of every `filter`
   so the value can be both tested and forwarded
   without re-running the predicate,
   and `283-` does the same behind an operator that carries state
-  (a `distinct`, a `skip`, a `dropWhile` or a capturing one).
+  (a `distinct`, a `skip`, a `dropWhile`, a capturing one,
+  or a map over an object argument).
 
 **Stage 3 (rules `301-` to `311-`): fold every operation into `distill`.**
 Mapping and filtering still look different at this point:
@@ -517,7 +531,10 @@ Both forms are within the specification,
 It promises not to add work:
   `101-mark-traversing-count` and
   `142-count-keeps-elidable-stage-native` keep the chain native
-  whenever the terminal is one the JVM can elide (#973).
+  whenever the terminal is one the JVM can elide (#973),
+  and `143-count-keeps-elidable-named-map-native` does the same
+  for a `map` whose argument is an object,
+  which has no lambda for `142-` to stamp (#635).
 Nothing is forfeited by doing so —
   in exactly that case the fused `mapMulti`
   would have optimised a pipeline that was never going to run.
@@ -562,6 +579,18 @@ LongStream.of(1L, 2L, 2L).distinct()
 // pushes it, so they admit only lconst_0, lconst_1 and ldc; anything
 // computed is left as it is rather than baked in wrong.
 stream.skip(list.size() - 3L)
+
+// A map or a filter whose OBJECT argument captures something (#635).
+// 215 pins the no-argument constructor, so the run it recognises is
+// exactly four opcodes; a capturing one pushes its arguments between
+// the dup and the invokespecial, and they have to be peeled the way
+// 114 peels a capturing lambda's.
+stream.map(new Scaler(by))
+
+// The same operation reading its object from a parameter or a field,
+// where there is no `new` to anchor on at all and the lone `aload`
+// cannot be told apart from the receiver stream's.
+static int run(Predicate<Integer> p) { return ... .filter(p) ... }
 ```
 
 A CAPTURING `mapMulti` stage is also left as two calls,

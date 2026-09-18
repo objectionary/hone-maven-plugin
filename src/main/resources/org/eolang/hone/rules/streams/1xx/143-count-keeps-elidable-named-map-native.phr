@@ -1,0 +1,108 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The object-mapper half of the `count()` guard (#973, #635). `142` keeps a
+# count-preserving stage native by stamping the Φ.hone.lambda `111` lifted out
+# of it; a `.map(new Foo())` never becomes a lambda, so `142` walks past it and
+# the elision `101` and `142` were written to protect is lost again the moment
+# `215` starts lifting object mappers.
+#
+# The defect is `101`'s, verbatim. A `count()` that `101` did NOT stamp is one
+# the JVM can elide: the source is SIZED, `map` preserves SIZED, and
+# `ReferencePipeline.count()` answers from the spliterator without running the
+# pipeline at all. `Stream.of(1, 2, 3).map(new Loud()).count()` therefore calls
+# `Loud.apply` zero times today; fuse the map into a `mapMulti`, which clears
+# SIZED by design, and it is called once per element. Same specification, more
+# work, and the fusion it buys optimises a pipeline that was never going to run.
+#
+# So this rule stamps the `invokeinterface Stream.map` itself with
+# `reverted ↦ Φ.true`. `215` is closed on the four-binding opcode jeo emits, so
+# a stamped one stops matching it, never becomes a Φ.hone.named-map, never folds
+# into a distill, and the `new`/`dup`/`invokespecial` in front of it are left
+# exactly where javac put them. jeo ignores the extra binding when assembling,
+# the same way it ignores the one `441` leaves on a reverted `distinct`.
+#
+# Only the map needs it. A `filter(new Bar())` clears SIZED whatever its
+# argument is, so `101` stamps the terminal, `142` and this rule both stand
+# down, and the object filter fuses as it should.
+#
+# Like `142` this is closed on the unstamped opcode, so it cannot re-fire on its
+# own output, and it runs after `102` has taken the own-line label out from
+# between the constructor and the call, which is what makes the four opcodes
+# adjacent enough to pin.
+name: count-keeps-elidable-named-map-native
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-new ↦ ⟦
+      φ ↦ Φ.jeo.opcode.new,
+      𝜏1 ↦ 𝑒-object,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-dup ↦ ⟦
+      φ ↦ Φ.jeo.opcode.dup,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-init ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokespecial,
+      𝜏2 ↦ 𝑒-object,
+      𝜏3 ↦ "<init>",
+      𝜏4 ↦ "()V",
+      𝜏5 ↦ Φ.false,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-map ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏6 ↦ "java/util/stream/Stream",
+      𝜏7 ↦ "map",
+      𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      𝜏9 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-new ↦ ⟦
+      φ ↦ Φ.jeo.opcode.new,
+      𝜏1 ↦ 𝑒-object
+    ⟧,
+    𝜏-dup ↦ ⟦
+      φ ↦ Φ.jeo.opcode.dup
+    ⟧,
+    𝜏-init ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokespecial,
+      𝜏2 ↦ 𝑒-object,
+      𝜏3 ↦ "<init>",
+      𝜏4 ↦ "()V",
+      𝜏5 ↦ Φ.false
+    ⟧,
+    𝜏-map ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏6 ↦ "java/util/stream/Stream",
+      𝜏7 ↦ "map",
+      𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      𝜏9 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface
+    ⟧,
+    𝐵-after
+  ⟧

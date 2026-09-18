@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The filter twin of 215-recognize-named-map (#635). Same four opcodes, same
+# absence of any invokedynamic, a Predicate descriptor instead of a Function
+# one, and a Φ.hone.named-filter out the other end. The trailing `astore` is
+# there to prove the lift is local: 𝐵-body-tail absorbs whatever follows the
+# run, and only the four opcodes are consumed.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/215-recognize-named-filter.phr
+input: |
+  ⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Good" ⟧,
+          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Good", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
+          op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "filter", v8 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
+          op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.named-filter, class ↦ "Foo", object ↦ "Good", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-filter, 𝐵-rest ⟧, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧, ρ ↦ ∅ ⟧

@@ -19,8 +19,8 @@
 # lone capturing operator, so its trailing mapToInt folds into a single
 # mapMultiToInt exactly like the fused cases. The indys that remain are the
 # string-concat (makeConcatWithConstants in decorate / the reduce), the genuinely
-# native roundtrip cases that must not be touched (capObj, capArr, capFld, named,
-# …), and one mapMulti dispatch per capturing chain; the fourteen that disappear
+# native roundtrip cases that must not be touched (capObj, capArr, capFld, …),
+# and one mapMulti dispatch per capturing chain; the fourteen that disappear
 # are the fusion-and-lowering win. Which indy collapses into which mapMulti is proven per-rule
 # by the src/test/phino/ packs — this fixture proves the rules COMPOSE on a real
 # class.
@@ -35,6 +35,21 @@
 # trailing mapToInt folds into a single mapMultiToInt via 451 — one indy, the same
 # win the fused cases get.
 #
+# Update (issue #635): `named` has moved out of the native list. A map or a
+# filter whose argument is an OBJECT — `filter(new Good()).map(new Doubler())`
+# — carries no invokedynamic at all, so 111 never saw it and no 2xx recogniser
+# could; 215 lifts the constructor run instead, 317 folds it into a stateful
+# distill with the object riding the shared state List, and the pair fuses and
+# lowers exactly as capLoc does. The tally does not move, which is why nothing
+# below it changed: the single indy this chain used to keep was its own
+# Integer::intValue, which 711 reverted to native because the lone unbox had
+# no distill to fold into, and what stands in its place now is the one
+# mapMultiToInt dispatch of the fused chain. So 41 to 27 still holds. What the
+# fix shows up in is the DISASSEMBLY — Good and Doubler are constructed once
+# each into a shared ArrayList before the dispatch, instead of being handed to
+# Stream.filter and Stream.map — and in streams/named-objects.yml, the fixture
+# that pins this shape on counts that do move.
+#
 # Native roundtrip shapes — must survive untouched:
 #   bound   : String::length             unbound-instance method ref
 #   capObj  : List captured in lambda     reference capture
@@ -45,7 +60,6 @@
 #   refs    : X::isOdd / X::triple        every operator a static method ref
 #   sField  : static final read           constant read from a lambda body
 #   sHelp   : isPrime / square helpers    lambda delegates to a static helper
-#   named   : new Good() / new Doubler()  Predicate / Function as named classes
 #
 # Capturing fusion shapes (issue #636) — must fuse or lower to mapMulti:
 #   capLoc    : filter(n>t).map(n+off)    single-int-capture filter+map FUSE
@@ -53,6 +67,9 @@
 #   lone      : map(n+off)                lone single-capture map -> standalone mapMulti
 #   loneMulti : map(n+p+q)                lone multi-capture map -> mapMultiToInt
 #   multiFil  : filter(n>lo && n<hi)      lone multi-int-capture filter -> mapMultiToInt
+#
+# Object-argument fusion shape (issue #635):
+#   named     : filter(new Good()).map(new Doubler())   object, not lambda, FUSE
 java: |
   package closures;
   import java.util.*;

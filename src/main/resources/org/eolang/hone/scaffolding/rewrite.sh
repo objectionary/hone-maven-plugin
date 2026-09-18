@@ -171,7 +171,7 @@ function rewrite {
       if cmp -s "${pho}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"
       else
-        verbose "  $(diff "${pho}" "${t}" | grep -cE '^[><]') lines changed by '${m}' in $(basename "${t}")"
+        verbose "  $(diff "${pho}" "${t}" | grep -cE '^>') lines changed by '${m}' in $(basename "${t}")"
       fi
       cp "${t}" "${pho}"
     done
@@ -189,7 +189,7 @@ function rewrite {
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    changed=$(diff "${phi}" "${pho}" | grep -cE '^[><]' || true)
+    changed=$(diff "${phi}" "${pho}" | grep -cE '^>' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
   statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"
@@ -198,7 +198,7 @@ function rewrite {
   if cmp -s "${xi}" "${xo}"; then
     verbose "No changes made to ${idx} $(basename "${xi}")"
   else
-    verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^[><]') lines"
+    verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^>') lines"
   fi
   printf '%s' "${stamp}" > "${mark}"
 }

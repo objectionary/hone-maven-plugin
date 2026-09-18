@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 215 is the front door for a map whose argument is an OBJECT and not a lambda
+# (#635). The input is what javac emits for `.map(new Doubler())` — four
+# opcodes, no invokedynamic anywhere, which is why 111 never fires on it and no
+# 2xx recogniser ever saw the operation. The four collapse into one
+# Φ.hone.named-map carrying the enclosing class name (so 401 can fuse it with
+# its neighbours) and the mapper's own class (so 317 can build it). All four
+# type fields say Ljava/lang/Object; because the call site is erased; 247
+# narrows them later. The second expectation is the whole point: the body is
+# closed and holds the pragma alone, so the constructor run is gone.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/215-recognize-named-map.phr
+input: |
+  ⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Doubler" ⟧,
+          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Doubler", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
+          op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", object ↦ "Doubler", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧

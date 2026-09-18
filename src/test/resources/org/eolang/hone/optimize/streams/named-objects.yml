@@ -1,0 +1,116 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A map or a filter whose argument is an OBJECT and not a lambda (#635).
+# `Stream.of(1, 2, 3).map(new Foo())` compiles to `new Foo; dup; invokespecial
+# Foo.<init>()V; invokeinterface Stream.map` — no invokedynamic anywhere — so
+# 111 never minted a Φ.hone.lambda for it and every 2xx recogniser walked past
+# the operation as if it were not there. On master this class keeps seven
+# `Stream.map` calls and one `Stream.filter` native; with 215/247/317 it keeps
+# two, and both of those are kept on purpose.
+#
+# The object is built ONCE when the pipeline is assembled and its `apply` is
+# called per element, which is exactly what the shared state List already does
+# for a capturing lambda. So 317 appends it in the distill's `state` block and
+# reads it back per element through a Φ.hone.fetch, and the operation fuses
+# with its neighbours on 401's ordinary state+body join. That is why `iinc`
+# goes from none to seven: 521 lowers each fetch to `List.get(counter++)`.
+#
+# Six pipelines, each pinning one decision:
+#   * paired  — the issue's own shape twice over, an object filter feeding an
+#     object mapper, with a trailing mapToInt. Both fuse into one
+#     Stream.mapMultiToInt.
+#   * guarded — a plain lambda filter BEHIND an object mapper. It is why
+#     `named-map` had to join 283's alternation: the folded body leaves one
+#     un-duplicated item, the predicate ate it, and the class died at load with
+#     "Inconsistent stackmap frames at branch target".
+#   * lifted  — a plain lambda map in FRONT and a dropWhile behind, so the
+#     object mapper is fused on both sides at once and the narrowing cast has
+#     to land ahead of the dropWhile's latch prologue.
+#   * tagged  — two object mappers in a row, the second changing the element
+#     type from Integer to String, collected rather than counted.
+#   * scaled  — `new Scaler(3)`, a CAPTURING constructor. 215 pins `()V`, so
+#     this one stays native on purpose; the list it prints proves the mapper
+#     still runs and still multiplies by three.
+#   * elided  — `Stream.of(1, 2, 3).map(new Loud()).count()`, the literal line
+#     in the issue, in a method of its own. The JDK answers that `count()` from
+#     the spliterator without running the pipeline, so `Loud.apply` is called
+#     zero times, and 143 keeps it that way — the trailing 0 in the printed
+#     line is the whole assertion, and it reads 3 if the guard is taken away.
+#     It sits in its own method because 101's guard is method-scoped: an
+#     unrelated `filter` elsewhere in the same method already defeats the
+#     elision on master, lambda or object alike.
+#
+# The printed line is the real test. It is identical before and after — the
+# same numbers, the same lists, the same call count — and it is the only thing
+# here that a rewrite producing a class that loads but computes the wrong
+# answer could not fake.
+#
+# `invokedynamic` is NOT what proves the fix. It falls from 6 to 4 here, but it
+# falls to 4 on master's rules as well: each dispatch a fused object operation
+# removes is replaced by the mapMulti dispatch that takes its place, and the
+# plain lambdas either side of it were fusing already. What moves is `iinc`,
+# one per Φ.hone.fetch that 521 lowers, and `checkcast`, the fetch's own
+# narrowing plus the cast 317 puts behind every `Function.apply`. Rewritten by
+# master's rules this class gives iinc 1 and checkcast 3; by these, 7 and 15.
+java: |
+  package named;
+  import java.util.List;
+  import java.util.function.Function;
+  import java.util.function.Predicate;
+  import java.util.stream.Collectors;
+  import java.util.stream.Stream;
+  public class X {
+    private static int touched;
+    static class Good implements Predicate<Integer> {
+      public boolean test(Integer n) { return n > 2; }
+    }
+    static class Doubler implements Function<Integer, Integer> {
+      public Integer apply(Integer n) { return n * 2; }
+    }
+    static class Tagger implements Function<Integer, String> {
+      public String apply(Integer n) { return "<" + n + ">"; }
+    }
+    static class Scaler implements Function<Integer, Integer> {
+      private final int by;
+      Scaler(int b) { this.by = b; }
+      public Integer apply(Integer n) { return n * this.by; }
+    }
+    static class Loud implements Function<Integer, Integer> {
+      public Integer apply(Integer n) { X.touched = X.touched + 1; return n; }
+    }
+    static long elided() {
+      return Stream.of(1, 2, 3).map(new Loud()).count();
+    }
+    public static void main(String[] a) {
+      int paired = Stream.of(1, 2, 3, 4, 5)
+        .filter(new Good()).map(new Doubler())
+        .mapToInt(Integer::intValue).sum();
+      int guarded = Stream.of(1, 2, 3, 4, 5)
+        .map(new Doubler()).filter(n -> n > 4)
+        .mapToInt(Integer::intValue).sum();
+      int lifted = Stream.of(1, 2, 3, 4)
+        .map(n -> n + 1).map(new Doubler()).dropWhile(n -> n < 7)
+        .mapToInt(Integer::intValue).sum();
+      List<String> tagged = Stream.of(1, 2)
+        .map(new Doubler()).map(new Tagger()).collect(Collectors.toList());
+      List<Integer> scaled = Stream.of(1, 2, 3)
+        .map(new Scaler(3)).collect(Collectors.toList());
+      System.out.printf(
+        "The result is %d %d %d %s %s %d %d%n",
+        paired, guarded, lifted, tagged, scaled, X.elided(), X.touched
+      );
+    }
+  }
+log:
+  - "BUILD SUCCESS"
+  - "The result is 24 24 18 [<2>, <4>] [3, 6, 9] 3 0"
+before:
+  invokedynamic: 6
+  iinc: 0
+  checkcast: 2
+after:
+  invokedynamic: 4
+  iinc: 7
+  checkcast: 15

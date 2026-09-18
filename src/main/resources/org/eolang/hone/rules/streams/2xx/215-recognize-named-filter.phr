@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The filter twin of 215-recognize-named-map, and its mirror all the way down
+# (#635): it lifts `new Bar; dup; invokespecial Bar.<init>()V; invokeinterface
+# Stream.filter` into a Φ.hone.named-filter, which 317 folds into the same kind
+# of stateful distill, with the predicate object riding the shared state List
+# instead of the mapper.
+#
+# The two rules are kept apart rather than generalised over the operator name
+# because nothing else about them is shared: the interface is a Predicate, the
+# SAM is `test` and returns Z, and the folded body is a guard (dup, test, ifne,
+# return) rather than a straight replacement. That is the same split 201 and 202
+# make, and the same one 314 and 316 make behind them.
+#
+# Because the folded body opens with its own `dup`, a named filter needs no
+# Φ.hone.dup spliced in front of it and is therefore absent from 281 and 283 —
+# exactly as the capturing filter 113 lifts is.
+name: recognize-named-filter
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-new ↦ ⟦
+          φ ↦ Φ.jeo.opcode.new,
+          𝜏1 ↦ 𝑒-object,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-dup ↦ ⟦
+          φ ↦ Φ.jeo.opcode.dup,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-init ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokespecial,
+          𝜏2 ↦ 𝑒-object,
+          𝜏3 ↦ "<init>",
+          𝜏4 ↦ "()V",
+          𝜏5 ↦ Φ.false,
+          ρ ↦ ∅
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏6 ↦ "java/util/stream/Stream",
+          𝜏7 ↦ "filter",
+          𝜏8 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;",
+          𝜏9 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-named ↦ ⟦
+          φ ↦ Φ.hone.named-filter,
+          class ↦ 𝑒-class-name,
+          object ↦ 𝑒-object,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-named
+    function: random-tau

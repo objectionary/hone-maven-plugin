@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a Φ.hone.named-filter (a filter over an object predicate, recognised by
+# 215) into a stateful Φ.hone.distill — the filter twin of 317's map fold, and
+# the object-argument analogue of what 314 does for a capturing predicate
+# (#635). The predicate object rides the shared state List, appended once in the
+# `state` block and read back per element by a Φ.hone.fetch, so 401 joins it
+# with a distinct, a skip or a capturing operator on its blind state+body join.
+#
+# The body is 314's guard, with the item preserved at the BOTTOM of the stack
+# while the predicate runs above it, so the keep label still sees a lone [item]
+# and reuses 503's Φ.hone.frame-item. On entry [item]:
+#   dup            [item, item]      keep a copy at the bottom for the keep path
+#   astore 1       [item]            park the top copy in its own (dead) slot
+#   fetch          [item, Predicate] 521 makes it List.get(counter++) + checkcast
+#   aload 1        [item, Predicate, item]   reload the copy above the receiver
+#   Predicate.test [item, Z]         the predicate eats the receiver and the copy
+#   ifne L         [item]            keep, else fall through and return (drop)
+#   return         drop the kept item (a void return discards the stack)
+#   L: frame-item  [item]            keep path, the frame distinct and skip use
+# The start label "named-filter" (not "filter") keeps 413 and 281 off this body,
+# the same reason 314 labels its own "c-filter".
+name: named-filter-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.named-filter,
+    class ↦ 𝑒-class,
+    object ↦ 𝑒-object,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "named-filter",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ ⟦
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
+      𝜏-dup-object ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-init ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokespecial,
+        i2 ↦ 𝑒-object,
+        i3 ↦ "<init>",
+        i4 ↦ "()V",
+        i5 ↦ Φ.false
+      ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      𝜏-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Predicate" ⟧,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/function/Predicate",
+        i3 ↦ "test",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-ifne ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧
+      ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-label
+    function: random-string
+    args: ['"L317%d"']
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-new
+    function: random-tau
+  - meta: 𝜏-dup-object
+    function: random-tau
+  - meta: 𝜏-init
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-keep
+    function: random-tau
+  - meta: 𝜏-park
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-reload
+    function: random-tau
+  - meta: 𝜏-call
+    function: random-tau
+  - meta: 𝜏-ifne
+    function: random-tau
+  - meta: 𝜏-return
+    function: random-tau
+  - meta: 𝜏-label
+    function: random-tau
+  - meta: 𝜏-frame
+    function: random-tau

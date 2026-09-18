@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The mapToX half of 247-narrow-named-map-output (#635). A trailing
+# `mapToInt`/`mapToLong`/`mapToDouble` is the one consumer of an object mapper
+# that carries no `accepted`: 205 mints a Φ.hone.unbox out of it, and the type it
+# wants is written in `bridge-signature` instead — "(Ljava/lang/Integer;)I" for
+# an `Integer::intValue` that 103 has already desugared into a
+# lambda$hone$N(Ljava/lang/Integer;)I.
+#
+# Without this the seam stays open until 451 splices that wrapper onto the tail
+# of the distill, where the item is still the Object `Function.apply` left and
+# the class dies with "Bad type on operand stack: Type 'java/lang/Object' is not
+# assignable to 'java/lang/Integer'". So the parameter is sed-ed out of the
+# bridge signature and written into the mapper's output exactly as its sibling
+# writes the successor's `accepted`, and 317 turns it into the same checkcast.
+#
+# The guard admits only a single reference parameter, which is every shape 205
+# admits; a primitive one would mean a mapToX reading an IntStream, which a
+# Stream.map cannot feed.
+name: narrow-named-map-before-unbox
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.named-map,
+      class ↦ 𝑒-class,
+      object ↦ 𝑒-object,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ 𝑒-static
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.named-map,
+      class ↦ 𝑒-class,
+      object ↦ 𝑒-object,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-wanted,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-wanted,
+      static ↦ 𝑒-static
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-second-opcode,
+      class ↦ 𝑒-class,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-second-static,
+      target ↦ 𝑒-second-target
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches: ['^\(L[^;]+;\).+$', 𝑒-bridge-signature]
+    - not:
+        matches: ['^\(Ljava/lang/Object;\).+$', 𝑒-bridge-signature]
+where:
+  - meta: 𝑒-wanted
+    function: sed
+    args:
+      - 𝑒-bridge-signature
+      - '"s/^\\((L[^;]+;)\\).+$/$1/g"'

@@ -1,0 +1,84 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reads the element type an object mapper produces off the operation that
+# consumes it (#635), which is the only place it is written down.
+#
+# `Function.apply` is erased: it returns java/lang/Object whatever the mapper
+# was declared over, and 215 has no way to learn better — `Foo` declares its
+# type argument in its OWN class file, which phino never sees, and the call site
+# javac emitted says `(Ljava/lang/Object;)Ljava/lang/Object;`. So 215 pins all
+# four type fields to Object and this rule corrects the two OUTPUT ones from the
+# successor, which does carry the type: every lambda-bearing pragma spells out in
+# `accepted` the parameter its desugared lambda$ declares, and the original
+# program only ran at all because the element really was of that type — javac put
+# the very same cast inside the class LambdaMetafactory spun for it.
+#
+# 317 turns the corrected `returned` into a `checkcast` behind the `apply`, so
+# the item is narrowed once, where the mapper leaves it, and every consumer
+# downstream finds the type it declares — a typed lambda$ (a map, a filter, a
+# peek), a dropWhile's latch prologue, a capturing operator's park-and-reload.
+# Casting at the source rather than in front of each consumer is what keeps this
+# to one rule: the alternative anchors on the consumer, and the 505 / 508 / 509
+# family shows how many anchors that takes.
+#
+# The successor is matched generically — `𝐵-second-head` absorbs whatever it
+# puts between `φ` and `accepted`, which is `class` plus the two bridge fields
+# for a map or a filter and the three accumulators as well for a capturing one —
+# because nothing here reads any of it. The guard admits only a reference that is
+# not Object: an Object-accepting successor needs no narrowing, and a primitive
+# one is unreachable, since every primitive operator lives on an IntStream that
+# a Stream.map cannot feed.
+#
+# A `distinct` or a `skip` behind the mapper carries no `accepted` at all and so
+# is left alone, exactly as 245 and 246 leave it: both hand the item on
+# untouched, so the narrowing is simply deferred to whatever types it next.
+name: narrow-named-map-output
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.named-map,
+      class ↦ 𝑒-class,
+      object ↦ 𝑒-object,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ "Ljava/lang/Object;",
+      accepted ↦ 𝑒-accepted,
+      returned ↦ "Ljava/lang/Object;",
+      static ↦ 𝑒-static
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      𝐵-second-head,
+      accepted ↦ 𝑒-wanted,
+      𝐵-second-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-first ↦ ⟦
+      φ ↦ Φ.hone.named-map,
+      class ↦ 𝑒-class,
+      object ↦ 𝑒-object,
+      bridge-input ↦ 𝑒-bridge-input,
+      bridge-output ↦ 𝑒-wanted,
+      accepted ↦ 𝑒-accepted,
+      returned ↦ 𝑒-wanted,
+      static ↦ 𝑒-static
+    ⟧,
+    𝜏-second ↦ ⟦
+      φ ↦ Φ.hone.𝜏-two,
+      𝐵-second-head,
+      accepted ↦ 𝑒-wanted,
+      𝐵-second-rest
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches: ['^L[^;]+;$', 𝑒-wanted]
+    - not:
+        eq: [𝑒-wanted, '"Ljava/lang/Object;"']

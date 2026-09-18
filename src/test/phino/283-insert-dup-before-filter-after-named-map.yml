@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The sixth name in 283's alternation (#635). 317 folds a named map into a
+# STATEFUL distill, whose body leaves one un-duplicated item behind, so a plain
+# filter behind it needs the same throwaway copy a distinct or a capturing map
+# does. Without it 401 fuses the pair anyway, the predicate eats the only copy
+# of the mapped item, and 503's keep-frame promises an element the stack no
+# longer has — `map(new Doubler()).filter(n -> n > 4)` died with "Inconsistent
+# stackmap frames at branch target".
+#
+# The pragma 215 mints puts `class` first and the four type fields behind it,
+# which 𝐵-first-head and 𝐵-first-rest absorb between them, so nothing here had
+# to change except the name.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/283-insert-dup-before-filter-after-stateful.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.named-map,
+        class ↦ "named/X",
+        object ↦ "Doubler",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true"
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.o-filter,
+        opcode ↦ "invokestatic",
+        class ↦ "named/X",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Z",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Z",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "named/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(Ljava/lang/Integer;)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-head, 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-named ⟧, 𝜏-dup ↦ ⟦ φ ↦ Φ.hone.dup, opcode ↦ "dup", class ↦ "named/X" ⟧, 𝜏-filter ↦ ⟦ φ ↦ Φ.hone.o-filter, 𝐵-filter ⟧, 𝐵-tail ⟧

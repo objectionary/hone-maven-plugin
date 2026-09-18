@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The stand-down half of 143 (#635), the twin of the one 142 has. When 101 has
+# stamped the terminal — something ahead of it clears SIZED, so the JDK walks
+# the pipeline whatever happens — the elision was never on offer and fusing the
+# object mapper costs nothing, so the guard must not fire.
+#
+# The input is the pack next door with one binding added to the `count()`. The
+# expectation is closed on the UNMARKED map opcode, so it passes only while 143
+# leaves it completely alone and 215 is still free to lift it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/143-count-keeps-elidable-named-map-native.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Loud" ⟧,
+      op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Loud", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
+      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
+      op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true, traverses ↦ Φ.true ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true, ρ ↦ ∅ ⟧

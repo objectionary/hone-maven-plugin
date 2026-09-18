@@ -1,0 +1,131 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Folds a Φ.hone.named-map (a map over an object mapper, recognised by 215) into
+# a Φ.hone.distill — the object-argument analogue of how 316 folds a capturing
+# map, and built on the same idea: the mapper is a value computed once at
+# pipeline-construction time and read once per element, which is exactly what
+# the shared state List is for (#635).
+#
+#   state — `dup; new Foo; dup; invokespecial Foo.<init>()V; List.add; pop`,
+#           the append 502 relocates into the caller, where it runs once. It
+#           begins and ends at [.. list] and peaks three slots above it, well
+#           inside the six 502 bumps the caller's max-stack by, so it joins any
+#           number of neighbouring appends without growing the stack further.
+#   body  — the auto emit-shape, one item in and one item out:
+#             astore 1   park the incoming item in its own (now-dead) param slot
+#             fetch      push the mapper, which 521 turns into
+#                        List.get(counter++) plus a checkcast to Function
+#             aload 1    reload the item above it
+#             Function.apply  call the mapper with the receiver below the item
+#             checkcast  narrow the erased result to `returned`
+# Parking in local 1 (which 512's wrapper only reads once, at entry) needs no
+# extra local, so 512's max-locals is untouched — the same park/reload 316 uses.
+#
+# The closing cast is what 247 exists to fill in. `Function.apply` is erased and
+# returns java/lang/Object, while everything 401 fuses behind it may be typed —
+# a map's or a filter's desugared lambda$, a dropWhile's latch prologue, a
+# trailing mapToX — and would otherwise be handed an Object where it declares a
+# wrapper. It is emitted unconditionally rather than in a second variant of this
+# rule: when 247 found nothing to read, `returned` is still Ljava/lang/Object;
+# and `checkcast java/lang/Object` is a no-op that always succeeds, null
+# included.
+#
+# The fetch narrows to java/util/function/Function, not to the object's own
+# class, so the call is the very `invokeinterface Function.apply` javac emitted
+# and nothing here depends on the mapper's class declaring a bridge. The
+# verifier accepts it because any class is assignable to an interface type
+# (JVMS 4.10.1.2), and at run time the object does implement Function — it was
+# just passed to Stream.map.
+#
+# The start label "named-map" (not "map") keeps 413 and 281 off this body, the
+# same reason 316 labels its own "c-map"; a named map that finds no neighbour to
+# fuse with is lowered to a standalone Stream.mapMulti by 502/512/521/601, like
+# every other lone stateful operator, rather than being reverted to native.
+name: named-map-to-distill
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.named-map,
+    class ↦ 𝑒-class,
+    object ↦ 𝑒-object,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "named-map",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ ⟦
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
+      𝜏-dup-object ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-init ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokespecial,
+        i2 ↦ 𝑒-object,
+        i3 ↦ "<init>",
+        i4 ↦ "()V",
+        i5 ↦ Φ.false
+      ⟧,
+      𝜏-add ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "add",
+        i4 ↦ "(Ljava/lang/Object;)Z",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
+      ρ ↦ ∅
+    ⟧,
+    body ↦ ⟦
+      𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
+      𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Function" ⟧,
+      𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/function/Function",
+        i3 ↦ "apply",
+        i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+where:
+  - meta: 𝑒-cast-class
+    function: sed
+    args:
+      - 𝑒-returned
+      - '"s/^L(.+);$/$1/g"'
+  - meta: 𝜏-cast
+    function: random-tau
+  - meta: 𝜏-dup
+    function: random-tau
+  - meta: 𝜏-new
+    function: random-tau
+  - meta: 𝜏-dup-object
+    function: random-tau
+  - meta: 𝜏-init
+    function: random-tau
+  - meta: 𝜏-add
+    function: random-tau
+  - meta: 𝜏-pop
+    function: random-tau
+  - meta: 𝜏-park
+    function: random-tau
+  - meta: 𝜏-fetch
+    function: random-tau
+  - meta: 𝜏-reload
+    function: random-tau
+  - meta: 𝜏-call
+    function: random-tau

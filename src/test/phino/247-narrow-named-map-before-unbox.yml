@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A trailing `mapToInt(Integer::intValue)` is the one consumer that carries no
+# `accepted` (#635). 205 mints a Φ.hone.unbox and writes the type it wants
+# inside `bridge-signature`, so this half of 247 seds the parameter out of
+# "(Ljava/lang/Integer;)I" and writes Ljava/lang/Integer; into the mapper's
+# output. Without it 451 splices `lambda$main$1(Ljava/lang/Integer;)I` onto a
+# distill tail still holding the Object that `Function.apply` left, and the
+# class dies with "Bad type on operand stack".
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/247-narrow-named-map-before-unbox.phr
+input: |
+  ⟦
+    j$body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.named-map,
+        class ↦ "Foo",
+        object ↦ "Doubler",
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Object;",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Object;",
+        static ↦ "true"
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokestatic",
+        class ↦ "Foo",
+        bridge-signature ↦ "(Ljava/lang/Integer;)I",
+        static ↦ "true",
+        target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(Ljava/lang/Integer;)I", is-interface ↦ Φ.false ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", object ↦ "Doubler", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Integer;", static ↦ "true" ⟧
+  - ⟦ φ ↦ Φ.hone.unbox, opcode ↦ "invokestatic", class ↦ "Foo", bridge-signature ↦ "(Ljava/lang/Integer;)I", static ↦ "true", 𝐵-tail ⟧

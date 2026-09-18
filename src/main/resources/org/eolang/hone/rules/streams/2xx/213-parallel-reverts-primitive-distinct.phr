@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Guards `212-recognize-primitive-distinct` against parallel pipelines (#996),
+# the primitive analogue of `224-parallel-reverts-distinct` and the exact
+# counterpart of `210-parallel-reverts-primitive-dropwhile`.
+#
+# `224`'s header spells out what is being protected: the fused seen-set makes
+# `add()` thread-safe but does not fix WHICH element survives among equals, and
+# the JDK's `distinct()` is documented stable on an ordered stream. That
+# argument does not care whether the stream is an `IntStream`, so the primitive
+# lift has to stand down on a parallel pipeline exactly as the object one does.
+#
+# It reverts BEFORE the boxing, which is the whole reason `212` mints a pragma
+# instead of writing `214`'s sandwich itself. Reverting later would work on the
+# middle of a sandwich and leave the `boxed()` / `mapToInt` round-trip standing
+# around a native call — a pipeline made slower than the one it started from,
+# and, where a neighbouring operator shares the sandwich, one whose stream
+# kind no longer matches the interface the reverted call names. Standing down
+# here leaves the method byte-for-byte what javac emitted.
+#
+# The reverted opcode carries `reverted ↦ Φ.true`, the fifth-operand guard the
+# rest of the pass uses: `212` is closed on the four-operand opcode jeo emits,
+# so it cannot re-recognise this one and the 212 -> 213 cycle cannot spin. jeo
+# ignores the extra binding when assembling.
+#
+# Detection is intentionally over-broad, as `224`'s is: any `parallel` /
+# `parallelStream` call anywhere in the method reverts every primitive distinct
+# in it. Over-reverting only forfeits the optimisation. This rule covers a
+# parallel call BEFORE the distinct; `213-parallel-reverts-primitive-distinct-
+# after` covers one after it, because binding groups are order-preserving.
+name: parallel-reverts-primitive-distinct
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-lifted ↦ ⟦
+      φ ↦ Φ.hone.primitive-distinct,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-parallel ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-pclass ↦ 𝑒-pclass,
+      𝜏-pmethod ↦ 𝑒-pmethod,
+      𝐵-parallel-rest
+    ⟧,
+    𝐵-between,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ "distinct",
+      i4 ↦ "()Ljava/util/stream/IntStream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+where:
+  - meta: 𝜏-call
+    function: random-tau

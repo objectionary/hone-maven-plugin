@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip sibling of `443-unsandwich-reverted-distinct` (#996); its header
+# carries the argument, including why the opcode this rule emits is stamped
+# `reverted`.
+#
+# One difference: a skip revert is TWO opcodes, not one. `442` puts the count
+# push back in front of the call, so the sandwich to collapse is box, push,
+# call, unbox — and the push comes back out with the call, in the same order
+# `212` absorbed it.
+name: unsandwich-reverted-skip
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ "java/util/stream/IntStream"
+    ⟧,
+    𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏2 ↦ "skip",
+      𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
+      𝜏4 ↦ Φ.true,
+      reverted ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ 𝑒-unbox-opcode,
+      class ↦ 𝑒-unbox-class,
+      bridge-signature ↦ "(Ljava/lang/Integer;)I",
+      static ↦ "true",
+      target ↦ 𝑒-unbox-target
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
+    𝜏-native ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/IntStream",
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/IntStream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-push-back
+    function: random-tau
+  - meta: 𝜏-native
+    function: random-tau

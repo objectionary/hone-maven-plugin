@@ -29,10 +29,21 @@
 #
 # It is the twin of 504, which does the same for the object filters 305 lowers
 # with a frame already on them: 504 promotes that frame and keeps its item, this
-# rule fills in the one 304 leaves open. Fires only for a single object
-# parameter (`(L<type>;)Z`); a primitive predicate keeps falling through to 503
-# and its bridge-input, which is right for it, and a captured predicate — whose
-# call takes the captured values as well as the item — is skipped.
+# rule fills in the one 304 leaves open. A captured predicate — whose call takes
+# the captured values as well as the item — is skipped.
+#
+# It fires for a PRIMITIVE parameter too (#995). That was left to `503-distill-
+# state-frame` and its `bridge-input` on the grounds that the two coincide, and
+# they do while the distill is primitive end to end. They part exactly where
+# `506`'s header says they part on the stateless side (#704/#713/#811): when
+# something ahead of the guard has already unboxed the item — `421`'s head
+# `Wrapper.xValue()`, a fused-in `mapToLong(Long::longValue)`, or the
+# unwrapping `246` mints behind a `distinct`/`skip` inside `212`'s boxing
+# sandwich (#996) — the guard's `dup` copied a raw primitive while
+# `bridge-input` still names the wrapper, and the frame promises the wrapper
+# over it: "Type integer (current frame, stack[0]) is not assignable to
+# 'java/lang/Integer'". The predicate's parameter names the survivor in every
+# one of those, so it is read here as it is in `506`.
 #
 # Ordering: shares 503's number, since no integer is free between 502 and 503,
 # and relies on `503-distill-predicate-frame` < `503-distill-state-frame`
@@ -107,13 +118,21 @@ result: |
 when:
   and:
     - matches:
-        - '^\(L[^;]+;\)Z$'
+        - '^\((L[^;]+;|[BCDFIJSZ])\)Z$'
         - 𝑒-predicate-signature
 where:
   - meta: 𝑒-frame-item
     function: sed
     args:
       - 𝑒-predicate-signature
+      - '"s/^\\(B\\)Z$/byte/g"'
+      - '"s/^\\(C\\)Z$/char/g"'
+      - '"s/^\\(D\\)Z$/double/g"'
+      - '"s/^\\(F\\)Z$/float/g"'
+      - '"s/^\\(I\\)Z$/integer/g"'
+      - '"s/^\\(J\\)Z$/long/g"'
+      - '"s/^\\(S\\)Z$/short/g"'
+      - '"s/^\\(Z\\)Z$/boolean/g"'
       - '"s/^\\(L(.+);\\)Z$/$1/g"'
   - meta: 𝑒-frame-input
     function: sed

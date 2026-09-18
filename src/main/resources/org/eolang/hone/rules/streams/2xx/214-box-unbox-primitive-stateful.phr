@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# What `211-box-unbox-primitive-function` does for every primitive operation
+# that carries a lambda, for the two that do not (#996): it wraps the pragma
+# `212` minted in the boxing sandwich — `Φ.hone.box`, the operation,
+# `Φ.hone.unbox` — and puts the OBJECT pragma in the middle, so `307` and `308`
+# fold a primitive distinct and a primitive skip with no change at all.
+#
+# `211` cannot do it. It reads the element type off the lifted lambda's
+# `bridge-signature` and builds the unbox's method handle from it; a distinct
+# and a skip carry no lambda, so there is no signature to read. Here the type
+# comes from the stream interface instead, which is why this rule is written
+# out for `java/util/stream/IntStream` alone rather than derived: `LongStream`
+# and `DoubleStream` are two-slot cases the stateful wrapper's hand-laid locals
+# do not handle (`512`, and the scope note in `212`).
+#
+# A pragma that got this far is one `213` did not revert, so it is on a
+# pipeline that stays sequential. What comes out is what a hand-written
+# `boxed().distinct().mapToInt(Integer::intValue)` would have been, except that
+# `221` cancels this sandwich against its neighbours' wherever two lifted
+# operations meet, so a run of them ends up inside ONE sandwich, and `441` /
+# `442` plus `443-unsandwich-reverted-distinct` / `-skip` take the sandwich
+# back off again when the operation in it never found anything to fuse with.
+#
+# The pattern is closed on the three bindings `212` emits (four for skip, whose
+# `push` rides along), so this rule cannot re-fire on its own output: what it
+# leaves in the middle is a `Φ.hone.distinct` / `Φ.hone.skip`, which it does
+# not match.
+name: box-unbox-primitive-stateful
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-lifted ↦ ⟦
+      φ ↦ Φ.hone.𝜏-primitive-op,
+      class ↦ 𝑒-class,
+      stream-class ↦ "java/util/stream/IntStream",
+      𝐵-lifted-rest
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ "java/util/stream/IntStream"
+    ⟧,
+    𝜏-lifted ↦ ⟦
+      φ ↦ Φ.hone.𝜏-object-op,
+      class ↦ 𝑒-class,
+      stream-class ↦ "java/util/stream/Stream",
+      𝐵-lifted-rest
+    ⟧,
+    𝜏-unbox ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ "invokevirtual",
+      class ↦ 𝑒-class,
+      bridge-signature ↦ "(Ljava/lang/Integer;)I",
+      static ↦ "true",
+      target ↦ ⟦
+        handle ↦ 5,
+        class ↦ "java/lang/Integer",
+        method ↦ "intValue",
+        signature ↦ "()I",
+        is-interface ↦ Φ.false
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - eq: [𝜏-primitive-op, 'primitive-distinct']
+    - eq: [𝜏-primitive-op, 'primitive-skip']
+where:
+  - meta: 𝜏-box
+    function: random-tau
+  - meta: 𝜏-unbox
+    function: random-tau
+  - meta: 𝑒-primitive-op
+    function: string
+    args: [𝜏-primitive-op]
+  - meta: 𝑒-object-op
+    function: sed
+    args:
+      - 𝑒-primitive-op
+      - '"s/^primitive-//g"'
+  - meta: 𝜏-object-op
+    function: tau
+    args: [𝑒-object-op]

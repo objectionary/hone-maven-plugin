@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive twin of `220-recognize-skip` (#996), and the sibling of
+# `212-recognize-primitive-distinct`: `220` pins `java/util/stream/Stream` on
+# the call, so an `IntStream.skip(n)` stayed a native call and split the
+# pipeline around it. Its header explains the rest of the shape, and why the
+# boxing sandwich these two pragmas need is built by `214` rather than by
+# `211`.
+#
+# Like `220`, this rule absorbs the long-constant push javac emits immediately
+# in front of the call (`lconst_0`, `lconst_1` or `ldc {long}`) and carries it
+# on the pragma, so `308` can bake it into the countdown counter and `442`
+# recover it when reverting an unfused skip. The push is captured as a whole
+# `Φ.jeo.opcode.*` object, so a stray label or debug entry can never be
+# mistaken for it — `151` has already stripped line-numbers and
+# `219-remove-label-before-skip` (widened to this interface by #996) has
+# removed the own-line label, so the push always sits immediately before the
+# call. A computed count would miscapture only the last opcode of its
+# expression, so, exactly as in `220`, this rule is for compile-time constants.
+#
+# `IntStream` only, for the slot-width reason
+# `212-recognize-primitive-distinct` records.
+name: recognize-primitive-skip
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏1 ↦ "java/util/stream/IntStream",
+          𝜏2 ↦ "skip",
+          𝜏3 ↦ "(J)Ljava/util/stream/IntStream;",
+          𝜏4 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-skip ↦ ⟦
+          φ ↦ Φ.hone.primitive-skip,
+          class ↦ 𝑒-class-name,
+          stream-class ↦ "java/util/stream/IntStream",
+          push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+where:
+  - meta: 𝜏-skip
+    function: random-tau

@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# `IntStream.distinct()` and `IntStream.skip(n)` stop being fusion barriers
+# (#996).
+#
+# `216` and `220` pin `java/util/stream/Stream` on the call they recognise, so
+# a primitive distinct or skip never became a pragma: it stayed native and cut
+# the pipeline into two independently fused runs around it. Every other
+# fusible operation already had its primitive twin — `203`/`232` for filter,
+# `204`/`231` for map, `208`/`233` for dropWhile since #982.
+# `212-recognize-primitive-distinct` and `212-recognize-primitive-skip` are
+# theirs, and they write the boxing sandwich out directly, because these two
+# carry no lambda for `211` to read a type off.
+#
+# Six pipelines, one per branch of the decision:
+#   * fused         — `map().distinct().filter().mapToObj()`. The distinct
+#     joins the run: what comes out is ONE primitive mapMulti for the map and
+#     ONE object mapMulti holding the distinct, the filter and the crossing,
+#     where before the distinct stood native between two runs. This is #996.
+#   * skipFused     — the same for `skip`, with the countdown `308` bakes in.
+#   * aloneDistinct — a bare `IntStream.distinct()` with nothing to fuse with.
+#     `441` hands it back and `443-unsandwich-reverted-distinct` takes the
+#     sandwich off again, so the class ends up with the native
+#     `IntStream.distinct()` it started with rather than a `boxed()` round-trip
+#     bought for no fusion at all. The `IntStream.distinct` count below is what
+#     pins that: drop the un-sandwich rules and it falls.
+#   * aloneSkip     — the same for `442`, whose revert is two opcodes (the
+#     count push comes back out in front of the call).
+#   * parallel      — `parallelStream`-fed distinct AND skip. `222`/`224`
+#     revert both for the encounter-order and data-race reasons #738 and #715
+#     give, and the un-sandwich rules put them back as native primitive calls.
+#   * ownLine       — `.skip(2)` written on its own source line. `212` needs
+#     the count push and the call adjacent, exactly as `220` does, and this
+#     layout is the one that separates them; `219` (widened to the IntStream
+#     interface here) is what normalises it. This pipeline is a CORRECTNESS
+#     case, not a discriminating one: the phi shows this skip is still the only
+#     one in the class that no rule lifted, so what it pins is that an
+#     unlifted own-line skip beside a lifted chain keeps printing the right
+#     answer. Why the layout resists the lift is worth its own issue; nothing
+#     here depends on the answer.
+#
+# The `distinct` pipelines use values whose duplicates are indistinguishable
+# ints, so which survivor a seen-set keeps cannot change what is printed.
+#
+# `invokedynamic` 10 -> 6 is the headline: four of javac's ten stream-lambda
+# call sites are gone because the operators behind them were folded into a
+# neighbour's dispatch, and two of those four are the distinct and the skip
+# that used to stand between two runs. `new` 0 -> 3 is the seen-set and the
+# two captured state lists, so it also says the folds actually happened rather
+# than everything reverting quietly.
+java: |
+  package primitivedistinctskip;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.IntStream;
+  public class X {
+    private static final int[] NUMBERS = {5, 2, 9, 2, 7, 1, 8, 5};
+    private static final List<Integer> BOXES = List.of(5, 2, 9, 2, 7, 1, 8, 5);
+    private static String fused() {
+      return IntStream.of(NUMBERS).map(n -> n + 1).distinct()
+        .filter(n -> n > 3).mapToObj(Integer::toString)
+        .collect(Collectors.joining("."));
+    }
+    private static String skipFused() {
+      return IntStream.of(NUMBERS).map(n -> n * 2).skip(3)
+        .filter(n -> n > 5).mapToObj(Integer::toString)
+        .collect(Collectors.joining("."));
+    }
+    private static int aloneDistinct() {
+      return IntStream.of(NUMBERS).distinct().sum();
+    }
+    private static int aloneSkip() {
+      return IntStream.of(NUMBERS).skip(2).sum();
+    }
+    private static int parallel() {
+      return BOXES.parallelStream().mapToInt(Integer::intValue)
+        .distinct().skip(1).map(n -> n + 1).sum();
+    }
+    private static int ownLine() {
+      return IntStream.of(NUMBERS)
+        .map(n -> n + 3)
+        .skip(2).filter(n -> n > 8)
+        .sum();
+    }
+    public static void main(String[] a) {
+      System.out.printf("R %s %s %d %d %d %d%n",
+        fused(), skipFused(), aloneDistinct(), aloneSkip(), parallel(), ownLine());
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "R 6.10.8.9 14.16.10 32 32 32 33"
+before:
+  invokedynamic: 10
+  invokeinterface: 24
+  invokestatic: 26
+  new: 0
+after:
+  invokedynamic: 6
+  invokeinterface: 29
+  invokestatic: 39
+  new: 3

@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 212 is CLOSED on the four-operand opcode jeo emits, so a call that 213 or
+# 443 has already handed back — stamped `reverted ↦ Φ.true` — is left alone.
+# Without that the whole set, which runs to fixpoint in one phino invocation,
+# would lift and revert the same call on every pass, and because each pass
+# mints fresh random names the tree would never settle (#996).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/212-recognize-primitive-distinct.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    m1 ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        op1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/IntStream",
+          i3 ↦ "distinct",
+          i4 ↦ "()Ljava/util/stream/IntStream;",
+          i5 ↦ Φ.true,
+          reverted ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ "java/util/stream/IntStream",
+      i3 ↦ "distinct",
+      i4 ↦ "()Ljava/util/stream/IntStream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧

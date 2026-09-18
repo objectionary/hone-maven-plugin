@@ -29,8 +29,8 @@
 #
 # Like `142` this is closed on the unstamped opcode, so it cannot re-fire on its
 # own output, and it runs after `102` has taken the own-line label out from
-# between the constructor and the call, which is what makes the four opcodes
-# adjacent enough to pin.
+# between the constructor and the call, which is what makes the constructor run
+# and the stream call adjacent enough to pin.
 name: count-keeps-elidable-named-map-native
 pattern: |
   ⟦

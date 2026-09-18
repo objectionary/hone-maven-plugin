@@ -3,9 +3,9 @@
 ---
 # yamllint disable rule:line-length
 # Recognises a `.map(new Foo())` — a map whose mapper is an OBJECT built at the
-# call site rather than a lambda — and abstracts the four-opcode run
-# `new Foo; dup; invokespecial Foo.<init>()V; invokeinterface Stream.map` into a
-# single Φ.hone.named-map pragma (#635).
+# call site rather than a lambda — and abstracts the run
+# `new Foo; dup; <args>; invokespecial Foo.<init>; invokeinterface Stream.map`
+# into a single Φ.hone.named-map pragma (#635, #1008).
 #
 # Every other map recogniser starts from a Φ.hone.lambda, which 111 mints out of
 # an invokedynamic. An object mapper carries no invokedynamic at all, so 111
@@ -31,22 +31,40 @@
 # fields are pinned to Ljava/lang/Object; — the same erasure a distinct or a skip
 # carries — and 247 narrows them when the next pragma says what it accepts.
 #
-# The no-argument constructor is the whole of v1 (#635). `new Foo()` pushes
-# nothing between the `dup` and the `invokespecial`, which is what makes the run
-# a fixed four opcodes this pattern can pin; binding 𝑒-object on both the `new`
-# and the `<init>` owner proves the two belong together, and the `()V` descriptor
-# proves nothing was pushed in between.
+# The constructor may CAPTURE (#1008). `new Foo(k)` pushes its arguments between
+# the `dup` and the `invokespecial`, so the run is no longer a fixed four
+# opcodes; 𝐵-args binds that stretch whole and 𝑒-init takes the descriptor the
+# `()V` literal used to pin. Nothing is peeled, and that is the difference from a
+# capturing LAMBDA: 114 peels a lambda's pushes because its captures are passed
+# to lambda$ on every element, while these are constructor arguments evaluated
+# once. 317 splices 𝐵-args back between the `new` and the `<init>` inside the
+# `state` block, which 502 relocates into the caller — the method the pushes came
+# from, where their locals are still in scope and still hold what javac meant.
 #
-# @todo #635:60min Fuse a map whose object argument CAPTURES something. A
-#  `map(new Foo(k))` compiles to `new Foo; dup; <pushes>; invokespecial
-#  Foo.<init>(I)V`, so the run is no longer four opcodes and the pushes have to
-#  be peeled the way 114 peels a capturing lambda's. The same goes for an object
-#  that arrives as a method argument or a field read (`filter(p)`, the refArg
-#  case in streams/closures.yml), where there is no `new` to anchor on at all and
-#  the lone `aload` cannot be told apart from the receiver Stream's. Both were
-#  left out to keep the front door to one provable shape; the next step is a
-#  peel rule of 114's kind, driven by the constructor descriptor instead of the
-#  factory one.
+# Binding 𝑒-object on both the `new` and the `<init>` owner is what proves the
+# two belong together now that the descriptor no longer does. It also settles a
+# nested `new Foo(new Bar())`: the inner run sits inside 𝐵-args, and the split
+# that would pair `new Foo` with `Bar.<init>` cannot bind one 𝑒-object to two
+# names.
+#
+# The `when` guard bounds the arguments to two JVM slots, which is not a
+# limitation of the shape but of the stack. 502 bumps the caller's max-stack by a
+# fixed 6, sized for the deepest existing append (308's); this append peaks at 4
+# with no arguments, so two more slots reach exactly the 6 already guaranteed and
+# a third would need a bump nobody made. One reference, one int, one long, one
+# double or two one-slot arguments all pass, which is every capturing mapper
+# worth writing.
+#
+# @todo #1008:45min Fuse a map whose object argument is not built at the call
+#  site. `filter(p)` reads its operator from a method argument or a field (the
+#  refArg case in streams/closures.yml), so there is no `new` to anchor on and
+#  the lone `aload` cannot be told apart from the receiver Stream's own. The
+#  anchor has to come from somewhere else — the descriptor of the stream call is
+#  the obvious candidate, since it names the functional interface — and that is a
+#  different shape from this one rather than a wider version of it. A
+#  constructor whose arguments exceed two slots is left out for the stack reason
+#  above; widening it means teaching 502 to bump by the append it actually
+#  relocated instead of by a constant.
 name: recognize-named-map
 pattern: |
   ⟦
@@ -68,11 +86,12 @@ pattern: |
           φ ↦ Φ.jeo.opcode.dup,
           ρ ↦ ∅
         ⟧,
+        𝐵-args,
         𝜏-init ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokespecial,
           𝜏2 ↦ 𝑒-object,
           𝜏3 ↦ "<init>",
-          𝜏4 ↦ "()V",
+          𝜏4 ↦ 𝑒-init,
           𝜏5 ↦ Φ.false,
           ρ ↦ ∅
         ⟧,
@@ -106,6 +125,8 @@ result: |
           φ ↦ Φ.hone.named-map,
           class ↦ 𝑒-class-name,
           object ↦ 𝑒-object,
+          init ↦ 𝑒-init,
+          args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
           bridge-input ↦ "Ljava/lang/Object;",
           bridge-output ↦ "Ljava/lang/Object;",
           accepted ↦ "Ljava/lang/Object;",
@@ -119,6 +140,8 @@ result: |
     𝐵-class-tail,
     ρ ↦ ∅
   ⟧
+when:
+  matches: ['^\(((\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])|[JD]|(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ]))?\)V$', 𝑒-init]
 where:
   - meta: 𝜏-named
     function: random-tau

@@ -8,7 +8,12 @@
 # pipeline-construction time and read once per element, which is exactly what
 # the shared state List is for (#635).
 #
-#   state — `dup; new Foo; dup; invokespecial Foo.<init>()V; List.add; pop`,
+#   state — `dup; new Foo; dup; <args>; invokespecial Foo.<init>; List.add;
+#           pop`, where <args> is the run of pushes 215 bound whole when the
+#           constructor captures (#1008) and is empty when it does not. The
+#           pushes are relocated rather than peeled, because a constructor
+#           argument is evaluated once and 502 lands this block back in the
+#           very method they came from, where their locals still hold it;
 #           the append 502 relocates into the caller, where it runs once. It
 #           begins and ends at [.. list] and peaks three slots above it, well
 #           inside the six 502 bumps the caller's max-stack by, so it joins any
@@ -49,6 +54,8 @@ pattern: |
     φ ↦ Φ.hone.named-map,
     class ↦ 𝑒-class,
     object ↦ 𝑒-object,
+    init ↦ 𝑒-init,
+    args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
@@ -69,11 +76,12 @@ result: |
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
       𝜏-dup-object ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝐵-args,
       𝜏-init ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokespecial,
         i2 ↦ 𝑒-object,
         i3 ↦ "<init>",
-        i4 ↦ "()V",
+        i4 ↦ 𝑒-init,
         i5 ↦ Φ.false
       ⟧,
       𝜏-add ↦ ⟦

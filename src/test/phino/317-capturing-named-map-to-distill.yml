@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The capturing half of #1008, one stage on from 215. The pragma arrives
+# carrying the pushes 215 bound whole and the constructor's real descriptor, and
+# this rule has to put both back where javac had them: the run goes between the
+# object's `dup` and its `invokespecial`, and the descriptor onto the
+# `invokespecial` itself. The state block that comes out is the append 502
+# relocates into the caller, so `bipush 2` runs there once, in the method it was
+# written in, rather than once per element. The body is untouched by capture —
+# it still parks the item, fetches the mapper and calls `apply` — which is the
+# whole reason a constructor argument needs no peel.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/3xx/317-named-map-to-distill.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.named-map,
+    class ↦ "Foo",
+    object ↦ "Scaler",
+    init ↦ "(I)V",
+    args ↦ ⟦ op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧, ρ ↦ ∅ ⟧,
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Integer;",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Integer;",
+    static ↦ "true"
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.distill, class ↦ "Foo", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", start ↦ "named-map", 𝐵-rest ⟧
+  - ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-n ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧, 𝜏-d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧, 𝜏-i ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧, 𝜏-a ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Function" ⟧, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/function/Function", i3 ↦ "apply", i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;", i5 ↦ Φ.true ⟧, 𝜏-x ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "java/lang/Integer" ⟧, ρ ↦ ∅ ⟧

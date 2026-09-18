@@ -204,7 +204,8 @@ An operation whose argument is an OBJECT rather than a lambda
   so `111-` never fires
   and nothing downstream could see the operation at all (#635).
 Rules `215-recognize-named-map` and `215-recognize-named-filter`
-  lift that four-opcode run the way `216-` lifts a bare `distinct`,
+  lift that run the way `216-` lifts a bare `distinct`,
+  with the constructor's own pushes bound whole when it captures (#1008),
   and because `Function.apply` is erased —
   the call site javac emits says only `java.lang.Object` —
   `247-` reads the element type off the pragma that consumes it
@@ -580,12 +581,13 @@ LongStream.of(1L, 2L, 2L).distinct()
 // computed is left as it is rather than baked in wrong.
 stream.skip(list.size() - 3L)
 
-// A map or a filter whose OBJECT argument captures something (#635).
-// 215 pins the no-argument constructor, so the run it recognises is
-// exactly four opcodes; a capturing one pushes its arguments between
-// the dup and the invokespecial, and they have to be peeled the way
-// 114 peels a capturing lambda's.
-stream.map(new Scaler(by))
+// A map or a filter whose OBJECT argument is built by a constructor
+// taking more than two stack slots (#1008). 215 carries the pushes into
+// the state append 502 relocates, which peaks at four slots with no
+// arguments; 502 bumps max-stack by a fixed 6, so two more fit and a
+// third would overflow a budget nobody widened. One reference, one int,
+// one long or two one-slot arguments all fuse.
+stream.map(new Wide(a, b, c))
 
 // The same operation reading its object from a parameter or a field,
 // where there is no `new` to anchor on at all and the lone `aload`

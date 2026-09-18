@@ -21,6 +21,8 @@ input: |
     φ ↦ Φ.hone.named-map,
     class ↦ "Foo",
     object ↦ "Doubler",
+    init ↦ "()V",
+    args ↦ ⟦ ρ ↦ ∅ ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Integer;",
     accepted ↦ "Ljava/lang/Object;",

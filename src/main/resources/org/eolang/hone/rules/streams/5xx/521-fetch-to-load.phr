@@ -5,8 +5,9 @@
 # Resolves a Φ.hone.fetch marker — left in a distill body by 307 / 308 to
 # mean "push my state-var onto the stack" — into a read from the captured
 # java/util/List. Inside the wrapper that 512 builds, the List is argument
-# 0 and a per-call counter sits at local 3, so the fetch becomes
-# `aload 0; iload 3; List.get(I); iinc 3 1; checkcast <type>`.
+# 0 and a per-call counter sits just above the three arguments, so the fetch
+# becomes `aload 0; iload <counter>; List.get(I); iinc <counter> 1;
+# checkcast <type>`.
 #
 # The counter (zeroed by 512 at method entry) is the mechanism that lets
 # two stateful distills fuse into one body: 401-fuse appends each
@@ -16,31 +17,71 @@
 # static index — keeps slot k aligned with guard k. An early `return` in
 # an earlier guard just means later get calls never run that call, and the
 # counter resets each call.
+#
+# The counter's SLOT is not fixed (#1012). A long or a double item takes two
+# local slots, so the counter sits at 4 there and at 3 for a narrow item. A
+# bare fetch marker cannot tell the two apart, which is why this rule matches
+# the wrapper AROUND the marker rather than the marker alone: the item's type
+# is the parameter 512 declared at index 1, and the width is read off it here
+# exactly as 512 reads it off `bridge-input`. Everything else about the match
+# is as loose as it was — the fetch can sit anywhere in the body, and the rule
+# is applied at fixpoint until none is left.
+#
+# Only 512's wrappers can match. 511 builds the stateless one, which has two
+# parameters and never holds a fetch, and every earlier owner of a fetch —
+# 441's unfused-distinct revert, 505 and 509's casts, the 503 frame rules — has
+# already run by the time 512 has turned the distill-lambda into a method.
 name: fetch-to-load
 pattern: |
   ⟦
-    𝐵-before,
-    𝜏-fetch ↦ ⟦
-      φ ↦ Φ.hone.fetch,
-      type ↦ 𝑒-type
+    φ ↦ Φ.jeo.method,
+    𝐵-head,
+    params ↦ ⟦
+      φ ↦ Φ.jeo.params,
+      𝐵-params-before,
+      𝜏-p-item ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-item ⟧,
+      𝐵-params-after
     ⟧,
-    𝐵-after
+    𝐵-middle,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-fetch ↦ ⟦
+        φ ↦ Φ.hone.fetch,
+        type ↦ 𝑒-type
+      ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-tail
   ⟧
 result: |
   ⟦
-    𝐵-before,
-    𝜏-load-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
-    𝜏-load-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 3 ⟧,
-    𝜏-get ↦ ⟦
-      φ ↦ Φ.jeo.opcode.invokeinterface,
-      i2 ↦ "java/util/List",
-      i3 ↦ "get",
-      i4 ↦ "(I)Ljava/lang/Object;",
-      i5 ↦ Φ.true
+    φ ↦ Φ.jeo.method,
+    𝐵-head,
+    params ↦ ⟦
+      φ ↦ Φ.jeo.params,
+      𝐵-params-before,
+      𝜏-p-item ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ 𝑒-item ⟧,
+      𝐵-params-after
     ⟧,
-    𝜏-inc ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧,
-    𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-type ⟧,
-    𝐵-after
+    𝐵-middle,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-load-arr ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧,
+      𝜏-load-idx ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 𝑒-counter-slot ⟧,
+      𝜏-get ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/List",
+        i3 ↦ "get",
+        i4 ↦ "(I)Ljava/lang/Object;",
+        i5 ↦ Φ.true
+      ⟧,
+      𝜏-inc ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 𝑒-counter-slot, i2 ↦ 1 ⟧,
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-type ⟧,
+      𝐵-after,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-tail
   ⟧
 where:
   - meta: 𝜏-load-arr
@@ -53,3 +94,14 @@ where:
     function: random-tau
   - meta: 𝜏-cast
     function: random-tau
+  - meta: 𝑒-counter-slot-str
+    function: sed
+    args:
+      - 𝑒-item
+      - '"s/^J$/4/g"'
+      - '"s/^D$/4/g"'
+      - '"s/^I$/3/g"'
+      - '"s/^L.+;$/3/g"'
+  - meta: 𝑒-counter-slot
+    function: number
+    args: [𝑒-counter-slot-str]

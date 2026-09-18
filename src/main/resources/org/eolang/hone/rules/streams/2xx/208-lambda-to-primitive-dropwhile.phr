@@ -17,21 +17,21 @@
 # the SAM, both signatures, the stream class and the stream signature together,
 # so a mismatched quartet can never be lifted.
 #
-# IntStream ONLY, and that narrowness is the whole of what is left of #982.
-# `203` covers all three primitive streams because a filter is stateless: it
-# folds to a distill with no state, 511 lowers it, and the item lives on the
-# stack. A dropWhile folds to a STATEFUL distill (310's sticky latch), which
-# 512 lowers into a wrapper whose locals are laid out by hand — the captured
-# List at 0, the item at 1, the consumer at 2, 521's fetch counter at 3, 310's
-# latch scratch at 4 and 5. A `long` or a `double` item takes TWO slots and
-# slides every one of those by one. The counter slot is spelled out again in
-# `521`, which sees a bare fetch marker with no way to learn the width of the
-# item in the method it is being lowered into, and again in the local lists the
-# 503/504/506/507/510 frame rules emit, so widening the layout is a change to
-# the whole stateful family rather than to this rule. Until that happens
-# `LongStream.dropWhile` and `DoubleStream.dropWhile` stay native, exactly as
-# they were before this rule existed — correct, just not fused. 512's header
-# records the same boundary from the other side.
+# ALL THREE primitive streams, since #1012; it was IntStream only while #982
+# was the whole of it. A dropWhile folds to a STATEFUL distill (310's sticky
+# latch), which 512 lowers into a wrapper whose locals used to be laid out by
+# hand — the captured List at 0, the item at 1, the consumer at 2, 521's fetch
+# counter at 3, 310's latch scratch at 4 and 5 — and a `long` or a `double`
+# item takes TWO slots and slides every one of those by one. 512 and 521 now
+# DERIVE the two that move, off the item type, and the latch scratch was pinned
+# to a fixed 5 and 6 above the widest counter, so the layout fits a wide item
+# and the three `or` arms below are all reachable. 512's header records the
+# same layout from the other side.
+#
+# The SAM, the lambda signature and the stream signature are matched as one
+# quartet per element type, so a mismatched one can still never be lifted: an
+# IntPredicate with a `(J)Z` body, or a LongStream.dropWhile handed an
+# IntPredicate, matches no arm.
 #
 # The output is a Φ.hone.primitive-dropWhile that `211` boxes exactly as it
 # boxes `primitive-filter` — `Φ.hone.box`, the boxed pragma, `Φ.hone.unbox` —
@@ -97,8 +97,22 @@ result: |
 when:
   and:
     - matches: ['\)Z$', 𝑒-target-signature]
-    - matches: ['\(\)Ljava/util/function/IntPredicate;', 𝑒-interface]
-    - eq: [𝑒-lambda-signature, '"(I)Z"']
-    - eq: [𝑒-bridge-signature, '"(I)Z"']
-    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
-    - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"']
+    - or:
+        - and:
+            - matches: ['\(\)Ljava/util/function/IntPredicate;', 𝑒-interface]
+            - eq: [𝑒-lambda-signature, '"(I)Z"']
+            - eq: [𝑒-bridge-signature, '"(I)Z"']
+            - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+            - eq: [𝑒-stream-signature, '"(Ljava/util/function/IntPredicate;)Ljava/util/stream/IntStream;"']
+        - and:
+            - matches: ['\(\)Ljava/util/function/LongPredicate;', 𝑒-interface]
+            - eq: [𝑒-lambda-signature, '"(J)Z"']
+            - eq: [𝑒-bridge-signature, '"(J)Z"']
+            - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+            - eq: [𝑒-stream-signature, '"(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"']
+        - and:
+            - matches: ['\(\)Ljava/util/function/DoublePredicate;', 𝑒-interface]
+            - eq: [𝑒-lambda-signature, '"(D)Z"']
+            - eq: [𝑒-bridge-signature, '"(D)Z"']
+            - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+            - eq: [𝑒-stream-signature, '"(Ljava/util/function/DoublePredicate;)Ljava/util/stream/DoubleStream;"']

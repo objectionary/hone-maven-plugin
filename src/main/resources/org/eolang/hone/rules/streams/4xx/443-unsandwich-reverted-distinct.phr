@@ -43,7 +43,7 @@ pattern: |
     𝐵-before,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ "java/util/stream/IntStream"
+      stream-class ↦ 𝑒-stream-class
     ⟧,
     𝜏-distinct ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
@@ -58,7 +58,7 @@ pattern: |
       φ ↦ Φ.hone.unbox,
       opcode ↦ 𝑒-unbox-opcode,
       class ↦ 𝑒-unbox-class,
-      bridge-signature ↦ "(Ljava/lang/Integer;)I",
+      bridge-signature ↦ 𝑒-unbox-bridge,
       static ↦ "true",
       target ↦ 𝑒-unbox-target
     ⟧,
@@ -69,14 +69,39 @@ result: |
     𝐵-before,
     𝜏-native ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
-      i2 ↦ "java/util/stream/IntStream",
+      i2 ↦ 𝑒-stream-class,
       i3 ↦ "distinct",
-      i4 ↦ "()Ljava/util/stream/IntStream;",
+      i4 ↦ 𝑒-native-signature,
       i5 ↦ Φ.true,
       reverted ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧
 where:
+  - meta: 𝑒-wrapper
+    function: sed
+    args:
+      - 𝑒-stream-class
+      - '"s/^java\\/util\\/stream\\/IntStream$/java\\/lang\\/Integer/g"'
+      - '"s/^java\\/util\\/stream\\/LongStream$/java\\/lang\\/Long/g"'
+      - '"s/^java\\/util\\/stream\\/DoubleStream$/java\\/lang\\/Double/g"'
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-stream-class
+      - '"s/^java\\/util\\/stream\\/IntStream$/I/g"'
+      - '"s/^java\\/util\\/stream\\/LongStream$/J/g"'
+      - '"s/^java\\/util\\/stream\\/DoubleStream$/D/g"'
+  - meta: 𝑒-unbox-bridge
+    function: concat
+    args: ['"(L"', 𝑒-wrapper, '";)"', 𝑒-primitive]
+  - meta: 𝑒-native-signature
+    function: concat
+    args: ['"()L"', 𝑒-stream-class, '";"']
   - meta: 𝜏-native
     function: random-tau
+when:
+  or:
+    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+    - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+    - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']

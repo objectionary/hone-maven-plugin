@@ -9,13 +9,14 @@
 # is argument 0, the item is argument 1, the downstream Consumer is
 # argument 2, so the leading item-load is `aload 1` and the trailing
 # consumer-load is `aload 2` (511's are 0 and 1). The body opens by
-# zeroing a per-call counter at local 3 (`iconst_0; istore 3`); 521 turns
+# zeroing a per-call counter just above the arguments (`iconst_0; istore`);
+# 521 turns
 # each fetch marker into List.get(counter); iinc so the N fetches walk the
-# List in body order — guard k reads state var k. max-locals is 6 (not 4):
-# slots 0-3 are the args plus the counter above, and 310's dropWhile latch
-# guard borrows slots 4-5 as scratch (the latch array and the negated
+# List in body order — guard k reads state var k. max-locals is 7 (not 4):
+# slots 0-4 are the args plus the counter above, and 310's dropWhile latch
+# guard borrows slots 5-6 as scratch (the latch array and the negated
 # predicate result), dead by its keep-label so 503's four-local frame still
-# holds. The two extra slots are unused by stateless distinct/skip guards and
+# holds. The extra slots are unused by stateless distinct/skip guards and
 # cost nothing there.
 #
 # The INPUT item is no longer always a reference. It was while the only
@@ -27,16 +28,21 @@
 # `iload` for I, `aload` for a reference — and the frame rules name local 1
 # "integer" for the same reason.
 #
-# Only a NARROW item is reachable, and deliberately: a long or a double occupies
-# TWO local slots, which slides the consumer from 2 to 3, the counter from 3 to
-# 4 and 310's latch scratch from 4/5 to 5/6. The counter slot is spelled out
-# again in 521, which sees a bare fetch marker and has no way to learn the
-# width of the item in the method it is being lowered into, so widening this
-# layout is not a change to one rule but to the whole stateful family (512,
-# 521, 310, 509 and every frame rule that emits a local list). 208's primitive
-# sibling therefore matches IntStream only and leaves LongStream and
-# DoubleStream native, exactly as before. The lload/dload arms below are here so
-# the mapping is right, not because anything can reach them yet.
+# A WIDE item is reachable too, since #1012. A long or a double occupies TWO
+# local slots, so the layout is not fixed: the consumer moves from 2 to 3 and
+# the counter from 3 to 4. Both are derived below from `bridge-input`, which is
+# the wrapper's own declared item type and therefore the single place the width
+# is read from; `521` reads the same width off the parameter this rule declares,
+# because a bare fetch marker cannot tell it.
+#
+# The latch scratch 310 borrows does NOT shift. It sits at a fixed 5 and 6, one
+# slot above the widest possible counter, and max-locals is a fixed 7. That is
+# what keeps the widening to two derived numbers instead of five: the latch is
+# dead by its keep-label, so no frame ever lists it, and a slot no frame lists
+# may be left unwritten — for a narrow item slot 4 simply goes unused. Every
+# frame in the family stays a FOUR-local frame either way, because a stackmap
+# frame lists one entry per VALUE and not per slot: (List, item, consumer,
+# counter) is four entries whether the item is one slot wide or two.
 #
 # The OUTPUT may differ from the input: when 451 fuses a trailing mapToX into
 # this stateful distill the body ends on a primitive, so the closing dup /
@@ -62,7 +68,7 @@ result: |
     maxs ↦ ⟦
       φ ↦ Φ.jeo.maxs,
       max-stack ↦ 10,
-      max-locals ↦ 6
+      max-locals ↦ 7
     ⟧,
     params ↦ ⟦
       φ ↦ Φ.jeo.params,
@@ -73,10 +79,10 @@ result: |
     body ↦ ⟦
       φ ↦ Φ.jeo.seq.of,
       i-init-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      i-store-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 3 ⟧,
+      i-store-counter ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 𝑒-counter-slot ⟧,
       i-load-item ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-load-item, i1 ↦ 1 ⟧,
       𝐵-body,
-      i-load-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧,
+      i-load-consumer ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 𝑒-consumer-slot ⟧,
       i-dup-x ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-x ⟧,
       i-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       i-invoke ↦ ⟦
@@ -113,6 +119,31 @@ where:
   - meta: 𝜏-load-item
     function: tau
     args: [𝑒-load-item]
+  # The two slot numbers the item's WIDTH moves (#1012). A long or a double
+  # takes two slots, so everything above the item slides by one. Read off
+  # `bridge-input` here and off the parameter this rule declares in 521.
+  - meta: 𝑒-consumer-slot-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^J$/3/g"'
+      - '"s/^D$/3/g"'
+      - '"s/^I$/2/g"'
+      - '"s/^L.+;$/2/g"'
+  - meta: 𝑒-consumer-slot
+    function: number
+    args: [𝑒-consumer-slot-str]
+  - meta: 𝑒-counter-slot-str
+    function: sed
+    args:
+      - 𝑒-bridge-input
+      - '"s/^J$/4/g"'
+      - '"s/^D$/4/g"'
+      - '"s/^I$/3/g"'
+      - '"s/^L.+;$/3/g"'
+  - meta: 𝑒-counter-slot
+    function: number
+    args: [𝑒-counter-slot-str]
   - meta: 𝑒-consumer-class
     function: sed
     args:

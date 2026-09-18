@@ -21,13 +21,13 @@
 # keep-label (a Φ.hone.frame-item that 503 fills, exactly as 307/308) from two
 # branches so only ONE stackmap frame is needed:
 #
-#   fetch [I; astore 4            ; stash the latch array in a scratch local
-#   aload 4; iconst_0; iaload     ; latch = array[0]
+#   fetch [I; astore 5            ; stash the latch array in a scratch local
+#   aload 5; iconst_0; iaload     ; latch = array[0]
 #   ifne KEEP                     ; latched -> keep, predicate never runs
 #   dup; <predicate>              ; not latched: test a copy of the item -> Z
-#   iconst_1; ixor; istore 5      ; notZ = !Z  (1 iff predicate returned false)
-#   aload 4; iconst_0; iload 5; iastore   ; array[0] = notZ  (sticks the latch)
-#   iload 5; ifne KEEP            ; predicate false -> keep (latch now set)
+#   iconst_1; ixor; istore 6      ; notZ = !Z  (1 iff predicate returned false)
+#   aload 5; iconst_0; iload 6; iastore   ; array[0] = notZ  (sticks the latch)
+#   iload 6; ifne KEEP            ; predicate false -> keep (latch now set)
 #   return                        ; predicate true  -> drop
 #   KEEP: <frame-item>            ; [item] survives to the appended consumer.accept
 #
@@ -42,7 +42,7 @@
 # distinct()/skip() ahead of this dropWhile leaves on the stack (#799): the
 # prologue sits between that guard's keep-frame and the `dup` this body makes
 # for its predicate, so neither 505 nor 508 can reach the typed predicate. Any
-# change to the prologue — its opcodes, their order, or scratch slot 4 — must be
+# change to the prologue — its opcodes, their order, or scratch slot 5 — must be
 # mirrored there, or the cast silently stops being spliced and the class fails
 # JVM verification again.
 #
@@ -104,8 +104,8 @@ result: |
     ⟧,
     body ↦ ⟦
       i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
-      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
-      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
       i6 ↦ ⟦
@@ -122,12 +122,12 @@ result: |
       ⟧,
       i9 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       i10 ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
-      i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
-      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      i11 ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 6 ⟧,
+      i12 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       i13 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      i14 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       i15 ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
-      i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       i17 ↦ ⟦
         φ ↦ Φ.jeo.opcode.ifne,
         i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧

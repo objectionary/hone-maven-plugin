@@ -42,19 +42,24 @@
 #     detour around it.
 #   * parAfter — the same with `parallel()` AFTER the dropWhile, which needs its
 #     own rule because binding groups are order-preserving.
-#   * longs    — LongStream.dropWhile, which stays NATIVE on purpose. A long
-#     item takes two local slots and slides every hand-written slot in the
-#     stateful lowering (512's counter, 310's latch scratch, the frame rules'
-#     local lists), so the lifting rule matches IntStream alone. This pipeline
-#     is here to pin that boundary: if someone widens the rule without widening
-#     the layout, the counts below move and this fixture says so.
+#   * longs    — LongStream.dropWhile, which FUSES since #1012. It was here to
+#     pin the opposite boundary: a long item takes two local slots and slid
+#     every hand-written slot in the stateful lowering, so the lifting rule
+#     matched IntStream alone. 512 and 521 now derive the two slots that move,
+#     and 414 widens the guard's copy of the item to a `dup2`, so this pipeline
+#     has become one LongStream.mapMulti like its IntStream neighbours. What it
+#     pins now is the widening itself, and `wide-stateful.yml` carries the rest
+#     of that family.
 #   * chars    — a `String.chars()` source, the IntStream nobody writes as one.
 #
 # Thirteen of the fourteen invokedynamic are the operators and the fourteenth is
 # the makeConcatWithConstants of `"v" + n`, which no rule touches. Afterwards
-# nine are left: that concat, one per surviving native predicate (`par`,
-# `parAfter`, `longs`) and one mapMulti for each of the five sequential runs
-# that fused — `plain`, `run`, `twice`, `crossing` and `chars`.
+# nine are left: that concat, one per surviving native predicate (`par` and
+# `parAfter`, the two the parallel guards hand back) and one mapMulti for each
+# of the six sequential runs that fused — `plain`, `run`, `twice`, `crossing`,
+# `chars` and, since #1012, `longs`. The total does not move when `longs`
+# fuses, because the indy it drops for the native predicate is the one it gains
+# for the mapMulti factory; `invokeinterface` is where that shows, 36 -> 39.
 java: |
   package primitivedropwhile;
   import java.util.stream.Collectors;
@@ -114,4 +119,4 @@ before:
   invokeinterface: 23
 after:
   invokedynamic: 9
-  invokeinterface: 36
+  invokeinterface: 39

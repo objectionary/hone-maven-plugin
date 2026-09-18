@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The scope guard that survived #1012. All three primitive streams are lifted
+# now, but each is matched as one QUARTET — the SAM, the lambda signature, the
+# bridge signature and the stream signature have to agree on the element type —
+# so a LongStream.dropWhile handed an IntPredicate belongs to no arm and comes
+# out of the rewrite still a Φ.hone.lambda, native as it was. Without the
+# quartet the `or` arms would cross-match and 310 would build a latch guard
+# around a predicate that cannot take the item.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/208-lambda-to-primitive-dropwhile.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      crossed ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "fusion/X",
+        method ↦ "test",
+        interface ↦ "()Ljava/util/function/IntPredicate;",
+        lambda-signature ↦ "(I)Z",
+        bridge-signature ↦ "(I)Z",
+        static ↦ "true",
+        opcode ↦ "invokeinterface",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "fusion/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(I)Z",
+          is-interface ↦ Φ.false
+        ⟧,
+        stream ↦ ⟦
+          class ↦ "java/util/stream/LongStream",
+          method ↦ "dropWhile",
+          signature ↦ "(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-l1, interface ↦ "()Ljava/util/function/IntPredicate;", 𝐵-l2, stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "dropWhile", 𝐵-l3 ⟧, 𝐵-l4 ⟧

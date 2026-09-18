@@ -15,8 +15,8 @@
 #
 # The body, entering with [item]:
 #
-#   fetch [I; astore 4            ; stash the latch array (cursor +1)
-#   aload 4; iconst_0; iaload     ; latch = array[0]
+#   fetch [I; astore 5            ; stash the latch array (cursor +1)
+#   aload 5; iconst_0; iaload     ; latch = array[0]
 #   <skip-acc: iinc 3,1 × N>      ; pay the cursor for the fetches below
 #   ifne KEEP                     ; latched -> keep, predicate never runs
 #   <undo-acc: iinc 3,-1 × N>     ; not latched: take the payment back
@@ -24,14 +24,15 @@
 #   <body-acc: fetch; unbox × N>  ; push the captures above the item (cursor +N)
 #   aload 1                       ; reload the copy on top of them
 #   invokestatic lambda$          ; predicate(capture…, item)Z
-#   iconst_1; ixor; istore 5      ; notZ = !Z
-#   aload 4; iconst_0; iload 5; iastore   ; array[0] = notZ (sticks the latch)
-#   iload 5; ifne KEEP            ; predicate false -> keep (latch now set)
+#   iconst_1; ixor; istore 6      ; notZ = !Z
+#   aload 5; iconst_0; iload 6; iastore   ; array[0] = notZ (sticks the latch)
+#   iload 6; ifne KEEP            ; predicate false -> keep (latch now set)
 #   return                        ; predicate true  -> drop
 #   KEEP: <frame-item>            ; [item] survives to the appended accept
 #
 # THE CURSOR BALANCE IS THE POINT. 521 turns every Φ.hone.fetch into
-# `aload 0; iload 3; List.get; iinc 3 1; checkcast`, and local 3 is a RUNTIME
+# `aload 0; iload <counter>; List.get; iinc <counter> 1; checkcast`, and that
+# counter is a RUNTIME
 # counter — that is what lets two stateful distills fuse, each guard reading the
 # next slot in body order. This is the one operator whose body can jump OVER its
 # own fetches: once latched, the predicate is never evaluated again. Without the
@@ -101,8 +102,8 @@ result: |
     ⟧,
     body ↦ ⟦
       𝜏-latch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
-      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
-      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧,
+      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-latch-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       𝜏-read-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
       𝐵-kacc,
@@ -124,12 +125,12 @@ result: |
       ⟧,
       𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
-      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
-      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 6 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
-      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-if-keep ↦ ⟦
         φ ↦ Φ.jeo.opcode.ifne,
         i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧

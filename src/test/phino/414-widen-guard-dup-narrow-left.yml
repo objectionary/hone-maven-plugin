@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The guard rail on #1012's widening: a copy handed to a narrow predicate stays
+# a `dup`, and so does one handed to a CAPTURING guard, whose call takes the
+# captured values first and the item last — its first parameter says nothing
+# about what was copied, which is why the rule insists on a single one.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/414-widen-guard-dup.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ "Foo",
+    bridge-input ↦ "J",
+    bridge-output ↦ "J",
+    start ↦ "dropWhile",
+    accepted ↦ "J",
+    returned ↦ "J",
+    static ↦ "true",
+    state ↦ ⟦ s ↦ ⟦ latch ↦ "[I" ⟧, ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      b2 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ "Foo",
+        i3 ↦ "lambda$main$0",
+        i4 ↦ "(I)Z",
+        i5 ↦ Φ.false
+      ⟧,
+      b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      b4 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ "Foo",
+        i3 ↦ "lambda$main$1",
+        i4 ↦ "(JJ)Z",
+        i5 ↦ Φ.false
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i4 ↦ "(I)Z", 𝐵-y ⟧, 𝐵-b ⟧
+  - ⟦ 𝐵-a, 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i4 ↦ "(JJ)Z", 𝐵-y ⟧, 𝐵-b ⟧

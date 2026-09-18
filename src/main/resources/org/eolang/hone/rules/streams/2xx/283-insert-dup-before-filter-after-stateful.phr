@@ -111,7 +111,7 @@ when:
         - eq: [𝜏-one, 'skip']
         - eq: [𝜏-one, 'dropWhile']
         - eq: [𝜏-one, 'c-map']
-        - eq: [𝜏-one, 'cp-dropWhile']
+        - eq: [𝜏-one, 'local-cp-dropWhile']
     - or:
         - eq: [𝜏-two, 'o-filter']
         - eq: [𝜏-two, 'p-filter']

@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The stand-down case for #1008. A constructor taking three ints needs three
+# stack slots for its arguments on top of the four this append already peaks at,
+# and 502 bumps the caller's max-stack by a fixed 6 — sized for 308's append, the
+# deepest there was. Two slots fit inside that guarantee; a third does not, and
+# the class would die at load with "Exceeded max stack size" rather than fail a
+# rule. So the `when` guard reads the descriptor and stands the rule down: the
+# five opcodes survive untouched and the operation stays native, which is correct
+# and merely unfused.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/215-recognize-named-map.phr
+input: |
+  ⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$main ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "main",
+        body ↦ ⟦
+          op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Wide" ⟧,
+          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧,
+          op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Wide", v3 ↦ "<init>", v4 ↦ "(III)V", v5 ↦ Φ.false ⟧,
+          op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-head, op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Wide" ⟧, 𝐵-tail ⟧
+  - ⟦ 𝐵-h, op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Wide", v3 ↦ "<init>", v4 ↦ "(III)V", v5 ↦ Φ.false ⟧, 𝐵-t ⟧
+  - ⟦ 𝐵-x, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", 𝐵-y ⟧, ρ ↦ ∅ ⟧

@@ -9,6 +9,14 @@
 # `state` block and read back per element by a Φ.hone.fetch, so 401 joins it
 # with a distinct, a skip or a capturing operator on its blind state+body join.
 #
+# When the constructor captures (#1008), 215 binds the run of pushes whole and
+# this rule splices it back between the `new` and the `<init>` of the append, so
+# the state block reads `dup; new Foo; dup; <args>; invokespecial Foo.<init>;
+# List.add; pop`. The pushes are relocated rather than peeled, the way 118 peels
+# a capturing predicate's: a constructor argument is evaluated once, and 502
+# lands this block in the very method the pushes came from, where their locals
+# still hold what javac meant them to.
+#
 # The body is 314's guard, with the item preserved at the BOTTOM of the stack
 # while the predicate runs above it, so the keep label still sees a lone [item]
 # and reuses 503's Φ.hone.frame-item. On entry [item]:
@@ -28,6 +36,8 @@ pattern: |
     φ ↦ Φ.hone.named-filter,
     class ↦ 𝑒-class,
     object ↦ 𝑒-object,
+    init ↦ 𝑒-init,
+    args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
@@ -48,11 +58,12 @@ result: |
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
       𝜏-dup-object ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝐵-args,
       𝜏-init ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokespecial,
         i2 ↦ 𝑒-object,
         i3 ↦ "<init>",
-        i4 ↦ "()V",
+        i4 ↦ 𝑒-init,
         i5 ↦ Φ.false
       ⟧,
       𝜏-add ↦ ⟦

@@ -17,6 +17,8 @@ input: |
     φ ↦ Φ.hone.named-filter,
     class ↦ "Foo",
     object ↦ "Good",
+    init ↦ "()V",
+    args ↦ ⟦ ρ ↦ ∅ ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Object;",
     accepted ↦ "Ljava/lang/Object;",

@@ -38,11 +38,12 @@ pattern: |
           φ ↦ Φ.jeo.opcode.dup,
           ρ ↦ ∅
         ⟧,
+        𝐵-args,
         𝜏-init ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokespecial,
           𝜏2 ↦ 𝑒-object,
           𝜏3 ↦ "<init>",
-          𝜏4 ↦ "()V",
+          𝜏4 ↦ 𝑒-init,
           𝜏5 ↦ Φ.false,
           ρ ↦ ∅
         ⟧,
@@ -76,6 +77,8 @@ result: |
           φ ↦ Φ.hone.named-filter,
           class ↦ 𝑒-class-name,
           object ↦ 𝑒-object,
+          init ↦ 𝑒-init,
+          args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
           bridge-input ↦ "Ljava/lang/Object;",
           bridge-output ↦ "Ljava/lang/Object;",
           accepted ↦ "Ljava/lang/Object;",
@@ -89,6 +92,8 @@ result: |
     𝐵-class-tail,
     ρ ↦ ∅
   ⟧
+when:
+  matches: ['^\(((\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])|[JD]|(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ]))?\)V$', 𝑒-init]
 where:
   - meta: 𝜏-named
     function: random-tau

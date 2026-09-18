@@ -11,7 +11,12 @@
 # flatMap variant — its four Throwable.addSuppressed calls, one per flatMap
 # below, are four of the invokevirtual. A third has now joined them: 208
 # recognises the mapToObj crossing (#984), so the mapToInt/mapToObj/mapToLong
-# run collapses further and invokedynamic drops 14 -> 12.
+# run collapses further and invokedynamic drops 14 -> 12. And a fourth, from
+# #1016: 221 no longer cancels an unbox against a user `boxed()` unless an
+# unbox takes the value straight back, which moves the fixpoint the boxing
+# rules settle on and leaves one `Integer.valueOf`/`Integer.intValue` round
+# trip fewer in the lowered class — invokestatic 35 -> 34 and invokevirtual
+# 20 -> 19, with invokedynamic and the printed result both unchanged.
 java: |
   package allops;
   import java.util.*;
@@ -64,7 +69,7 @@ before:
   return: 7
 after:
   invokespecial: 4
-  invokestatic: 35
-  invokevirtual: 20
+  invokestatic: 34
+  invokevirtual: 19
   invokedynamic: 12
   return: 19

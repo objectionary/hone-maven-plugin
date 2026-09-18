@@ -16,7 +16,8 @@ pattern: |
     𝐵-before,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class
+      stream-class ↦ 𝑒-stream-class,
+      𝐵-box-rest
     ⟧,
     𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
     𝜏-skip ↦ ⟦

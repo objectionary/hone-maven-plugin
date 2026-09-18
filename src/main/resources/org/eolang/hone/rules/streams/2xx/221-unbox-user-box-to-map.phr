@@ -2,30 +2,30 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Collapses an unbox immediately followed by a box back into a single object
-# map. This is the cleanup for the box/unbox pair `211` synthesises when it
-# splits a primitive IntStream.filter/map chain (box + boxed-primitive-func +
-# unbox) and for the one `214` puts around a lifted distinct or skip: where two
-# split ops meet, the tail unbox of one and the head box of the next cancel,
-# and so does the head box `211` wedges right after a user `mapToInt(ref)` that
-# feeds a primitive op.
+# The companion of `221-unbox-box-to-map`, for the one user box that IS safe to
+# cancel an unbox against: a `boxed()` whose value the user's own `mapToX`
+# consumes on the very next step. `221-unbox-box-to-map` takes only the boxes
+# this pass minted itself, because a user `boxed()` that survives into the rest
+# of the pipeline is the caller's element type and cancelling it loses the
+# boxing (#1016). A `boxed()` with an unbox right behind it is not that: the
+# round trip is dead on arrival — box it, unbox it again — so the seam merges
+# and the trailing unbox stays where it was, for `451` to fuse into the distill
+# later.
 #
-# It takes only a box THIS PASS MINTED, which is what the `synthetic` mark in
-# the pattern says: `208`, `211` and `214` stamp every box they emit, a user
-# `boxed()` lifted by `206` carries no such binding, and the closed pattern
-# therefore stops at it. The mark went in for #1016. The older reading — that
-# `209` has already folded away every genuine `mapToX(...).boxed()` round trip,
-# so whatever box is left here must be synthetic — is simply not true: `209`
-# only folds a `boxed()` that an unbox feeds, and a `boxed()` that follows a
-# primitive `distinct()` or `skip()` reaches this rule intact. Cancelling it
-# dropped the user's own boxing, left the run primitive-out while the caller
-# held a `Stream`, and `501` then emitted `mapMultiToInt` for it — an
-# `IncompatibleClassChangeError` at the first element.
+# `boxed-filter-tail.yml` is the shape, and the reason this rule exists: a
+# primitive `filter` whose `boxed()` feeds a `mapToInt(Double::intValue)` with
+# nothing in between. `211` splits the filter into box + boxed-primitive-filter
+# + unbox and `205` has already lifted the methodref into an unbox, which puts
+# unbox / box / unbox in a row; cancelling the first pair is what keeps the
+# whole run inside one distill and lets `501` lower it to a single
+# `mapMultiToInt`. Without this rule the run breaks in two and the class ends
+# up with twice the invokedynamic it needs.
 #
-# The one user box that IS dead on arrival — a `boxed()` with the user's own
-# `mapToX` right behind it — is cancelled by `221-unbox-user-box-to-map`
-# instead, which pins that following unbox in its pattern.
-name: unbox-box-to-map
+# Runs after `221-unbox-box-to-map` — the sort is over the whole filename — so
+# a synthetic box is taken by the general rule first and only a genuine user
+# `boxed()` ever reaches this one. The box pattern is closed and carries no
+# `synthetic` mark, which is what makes that true independently of the order.
+name: unbox-user-box-to-map
 pattern: |
   ⟦
     𝐵-before,
@@ -45,8 +45,11 @@ pattern: |
     ⟧,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class,
-      synthetic ↦ Φ.true
+      stream-class ↦ 𝑒-stream-class
+    ⟧,
+    𝜏-next ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      𝐵-next-rest
     ⟧,
     𝐵-after
   ⟧
@@ -69,6 +72,10 @@ result: |
         signature ↦ 𝑒-target-signature,
         is-interface ↦ 𝑒-target-is-interface
       ⟧
+    ⟧,
+    𝜏-next ↦ ⟦
+      φ ↦ Φ.hone.unbox,
+      𝐵-next-rest
     ⟧,
     𝐵-after
   ⟧

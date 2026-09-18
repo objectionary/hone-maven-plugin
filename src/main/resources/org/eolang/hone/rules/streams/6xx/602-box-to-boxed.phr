@@ -6,7 +6,8 @@ name: box-to-boxed
 pattern: |
   ⟦
     φ ↦ Φ.hone.box,
-    stream-class ↦ 𝑒-stream-class
+    stream-class ↦ 𝑒-stream-class,
+    𝐵-box-rest
   ⟧
 result: |
   ⟦

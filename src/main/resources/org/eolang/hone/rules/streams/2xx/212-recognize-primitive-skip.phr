@@ -23,8 +23,9 @@
 # or `ldc`, the three opcodes that push a long on their own. Anything computed
 # is left plain bytecode.
 #
-# `IntStream` only, for the reason `212-recognize-primitive-distinct` records:
-# the slot layout is no longer what stops it (#1012), #1016 is.
+# All three primitive stream interfaces, for the reason
+# `212-recognize-primitive-distinct` records: #1012 fixed the slot layout and
+# #1016 the boxing seam, and with both closed the lift widens.
 name: recognize-primitive-skip
 pattern: |
   ⟦
@@ -89,4 +90,7 @@ when:
         - eq: [𝜏-pop, 'lconst_0']
         - eq: [𝜏-pop, 'lconst_1']
         - eq: [𝜏-pop, 'ldc']
-    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+    - or:
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']

@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The user box that IS safe to cancel against: a `boxed()` whose value the
+# user's own `mapToX` takes on the very next step, so the round trip is dead
+# before it starts. `221-unbox-box-to-map` declines it — the box carries no
+# `synthetic` stamp, see `221-unbox-box-to-map-user-left` — and this rule takes
+# it instead, because the unbox it pins behind the box proves nothing downstream
+# ever sees the boxed element. The pair becomes one object map and the trailing
+# unbox stays for `451`. `boxed-filter-tail.yml` is the end-to-end shape: lose
+# this collapse and its four pipelines stop fusing into one mapMultiToX each.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/221-unbox-user-box-to-map.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokevirtual",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Long;)J",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 5,
+          class ↦ "java/lang/Long",
+          method ↦ "longValue",
+          signature ↦ "()J",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.box,
+        stream-class ↦ "java/util/stream/LongStream"
+      ⟧,
+      op3 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokevirtual",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Long;)I",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 5,
+          class ↦ "java/lang/Long",
+          method ↦ "intValue",
+          signature ↦ "()I",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, 𝜏-m ↦ ⟦ φ ↦ Φ.hone.map, 𝐵-b ⟧, 𝜏-u ↦ ⟦ φ ↦ Φ.hone.unbox, 𝐵-c ⟧, 𝐵-d ⟧
+  - ⟦
+      φ ↦ Φ.hone.unbox,
+      opcode ↦ "invokevirtual",
+      class ↦ "A",
+      bridge-signature ↦ "(Ljava/lang/Long;)I",
+      static ↦ "true",
+      target ↦ ⟦
+        handle ↦ 5,
+        class ↦ "java/lang/Long",
+        method ↦ "intValue",
+        signature ↦ "()I",
+        is-interface ↦ Φ.false
+      ⟧
+    ⟧

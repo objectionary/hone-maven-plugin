@@ -237,6 +237,19 @@ function rewrite_with_timeout {
   "${SETSID}" --wait "${0}" rewrite "$@" &
   sid=$!
   group=""
+  # shellcheck disable=SC2329
+  function stop_worker {
+    kill_tree TERM "${sid}"
+    kill -TERM "-${sid}" 2>/dev/null || true
+    if [ -n "${watchdog:-}" ]; then
+      kill_tree TERM "${watchdog}"
+    fi
+    sleep "${HONE_KILL_GRACE:-10}"
+    kill_tree KILL "${sid}"
+    kill -KILL "-${sid}" 2>/dev/null || true
+    exit 143
+  }
+  trap stop_worker TERM INT HUP
   for _ in $(seq 1 100); do
     group=$(ps -o pgid= -p "${sid}" 2>/dev/null | tr -d ' ') || true
     [ -n "${group}" ] && break

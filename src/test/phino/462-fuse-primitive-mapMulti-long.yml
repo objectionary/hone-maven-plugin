@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The wide-element arm of 462 (#983), and the one the slot arithmetic exists
+# for. A `long` item occupies TWO local slots, so in `fused` the downstream
+# LongConsumer is parameter 1 but local **2**, not local 1 as it is for an int —
+# the `𝑒-consumer-slot` meta is what carries that, and getting it wrong gives a
+# method that loads the sink from the item's second half. `wrap` needs no such
+# care: its sink is parameter 0 and therefore always local 0, whatever follows
+# it.
+#
+# Two stages is enough here; `462-fuse-primitive-mapMulti` already proves the
+# fold iterates. What this pack pins is the shape of the pair: a `fused` taking
+# `(JLjava/util/function/LongConsumer;)V`, a `wrap` taking
+# `(Ljava/util/function/LongConsumer;J)V` — note the reversed order, which is
+# the composition's doing and not a typo — a factory descriptor over
+# LongConsumer on both sides, and `lload 0` beside `aload 2`.
+#
+# The double arm is the same shape with D for J, so it is covered by the
+# optimize fixture rather than a third near-identical pack.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/462-fuse-primitive-mapMulti.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        op0 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/stream/LongStream$LongMapMultiConsumer;",
+          lambda-signature ↦ "(JLjava/util/function/LongConsumer;)V",
+          bridge-signature ↦ "(JLjava/util/function/LongConsumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(JLjava/util/function/LongConsumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "mapMulti", signature ↦ "(Ljava/util/stream/LongStream$LongMapMultiConsumer;)Ljava/util/stream/LongStream;" ⟧
+        ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/stream/LongStream$LongMapMultiConsumer;",
+          lambda-signature ↦ "(JLjava/util/function/LongConsumer;)V",
+          bridge-signature ↦ "(JLjava/util/function/LongConsumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(JLjava/util/function/LongConsumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "mapMulti", signature ↦ "(Ljava/util/stream/LongStream$LongMapMultiConsumer;)Ljava/util/stream/LongStream;" ⟧
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$1", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokedynamic, i2 ↦ "accept", i3 ↦ "(Ljava/util/function/LongConsumer;)Ljava/util/function/LongConsumer;", 𝐵-rest ⟧
+  - ⟦ φ ↦ Φ.jeo.method, 𝐵-fh, descriptor ↦ "(JLjava/util/function/LongConsumer;)V", 𝐵-ft ⟧
+  - ⟦ φ ↦ Φ.jeo.method, 𝐵-wh, descriptor ↦ "(Ljava/util/function/LongConsumer;J)V", 𝐵-wt ⟧
+  - ⟦ 𝐵-bh, ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, i1 ↦ 0 ⟧, ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 2 ⟧, 𝐵-bt ⟧
+  - ⟦ 𝐵-ch, ld-item ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, i1 ↦ 1 ⟧, ld-downstream ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 0 ⟧, 𝐵-ct ⟧

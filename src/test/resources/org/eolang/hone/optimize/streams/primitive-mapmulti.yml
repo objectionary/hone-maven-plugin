@@ -1,0 +1,135 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Two adjacent PRIMITIVE mapMulti stages (#983). `461-fuse-mapMulti` pins
+# `java/util/stream/Stream`, the object `BiConsumer` SAM and the object stream
+# signature in all three places it names a stream call, so
+# `intStream.mapMulti(a).mapMulti(b)` stayed two calls while the identical
+# reference-form chain collapsed into one. `462-fuse-primitive-mapMulti` is its
+# sibling for all three primitive streams; the composition
+# `(x, c) -> a(x, y -> b(y, c))` is unchanged, only the types around it are.
+#
+# Nine pipelines, one per thing that can go wrong:
+#   * pair       — the issue's own shape. 1,2,3 each emit n and n+1, then each
+#     doubles: 2+4+4+6+6+8 = 30.
+#   * triple     — THREE stages, so the fold has to iterate: phino folds the
+#     first pair, then folds that product with the third. 116.
+#   * dropping   — a first stage that emits NOTHING for even elements. The rule
+#     wires the call graph and never inlines either body, so a stage that emits
+#     zero or many values per item is none of its business; this pins that. 900.
+#   * longs      — a wide element. A long takes TWO local slots, so the
+#     downstream sink is parameter 1 but local 2 in the synthesised `fused`.
+#     Loading it from local 1 would read the item's second half. 24.
+#   * reals      — the same for double. 12.0.
+#   * crossing   — a chain that changes stream type in the middle
+#     (`mapMulti(..).mapToLong(..).mapMulti(..)`). The two stages are NOT
+#     adjacent and their SAMs differ, and the rule shares one
+#     `𝑒-lambda-signature` between both stages precisely so this cannot fuse.
+#     Both calls survive. 30.
+#   * captured   — a CAPTURING primitive stage. 111 declines a capturing
+#     invokedynamic, so no pragma is ever lifted and both calls stay native,
+#     exactly as before. 72.
+#   * neighbours — the load-bearing exclusion. A `map` and a `filter` around the
+#     two user stages fuse into distills, and since #982 an IntStream distill
+#     lowers to a primitive `IntStream.mapMulti` of its OWN — a shape this rule
+#     would otherwise match. Its `distill_…` prefix guard keeps it off that
+#     output. Four stream operations become three mapMulti stages: the user pair
+#     fused into one, plus one each for the map and the filter. 44.
+#   * objects    — the reference form, still fused by 461 and untouched here.
+#
+# The counts below are pinned on invokeinterface and invokestatic, NOT on
+# invokedynamic, and that is the interesting part. Every fusion removes the
+# second stage's outer invokedynamic and adds the inner one that `fused` uses to
+# build its wrapper sink, so the invokedynamic total does not move at all — 23
+# before, 23 after. It is pinned here at that value precisely to record the
+# fact. What moves is the stream calls: invokeinterface 57 -> 51, six
+# `mapMulti` dispatches gone, and invokestatic 27 -> 45 for the `fused`/`wrap`
+# bodies the rule synthesises and the original lambda bodies they now call
+# directly instead of through a second stream stage.
+java: |
+  package primitivemapmulti;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.Stream;
+  import java.util.stream.Collectors;
+  public class X {
+    private static int pair() {
+      return IntStream.of(1, 2, 3)
+        .mapMulti((n, sink) -> { sink.accept(n); sink.accept(n + 1); })
+        .mapMulti((n, sink) -> { sink.accept(n * 2); })
+        .sum();
+    }
+    private static int triple() {
+      return IntStream.of(1, 2)
+        .mapMulti((n, sink) -> { sink.accept(n); sink.accept(n + 10); })
+        .mapMulti((n, sink) -> { sink.accept(n * 2); })
+        .mapMulti((n, sink) -> { sink.accept(n + 1); sink.accept(n + 2); })
+        .sum();
+    }
+    private static int dropping() {
+      return IntStream.of(1, 2, 3, 4, 5)
+        .mapMulti((n, sink) -> { if (n % 2 == 1) { sink.accept(n); } })
+        .mapMulti((n, sink) -> { sink.accept(n * 100); })
+        .sum();
+    }
+    private static long longs() {
+      return LongStream.of(1L, 2L)
+        .mapMulti((n, sink) -> { sink.accept(n); sink.accept(n + 1L); })
+        .mapMulti((n, sink) -> { sink.accept(n * 3L); })
+        .sum();
+    }
+    private static double reals() {
+      return DoubleStream.of(0.5, 1.5)
+        .mapMulti((d, sink) -> { sink.accept(d); sink.accept(d + 1.0); })
+        .mapMulti((d, sink) -> { sink.accept(d * 2.0); })
+        .sum();
+    }
+    private static long crossing() {
+      return IntStream.of(1, 2, 3)
+        .mapMulti((n, sink) -> { sink.accept(n); })
+        .mapToLong(n -> n)
+        .mapMulti((n, sink) -> { sink.accept(n * 5L); })
+        .sum();
+    }
+    private static int captured(final int by) {
+      return IntStream.of(1, 2, 3)
+        .mapMulti((n, sink) -> { sink.accept(n + by); })
+        .mapMulti((n, sink) -> { sink.accept(n * 2); })
+        .sum();
+    }
+    private static int neighbours() {
+      return IntStream.of(1, 5, 2, 9)
+        .map(n -> n + 1)
+        .mapMulti((n, sink) -> { sink.accept(n); sink.accept(n + 1); })
+        .mapMulti((n, sink) -> { sink.accept(n * 2); })
+        .filter(n -> n % 4 == 0)
+        .sum();
+    }
+    private static String objects() {
+      return Stream.of("a", "bb")
+        .<String>mapMulti((s, sink) -> { sink.accept(s); sink.accept(s + "!"); })
+        .<String>mapMulti((s, sink) -> { sink.accept(s.toUpperCase()); })
+        .collect(Collectors.joining(","));
+    }
+    public static void main(String[] a) {
+      System.out.printf("R %d %d %d %d %.1f %d %d %d %s%n",
+        pair(), triple(), dropping(), longs(), reals(), crossing(),
+        captured(10), neighbours(), objects());
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "R 30 116 900 24 12.0 30 72 44 A,A!,BB,BB!"
+before:
+  invokedynamic: 23
+  invokeinterface: 57
+  invokestatic: 27
+after:
+  invokedynamic: 23
+  invokeinterface: 51
+  invokestatic: 45

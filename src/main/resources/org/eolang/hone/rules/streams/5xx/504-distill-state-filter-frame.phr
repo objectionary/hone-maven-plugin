@@ -4,12 +4,13 @@
 # yamllint disable rule:line-length
 # Promotes the same-locals-1 keep-frame that 305 leaves on a filter guard
 # into a FULL frame when that guard has fused into a STATEFUL distill —
-# one whose wrapper (512) owns the per-call counter at local 3. A
+# one whose wrapper (512) owns the per-call counter just above its
+# arguments. A
 # same-locals-1 frame inherits its locals from the previous frame, so if a
 # filter guard is the first branch target in the wrapper it inherits the
-# bare param frame (List, item, Consumer) and the counter at slot 3 is
-# undefined — the next fetch's `iload 3` then fails verification. Rewriting
-# every such frame to a full frame that lists the counter keeps slot 3
+# bare param frame (List, item, Consumer) and the counter's slot is
+# undefined — the next fetch's `iload` then fails verification. Rewriting
+# every such frame to a full frame that lists the counter keeps that slot
 # live across all guards. Scoped to Φ.hone.distill-lambda with `captured`,
 # so stateless filter frames (511's wrapper has no counter) are untouched.
 # Runs at fixpoint before 512 wraps the lambda, alongside 503 which does

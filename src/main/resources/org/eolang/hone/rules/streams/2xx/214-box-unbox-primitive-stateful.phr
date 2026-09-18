@@ -11,10 +11,12 @@
 # `211` cannot do it. It reads the element type off the lifted lambda's
 # `bridge-signature` and builds the unbox's method handle from it; a distinct
 # and a skip carry no lambda, so there is no signature to read. Here the type
-# comes from the stream interface instead, which is why this rule is written
-# out for `java/util/stream/IntStream` alone rather than derived: `LongStream`
-# and `DoubleStream` are two-slot cases the stateful wrapper's hand-laid locals
-# do not handle (`512`, and the scope note in `212`).
+# comes from the stream INTERFACE instead, and is derived from it, so one rule
+# covers all three (#1012): `IntStream` gives Integer/intValue/()I,
+# `LongStream` Long/longValue/()J and `DoubleStream` Double/doubleValue/()D.
+# It was IntStream alone while the stateful wrapper `512` builds had a
+# hand-written local layout that only a one-slot item fitted; `512` and `521`
+# now derive the two slots a wide item moves.
 #
 # A pragma that got this far is one `213` did not revert, so it is on a
 # pipeline that stays sequential. What comes out is what a hand-written
@@ -35,7 +37,7 @@ pattern: |
     𝜏-lifted ↦ ⟦
       φ ↦ Φ.hone.𝜏-primitive-op,
       class ↦ 𝑒-class,
-      stream-class ↦ "java/util/stream/IntStream",
+      stream-class ↦ 𝑒-stream-class,
       𝐵-lifted-rest
     ⟧,
     𝐵-after
@@ -45,7 +47,7 @@ result: |
     𝐵-before,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ "java/util/stream/IntStream"
+      stream-class ↦ 𝑒-stream-class
     ⟧,
     𝜏-lifted ↦ ⟦
       φ ↦ Φ.hone.𝜏-object-op,
@@ -57,23 +59,58 @@ result: |
       φ ↦ Φ.hone.unbox,
       opcode ↦ "invokevirtual",
       class ↦ 𝑒-class,
-      bridge-signature ↦ "(Ljava/lang/Integer;)I",
+      bridge-signature ↦ 𝑒-unbox-bridge,
       static ↦ "true",
       target ↦ ⟦
         handle ↦ 5,
-        class ↦ "java/lang/Integer",
-        method ↦ "intValue",
-        signature ↦ "()I",
+        class ↦ 𝑒-wrapper,
+        method ↦ 𝑒-unbox-method,
+        signature ↦ 𝑒-unbox-signature,
         is-interface ↦ Φ.false
       ⟧
     ⟧,
     𝐵-after
   ⟧
 when:
-  or:
-    - eq: [𝜏-primitive-op, 'primitive-distinct']
-    - eq: [𝜏-primitive-op, 'primitive-skip']
+  and:
+    - or:
+        - eq: [𝜏-primitive-op, 'primitive-distinct']
+        - eq: [𝜏-primitive-op, 'primitive-skip']
+    - or:
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
 where:
+  - meta: 𝑒-wrapper
+    function: sed
+    args:
+      - 𝑒-stream-class
+      - '"s/^java\\/util\\/stream\\/IntStream$/java\\/lang\\/Integer/g"'
+      - '"s/^java\\/util\\/stream\\/LongStream$/java\\/lang\\/Long/g"'
+      - '"s/^java\\/util\\/stream\\/DoubleStream$/java\\/lang\\/Double/g"'
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-stream-class
+      - '"s/^java\\/util\\/stream\\/IntStream$/I/g"'
+      - '"s/^java\\/util\\/stream\\/LongStream$/J/g"'
+      - '"s/^java\\/util\\/stream\\/DoubleStream$/D/g"'
+  - meta: 𝑒-unbox-method-prefix
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/^I$/int/g"'
+      - '"s/^J$/long/g"'
+      - '"s/^D$/double/g"'
+  - meta: 𝑒-unbox-method
+    function: concat
+    args: [𝑒-unbox-method-prefix, '"Value"']
+  - meta: 𝑒-unbox-signature
+    function: concat
+    args: ['"()"', 𝑒-primitive]
+  - meta: 𝑒-unbox-bridge
+    function: concat
+    args: ['"(L"', 𝑒-wrapper, '";)"', 𝑒-primitive]
   - meta: 𝜏-box
     function: random-tau
   - meta: 𝜏-unbox

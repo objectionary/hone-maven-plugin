@@ -22,7 +22,7 @@
 # Both `ifne` arms jump to the same keep-label — the already-dropping arm (the
 # latch is set, the predicate is not even evaluated) and the arm that has just
 # evaluated it — and both leave only the item on the stack, so one frame
-# describes both. The scratch locals 4 and 5 that 310 borrows are dead by then,
+# describes both. The scratch locals 5 and 6 that 310 borrows are dead by then,
 # so the four-local frame 512 sizes for still holds.
 #
 # The predicate parameter may be PRIMITIVE as well as a reference, since #982:
@@ -42,6 +42,9 @@
 # `503-distill-dropwhile-frame` < `503-distill-state-frame` alphabetically.
 # Scoped to a distill-lambda WITH `captured`, so stateless keep-labels stay
 # with 506/507.
+# The guard's copy of the item is `dup` for a narrow item and `dup2` for a wide
+# one (`414`, #1012), so the opcode is a metavariable pinned by the `when` to
+# those two.
 name: distill-dropwhile-frame
 pattern: |
   ⟦
@@ -54,12 +57,12 @@ pattern: |
     body ↦ ⟦
       𝐵-before,
       𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
-      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
-      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧,
+      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-latch-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       𝜏-read-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
       𝜏-if-dropping ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-dropping-target ⟧,
-      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-op ⟧,
       𝜏-predicate ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokestatic,
         i2 ↦ 𝑒-predicate-class,
@@ -69,12 +72,12 @@ pattern: |
       ⟧,
       𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
-      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
-      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 6 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
-      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-if-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-keep-target ⟧,
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
@@ -94,12 +97,12 @@ result: |
     body ↦ ⟦
       𝐵-before,
       𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ 𝑒-fetch-type ⟧,
-      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
-      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧,
+      𝜏-load-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-latch-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       𝜏-read-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
       𝜏-if-dropping ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-dropping-target ⟧,
-      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup-op ⟧,
       𝜏-predicate ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokestatic,
         i2 ↦ 𝑒-predicate-class,
@@ -109,12 +112,12 @@ result: |
       ⟧,
       𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
-      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
-      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 6 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
-      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-if-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-keep-target ⟧,
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
@@ -139,6 +142,9 @@ result: |
   ⟧
 when:
   and:
+    - or:
+        - eq: [𝜏-dup-op, 'dup']
+        - eq: [𝜏-dup-op, 'dup2']
     - matches:
         - '^\((L[^;]+;|[BCDFIJSZ])\)Z$'
         - 𝑒-predicate-signature

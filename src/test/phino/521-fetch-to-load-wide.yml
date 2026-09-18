@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The counter slot a fetch reads follows the item's WIDTH (#1012). A bare fetch
+# marker cannot tell a `long` item from an `int` one, so the rule matches the
+# wrapper around it and reads the type off the parameter 512 declared at index
+# 1: a wide item puts the counter at 4.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/521-fetch-to-load.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.method,
+    access ↦ 4106,
+    descriptor ↦ "(Ljava/util/List;JLjava/util/function/LongConsumer;)V",
+    params ↦ ⟦
+      φ ↦ Φ.jeo.params,
+      i1 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ "Ljava/util/List;" ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 1, access ↦ 0, type ↦ "J" ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ "Ljava/util/function/LongConsumer;" ⟧
+    ⟧,
+    body ↦ ⟦
+      b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
+      ρ ↦ ∅
+    ⟧,
+    name ↦ "distill_0"
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 4 ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 4, i2 ↦ 1 ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "java/util/HashSet" ⟧

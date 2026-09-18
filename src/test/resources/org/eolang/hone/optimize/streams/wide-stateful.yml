@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The whole stateful family on `LongStream` and `DoubleStream` (#1012).
+#
+# `512` lowers a stateful distill into a wrapper whose locals used to be written
+# out by hand — the captured List at 0, the item at 1, the consumer at 2,
+# `521`'s fetch counter at 3, `310`'s latch scratch at 4 and 5 — and a `long` or
+# a `double` item takes TWO slots, which slides every one of those. So the
+# layout admitted narrow items only, and `distinct`, `skip` and `dropWhile` all
+# stayed native on half the primitive stream types. #982 and #996 each closed
+# the `IntStream` arm of that and left this, which is what made it look tracked
+# when it was not.
+#
+# Two numbers move with the item's width and are now derived from it — the
+# consumer's slot and the counter's — and the latch scratch is pinned above the
+# widest counter instead of floating behind it, so it needs no deriving at all.
+# Every frame in the family stays a FOUR-local frame either way, because a
+# stackmap frame lists one entry per VALUE and not per slot.
+#
+# Four pipelines, over both wide element types:
+#   * longDrop / doubleDrop — `208`'s primitive dropWhile on a `long` and on a
+#     `double`, each with a filter behind it so the two guards share the wrapper
+#     and the counter has to walk two state vars.
+#   * twice    — two dropWhiles in one fused body, so the counter reads state
+#     var 0 and then 1. A counter at the wrong slot reads the item's second
+#     half instead, which is the failure this whole change is about.
+#   * boxedAfter — the operation followed immediately by the user's own
+#     `boxed()`. This one is here as a GUARD RAIL rather than a new capability:
+#     `233` gives the dropWhile pragma a boxed bridge with only `accepted` and
+#     `returned` primitive, so `411`/`422` put the re-boxing back and the
+#     pipeline is correct. The two type-transparent operations lose it in the
+#     same position, which is #1016, and this pipeline is what says the
+#     dropWhile path does not.
+#
+# `distinct()` and `skip(n)` on a wide element are NOT here, and not because of
+# the layout — that is what this change fixes. They wait on #1016: their lift
+# goes through `214`'s sandwich, whose trailing unbox `221` cancels against a
+# following user `boxed()`, keeping only the unbox. That is live on `IntStream`
+# today, so lifting them here would widen a crash rather than introduce one,
+# and `RandomPipeline` seed 18 walks into it.
+#
+java: |
+  package widestateful;
+  import java.util.stream.Collectors;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.LongStream;
+  public class X {
+    private static final long[] LONGS = {5L, 2L, 9L, 2L, 7L, 1L, 8L, 5L};
+    private static final double[] REALS = {1.5, 2.25, 1.5, 8.125, 0.5, 2.25};
+    private static long longDrop() {
+      return LongStream.of(LONGS).map(n -> n + 1L).dropWhile(n -> n < 5L)
+        .filter(n -> n > 2L).sum();
+    }
+    private static double doubleDrop() {
+      return DoubleStream.of(REALS).map(d -> d * 2.0).dropWhile(d -> d < 4.0)
+        .filter(d -> d > 1.0).sum();
+    }
+    private static long twice() {
+      return LongStream.of(LONGS).map(n -> n + 1L).dropWhile(n -> n < 4L)
+        .dropWhile(n -> n > 9L).filter(n -> n > 2L).sum();
+    }
+    private static String boxedAfter() {
+      return LongStream.of(LONGS).dropWhile(n -> n < 7L).boxed()
+        .collect(Collectors.toList()).toString();
+    }
+    public static void main(String[] a) {
+      System.out.printf("R %d %s %d %s%n",
+        longDrop(), doubleDrop(), twice(), boxedAfter());
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "R 45 28.25 45 [9, 2, 7, 1, 8, 5]"
+before:
+  invokedynamic: 11
+  invokeinterface: 17
+  invokestatic: 12
+  new: 0
+after:
+  invokedynamic: 4
+  invokeinterface: 24
+  invokestatic: 24
+  new: 4

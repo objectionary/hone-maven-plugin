@@ -4,7 +4,7 @@
 # yamllint disable rule:line-length
 # The stateful counterpart of `506-distill-predicate-frame` (#794), for a filter
 # guard that has been fused into a STATEFUL distill — one whose wrapper (512)
-# owns the per-call counter at local 3 (#805).
+# owns the per-call counter just above its arguments (#805).
 #
 # 304 leaves a `Φ.hone.frame-item` marker at its keep-label. In a stateless
 # distill-lambda `506-distill-predicate-frame` claims it and names the survivor

@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Widens the throwaway copy a guard makes of its item when the item turns out
+# to be a `long` or a `double` (#1012).
+#
+# Three kinds of guard copy the item, hand the copy to a lambda and keep the
+# original for whatever comes next: a filter (`281`/`283`/`413`), a peek, and a
+# dropWhile (`310`). Each splices a plain `dup`, and each is right to, because
+# when they fire the operation is still inside `211`/`214`'s boxing sandwich:
+# the item they see is the WRAPPER, one slot wide. `411` is what changes the
+# answer. It collapses the sandwich and retypes the whole run onto the raw
+# primitive, and from that point the stack holds a two-slot value that a `dup`
+# cannot copy — "Type long_2nd (current frame, stack[1]) is not assignable to
+# category1 type".
+#
+# `281` and `413` already read a primitive rather than a wrapper and get this
+# right on their own, which is why a stateless `LongStream.filter` has always
+# fused. The copies that do not are the ones spliced while the wrapper was
+# still the visible type, and rather than teach each splicing rule to predict
+# `411`, the repair is made here, once, after `411` has decided.
+#
+# The anchor is the copy's CONSUMER, and only that: a `dup` immediately
+# followed by an invokestatic taking ONE wide primitive and returning `Z` or
+# `V` — which is exactly a filter or dropWhile predicate, or a peek body, being
+# handed the copy. The copy IS that call's argument, so if the call takes a
+# `long` the duplicated value is a `long`; nothing else needs to be known, and
+# in particular not the distill's `bridge-input`. That matters: an unboxing
+# `246` or `421` mints can leave a raw `long` on the stack inside a run whose
+# `bridge-input` is still `Ljava/lang/Object;`, which is what a `distinct()`
+# ahead of a `dropWhile` produces, and a rule keyed on `bridge-input` would
+# walk past it.
+#
+# The one-parameter shape is deliberate. A CAPTURING guard's call takes the
+# captured values first and the item last, so its first parameter says nothing
+# about what was copied; `314` builds those and parks the item in a local
+# instead. Requiring `(J)Z`, `(J)V`, `(D)Z` or `(D)V` keeps this rule to the
+# non-capturing guards, and being closed on `dup` keeps it from firing twice on
+# its own output.
+#
+# Only the copy moves. The wrapper's own stack arrangement (`512`'s `dup_x2`
+# for a wide consumer) is already width-correct, and a guard's other opcodes
+# work on the latch array and the verdict, both narrow whatever the item is.
+name: widen-guard-dup
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-call-class,
+        i3 ↦ 𝑒-call-method,
+        i4 ↦ 𝑒-call-signature,
+        i5 ↦ 𝑒-call-is-interface
+      ⟧,
+      𝐵-after
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ 𝑒-start,
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ 𝑒-static,
+    state ↦ 𝑒-state,
+    body ↦ ⟦
+      𝐵-before,
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-call-class,
+        i3 ↦ 𝑒-call-method,
+        i4 ↦ 𝑒-call-signature,
+        i5 ↦ 𝑒-call-is-interface
+      ⟧,
+      𝐵-after
+    ⟧
+  ⟧
+when:
+  matches: ['^\((J|D)\)[ZV]$', 𝑒-call-signature]

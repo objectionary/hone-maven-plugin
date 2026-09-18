@@ -20,7 +20,8 @@
 #
 # The two accumulators 118 does not have are the cursor balance. 314's dropWhile
 # twin jumps over the whole run of fetches once the latch is set, and each fetch
-# carries an `iinc` of the shared List cursor at local 3 (521), so the jump would
+# carries an `iinc` of the shared List cursor 521 keeps just above the
+# wrapper's arguments, so the jump would
 # desynchronise every fetch behind it — including a stateful operator fused after
 # this one. One `iinc 3, 1` per capture goes into `skip-acc`, which runs BEFORE
 # the latch branch, and one `iinc 3, -1` into `undo-acc`, which runs on the arm

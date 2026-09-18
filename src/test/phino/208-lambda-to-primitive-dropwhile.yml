@@ -8,12 +8,13 @@
 # class and the primitive bridge through to 211, exactly as 203 does for a
 # primitive filter.
 #
-# The second operation is the SCOPE guard, and it is the more interesting half
-# of this pack: the same shape over LongStream must NOT be lifted. A long item
-# takes two local slots, which slides every hand-written slot in the stateful
-# lowering (512's counter, 310's latch scratch, the frame rules' local lists),
-# so the rule matches IntStream alone and a LongStream.dropWhile has to come
-# out of this rewrite still a Φ.hone.lambda, native as it was before.
+# The second operation is the LongStream arm, which #1012 opened. It used to be
+# this pack's scope guard — a long item takes two local slots, which slid every
+# hand-written slot in the stateful lowering — and now that 512 and 521 derive
+# the two slots that move, it is lifted like the IntStream one, with its own
+# SAM and its own signatures. What still guards the scope is that the quartet
+# has to agree: the `-mismatched` pack keeps a LongStream call handed an
+# IntPredicate out of the rewrite.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/208-lambda-to-primitive-dropwhile.phr
 input: |
@@ -69,4 +70,4 @@ input: |
 expected:
   - ⟦ φ ↦ Φ.hone.primitive-dropWhile, opcode ↦ "invokeinterface", class ↦ "fusion/X", stream-class ↦ "java/util/stream/IntStream", bridge-signature ↦ "(I)Z", static ↦ "true", 𝐵-rest ⟧
   - ⟦ φ ↦ Φ.hone.primitive-dropWhile, 𝐵-h, target ↦ ⟦ 𝐵-t1, method ↦ "lambda$main$0", 𝐵-t2 ⟧, 𝐵-t ⟧
-  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-l1, interface ↦ "()Ljava/util/function/LongPredicate;", 𝐵-l2, stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "dropWhile", 𝐵-l3 ⟧, 𝐵-l4 ⟧
+  - ⟦ φ ↦ Φ.hone.primitive-dropWhile, opcode ↦ "invokeinterface", class ↦ "fusion/X", stream-class ↦ "java/util/stream/LongStream", bridge-signature ↦ "(J)Z", static ↦ "true", 𝐵-rest ⟧

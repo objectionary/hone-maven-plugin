@@ -23,8 +23,8 @@
 # or `ldc`, the three opcodes that push a long on their own. Anything computed
 # is left plain bytecode.
 #
-# `IntStream` only, for the slot-width reason
-# `212-recognize-primitive-distinct` records.
+# `IntStream` only, for the reason `212-recognize-primitive-distinct` records:
+# the slot layout is no longer what stops it (#1012), #1016 is.
 name: recognize-primitive-skip
 pattern: |
   ⟦
@@ -40,9 +40,9 @@ pattern: |
         𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
         𝜏-invokeinterface ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
-          𝜏1 ↦ "java/util/stream/IntStream",
+          𝜏1 ↦ 𝑒-stream-class,
           𝜏2 ↦ "skip",
-          𝜏3 ↦ "(J)Ljava/util/stream/IntStream;",
+          𝜏3 ↦ 𝑒-signature,
           𝜏4 ↦ Φ.true,
           ρ ↦ ∅
         ⟧,
@@ -67,7 +67,7 @@ result: |
         𝜏-skip ↦ ⟦
           φ ↦ Φ.hone.primitive-skip,
           class ↦ 𝑒-class-name,
-          stream-class ↦ "java/util/stream/IntStream",
+          stream-class ↦ 𝑒-stream-class,
           push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧
         ⟧,
         𝐵-body-tail
@@ -80,8 +80,13 @@ result: |
 where:
   - meta: 𝜏-skip
     function: random-tau
+  - meta: 𝑒-signature
+    function: concat
+    args: ['"(J)L"', 𝑒-stream-class, '";"']
 when:
-  or:
-    - eq: [𝜏-pop, 'lconst_0']
-    - eq: [𝜏-pop, 'lconst_1']
-    - eq: [𝜏-pop, 'ldc']
+  and:
+    - or:
+        - eq: [𝜏-pop, 'lconst_0']
+        - eq: [𝜏-pop, 'lconst_1']
+        - eq: [𝜏-pop, 'ldc']
+    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']

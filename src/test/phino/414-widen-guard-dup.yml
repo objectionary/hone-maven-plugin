@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A guard's throwaway copy of a WIDE item is a dup2 (#1012). The decision is
+# made from what the copy is handed to — a one-parameter `(J)Z` predicate — and
+# NOT from the distill's bridge-input, which here is still a reference: that is
+# the `distinct().dropWhile()` shape, where the run never collapses to a
+# primitive distill and the unboxing ahead of the predicate still leaves a raw
+# long on the stack.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/414-widen-guard-dup.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ "Foo",
+    bridge-input ↦ "Ljava/lang/Object;",
+    bridge-output ↦ "Ljava/lang/Object;",
+    start ↦ "distinct",
+    accepted ↦ "Ljava/lang/Object;",
+    returned ↦ "Ljava/lang/Object;",
+    static ↦ "true",
+    state ↦ ⟦ s ↦ ⟦ set ↦ "HashSet" ⟧, ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      b2 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ "Foo",
+        i3 ↦ "lambda$main$0",
+        i4 ↦ "(J)Z",
+        i5 ↦ Φ.false
+      ⟧,
+      b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧
+  - ⟦ 𝐵-a, 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup2 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i4 ↦ "(J)Z", 𝐵-y ⟧, 𝐵-b ⟧

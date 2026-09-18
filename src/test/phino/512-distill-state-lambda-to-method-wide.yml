@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A WIDE item slides the wrapper's locals (#1012). A `long` takes two slots, so
+# the consumer is argument 2 but local 3, and the counter 512 zeroes at method
+# entry sits at 4 rather than 3. Both are derived from `bridge-input`; the
+# latch scratch does not move, because it is pinned above the widest counter.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/5xx/512-distill-state-lambda-to-method.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill-lambda,
+        static ↦ "true",
+        bridge-input ↦ "J",
+        consumer ↦ "Ljava/util/function/LongConsumer;",
+        target-method ↦ "distill_0",
+        captured ↦ "Ljava/util/List;",
+        body ↦ ⟦ b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.nop ⟧, ρ ↦ ∅ ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 4 ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.lload, i1 ↦ 1 ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 3 ⟧
+  - ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 10, max-locals ↦ 7 ⟧
+  - ⟦ 𝐵-a, descriptor ↦ "(Ljava/util/List;JLjava/util/function/LongConsumer;)V", 𝐵-b ⟧

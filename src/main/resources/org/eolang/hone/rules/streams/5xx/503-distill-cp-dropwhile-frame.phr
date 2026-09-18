@@ -26,7 +26,7 @@
 # leaves `L…;)Z` is exactly the run of captures. Everything else is 503's: a FULL
 # frame rather than same-locals-1, because a same-locals frame would drop the
 # cursor 512 keeps at slot 3 and the next guard's `iload 3` would read an
-# undefined local; the scratch locals (1 parked item, 4 latch array, 5 verdict)
+# undefined local; the scratch locals (1 parked item, 5 latch array, 6 verdict)
 # are dead at the keep-label, so the four-local frame still holds.
 #
 # An ERASED item is left to the fallback on purpose. When a distinct() or a
@@ -66,12 +66,12 @@ pattern: |
       ⟧,
       𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
-      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
-      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 6 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
-      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-if-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-keep-target ⟧,
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
@@ -100,12 +100,12 @@ result: |
       ⟧,
       𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
       𝜏-negate ↦ ⟦ φ ↦ Φ.jeo.opcode.ixor ⟧,
-      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 5 ⟧,
-      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-park-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 6 ⟧,
+      𝜏-reload-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-store-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
-      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-load-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-write-latch ↦ ⟦ φ ↦ Φ.jeo.opcode.iastore ⟧,
-      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 5 ⟧,
+      𝜏-reload-verdict ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 6 ⟧,
       𝜏-if-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-keep-target ⟧,
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,

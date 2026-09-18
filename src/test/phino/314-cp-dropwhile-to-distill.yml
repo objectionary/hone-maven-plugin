@@ -83,7 +83,7 @@ input: |
 expected:
   - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, start ↦ "c-dropWhile", 𝐵-c ⟧
   - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, state ↦ ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-one ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧, 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 10 ⟧, 𝐵-e ⟧, 𝐵-f ⟧
-  - ⟦ 𝐵-a, body ↦ ⟦ 𝜏-latch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧, 𝐵-b ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, body ↦ ⟦ 𝜏-latch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧, 𝐵-b ⟧, 𝐵-c ⟧
   - ⟦ 𝐵-a, 𝜏-read ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧, 𝜏-tick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧, 𝜏-if ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, 𝐵-b ⟧, 𝜏-untick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧, 𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-park1 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝐵-c ⟧
   - ⟦ 𝐵-a, 𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-pred ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "dw/X", i2 ↦ "lambda$pipe$0", i3 ↦ "(ILjava/lang/Integer;)Z", i4 ↦ Φ.false ⟧, 𝐵-b ⟧
   - ⟦ 𝐵-a, 𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, 𝐵-b ⟧, 𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧, 𝐵-c ⟧

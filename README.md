@@ -500,6 +500,59 @@ Stream.of("a", null, "a", null).distinct().map(s -> s).count();
   and `Collections.synchronizedSet` keeps it on the unordered fold,
   which is the only one that pays for a lock.
 
+## Why a `long` Element Used To Fuse Less Than an `int`
+
+Nothing stateful fused on a `LongStream` or a `DoubleStream` until #1012,
+  and the reason was a local-variable layout rather than a contract.
+`512` lowers a stateful distill into a wrapper
+  whose locals it writes out itself:
+  the captured `List` at 0, the item at 1, the consumer at 2,
+  `521`'s fetch counter at 3,
+  and `310`'s dropWhile latch scratch at 4 and 5.
+A `long` or a `double` takes _two_ slots,
+  so a wide item slides every one of those by one,
+  and `521` — which sees a bare fetch marker —
+  had no way to learn the width of the item
+  in the method it was lowering into.
+
+So `distinct()`, `skip()` and `dropWhile()` all stayed native
+  on half the primitive stream types,
+  which is the whole stateful family.
+Issues #982 and #996 each closed the `IntStream` arm of that gap
+  and left the rest,
+  so the backlog looked like it tracked something it did not.
+`dropWhile()` fuses on a wide element now;
+  `distinct()` and `skip()` wait on #1016,
+  which is a different defect in the same lift
+  and is live on `IntStream` today.
+
+Two numbers move with the item's width,
+  and both are now derived from it rather than written out:
+  the consumer's slot and the counter's.
+`512` reads the width off `bridge-input`,
+  and `521` reads it off the parameter `512` declared,
+  which is the same fact from the same place.
+The latch scratch does not move at all —
+  it is pinned above the widest counter,
+  and it is dead by the guard's keep-label,
+  so no frame ever lists it and the slot below it may go unwritten.
+Every frame in the family stays a _four-local_ frame either way,
+  because a stackmap frame lists one entry per value and not per slot.
+
+One more thing has to follow the width.
+A filter, a peek and a `dropWhile` each copy the item with a `dup`
+  so the predicate can eat the copy and the original can travel on,
+  and a two-slot value needs a `dup2`.
+The rules that splice those copies cannot tell:
+  when they fire the operation is still inside the boxing sandwich,
+  where the item is the one-slot wrapper,
+  and `411` only afterwards collapses the sandwich onto the raw primitive.
+`414-widen-guard-dup` makes that repair once, after `411` has decided,
+  and it decides from what the copy is handed to —
+  a one-parameter `(J)Z` predicate copies a `long` —
+  rather than from the distill's element type,
+  which is still a reference when a `distinct()` leads the run.
+
 `skip()` and `dropWhile()` have unordered contracts of their own
   — any _n_ elements, any subset of the matching prefix —
   so the same relaxation would extend to `222`/`223` and `226`/`227`,
@@ -564,14 +617,11 @@ It is a fusion barrier:
   and the code is correct, just not collapsed into a single pass.
 
 ```java
-// A dropWhile on a LONG or DOUBLE stream (#982). IntStream is fused,
-// by 208's primitive sibling; a long or a double element takes two
-// local slots, which slides the counter 521 reads and the scratch
-// 310 borrows, so those two stay native until that layout is widened.
-LongStream.of(1L, 2L, 3L, 4L).dropWhile(n -> n < 3L)
-
-// A distinct() or a skip(n) on a LONG or DOUBLE stream, for the same
-// reason and with the same IntStream exception (#996).
+// A distinct() or a skip(n) on a LONG or DOUBLE stream (#1016). The
+// local layout that used to stop it is gone (#1012) and dropWhile
+// fuses there now, but these two are type-transparent: their lift
+// goes through a boxing sandwich whose trailing unbox is cancelled
+// against a following user boxed(), which loses the boxing.
 LongStream.of(1L, 2L, 2L).distinct()
 
 // A skip(n) whose count is not a compile-time constant (#969). 220 and

@@ -31,7 +31,7 @@ result: |
       φ ↦ Φ.jeo.opcode.invokeinterface,
       i2 ↦ 𝑒-stream-class,
       i3 ↦ "distinct",
-      i4 ↦ "()Ljava/util/stream/IntStream;",
+      i4 ↦ 𝑒-signature,
       i5 ↦ Φ.true,
       reverted ↦ Φ.true
     ⟧,
@@ -53,3 +53,6 @@ when:
 where:
   - meta: 𝜏-call
     function: random-tau
+  - meta: 𝑒-signature
+    function: concat
+    args: ['"()L"', 𝑒-stream-class, '";"']

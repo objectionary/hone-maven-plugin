@@ -37,7 +37,7 @@
 # — correct, since a narrowed item is assignable to it.
 #
 # The prologue is spelled out opcode by opcode, including 310's fixed scratch
-# slot 4, so that only a dropWhile latch — not an arbitrary run of opcodes — is
+# slot 5, so that only a dropWhile latch — not an arbitrary run of opcodes — is
 # tolerated in the gap; a body that computes something else between the frame
 # and the dup is deliberately left to fail loudly rather than be cast blindly.
 # The `when` guard is 505's and 508's: bridge-input must be Object (the distinct
@@ -63,8 +63,8 @@ pattern: |
       𝐵-before,
       𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
       𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
-      𝜏-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
-      𝜏-aload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧,
+      𝜏-aload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       𝜏-iaload ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
       𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-latched-target ⟧,
@@ -93,8 +93,8 @@ result: |
       𝜏-frame ↦ ⟦ φ ↦ Φ.jeo.frame, 𝐵-frame-rest ⟧,
       𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧,
       𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
-      𝜏-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 4 ⟧,
-      𝜏-aload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 4 ⟧,
+      𝜏-astore ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 5 ⟧,
+      𝜏-aload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 5 ⟧,
       𝜏-index ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_0 ⟧,
       𝜏-iaload ↦ ⟦ φ ↦ Φ.jeo.opcode.iaload ⟧,
       𝜏-ifne ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ 𝑒-latched-target ⟧,

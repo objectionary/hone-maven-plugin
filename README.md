@@ -556,6 +556,12 @@ LongStream.of(1L, 2L, 3L, 4L).dropWhile(n -> n < 3L)
 // A distinct() or a skip(n) on a LONG or DOUBLE stream, for the same
 // reason and with the same IntStream exception (#996).
 LongStream.of(1L, 2L, 2L).distinct()
+
+// A skip(n) whose count is not a compile-time constant (#969). 220 and
+// 212 bake the count into the countdown by capturing the opcode that
+// pushes it, so they admit only lconst_0, lconst_1 and ldc; anything
+// computed is left as it is rather than baked in wrong.
+stream.skip(list.size() - 3L)
 ```
 
 A CAPTURING `mapMulti` stage is also left as two calls,

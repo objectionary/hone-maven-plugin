@@ -23,9 +23,23 @@
 # immediately before the call — whether or not `.skip(n)` was written on its
 # own source line.
 #
-# v1 assumes the count is a compile-time constant (a single opcode pushes the
-# whole value). A computed argument would miscapture only the last opcode of
-# its expression; such streams are left unoptimised.
+# The count MUST be a compile-time constant, and the `when` below is what makes
+# that true rather than merely intended (#969). `𝜏-pop` is a metavariable over
+# the opcode NAME, so without a guard it matches `lsub`, `i2l`, `lload` or
+# anything else as happily as `lconst_1`: for `stream.skip(list.size())` javac
+# emits `invokeinterface java/util/List.size:()I`, `i2l`, then the call, and the
+# rule took the `i2l`. `308` splices whatever is captured verbatim into the
+# state prologue, where the stack holds the captured java/util/List, so the
+# prologue tried to widen a list reference to a long and left the `size()`
+# result orphaned — a class that fails verification, and `442` replays the same
+# wrong opcode when reverting, so the fallback did not rescue it either. The
+# guard admits exactly the three opcodes that push a long constant on their
+# own: `lconst_0`, `lconst_1` and `ldc` (jeo normalises javac's `ldc2_w` to
+# `ldc`). Every other shape is left plain bytecode, which is what the rule
+# always claimed to do.
+#
+# The same guard is on `212-recognize-primitive-skip`, which lifts the
+# `IntStream` call with the same pattern.
 name: recognize-skip
 pattern: |
   ⟦
@@ -81,3 +95,8 @@ result: |
 where:
   - meta: 𝜏-skip
     function: random-tau
+when:
+  or:
+    - eq: [𝜏-pop, 'lconst_0']
+    - eq: [𝜏-pop, 'lconst_1']
+    - eq: [𝜏-pop, 'ldc']

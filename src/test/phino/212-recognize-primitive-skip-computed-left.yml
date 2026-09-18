@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive twin needs the same guard (#969), or the hole the object rule
+# just closed reopens on the IntStream path: here the count is a method
+# parameter, so the opcode in front of the call is an `lload`, and capturing it
+# would read slot 0 inside the state prologue, where it is a different value.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/212-recognize-primitive-skip.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    m1 ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, i1 ↦ 0 ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/IntStream",
+          i3 ↦ "skip",
+          i4 ↦ "(J)Ljava/util/stream/IntStream;",
+          i5 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦
+      𝐵-a,
+      𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, i1 ↦ 0 ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/stream/IntStream",
+        i3 ↦ "skip",
+        i4 ↦ "(J)Ljava/util/stream/IntStream;",
+        i5 ↦ Φ.true,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-b
+    ⟧

@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `skip(n)` whose count is computed is left as plain bytecode (#969). The
+# opcode in front of the call is the `lsub` that finishes the arithmetic, not a
+# long-constant push, so `220` declines: capturing it would splice an `lsub`
+# into the state prologue `308` builds, where the stack holds the captured
+# java/util/List, and the class would fail verification.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/220-recognize-skip.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    m1 ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/Stream",
+          i3 ↦ "skip",
+          i4 ↦ "(J)Ljava/util/stream/Stream;",
+          i5 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦
+      𝐵-a,
+      𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.lsub ⟧,
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        i2 ↦ "java/util/stream/Stream",
+        i3 ↦ "skip",
+        i4 ↦ "(J)Ljava/util/stream/Stream;",
+        i5 ↦ Φ.true,
+        ρ ↦ ∅
+      ⟧,
+      𝐵-b
+    ⟧

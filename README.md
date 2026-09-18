@@ -431,9 +431,8 @@ The JDK's native `Stream.distinct()` honours the ordered/parallel contract,
 
 The sections above explain what the plugin refuses to fuse
   because fusing it would be wrong.
-These two it would like to fuse and cannot yet,
-  and each one has an issue of its own.
-Each is a fusion barrier:
+This one it would like to fuse and cannot yet.
+It is a fusion barrier:
   the operations on either side of it still fuse into a `mapMulti`,
   the unrecognised call stays native between them,
   and the code is correct, just not collapsed into a single pass.
@@ -444,11 +443,12 @@ Each is a fusion barrier:
 // local slots, which slides the counter 521 reads and the scratch
 // 310 borrows, so those two stay native until that layout is widened.
 LongStream.of(1L, 2L, 3L, 4L).dropWhile(n -> n < 3L)
-
-// Two adjacent PRIMITIVE mapMulti stages (#983). 461 composes two
-// bodies into one, but only in the reference form, Stream.mapMulti.
-intStream.mapMulti(first).mapMulti(second)
 ```
+
+A CAPTURING `mapMulti` stage is also left as two calls,
+  on every stream kind:
+  `111` declines a capturing `invokedynamic`,
+  so neither `461` nor `462` ever sees a pragma to fuse.
 
 A method reference is fused only when the wrapper the rules synthesise
   for it takes the element and returns the result with no adaptation

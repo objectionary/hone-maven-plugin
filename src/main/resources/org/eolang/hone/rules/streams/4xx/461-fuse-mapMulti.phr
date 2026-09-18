@@ -23,9 +23,13 @@
 # cycle, collapsing a whole chain to one stage.
 #
 # Scope: reference Stream.mapMulti only (BiConsumer/Consumer, object element).
-# The primitive mapMultiToInt/Long/Double variants and capturing lambdas are
-# left for a follow-up — they never reach this Φ.hone.lambda form today (111
-# declines capturing indy; the primitive consumers carry different SAM types).
+# A primitive stage carries a different SAM — IntStream.IntMapMultiConsumer over
+# `(ILjava/util/function/IntConsumer;)V` — so it cannot match the constants
+# pinned above, and `462-fuse-primitive-mapMulti` handles all three primitive
+# streams instead (#983); the composition there is this one, with the types
+# renamed and the item's local slot widened for long and double. A CAPTURING
+# stage still reaches neither rule, because 111 declines a capturing
+# invokedynamic and no pragma is ever lifted for it.
 name: fuse-mapMulti
 pattern: |
   ⟦

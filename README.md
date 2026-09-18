@@ -484,15 +484,17 @@ Nothing is forfeited by doing so —
   would have optimised a pipeline that was never going to run.
 
 The dividing line is whether a stage clears SIZED,
-  which is **not** the same as whether it changes the element count:
+  which is **not** the same as whether it changes the element count.
+Measured against the JDK rather than reasoned about:
 
-| keeps the elision | clears SIZED, so the fusion is kept |
-| --- | --- |
-| `limit`, `skip`, `sorted`, `peek`, `map`, `boxed`, `unordered` | `filter`, `distinct`, `takeWhile`, `dropWhile`, `flatMap`, `mapMulti` |
+* `limit`, `skip`, `sorted`, `peek`, `map`, `boxed` and `unordered`
+  keep the elision, so the guard fires and the chain stays native;
+* `filter`, `distinct`, `takeWhile`, `dropWhile`, `flatMap` and
+  `mapMulti` clear SIZED, so the fusion is kept.
 
 `limit(3)` drops elements and still elides,
   because `SliceOps` computes the new size from the old one.
-Where a stage on the right is present the JVM has to walk the stream anyway,
+Where a SIZED-clearing stage is present the JVM walks the stream anyway,
   so the fusion costs nothing and is kept.
 
 ## Which Sink-Free Shapes Are Not Fused Yet

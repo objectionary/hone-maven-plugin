@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The stream-class guard of 217 (#975). Detection is method-local, exactly as
+# 224's is, but the locality cuts the other way: 224 over-reverts, which only
+# forfeits an optimisation, whereas 217 over-PERMITS, which would keep a fusion
+# the stability contract forbids. The guard narrows that by requiring the
+# `unordered()` call to be on the same stream interface the distinct is on.
+#
+# Here an `IntStream.unordered()` precedes an object-`Stream` distinct — a
+# method that happens to hold an unrelated primitive chain. Nothing is marked,
+# so 224 still reverts the distinct on a parallel pipeline and the contract
+# holds. The single expectation is CLOSED on the unmarked form, so it fails the
+# moment the guard stops filtering.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/217-unordered-permits-distinct.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/IntStream",
+        v1 ↦ "unordered",
+        v2 ↦ "()Ljava/util/stream/BaseStream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "fusion/X",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.distinct, class ↦ "fusion/X", stream-class ↦ "java/util/stream/Stream" ⟧

@@ -5,6 +5,13 @@
 # Folds Φ.hone.distinct (produced by 216) into a Φ.hone.distill, exactly
 # like 305 folds a filter — distinct is "a filter that owns a seen-set".
 #
+# The trailing 𝐵-marks wildcard in the pattern is what lets this rule fold the
+# pragma whether or not `217-unordered-permits-distinct` has stamped it
+# `unordered ↦ Φ.true` (#975). That mark exists to steer 224/225, which are
+# closed on the unmarked form and therefore leave a marked pragma alone; it
+# says nothing this fold needs, and nothing ever strips it, so the wildcard
+# absorbs it here and the distill comes out the same either way.
+#
 # The per-element state, a thread-safe seen-set built by
 # java.util.concurrent.ConcurrentHashMap.newKeySet(), is carried as the
 # `state` binding: a block of bytecode that APPENDS a fresh set to the
@@ -37,7 +44,8 @@ pattern: |
   ⟦
     φ ↦ Φ.hone.distinct,
     class ↦ 𝑒-class,
-    stream-class ↦ 𝑒-stream-class
+    stream-class ↦ 𝑒-stream-class,
+    𝐵-marks
   ⟧
 result: |
   ⟦

@@ -42,6 +42,15 @@
 # `coll.parallelStream().…distinct()`); its sibling `225` covers the call after
 # the distinct (`source.distinct().parallel()`). Binding groups are
 # order-preserving, so both layouts need their own rule.
+# NOT every parallel pipeline any more: the contract above is conditional on
+# the stream being ORDERED, and `BaseStream.unordered()` drops that condition,
+# since an unordered `distinct()` may keep any element among equals — which is
+# what the seen-set already does. `217-unordered-permits-distinct` stamps
+# `unordered ↦ Φ.true` on a pragma an explicit `unordered()` call precedes, and
+# this rule's pattern is CLOSED on the three-binding form `216` emits, so a
+# marked pragma stops matching here and keeps its fusion (#975). Do not add a
+# trailing wildcard to that object: it is what makes the mark work.
+#
 name: parallel-reverts-distinct
 pattern: |
   ⟦

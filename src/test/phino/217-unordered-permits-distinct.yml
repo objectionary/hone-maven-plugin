@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 217 stamps `unordered ↦ Φ.true` on a Φ.hone.distinct that an explicit
+# `unordered()` call precedes, which is what makes 224/225 — closed on the
+# three-binding form 216 emits — leave it alone and let the fusion stand on a
+# parallel pipeline (#975).
+#
+# The body holds TWO distinct pragmas around one `unordered()` call, which is
+# the whole point of the pack: the ordering asymmetry is load bearing, not
+# incidental. `unordered()` marks a stream unordered from that point ON, so a
+# distinct AFTER it sees an unordered stream and may keep any element among
+# equals, while a distinct BEFORE it ran on a stream that was still ordered and
+# is still bound by the stability contract 224 protects.
+#
+# So exactly one of the two comes out marked. The first expectation is CLOSED on
+# the unmarked form and therefore only matches a pragma that was left alone; the
+# second names the mark. Both matching proves the rule marked one and not the
+# other — if it marked both, the closed pattern fails; if it marked neither, the
+# second fails.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/217-unordered-permits-distinct.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op0 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "fusion/X",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "unordered",
+        v2 ↦ "()Ljava/util/stream/BaseStream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.distinct,
+        class ↦ "fusion/X",
+        stream-class ↦ "java/util/stream/Stream"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.distinct, class ↦ "fusion/X", stream-class ↦ "java/util/stream/Stream" ⟧
+  - ⟦ φ ↦ Φ.hone.distinct, class ↦ "fusion/X", stream-class ↦ "java/util/stream/Stream", unordered ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, v1 ↦ "unordered", 𝐵-t ⟧

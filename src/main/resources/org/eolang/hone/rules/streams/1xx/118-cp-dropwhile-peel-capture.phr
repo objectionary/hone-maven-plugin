@@ -3,7 +3,7 @@
 ---
 # yamllint disable rule:line-length
 # The cp-dropWhile mirror of 118: peels one captured push off a
-# Φ.hone.cp-dropWhile and folds it into the operator's shared-List state. 113's
+# Φ.hone.local-cp-dropWhile and folds it into the operator's shared-List state. 113's
 # dropWhile twin emits the pragma with the whole run of pushes still inline in
 # front of it, empty accumulators, and `captures` — the factory descriptor's
 # parameter list, one code per capture.
@@ -34,7 +34,7 @@ pattern: |
     𝐵-h,
     𝜏-push ↦ 𝑒-push,
     𝜏-cd ↦ ⟦
-      φ ↦ Φ.hone.cp-dropWhile,
+      φ ↦ Φ.hone.local-cp-dropWhile,
       state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
       body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
       skip-acc ↦ ⟦ 𝐵-kacc, ρ ↦ ∅ ⟧,
@@ -48,7 +48,7 @@ result: |
   ⟦
     𝐵-h,
     𝜏-cd ↦ ⟦
-      φ ↦ Φ.hone.cp-dropWhile,
+      φ ↦ Φ.hone.local-cp-dropWhile,
       state-acc ↦ ⟦
         𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
         𝜏-load ↦ 𝑒-push,

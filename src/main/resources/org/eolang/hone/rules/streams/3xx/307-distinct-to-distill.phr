@@ -42,7 +42,7 @@
 name: distinct-to-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.distinct,
+    φ ↦ Φ.hone.local-distinct,
     class ↦ 𝑒-class,
     stream-class ↦ 𝑒-stream-class,
     𝐵-marks

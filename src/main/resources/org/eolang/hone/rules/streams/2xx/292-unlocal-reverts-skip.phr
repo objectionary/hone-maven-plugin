@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The skip half of the locality guard (#971). `291` renamed every stateful
+# pragma whose chain provably starts at a sequential source and ends at a
+# terminal IN THIS BODY; anything still carrying the bare name could not be
+# proved local, so its stream may have been handed in by a caller who made it
+# parallel — `tail(items.parallelStream())` — and the shared countdown long[1] it would fuse into
+# races across ForkJoin workers. This rule puts it back as the native call.
+#
+# It is the twin of `222`'s result, with the trigger changed: that rule fires
+# when a `parallel()` call is visible in the method, this one when locality could
+# not be established at all. The two compose — `222` runs first and takes the
+# visibly parallel chains, `291` marks the provably local remainder, and whatever
+# is left over arrives here.
+#
+# The skip's count push rides back out with it, which is why this rule carries
+# the enclosing binding groups: one pragma becomes TWO siblings in the body, and
+# a rule whose whole pattern is the pragma would nest them in one object that
+# jeo cannot assemble.
+#
+# The reverted opcode carries `reverted ↦ Φ.true`, the fifth-operand marker
+# `441`/`442`/`454` use: the recogniser that lifted this pragma is closed on the
+# four-operand form jeo emits, so it cannot lift the result again and no cycle
+# can spin. jeo ignores the extra binding when assembling.
+name: unlocal-reverts-skip
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-skip ↦ ⟦
+      φ ↦ Φ.hone.skip,
+      class ↦ 𝑒-class,
+      stream-class ↦ 𝑒-stream-class,
+      push ↦ 𝑒-push
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push-back ↦ 𝑒-push,
+    𝜏-skip-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      i2 ↦ 𝑒-stream-class,
+      i3 ↦ "skip",
+      i4 ↦ "(J)Ljava/util/stream/Stream;",
+      i5 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+where:
+  - meta: 𝜏-push-back
+    function: random-tau
+  - meta: 𝜏-skip-call
+    function: random-tau

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# Folds a Φ.hone.cp-dropWhile (a capturing dropWhile recognised by 113's twin
+# Folds a Φ.hone.local-cp-dropWhile (a capturing dropWhile recognised by 113's twin
 # and gathered by 118's) into a stateful Φ.hone.distill. It is 310's latch guard
 # and 314's capture park/reload in one body, which is the whole of #981: the
 # one-cell int[1] latch 310 builds cannot live beside the captures, it has to
@@ -54,7 +54,7 @@
 name: cp-dropwhile-to-distill
 pattern: |
   ⟦
-    φ ↦ Φ.hone.cp-dropWhile,
+    φ ↦ Φ.hone.local-cp-dropWhile,
     state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
     body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
     skip-acc ↦ ⟦ 𝐵-kacc, ρ ↦ ∅ ⟧,

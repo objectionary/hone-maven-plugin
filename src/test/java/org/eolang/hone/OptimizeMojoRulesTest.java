@@ -266,7 +266,7 @@ final class OptimizeMojoRulesTest {
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
-            .file("src/rules/a-few/001.yaml").write(
+            .file("src/rules/a few/001.yaml").write(
                 """
                 name: hello-to-bye
                 pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 68-65-6C-6C-6F ⟧ )'
@@ -274,7 +274,7 @@ final class OptimizeMojoRulesTest {
                 """.getBytes(StandardCharsets.UTF_8)
             );
         fea.files()
-            .file("src/rules/a-few/002.yaml").write(
+            .file("src/rules/a few/002.yaml").write(
                 """
                 name: mama-to-papa
                 pattern: 'Φ.bytes ( φ ↦ ⟦ Δ ⤍ 6D-61-6D-61 ⟧ )'
@@ -327,7 +327,7 @@ final class OptimizeMojoRulesTest {
                 new String[] {
                     "src/rules/first.yaml",
                     "src/rules/second.yaml",
-                    "src/rules/a-few",
+                    "src/rules/a few",
                 }
             )
             .set("image", image)

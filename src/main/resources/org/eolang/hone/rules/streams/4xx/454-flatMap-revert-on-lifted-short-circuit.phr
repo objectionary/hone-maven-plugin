@@ -12,9 +12,10 @@
 # the downstream short-circuit is matched in.
 #
 # The sibling binds that short-circuit as a raw `Φ.jeo.opcode.invokeinterface`
-# or `invokevirtual` and tests its method operand against the seven names. In
-# practice that reaches only the three which take no lambda — `limit`,
-# `findFirst`, `findAny`. The other four all take one, so by the time the 4xx
+# or `invokevirtual` and tests its method operand against the eight names. In
+# practice that reaches only the four which take no lambda — `limit`,
+# `findFirst`, `findAny` and `gather`, the last of which joined the list for
+# #972. The other four all take one, so by the time the 4xx
 # pass runs `111-invokedynamic-to-lambda` has folded each of their
 # invokedynamic + invokeinterface pairs into a single `Φ.hone.lambda` and there
 # is no opcode left for the sibling's pattern to see: `takeWhile`, `anyMatch`,
@@ -27,13 +28,17 @@
 #
 # Matching the lifted form here closes that half: `𝜏-short` is bound as a
 # `Φ.hone.lambda` and the `method` of its `stream` block is tested against the
-# same seven names. Nothing between 111 and 701 claims those four operators —
+# same eight names. Nothing between 111 and 701 claims those four operators —
 # no 2xx rule recognises them, so no distill ever swallows them — which is why
 # the lambda is still intact at this point and one pattern suffices. The name
-# list is kept character-identical in both rules rather than split three/four,
+# list is kept character-identical in both rules rather than split four/four,
 # so the pair reads as one guard and neither drifts: `limit` cannot appear in
 # this form (it takes a `long`, not a functional interface) and the two
 # lambda-free terminals cannot either, so the extra names simply never match.
+# `gather` is the borderline one: `Gatherer` has a single abstract method, so
+# javac will accept a lambda for it and `111` would lift that — which is
+# precisely why the name belongs in both lists rather than only in the
+# sibling's.
 # A capturing short-circuit — `takeWhile(n -> n < bound)` — is not lifted by
 # `111` either (its pattern requires a non-capturing `()...` interface), so it
 # arrives as the raw opcode the sibling already handles.
@@ -144,7 +149,7 @@ result: |
 when:
   and:
     - matches: ['^flatMap(ToInt|ToLong|ToDouble)?$', 𝑒-stream-method]
-    - matches: ['^(limit|takeWhile|findFirst|findAny|anyMatch|allMatch|noneMatch)$', 𝑒-sstream-method]
+    - matches: ['^(limit|takeWhile|findFirst|findAny|anyMatch|allMatch|noneMatch|gather)$', 𝑒-sstream-method]
 where:
   - meta: 𝜏-invokedynamic
     function: random-tau

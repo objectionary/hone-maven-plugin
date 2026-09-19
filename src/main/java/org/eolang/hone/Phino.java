@@ -61,10 +61,12 @@ final class Phino {
             final Thread pump = new Thread(
                 () -> Phino.pump(stdout, proc.getInputStream())
             );
+            pump.setDaemon(true);
             pump.start();
             final Thread errs = new Thread(
                 () -> Phino.pump(new ByteArrayOutputStream(), proc.getErrorStream())
             );
+            errs.setDaemon(true);
             errs.start();
             final boolean probed = proc.waitFor(3L, TimeUnit.SECONDS);
             if (probed) {
@@ -73,8 +75,10 @@ final class Phino {
                 available = Phino.version(proc, stdout, expected, this);
             } else {
                 proc.destroyForcibly();
-                pump.interrupt();
+                proc.getInputStream().close();
+                proc.getErrorStream().close();
                 pump.join(TimeUnit.SECONDS.toMillis(1L));
+                errs.join(TimeUnit.SECONDS.toMillis(1L));
                 Logger.info(
                     this,
                     "The 'phino --version' probe timed out, we must use Docker"
@@ -103,7 +107,11 @@ final class Phino {
                 stdout.write(buffer, 0, read);
             }
         } catch (final IOException ex) {
-            throw new IllegalStateException(ex);
+            Logger.debug(
+                Phino.class,
+                "Reading of the 'phino' probe stream stopped: %s",
+                ex.getMessage()
+            );
         }
     }
 

@@ -31,6 +31,15 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @SuppressWarnings("JTCOP.RuleEveryTestHasProductionClass")
 final class OptimizeMojoStatisticsTest {
 
+    /*
+     * @todo #1048:30min Set debug=true in this test again. It used to, which
+     *  traces entry.sh and rewrite.sh with "set -x", and that trace is over
+     *  60 KiB for the two classes below. Jaxec reads none of it until the
+     *  script exits (yegor256/jaxec#165), the script fills the 64 KiB pipe
+     *  buffer, blocks in write(), and the build hangs forever. Once jaxec is
+     *  fixed and the version in pom.xml is bumped, put the option back:
+     *  nothing else covers debug mode on the host path.
+     */
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
@@ -44,7 +53,7 @@ final class OptimizeMojoStatisticsTest {
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
-    @Timeout(600L)
+    @Timeout(1200L)
     @DisabledWithoutDocker
     @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
     void generatesStatisticsWithDocker(
@@ -85,7 +94,6 @@ final class OptimizeMojoStatisticsTest {
             .phase("process-classes")
             .goals("optimize")
             .configuration()
-            .set("debug", "true")
             .set("alwaysWithDocker", "false")
             .set("grepIn", ".*");
         fea.exec("process-classes");

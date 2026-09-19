@@ -143,6 +143,22 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     /**
+     * Returns the version of this plugin.
+     *
+     * @return The version of hone-maven-plugin
+     * @throws IOException If reading the version fails
+     */
+    protected String hone() throws IOException {
+        final String version = new IoCheckedText(
+            new TextOf(
+                new ResourceOf("org/eolang/hone/hone-version.txt")
+            )
+        ).asString().trim();
+        Logger.debug(this, "The version of hone-maven-plugin is %s", version);
+        return version;
+    }
+
+    /**
      * Returns the phino version to use.
      *
      * @return The phino version

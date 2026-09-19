@@ -195,7 +195,13 @@ if streams_selected; then
   declare -a outdated=()
   while IFS= read -r classfile; do
     [ -z "${classfile}" ] && continue
-    read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}")
+    high=''
+    low=''
+    if ! read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}" 2> /dev/null) || [ -z "${low}" ]; then
+      outdated+=("${classfile}")
+      echo "The file '${classfile}' is too short to carry a class version, so it stays out of the pipeline"
+      continue
+    fi
     class_version=$(( high * 256 + low ))
     if [ "${class_version}" -lt 60 ]; then
       outdated+=("${classfile}")

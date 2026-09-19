@@ -206,6 +206,17 @@ An operation whose argument is an OBJECT rather than a lambda
 Rules `215-recognize-named-map` and `215-recognize-named-filter`
   lift that run the way `216-` lifts a bare `distinct`,
   with the constructor's own pushes bound whole when it captures (#1008).
+A capturing constructor is taken whatever its arguments weigh (#1029).
+The run being lifted is javac's own
+  and stands at the depth javac sized `max_stack` for,
+  so relocating it into `502`'s state append
+  costs the two cells of the `ArrayList` beneath it and nothing else —
+  the arguments cancel.
+The fixed bump of 6 that `502` applies
+  is sized for `307`'s and `308`'s appends,
+  which materialise a `HashSet` and a `long[]`
+  that were never in the original bytecode,
+  and it covers a relocated append several times over.
 An operator that is LOADED rather than built —
   out of a parameter, a local, or a static field —
   has no such run to anchor on,
@@ -672,14 +683,6 @@ It is a fusion barrier:
 // pushes it, so they admit only lconst_0, lconst_1 and ldc; anything
 // computed is left as it is rather than baked in wrong.
 stream.skip(list.size() - 3L)
-
-// A map or a filter whose OBJECT argument is built by a constructor
-// taking more than two stack slots (#1008). 215 carries the pushes into
-// the state append 502 relocates, which peaks at four slots with no
-// arguments; 502 bumps max-stack by a fixed 6, so two more fit and a
-// third would overflow a budget nobody widened. One reference, one int,
-// one long or two one-slot arguments all fuse.
-stream.map(new Wide(a, b, c))
 
 // A map or a filter reading its operator from an INSTANCE field
 // (#1014). 215-recognize-ref-map takes an aload or a getstatic, each of

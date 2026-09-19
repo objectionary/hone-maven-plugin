@@ -34,6 +34,16 @@
 #     while 215 pinned the descriptor to `()V`; #1008 binds the pushes between
 #     the `dup` and the `<init>` whole, so it fuses now, and the list it prints
 #     proves the mapper still runs and still multiplies by three.
+#   * wide    — `new Between(2, 6L, "x")` and `new Wide(by, add, scale)`, a
+#     predicate and a mapper whose constructors weigh five and six JVM slots.
+#     #1008 admitted two and refused the rest, on the reading that 502's fixed
+#     bump of 6 left room for exactly two more cells; #1029 took the guard off,
+#     because the run being relocated is javac's own and stood at this very
+#     depth already — all the relocation adds is the two cells of the ArrayList
+#     beneath it, whatever the arguments weigh. This method declares stack=8 for
+#     the unfused form and the fused prologue peaks at 10, so the arithmetic is
+#     visible in the class file. Both fuse into one mapMultiToInt: {3, 4, 5}
+#     survive the predicate, (n * 2 + 10) * 1.5 truncates to {24, 27, 30} -> 81.
 #   * elided  — `Stream.of(1, 2, 3).map(new Loud()).count()`, the literal line
 #     in the issue, in a method of its own. The JDK answers that `count()` from
 #     the spliterator without running the pipeline, so `Loud.apply` is called
@@ -56,13 +66,17 @@
 # `Function.apply`. Rewritten by master's rules this class gives iinc 1 and
 # checkcast 3; by these, 8 and 17.
 #
-# The counts moved once since they were written. #1008 taught 215 the capturing
-# constructor, which brought `scaled` into the fused set — one more mapMulti
-# dispatch, one more fetch, two more casts, so 4/7/15 became 5/8/17. #1011
-# landed that widening without re-measuring this fixture, and the same PR left
-# 247's pattern closed on the pre-#1008 binding list, so the narrowing it exists
-# for stopped firing and the class failed JVM verification with "Type
-# 'java/lang/Object' is not assignable to 'java/lang/Integer'" (#1022).
+# The counts have moved twice since they were written. #1008 taught 215 the
+# capturing constructor, which brought `scaled` into the fused set — one more
+# mapMulti dispatch, one more fetch, two more casts, so 4/7/15 became 5/8/17.
+# #1011 landed that widening without re-measuring this fixture, and the same PR
+# left 247's pattern closed on the pre-#1008 binding list, so the narrowing it
+# exists for stopped firing and the class failed JVM verification with "Type
+# 'java/lang/Object' is not assignable to 'java/lang/Integer'" (#1022). Then
+# #1029 added the `wide` pair above: one more fused run (5 -> 6 dispatches, and
+# 6 -> 7 before, since the pipeline brings its own `Integer::intValue`), two
+# more operators on the state List (8 -> 10 fetches) and three more casts
+# (17 -> 20).
 java: |
   package named;
   import java.util.List;
@@ -89,6 +103,24 @@ java: |
     static class Loud implements Function<Integer, Integer> {
       public Integer apply(Integer n) { X.touched = X.touched + 1; return n; }
     }
+    static class Wide implements Function<Integer, Integer> {
+      private final int by;
+      private final long add;
+      private final double scale;
+      Wide(int b, long a, double s) { this.by = b; this.add = a; this.scale = s; }
+      public Integer apply(Integer n) {
+        return (int) ((n * this.by + this.add) * this.scale);
+      }
+    }
+    static class Between implements Predicate<Integer> {
+      private final int lo;
+      private final long hi;
+      private final String tag;
+      Between(int l, long h, String t) { this.lo = l; this.hi = h; this.tag = t; }
+      public boolean test(Integer n) {
+        return n > this.lo && n < this.hi && !this.tag.isEmpty();
+      }
+    }
     static long elided() {
       return Stream.of(1, 2, 3).map(new Loud()).count();
     }
@@ -106,20 +138,27 @@ java: |
         .map(new Doubler()).map(new Tagger()).collect(Collectors.toList());
       List<Integer> scaled = Stream.of(1, 2, 3)
         .map(new Scaler(3)).collect(Collectors.toList());
+      int by = 2;
+      long add = 10L;
+      double scale = 1.5;
+      int wide = Stream.of(1, 2, 3, 4, 5, 6)
+        .filter(new Between(2, 6L, "x"))
+        .map(new Wide(by, add, scale))
+        .mapToInt(Integer::intValue).sum();
       System.out.printf(
-        "The result is %d %d %d %s %s %d %d%n",
-        paired, guarded, lifted, tagged, scaled, X.elided(), X.touched
+        "The result is %d %d %d %s %s %d %d %d%n",
+        paired, guarded, lifted, tagged, scaled, X.elided(), X.touched, wide
       );
     }
   }
 log:
   - "BUILD SUCCESS"
-  - "The result is 24 24 18 [<2>, <4>] [3, 6, 9] 3 0"
+  - "The result is 24 24 18 [<2>, <4>] [3, 6, 9] 3 0 81"
 before:
-  invokedynamic: 6
+  invokedynamic: 7
   iinc: 0
   checkcast: 2
 after:
-  invokedynamic: 5
-  iinc: 8
-  checkcast: 17
+  invokedynamic: 6
+  iinc: 10
+  checkcast: 20

@@ -1,0 +1,122 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Recognises a `.map(f)` whose mapper is not built at the call site but
+# LOADED — from a method parameter, a local, or a static field (#1014, the
+# puzzle `1008-411ebd40` left on `215-recognize-named-map`). The `refArg` case
+# of `streams/closures.yml` is the shape:
+#
+#     static int viaRefArg(Predicate<Integer> p, Function<Integer, Integer> f) {
+#       return Stream.of(1, 2, 3, 4, 5).filter(p).map(f)
+#         .mapToInt(Integer::intValue).sum();
+#     }
+#
+# THE ANCHOR IS THE CALL, not the operand. `215-recognize-named-map` keys on
+# the `new`/`dup`/`<init>` run in front of the stream call, which says both that
+# an object is being built and where the run begins. There is no such run here —
+# the operand is one `aload` or one `getstatic`, and nothing about that opcode on
+# its own distinguishes the mapper from the receiver Stream. So this rule keys on
+# the stream call's own descriptor, `(Ljava/util/function/Function;)Ljava/util/stream/Stream;`,
+# which names the functional interface, and takes the opcode IMMEDIATELY in front
+# of it. That opcode is the mapper and cannot be anything else: a JVM call site
+# pushes the receiver first and the argument last, so whatever is adjacent to a
+# one-argument `Stream.map` is what it consumes.
+#
+# Adjacency is also the whole of the guard. Where javac puts a label or a frame
+# between the load and the call, the pattern simply does not match and the
+# operation stays native — a missed fusion, never a wrong one. And a `map`
+# whose argument is an expression rather than a load ends in some other opcode:
+# `invokespecial` for a `new Foo()`, which `215-recognize-named-map` takes,
+# `invokedynamic` for a lambda or a methodref, which `111` lifted long before
+# the 2xx phase, `invokestatic` for `map(makeIt())`, which nothing takes yet.
+#
+# Only `aload` and `getstatic` are admitted, and the reason is `502`. What
+# `317` builds out of this pragma is a `state` block that the fused method's
+# caller runs once, and `502` relocates that block into the very method the
+# opcode came from — so the opcode has to be one that pushes the operator ON ITS
+# OWN. `aload` and `getstatic` are; `getfield` is not, because its receiver was
+# pushed by an opcode ahead of the run and would be left behind, stranded on the
+# caller's stack. An instance field therefore stays native.
+#
+# Everything downstream is shared with the constructed shape. The pragma is the
+# same `Φ.hone.named-map` with the same four erased type fields — `Function.apply`
+# tells us nothing about the element type, exactly as it tells `215` nothing —
+# and the only difference is what its `make` block holds: one load opcode here,
+# a whole `new`/`dup`/`args`/`<init>` run there. `317` splices whichever it is
+# between the `dup` and the `List.add` of the append, and `247` narrows the two output fields from
+# whatever consumes the item.
+name: recognize-ref-map
+pattern: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-load ↦ ⟦
+          φ ↦ Φ.jeo.opcode.𝜏-load-op,
+          𝐵-load-operands
+        ⟧,
+        𝜏-invokeinterface ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          𝜏6 ↦ "java/util/stream/Stream",
+          𝜏7 ↦ "map",
+          𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+          𝜏9 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    𝐵-class-head-before,
+    name ↦ 𝑒-class-name,
+    𝐵-class-head-after,
+    𝜏-caller ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      𝐵-caller-head,
+      body ↦ ⟦
+        𝐵-body-head,
+        𝜏-named ↦ ⟦
+          φ ↦ Φ.hone.named-map,
+          class ↦ 𝑒-class-name,
+          make ↦ ⟦
+            𝜏-make-load ↦ ⟦
+              φ ↦ Φ.jeo.opcode.𝜏-load-op,
+              𝐵-load-operands
+            ⟧,
+            ρ ↦ ∅
+          ⟧,
+          bridge-input ↦ "Ljava/lang/Object;",
+          bridge-output ↦ "Ljava/lang/Object;",
+          accepted ↦ "Ljava/lang/Object;",
+          returned ↦ "Ljava/lang/Object;",
+          static ↦ "true"
+        ⟧,
+        𝐵-body-tail
+      ⟧,
+      𝐵-caller-tail
+    ⟧,
+    𝐵-class-tail,
+    ρ ↦ ∅
+  ⟧
+when:
+  or:
+    - eq: [𝜏-load-op, 'aload']
+    - eq: [𝜏-load-op, 'getstatic']
+where:
+  - meta: 𝜏-named
+    function: random-tau
+  - meta: 𝜏-make-load
+    function: random-tau

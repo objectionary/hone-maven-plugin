@@ -35,9 +35,7 @@ pattern: |
   ⟦
     φ ↦ Φ.hone.named-filter,
     class ↦ 𝑒-class,
-    object ↦ 𝑒-object,
-    init ↦ 𝑒-init,
-    args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
+    make ↦ ⟦ 𝐵-make, ρ ↦ ∅ ⟧,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
@@ -56,16 +54,7 @@ result: |
     static ↦ 𝑒-static,
     state ↦ ⟦
       𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
-      𝜏-dup-object ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      𝐵-args,
-      𝜏-init ↦ ⟦
-        φ ↦ Φ.jeo.opcode.invokespecial,
-        i2 ↦ 𝑒-object,
-        i3 ↦ "<init>",
-        i4 ↦ 𝑒-init,
-        i5 ↦ Φ.false
-      ⟧,
+      𝐵-make,
       𝜏-add ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokeinterface,
         i2 ↦ "java/util/List",
@@ -103,12 +92,6 @@ where:
     function: random-string
     args: ['"L317%d"']
   - meta: 𝜏-dup
-    function: random-tau
-  - meta: 𝜏-new
-    function: random-tau
-  - meta: 𝜏-dup-object
-    function: random-tau
-  - meta: 𝜏-init
     function: random-tau
   - meta: 𝜏-add
     function: random-tau

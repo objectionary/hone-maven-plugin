@@ -31,6 +31,6 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-before, object ↦ "Scaler", init ↦ "(I)V", 𝐵-after ⟧
-  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-a, args ↦ ⟦ 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, 𝐵-p ⟧, ρ ↦ ∅ ⟧, 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-before, make ↦ ⟦ 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧, 𝐵-m, 𝜏-init ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧, ρ ↦ ∅ ⟧, 𝐵-after ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-a, make ↦ ⟦ 𝐵-m1, 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, 𝐵-p ⟧, 𝐵-m2, ρ ↦ ∅ ⟧, 𝐵-b ⟧
   - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧

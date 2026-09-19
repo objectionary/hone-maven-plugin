@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `.map(f)` whose mapper arrives in a method parameter rather than being
+# built at the call site (#1014). There is no `new` to anchor on, so the rule
+# keys on the stream call's descriptor and takes the opcode immediately in front
+# of it — here an `aload` — which a one-argument JVM call site guarantees is the
+# argument and not the receiver. The pragma is the same `Φ.hone.named-map` the
+# constructed shape mints; only the `make` block differs, and it holds the one
+# load opcode that puts the mapper on the stack.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/215-recognize-ref-map.phr
+input: |
+  ⟦
+    j$X ↦ ⟦
+      φ ↦ Φ.jeo.class,
+      name ↦ "Foo",
+      j$run ↦ ⟦
+        φ ↦ Φ.jeo.method,
+        name ↦ "run",
+        body ↦ ⟦
+          op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v1 ↦ 0 ⟧,
+          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v1 ↦ 0 ⟧, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧

@@ -49,9 +49,7 @@ pattern: |
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.named-map,
       class ↦ 𝑒-class,
-      object ↦ 𝑒-object,
-      init ↦ 𝑒-init,
-      args ↦ 𝑒-args,
+      make ↦ 𝑒-make,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ "Ljava/lang/Object;",
       accepted ↦ 𝑒-accepted,
@@ -72,9 +70,7 @@ result: |
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.named-map,
       class ↦ 𝑒-class,
-      object ↦ 𝑒-object,
-      init ↦ 𝑒-init,
-      args ↦ 𝑒-args,
+      make ↦ 𝑒-make,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ 𝑒-wanted,
       accepted ↦ 𝑒-accepted,

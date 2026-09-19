@@ -136,7 +136,17 @@ function rewrite {
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
   mark="${xo}.stamp"
-  if [ -f "${phi}" ] && [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${pho}" ] && [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${stamp}" ]; then
+  fresh=false
+  if [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${stamp}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${xi}" ]; then
+    if [ ! -f "${phi}" ]; then
+      # There are no intermediates, because grep-in excluded this file the
+      # previous time and the output is a plain copy of the input.
+      fresh=true
+    elif [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ "${xo}" -nt "${pho}" ]; then
+      fresh=true
+    fi
+  fi
+  if [ "${fresh}" == 'true' ]; then
     echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain, with the same rules and options; skipping transformation for ${idx}"
     return
   fi
@@ -150,6 +160,7 @@ function rewrite {
     fi
     if [ "${rc}" -ne 0 ]; then
       cp "${xi}" "${xo}"
+      printf '%s' "${stamp}" > "${mark}"
       echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
       return
     fi

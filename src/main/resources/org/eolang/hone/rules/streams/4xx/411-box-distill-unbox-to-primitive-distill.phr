@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# The box pattern carries a trailing `𝐵-box-rest` so the `user ↦ Φ.true`
+# stamp `206` puts on a real `boxed()` (#1016) does not close it: this rule
+# takes a box of either provenance, exactly as it did before the stamp.
 name: box-distill-unbox-to-primitive-distill
 pattern: |
   ⟦

@@ -8,19 +8,17 @@
 # unbox) and for the one `214` puts around a lifted distinct or skip: where two
 # split ops meet, the tail unbox of one and the head box of the next cancel,
 # and so does the head box `211` wedges right after a user `mapToInt(ref)` that
-# feeds a primitive op.
+# feeds a primitive op, and the one `208-mapToObj` mints for the crossing.
 #
-# It takes only a box THIS PASS MINTED, which is what the `synthetic` mark in
-# the pattern says: `208`, `211` and `214` stamp every box they emit, a user
-# `boxed()` lifted by `206` carries no such binding, and the closed pattern
-# therefore stops at it. The mark went in for #1016. The older reading — that
-# `209` has already folded away every genuine `mapToX(...).boxed()` round trip,
-# so whatever box is left here must be synthetic — is simply not true: `209`
-# only folds a `boxed()` that an unbox feeds, and a `boxed()` that follows a
-# primitive `distinct()` or `skip()` reaches this rule intact. Cancelling it
-# dropped the user's own boxing, left the run primitive-out while the caller
-# held a `Stream`, and `501` then emitted `mapMultiToInt` for it — an
-# `IncompatibleClassChangeError` at the first element.
+# The box pattern is CLOSED and carries no `user ↦ Φ.true`, which is what keeps
+# the user's own `boxed()` out of it (#1016). The older reading — that `209`
+# has already folded away every genuine `mapToX(...).boxed()` round trip, so
+# whatever box is left here must be synthetic — is simply not true: `209` only
+# folds a `boxed()` that an unbox feeds, and a `boxed()` written straight
+# behind a primitive `distinct()` or `skip()` reaches this rule intact.
+# Cancelling it dropped the user's own boxing, left the run primitive-out while
+# the caller held a `Stream`, and `501` then emitted `mapMultiToInt` for it —
+# an `IncompatibleClassChangeError` at the first element.
 #
 # The one user box that IS dead on arrival — a `boxed()` with the user's own
 # `mapToX` right behind it — is cancelled by `221-unbox-user-box-to-map`
@@ -45,8 +43,7 @@ pattern: |
     ⟧,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class,
-      synthetic ↦ Φ.true
+      stream-class ↦ 𝑒-stream-class
     ⟧,
     𝐵-after
   ⟧

@@ -2,6 +2,23 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# Lifts the user's own `boxed()` into a `Φ.hone.box`, and MARKS it `user ↦
+# Φ.true` — the one box in the pipeline that is the caller's element type and
+# not scaffolding. `208-mapToObj`, `211` and `214` mint boxes of their own, and
+# `221-unbox-box-to-map` cancels an unbox against whatever box follows it, so
+# without the mark it cannot tell the two apart. It could not before, either,
+# and that was #1016: a primitive `distinct()` or `skip(n)` with a `boxed()`
+# right behind it ends `214`'s sandwich in an unbox, `221` cancelled that unbox
+# against the user's box and kept only the unbox, and the boxing the user asked
+# for was gone — `501` then lowered the run to `mapMultiToInt` while the caller
+# held the `Stream` `boxed()` had promised, and the first element threw
+# `IncompatibleClassChangeError`.
+#
+# The mark is on THIS box rather than on the three synthetic ones because every
+# other rule that reads a box — `209`, `411`, the two `443-unsandwich` rules,
+# `602` — wants all of them, and a closed pattern with an extra binding in it
+# stops matching. They carry a trailing `𝐵-box-rest` for that reason and go on
+# seeing exactly what they saw before; only `221` discriminates.
 name: boxed-to-box
 pattern: |
   ⟦
@@ -15,7 +32,8 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.hone.box,
-    stream-class ↦ 𝑒-target-stream-class
+    stream-class ↦ 𝑒-target-stream-class,
+    user ↦ Φ.true
   ⟧
 when:
   or:

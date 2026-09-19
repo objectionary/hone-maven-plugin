@@ -47,8 +47,7 @@ result: |
     𝐵-before,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class,
-      synthetic ↦ Φ.true
+      stream-class ↦ 𝑒-stream-class
     ⟧,
     𝜏-lifted ↦ ⟦
       φ ↦ Φ.hone.𝜏-object-op,

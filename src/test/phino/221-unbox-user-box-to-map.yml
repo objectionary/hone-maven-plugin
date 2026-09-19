@@ -4,8 +4,8 @@
 # yamllint disable rule:line-length
 # The user box that IS safe to cancel against: a `boxed()` whose value the
 # user's own `mapToX` takes on the very next step, so the round trip is dead
-# before it starts. `221-unbox-box-to-map` declines it — the box carries no
-# `synthetic` stamp, see `221-unbox-box-to-map-user-left` — and this rule takes
+# before it starts. `221-unbox-box-to-map` declines it — the box carries 206's
+# `user ↦ Φ.true`, see `221-unbox-box-to-map-user-left` — and this rule takes
 # it instead, because the unbox it pins behind the box proves nothing downstream
 # ever sees the boxed element. The pair becomes one object map and the trailing
 # unbox stays for `451`. `boxed-filter-tail.yml` is the end-to-end shape: lose
@@ -31,7 +31,8 @@ input: |
       ⟧,
       op2 ↦ ⟦
         φ ↦ Φ.hone.box,
-        stream-class ↦ "java/util/stream/LongStream"
+        stream-class ↦ "java/util/stream/LongStream",
+        user ↦ Φ.true
       ⟧,
       op3 ↦ ⟦
         φ ↦ Φ.hone.unbox,

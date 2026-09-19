@@ -9,6 +9,12 @@
 # producing the primitive and the Wrapper.valueOf re-boxing it. It runs before
 # 211, so every unbox/box adjacency it sees is a genuine boxed() round-trip and
 # never 211's compensating box around a primitive operator.
+#
+# The box here carries 206's `user ↦ Φ.true` (#1016), because a genuine
+# `boxed()` is what this rule folds. 209's box pattern takes a trailing
+# `𝐵-box-rest` for it: the stamp would otherwise close the pattern against the
+# one pair the rule exists for, which is how `closures` and `named-objects`
+# died with a VerifyError while #1016 was being fixed the other way round.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/209-unbox-box-to-distill.phr
 input: |
@@ -30,7 +36,8 @@ input: |
       ⟧,
       op2 ↦ ⟦
         φ ↦ Φ.hone.box,
-        stream-class ↦ "java/util/stream/LongStream"
+        stream-class ↦ "java/util/stream/LongStream",
+        user ↦ Φ.true
       ⟧,
       ρ ↦ ∅
     ⟧

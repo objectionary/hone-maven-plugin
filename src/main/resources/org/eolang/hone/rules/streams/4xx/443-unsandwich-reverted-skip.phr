@@ -10,6 +10,10 @@
 # push back in front of the call, so the sandwich to collapse is box, push,
 # call, unbox — and the push comes back out with the call, in the same order
 # `212` absorbed it.
+#
+# The box pattern carries a trailing `𝐵-box-rest` so the `user ↦ Φ.true`
+# stamp `206` puts on a real `boxed()` (#1016) does not close it: this rule
+# takes a box of either provenance, exactly as it did before the stamp.
 name: unsandwich-reverted-skip
 pattern: |
   ⟦

@@ -42,6 +42,6 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ 𝐵-a, 𝜏-box ↦ ⟦ φ ↦ Φ.hone.box, stream-class ↦ "java/util/stream/IntStream", synthetic ↦ Φ.true ⟧, 𝜏-map ↦ ⟦ φ ↦ Φ.hone.map, 𝐵-b ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, 𝜏-box ↦ ⟦ φ ↦ Φ.hone.box, stream-class ↦ "java/util/stream/IntStream" ⟧, 𝜏-map ↦ ⟦ φ ↦ Φ.hone.map, 𝐵-b ⟧, 𝐵-c ⟧
   - ⟦ 𝐵-a, φ ↦ Φ.hone.map, 𝐵-b, bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/String;", accepted ↦ "I", returned ↦ "Ljava/lang/String;", 𝐵-c ⟧
   - ⟦ 𝐵-a, φ ↦ Φ.hone.map, 𝐵-b, target ↦ ⟦ 𝐵-c, method ↦ "lambda$main$0", signature ↦ "(I)Ljava/lang/String;", 𝐵-d ⟧, 𝐵-e ⟧

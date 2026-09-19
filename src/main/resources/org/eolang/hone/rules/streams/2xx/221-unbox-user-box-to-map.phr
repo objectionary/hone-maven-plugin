@@ -4,8 +4,8 @@
 # yamllint disable rule:line-length
 # The companion of `221-unbox-box-to-map`, for the one user box that IS safe to
 # cancel an unbox against: a `boxed()` whose value the user's own `mapToX`
-# consumes on the very next step. `221-unbox-box-to-map` takes only the boxes
-# this pass minted itself, because a user `boxed()` that survives into the rest
+# consumes on the very next step. `221-unbox-box-to-map` takes only a box with
+# no `user ↦ Φ.true` on it, because a user `boxed()` that survives into the rest
 # of the pipeline is the caller's element type and cancelling it loses the
 # boxing (#1016). A `boxed()` with an unbox right behind it is not that: the
 # round trip is dead on arrival — box it, unbox it again — so the seam merges
@@ -21,10 +21,9 @@
 # `mapMultiToInt`. Without this rule the run breaks in two and the class ends
 # up with twice the invokedynamic it needs.
 #
-# Runs after `221-unbox-box-to-map` — the sort is over the whole filename — so
-# a synthetic box is taken by the general rule first and only a genuine user
-# `boxed()` ever reaches this one. The box pattern is closed and carries no
-# `synthetic` mark, which is what makes that true independently of the order.
+# It pins `user ↦ Φ.true`, so the only box it ever takes is one `206` lifted
+# from a `boxed()` the user wrote; the synthetic ones are `221-unbox-box-to-map`
+# territory whether or not an unbox follows.
 name: unbox-user-box-to-map
 pattern: |
   ⟦
@@ -45,7 +44,8 @@ pattern: |
     ⟧,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class
+      stream-class ↦ 𝑒-stream-class,
+      user ↦ Φ.true
     ⟧,
     𝜏-next ↦ ⟦
       φ ↦ Φ.hone.unbox,

@@ -27,6 +27,11 @@
 # the synthetic 211 pairs as before. The `lambda$` target gate is belt-and-
 # suspenders: every 205 unbox targets a lambda$ anyway, but the gate makes the
 # "user pair only" intent explicit and survives any future reordering.
+#
+# The box pattern carries a trailing `𝐵-box-rest` so that the `user ↦ Φ.true`
+# `206` stamps on a real `boxed()` (#1016) does not close this pattern against
+# the very pair the rule exists for. The group is there to be ignored: this
+# rule wants a box of any provenance, exactly as it did before the stamp.
 name: unbox-box-to-distill
 pattern: |
   ⟦
@@ -47,7 +52,8 @@ pattern: |
     ⟧,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class
+      stream-class ↦ 𝑒-stream-class,
+      𝐵-box-rest
     ⟧,
     𝐵-after
   ⟧

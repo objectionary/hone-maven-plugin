@@ -22,7 +22,7 @@
 # native on a parallel pipeline rather than patching the adapter — this rule
 # leaves the flatMap native whenever the same method body can reach a
 # short-circuiting operator (`limit`, `takeWhile`, `findFirst`, `findAny`,
-# `anyMatch`, `allMatch`, `noneMatch`) downstream of it. phino patterns cannot
+# `anyMatch`, `allMatch`, `noneMatch`, `gather`) downstream of it. phino cannot
 # test a binding group for the ABSENCE of such a call, so instead of gating
 # 455-458 on a marker this rule takes the dual, positive route used by `442`
 # and `222`: once `111` has lifted the flatMap into a Φ.hone.lambda, if a
@@ -39,15 +39,33 @@
 # flatMap call.
 #
 # The short-circuit is bound below as a raw opcode, which reaches only the
-# three of the seven names that take no lambda: `limit`, `findFirst` and
-# `findAny`. The other four take one, so `111` has already folded them into a
-# `Φ.hone.lambda` and there is no opcode here to see — the sibling
+# four of the eight names that take no lambda: `limit`, `findFirst`, `findAny`
+# and `gather`. The other four take one, so `111` has already folded them into
+# a `Φ.hone.lambda` and there is no opcode here to see — the sibling
 # `454-flatMap-revert-on-lifted-short-circuit` (which sorts just ahead of this
 # file) carries the identical guard with `𝜏-short` bound in that lifted shape
-# instead, and between the two every one of the seven is covered (#816). Keep
+# instead, and between the two every one of the eight is covered (#816). Keep
 # the name list in the two `when` blocks character-identical: a name that
 # cannot occur in one shape simply never matches there, and splitting the list
-# three/four would let the halves drift apart.
+# four/four would let the halves drift apart.
+#
+# `gather` is the eighth and joined last (#972). A `Gatherer` whose integrator
+# returns `false` stops the upstream, and the JDK honours that through flatMap
+# the same way it honours a `limit`: `cancellationRequested()` is polled and
+# the inner spliterator is then pulled one element at a time. The fused form
+# has no such path — `455` hands the user's `BiConsumer` the downstream
+# `Consumer` directly and drains the inner stream with `forEach` — so
+# `Stream.of(1L).flatMap(x -> Stream.iterate(x, i -> i + 1)).gather(g).toList()`
+# terminates native and hangs fused, exactly as the `limit` form does. It takes
+# a `Gatherer` rather than a lambda, so it is this rule's shape that sees it.
+# The operator was preview when #816 drew up the list and reached final API
+# status in Java 24, which is the whole reason it was not on it.
+#
+# Not every gatherer short-circuits — one built from `Gatherers.map` never
+# returns `false` — and the name matches all the same. That is the same
+# over-broad reading the paragraph below defends for the other seven: the rule
+# cannot see which `Gatherer` instance reaches the call, only that one does,
+# and forfeiting a fusion is the safe direction to be wrong in.
 #
 # Detection is intentionally over-broad: any matching short-circuit anywhere
 # after the flatMap in the method reverts it, even one on an unrelated,
@@ -147,7 +165,7 @@ when:
         - eq: [𝜏-op, 'invokeinterface']
         - eq: [𝜏-op, 'invokevirtual']
     - matches: ['^flatMap(ToInt|ToLong|ToDouble)?$', 𝑒-stream-method]
-    - matches: ['^(limit|takeWhile|findFirst|findAny|anyMatch|allMatch|noneMatch)$', 𝑒-smethod]
+    - matches: ['^(limit|takeWhile|findFirst|findAny|anyMatch|allMatch|noneMatch|gather)$', 𝑒-smethod]
 where:
   - meta: 𝜏-invokedynamic
     function: random-tau

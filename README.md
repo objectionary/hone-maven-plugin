@@ -409,20 +409,30 @@ Because a `mapMulti` cannot honour cancellation, the cure mirrors the
   revert-on-parallel guard above rather than patching the adapter:
   `454-flatMap-revert-on-short-circuit` reverts the lifted `flatMap` back to its
   native call whenever the same method body reaches a `limit`, `takeWhile`,
-  `findFirst`, `findAny`, `anyMatch`, `allMatch`, or `noneMatch` downstream of
-  it, so those `flatMap`s stay unfused.
-Covering those seven names takes two rules, because by the time the 4xx pass
+  `findFirst`, `findAny`, `anyMatch`, `allMatch`, `noneMatch` or `gather`
+  downstream of it, so those `flatMap`s stay unfused.
+Covering those eight names takes two rules, because by the time the 4xx pass
   runs they no longer share a shape (#816):
-  `limit`, `findFirst` and `findAny` take no lambda and are still plain opcodes,
+  `limit`, `findFirst`, `findAny` and `gather` take no lambda and are still
+  plain opcodes,
   while `takeWhile`, `anyMatch`, `allMatch` and `noneMatch` each take one and
   have therefore been folded into a `Φ.hone.lambda` by
   `111-invokedynamic-to-lambda`.
 `454-flatMap-revert-on-short-circuit` matches the opcode shape and its sibling
   `454-flatMap-revert-on-lifted-short-circuit` the folded one, with the same
-  guard and the same seven-name list in both;
+  guard and the same eight-name list in both;
   until the second one existed the four lambda-taking names went unguarded, the
   `flatMap` was fused anyway, and the hang above stayed reachable through
   `.takeWhile(i -> i < 5)`.
+`gather` joined the list last (#972).
+A `Gatherer` whose integrator returns `false` stops the upstream
+  and the JDK honours that through `flatMap` exactly as it honours a `limit`,
+  so the same pipeline hangs when fused;
+  the operator was still a preview API when the list was drawn up
+  and reached final API status in Java 24.
+It is the one name the end-to-end fixtures cannot reach,
+  because they are compiled at `maven.compiler.release=17` —
+  the two single-rule packs are what keep it on the list.
 
 ## Why `skip` Is Only Fused on Sequential Pipelines
 

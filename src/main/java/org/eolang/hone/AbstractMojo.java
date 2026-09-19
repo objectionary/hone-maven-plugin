@@ -149,11 +149,13 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @throws IOException If reading the version fails
      */
     protected String hone() throws IOException {
-        return new IoCheckedText(
+        final String version = new IoCheckedText(
             new TextOf(
                 new ResourceOf("org/eolang/hone/hone-version.txt")
             )
         ).asString().trim();
+        Logger.debug(this, "The version of hone-maven-plugin is %s", version);
+        return version;
     }
 
     /**

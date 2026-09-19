@@ -37,6 +37,19 @@
 # maxs bindings "m1" (max-stack) and "m2" (max-locals), so they are matched by
 # those literal names — a 𝜏- metavariable used as a binding NAME no longer binds
 # to a scalar value (see 112).
+#
+# TWO KINDS OF APPEND end up here and only one of them needs a number of its
+# own. 307's and 308's MATERIALISE a state object — a HashSet, a `long[1]` —
+# that was never in the class jeo disassembled, so nothing javac wrote down
+# covers them and the 6 is sized for the deeper of the two. 112's boxing append
+# and 317's object-operator append RELOCATE opcodes javac emitted, and they
+# arrive at the depth javac emitted them at: the original ran
+# `[.., stream, Foo, Foo, <args>]` right here and `max_stack` was sized for it,
+# so putting the same run above the ArrayList costs exactly the two cells of
+# `[.., stream, list, list, ...]` and nothing else. The arguments cancel, so a
+# relocated append is +2 however wide its constructor is — which is why 215 no
+# longer bounds one (#1029), and why the 6 that 308 asks for covers every
+# relocated append several times over.
 name: distill-state-to-mapMulti
 pattern: |
   ⟦
@@ -148,9 +161,10 @@ result: |
 where:
   # Six is the peak of the deepest state append, 308's: from [.. list] it goes
   # iconst_1, newarray, dup, iconst_0, <2-slot count push> before lastore
-  # collapses it back. 307's is three and the leading new/dup pair is two, so one
-  # bump covers them all, however many appends 401 fused into this distill —
-  # every append starts and ends at [.. list].
+  # collapses it back. 307's is three and the leading new/dup pair is two, and a
+  # RELOCATED append (112's, 317's) needs two whatever it carries, for the reason
+  # the header gives. So one bump covers them all, however many appends 401 fused
+  # into this distill — every append starts and ends at [.. list].
   - meta: 𝑒-bumped-stack
     function: sum
     args: [𝑒-max-stack, '6']

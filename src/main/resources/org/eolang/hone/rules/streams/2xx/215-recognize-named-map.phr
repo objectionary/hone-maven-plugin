@@ -47,13 +47,31 @@
 # that would pair `new Foo` with `Bar.<init>` cannot bind one 𝑒-object to two
 # names.
 #
-# The `when` guard bounds the arguments to two JVM slots, which is not a
-# limitation of the shape but of the stack. 502 bumps the caller's max-stack by a
-# fixed 6, sized for the deepest existing append (308's); this append peaks at 4
-# with no arguments, so two more slots reach exactly the 6 already guaranteed and
-# a third would need a bump nobody made. One reference, one int, one long, one
-# double or two one-slot arguments all pass, which is every capturing mapper
-# worth writing.
+# THE ARGUMENTS ARE NOT BOUNDED, and the `when` guard that used to bound them to
+# two JVM slots was reasoning from the wrong base (#1029). It read: `502` bumps
+# the caller's max-stack by a fixed 6, this append peaks at four cells with no
+# arguments, so two more slots reach the guarantee and a third overflows it. The
+# arithmetic is right and the premise is wrong — it measures the append against
+# nothing, when javac has already measured most of it.
+#
+# The run this rule lifts is javac's own. `new Foo; dup; <args>; invokespecial`
+# stood right here, at this very stack depth, in the class jeo disassembled, so
+# `max_stack` was sized for its peak: with the source stream below it the
+# original reached `[.., stream, Foo, Foo, <args>]`. `502` relocates the same
+# opcodes to the same point and puts them above the ArrayList it builds, so the
+# fused peak is `[.., stream, list, list, Foo, Foo, <args>]` — the identical run
+# with TWO more cells under it. The arguments cancel out of the difference
+# whatever they are, one slot or nine, and so does whatever transient depth the
+# argument expressions reach on their way: javac counted that too, at the same
+# base.
+#
+# So a relocated append needs `max_stack + 2`, and `502` gives it 6. The 6 is
+# sized for `307`'s and `308`'s appends, which build a HashSet and a `long[]`
+# that were never in the original bytecode and therefore have no number of
+# javac's to inherit. It covers this one several times over. `new Wide(a, b, c)`
+# with an int, a long and a double — six slots of arguments — fuses and loads:
+# its method declared `stack=8` for the unfused form and the fused prologue
+# peaks at 10.
 #
 # A mapper that is LOADED rather than built — out of a parameter, a local or a
 # static field — is `215-recognize-ref-map`'s (#1014). It is a different shape
@@ -61,13 +79,6 @@
 # keys on the stream call's descriptor and takes the opcode adjacent to it. What
 # the two share is everything downstream — the same pragma, differing only in
 # what its `make` block holds.
-#
-# @todo #1008:45min Fuse a constructor whose arguments exceed two JVM slots.
-#  The `when` below bounds them for the stack reason above: `502` bumps the
-#  caller's max-stack by a fixed 6 and this append peaks at 4 with no arguments,
-#  so two more slots reach exactly what is guaranteed and a third would need a
-#  bump nobody made. Widening it means teaching `502` to bump by the append it
-#  actually relocated instead of by a constant.
 name: recognize-named-map
 pattern: |
   ⟦
@@ -153,8 +164,6 @@ result: |
     𝐵-class-tail,
     ρ ↦ ∅
   ⟧
-when:
-  matches: ['^\(((\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])|[JD]|(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ]))?\)V$', 𝑒-init]
 where:
   - meta: 𝜏-named
     function: random-tau

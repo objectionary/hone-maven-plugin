@@ -17,6 +17,13 @@
 # Because the folded body opens with its own `dup`, a named filter needs no
 # Φ.hone.dup spliced in front of it and is therefore absent from 281 and 283 —
 # exactly as the capturing filter 113 lifts is.
+#
+# A capturing constructor is taken whatever its arguments weigh, and the twin's
+# header carries the argument for why (#1029): the `new`/`dup`/args/`<init>` run
+# is javac's own, standing at the depth javac sized `max_stack` for, so the only
+# thing `502`'s relocation adds is the two cells of the ArrayList beneath it.
+# Both rules used to refuse a constructor past two slots on a stack argument
+# that measured the append against nothing.
 name: recognize-named-filter
 pattern: |
   ⟦
@@ -102,8 +109,6 @@ result: |
     𝐵-class-tail,
     ρ ↦ ∅
   ⟧
-when:
-  matches: ['^\(((\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])|[JD]|(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ]))?\)V$', 𝑒-init]
 where:
   - meta: 𝜏-named
     function: random-tau

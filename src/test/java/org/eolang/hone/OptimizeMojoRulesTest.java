@@ -137,7 +137,7 @@ final class OptimizeMojoRulesTest {
         );
         final String timing = fea.files().file("target/hone-timings.csv").content();
         final Matcher mtc = Pattern.compile(
-            String.format("optimize,(?<msec>[0-9]+)%n")
+            String.format("\"optimize\";(?<msec>[0-9]+)%n")
         ).matcher(timing);
         MatcherAssert.assertThat(
             String.format("timing must exist in [%s]", timing),

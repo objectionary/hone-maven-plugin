@@ -86,6 +86,21 @@ jobs:
             sudo chmod +x /usr/bin/phino
           fi
           phino --pin="${version}" --version
+      # A test that finds "phino" on the host runs "rewrite.sh" on the host
+      # too, and that script refuses to rewrite in more than one thread
+      # without GNU Parallel, by the decision of #409. The EC2 AMI doesn't
+      # carry it, so ever since the step above started putting "phino" on the
+      # PATH, 79 of those tests died with "parallel: command not found" and
+      # the deep suite was never green (see #1042).
+      - name: install-parallel
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          if ! command -v parallel > /dev/null; then
+            sudo apt-get update --quiet
+            sudo apt-get install --yes --no-install-recommends parallel
+          fi
+          parallel --version | head -1
       - uses: actions/cache@v6
         with:
           path: ~/.m2/repository

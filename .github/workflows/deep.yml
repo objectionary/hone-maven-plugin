@@ -8,6 +8,9 @@ name: deep
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+concurrency:
+  group: deep-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   start-instance:
     runs-on: ubuntu-24.04

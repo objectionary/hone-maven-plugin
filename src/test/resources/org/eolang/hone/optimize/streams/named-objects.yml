@@ -8,7 +8,7 @@
 # 111 never minted a Φ.hone.lambda for it and every 2xx recogniser walked past
 # the operation as if it were not there. On master this class keeps seven
 # `Stream.map` calls and one `Stream.filter` native; with 215/247/317 it keeps
-# two, and both of those are kept on purpose.
+# ONE, and that one is kept on purpose.
 #
 # The object is built ONCE when the pipeline is assembled and its `apply` is
 # called per element, which is exactly what the shared state List already does
@@ -30,9 +30,10 @@
 #     to land ahead of the dropWhile's latch prologue.
 #   * tagged  — two object mappers in a row, the second changing the element
 #     type from Integer to String, collected rather than counted.
-#   * scaled  — `new Scaler(3)`, a CAPTURING constructor. 215 pins `()V`, so
-#     this one stays native on purpose; the list it prints proves the mapper
-#     still runs and still multiplies by three.
+#   * scaled  — `new Scaler(3)`, a CAPTURING constructor. It stayed native
+#     while 215 pinned the descriptor to `()V`; #1008 binds the pushes between
+#     the `dup` and the `<init>` whole, so it fuses now, and the list it prints
+#     proves the mapper still runs and still multiplies by three.
 #   * elided  — `Stream.of(1, 2, 3).map(new Loud()).count()`, the literal line
 #     in the issue, in a method of its own. The JDK answers that `count()` from
 #     the spliterator without running the pipeline, so `Loud.apply` is called
@@ -47,13 +48,21 @@
 # here that a rewrite producing a class that loads but computes the wrong
 # answer could not fake.
 #
-# `invokedynamic` is NOT what proves the fix. It falls from 6 to 4 here, but it
-# falls to 4 on master's rules as well: each dispatch a fused object operation
-# removes is replaced by the mapMulti dispatch that takes its place, and the
-# plain lambdas either side of it were fusing already. What moves is `iinc`,
-# one per Φ.hone.fetch that 521 lowers, and `checkcast`, the fetch's own
-# narrowing plus the cast 317 puts behind every `Function.apply`. Rewritten by
-# master's rules this class gives iinc 1 and checkcast 3; by these, 7 and 15.
+# `invokedynamic` is NOT what proves the fix. An object operation carries no
+# invokedynamic of its own — that is the whole reason 111 never saw it — so
+# fusing one cannot remove a dispatch, and the mapMulti it becomes adds one.
+# What moves with the fix is `iinc`, one per Φ.hone.fetch that 521 lowers, and
+# `checkcast`, the fetch's own narrowing plus the cast 317 puts behind every
+# `Function.apply`. Rewritten by master's rules this class gives iinc 1 and
+# checkcast 3; by these, 8 and 17.
+#
+# The counts moved once since they were written. #1008 taught 215 the capturing
+# constructor, which brought `scaled` into the fused set — one more mapMulti
+# dispatch, one more fetch, two more casts, so 4/7/15 became 5/8/17. #1011
+# landed that widening without re-measuring this fixture, and the same PR left
+# 247's pattern closed on the pre-#1008 binding list, so the narrowing it exists
+# for stopped firing and the class failed JVM verification with "Type
+# 'java/lang/Object' is not assignable to 'java/lang/Integer'" (#1022).
 java: |
   package named;
   import java.util.List;
@@ -111,6 +120,6 @@ before:
   iinc: 0
   checkcast: 2
 after:
-  invokedynamic: 4
-  iinc: 7
-  checkcast: 15
+  invokedynamic: 5
+  iinc: 8
+  checkcast: 17

@@ -19,6 +19,14 @@
 # The guard admits only a single reference parameter, which is every shape 205
 # admits; a primitive one would mean a mapToX reading an IntStream, which a
 # Stream.map cannot feed.
+
+# The pragma pattern is CLOSED, so it must list every binding 215 mints — the
+# `init` descriptor and the `args` block #1008 added included. It did not, and
+# between #1011 and #1022 this rule therefore matched nothing at all: the
+# narrowing never happened, `returned` stayed Object, and 317 emitted a
+# `checkcast java/lang/Object` in front of a consumer that wanted an Integer,
+# so the class failed JVM verification. Add a binding to what 215 emits and it
+# has to be added here too.
 name: narrow-named-map-before-unbox
 pattern: |
   ⟦
@@ -27,6 +35,8 @@ pattern: |
       φ ↦ Φ.hone.named-map,
       class ↦ 𝑒-class,
       object ↦ 𝑒-object,
+      init ↦ 𝑒-init,
+      args ↦ 𝑒-args,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ "Ljava/lang/Object;",
       accepted ↦ 𝑒-accepted,
@@ -50,6 +60,8 @@ result: |
       φ ↦ Φ.hone.named-map,
       class ↦ 𝑒-class,
       object ↦ 𝑒-object,
+      init ↦ 𝑒-init,
+      args ↦ 𝑒-args,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ 𝑒-wanted,
       accepted ↦ 𝑒-accepted,

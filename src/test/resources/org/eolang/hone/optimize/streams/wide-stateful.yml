@@ -19,7 +19,7 @@
 # Every frame in the family stays a FOUR-local frame either way, because a
 # stackmap frame lists one entry per VALUE and not per slot.
 #
-# Four pipelines, over both wide element types:
+# Six pipelines, over both wide element types:
 #   * longDrop / doubleDrop — `208`'s primitive dropWhile on a `long` and on a
 #     `double`, each with a filter behind it so the two guards share the wrapper
 #     and the counter has to walk two state vars.
@@ -30,16 +30,16 @@
 #     `boxed()`. This one is here as a GUARD RAIL rather than a new capability:
 #     `233` gives the dropWhile pragma a boxed bridge with only `accepted` and
 #     `returned` primitive, so `411`/`422` put the re-boxing back and the
-#     pipeline is correct. The two type-transparent operations lose it in the
-#     same position, which is #1016, and this pipeline is what says the
+#     pipeline is correct. The two type-transparent operations lost it in the
+#     same position, which was #1016, and this pipeline is what said the
 #     dropWhile path does not.
-#
-# `distinct()` and `skip(n)` on a wide element are NOT here, and not because of
-# the layout — that is what this change fixes. They wait on #1016: their lift
-# goes through `214`'s sandwich, whose trailing unbox `221` cancels against a
-# following user `boxed()`, keeping only the unbox. That is live on `IntStream`
-# today, so lifting them here would widen a crash rather than introduce one,
-# and `RandomPipeline` seed 18 walks into it.
+#   * longDistinct / doubleSkip — the other two stateful operators on a wide
+#     element. They were held back when #1012 landed, because their lift goes
+#     through `214`'s sandwich and #1016 was still open: `221` cancelled that
+#     sandwich's trailing unbox against the user's own `boxed()` and kept only
+#     the unbox. Every box now records which rule minted it, and the only one
+#     `221-unbox-box-to-map` refuses is the `minted ↦ "user"` box 206 lifts
+#     from a `boxed()`, so these two lift like the dropWhile does.
 #
 java: |
   package widestateful;
@@ -49,6 +49,13 @@ java: |
   public class X {
     private static final long[] LONGS = {5L, 2L, 9L, 2L, 7L, 1L, 8L, 5L};
     private static final double[] REALS = {1.5, 2.25, 1.5, 8.125, 0.5, 2.25};
+    private static long longDistinct() {
+      return LongStream.of(LONGS).map(n -> n + 1L).distinct()
+        .filter(n -> n > 3L).sum();
+    }
+    private static double doubleSkip() {
+      return DoubleStream.of(REALS).map(d -> d * 2.0).skip(2L).sum();
+    }
     private static long longDrop() {
       return LongStream.of(LONGS).map(n -> n + 1L).dropWhile(n -> n < 5L)
         .filter(n -> n > 2L).sum();
@@ -66,8 +73,9 @@ java: |
         .collect(Collectors.toList()).toString();
     }
     public static void main(String[] a) {
-      System.out.printf("R %d %s %d %s%n",
-        longDrop(), doubleDrop(), twice(), boxedAfter());
+      System.out.printf("R %d %s %d %s %d %s%n",
+        longDrop(), doubleDrop(), twice(), boxedAfter(),
+        longDistinct(), doubleSkip());
     }
   }
 grep-in: ".*"
@@ -75,14 +83,14 @@ log:
   - "Modified 1/1 X.phi"
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
-  - "R 45 28.25 45 [9, 2, 7, 1, 8, 5]"
+  - "R 45 28.25 45 [9, 2, 7, 1, 8, 5] 33 24.75"
 before:
-  invokedynamic: 11
-  invokeinterface: 17
-  invokestatic: 12
+  invokedynamic: 14
+  invokeinterface: 24
+  invokestatic: 18
   new: 0
 after:
-  invokedynamic: 4
-  invokeinterface: 24
-  invokestatic: 24
-  new: 4
+  invokedynamic: 6
+  invokeinterface: 35
+  invokestatic: 34
+  new: 7

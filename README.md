@@ -522,10 +522,35 @@ So `distinct()`, `skip()` and `dropWhile()` all stayed native
 Issues #982 and #996 each closed the `IntStream` arm of that gap
   and left the rest,
   so the backlog looked like it tracked something it did not.
-`dropWhile()` fuses on a wide element now;
-  `distinct()` and `skip()` wait on #1016,
-  which is a different defect in the same lift
-  and is live on `IntStream` today.
+All three fuse on a wide element now.
+`distinct()` and `skip()` needed one more thing than the layout,
+  and it was #1016 rather than anything about element width:
+  their lift wraps the operation in a boxing sandwich,
+  and `221` used to cancel that sandwich's trailing unbox
+  against whatever box came next —
+  including the user's own `boxed()`,
+  whose boxing then simply disappeared,
+  handing a `mapMultiToInt`'s `IntStream`
+  to code holding the `Stream` that `boxed()` promised.
+Four rules mint a box and they are not interchangeable,
+  so every box now records which one minted it:
+  `minted ↦ "user"` for a `boxed()` the user wrote,
+  `"crossing"` for `208-mapToObj`'s primitive-to-reference step,
+  `"split"` for `211`'s sandwich head
+  and `"sandwich"` for `214`'s.
+`221-unbox-box-to-map` takes every box but the user's own,
+  and `209-unbox-box-to-distill` takes only the user's and the crossing,
+  which is what its header always said it wanted
+  and what its position in the sort never actually gave it —
+  the rule set runs to a fixpoint,
+  so `209` comes round again after `211` and `214` have fired.
+The one user `boxed()` that is still safe to cancel against
+  is one the user's own `mapToX` unboxes on the very next step,
+  and `221-unbox-user-box-to-map` takes that one,
+  pinning the following unbox in its pattern
+  so the round trip it drops is provably dead.
+That defect was live on `IntStream` long before any wide element
+  could reach it.
 
 Two numbers move with the item's width,
   and both are now derived from it rather than written out:
@@ -618,13 +643,6 @@ It is a fusion barrier:
   and the code is correct, just not collapsed into a single pass.
 
 ```java
-// A distinct() or a skip(n) on a LONG or DOUBLE stream (#1016). The
-// local layout that used to stop it is gone (#1012) and dropWhile
-// fuses there now, but these two are type-transparent: their lift
-// goes through a boxing sandwich whose trailing unbox is cancelled
-// against a following user boxed(), which loses the boxing.
-LongStream.of(1L, 2L, 2L).distinct()
-
 // A skip(n) whose count is not a compile-time constant (#969). 220 and
 // 212 bake the count into the countdown by capturing the opcode that
 // pushes it, so they admit only lconst_0, lconst_1 and ldc; anything

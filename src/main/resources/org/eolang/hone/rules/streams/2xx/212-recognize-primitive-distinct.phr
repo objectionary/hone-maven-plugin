@@ -23,24 +23,21 @@
 # lambda — there is no signature to read, and the element type is already fixed
 # by the stream interface.
 #
-# `IntStream` ONLY, still, and the reason is no longer the slot layout (#1012
-# widened that) but #1016: `214`'s sandwich ends in an unbox, and when the
-# user's own `boxed()` follows the operation immediately, `221` cancels that
-# unbox against it and keeps only the unbox — the re-boxing the user asked for
-# disappears and the run hands a `mapMultiToInt`'s IntStream to code holding
-# the `Stream` `boxed()` promised. That is live on `IntStream` today, so lifting
-# `LongStream` and `DoubleStream` here would not introduce the defect, only
-# widen its reach, and `RandomPipeline` seed 18 walks straight into it. The two
-# TYPE-TRANSPARENT operations are the only ones exposed: `231`/`232`/`233` give
-# their pragmas a boxed bridge with only `accepted` and `returned` primitive, so
-# `411`/`422` put the re-boxing back, which is why `dropWhile` on a wide element
-# fuses (#1012) and these two wait for #1016.
+# ALL THREE primitive stream interfaces. Two things had to be true first, and
+# both now are: #1012 made the stateful wrapper's local layout derive the slots
+# a wide item moves, and #1016 stopped `221` cancelling `214`'s trailing unbox
+# against the user's own `boxed()` — which used to drop the re-boxing the user
+# asked for and hand a `mapMultiToInt`'s IntStream to code holding a `Stream`.
+# That second one was live on `IntStream`, so it was never about which
+# interface was lifted; it just had to be fixed before the lift was widened.
 #
 # NUMBERED 212, not beside `216`, because `214`'s sandwich must land after
 # `209-unbox-box-to-distill`, which folds a user `mapToX(...).boxed()`
-# round-trip and whose header spells out why a synthetic box must never be in
-# the tree when it runs, and after `211`, so the sandwich is one `221` can
-# cancel against its neighbours like any other.
+# round-trip and must never be handed the head of this sandwich instead — the
+# `minted ↦ "sandwich"` binding `214` stamps on it is what says so now, since
+# the set runs to a fixpoint and position in the sort does not — and after
+# `211`, so the sandwich is one `221` can cancel against its neighbours like
+# any other.
 #
 # The pattern matches at class scope to capture the enclosing class name, which
 # `307` needs on the resulting distill so `401-fuse` can compose it with the
@@ -104,4 +101,7 @@ where:
     args: ['"()L"', 𝑒-stream-class, '";"']
 when:
   and:
-    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+    - or:
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']

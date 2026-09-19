@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The other half of #1016: a box the USER wrote is not cancelled. 206 stamps it
+# `minted ↦ "user"` and 221's `when` admits every other box but not that one,
+# so the pair
+# survives as an unbox and a box, which 603 and 602 lower back into the
+# `mapToInt(Wrapper::xValue)` and the `boxed()` the user's pipeline had.
+# Cancelling here kept only the unbox, and the run then handed a
+# `mapMultiToInt`'s IntStream to code holding a `Stream`.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/221-unbox-box-to-map.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.unbox,
+        opcode ↦ "invokevirtual",
+        class ↦ "A",
+        bridge-signature ↦ "(Ljava/lang/Long;)J",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 5,
+          class ↦ "java/lang/Long",
+          method ↦ "longValue",
+          signature ↦ "()J",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.box,
+        stream-class ↦ "java/util/stream/LongStream",
+        minted ↦ "user"
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ "java/util/stream/LongStream",
+      minted ↦ "user"
+    ⟧
+  - ⟦ 𝐵-a, 𝜏-u ↦ ⟦ φ ↦ Φ.hone.unbox, 𝐵-c ⟧, 𝜏-b ↦ ⟦ φ ↦ Φ.hone.box, 𝐵-d ⟧, 𝐵-b ⟧

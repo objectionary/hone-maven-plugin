@@ -31,6 +31,20 @@
 #   * parallel      — `parallelStream`-fed distinct AND skip. `222`/`224`
 #     revert both for the encounter-order and data-race reasons #738 and #715
 #     give, and the un-sandwich rules put them back as native primitive calls.
+#   * boxedAfter / boxedAfterSkip — the operation followed IMMEDIATELY by the
+#     user's own `boxed()`, which is #1016. `214`'s sandwich ends in an unbox
+#     and `221` used to cancel that unbox against the next box it found; when
+#     that box was the user's it kept only the unbox, so the re-boxing the user
+#     asked for disappeared and the run handed a `mapMultiToInt`'s IntStream to
+#     code holding the `Stream` `boxed()` promised —
+#     "IncompatibleClassChangeError: ReferencePipeline$12 does not implement
+#     java.util.stream.Stream". Every box now records which rule minted it, and
+#     `221-unbox-box-to-map` takes every one but the `minted ↦ "user"` box 206
+#     lifts from a `boxed()`, so the user's survives. The one user box still
+#     cancelled is one an unbox takes straight back — `boxed().mapToInt(...)`,
+#     which `221-unbox-user-box-to-map` handles and `boxed-filter-tail.yml`
+#     covers. These two pipelines did not load at all before the fix, which
+#     makes the printed line their whole assertion.
 #   * ownLine       — `.skip(2)` written on its own source line. `212` needs
 #     the count push and the call adjacent, exactly as `220` does, and this
 #     layout is the one that separates them; `219` (widened to the IntStream
@@ -78,6 +92,14 @@ java: |
       return BOXES.parallelStream().mapToInt(Integer::intValue)
         .distinct().skip(1).map(n -> n + 1).sum();
     }
+    private static String boxedAfter() {
+      return IntStream.of(NUMBERS).distinct().boxed()
+        .collect(Collectors.toList()).toString();
+    }
+    private static String boxedAfterSkip() {
+      return IntStream.of(NUMBERS).skip(2L).boxed()
+        .collect(Collectors.toList()).toString();
+    }
     private static int ownLine() {
       return IntStream.of(NUMBERS)
         .map(n -> n + 3)
@@ -85,8 +107,9 @@ java: |
         .sum();
     }
     public static void main(String[] a) {
-      System.out.printf("R %s %s %d %d %d %d%n",
-        fused(), skipFused(), aloneDistinct(), aloneSkip(), parallel(), ownLine());
+      System.out.printf("R %s %s %d %d %d %d %s %s%n",
+        fused(), skipFused(), aloneDistinct(), aloneSkip(), parallel(), ownLine(),
+        boxedAfter(), boxedAfterSkip());
     }
   }
 grep-in: ".*"
@@ -94,14 +117,14 @@ log:
   - "Modified 1/1 X.phi"
   - "Finished rewriting 1 file"
   - "BUILD SUCCESS"
-  - "R 6.10.8.9 14.16.10 32 32 32 33"
+  - "R 6.10.8.9 14.16.10 32 32 32 33 [5, 2, 9, 7, 1, 8] [9, 2, 7, 1, 8, 5]"
 before:
   invokedynamic: 10
-  invokeinterface: 24
-  invokestatic: 26
+  invokeinterface: 32
+  invokestatic: 32
   new: 0
 after:
   invokedynamic: 6
-  invokeinterface: 29
-  invokestatic: 39
+  invokeinterface: 37
+  invokestatic: 45
   new: 3

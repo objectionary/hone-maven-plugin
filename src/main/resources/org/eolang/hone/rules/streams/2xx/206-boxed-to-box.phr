@@ -2,6 +2,34 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# Lifts the user's own `boxed()` into a `Φ.hone.box`, stamped `minted ↦ "user"`.
+#
+# FOUR rules mint a box and they are not interchangeable, which is what the
+# binding records (#1016): `206` a `boxed()` the user wrote, `208-mapToObj` the
+# crossing from a primitive stream to a reference one, `211` the head of the
+# sandwich it splits a lambda-carrying primitive operator into, and `214` the
+# head of the one it puts around a `distinct()` or a `skip(n)`. Every box now
+# says which, and the rules that read a box say which ones they want:
+#
+#   * `209` folds an unbox and a box into a boxing distill — a genuine user
+#     round trip, so `"user"` and `"crossing"` only. Handed a `"split"` or a
+#     `"sandwich"` it splices a stray `Wrapper.valueOf` into the middle of a
+#     primitive chain, which its own header has warned about since it was
+#     written; ordering alone did not prevent it, because the whole rule set
+#     runs to a fixpoint and `209` gets another turn after `211` and `214` fire.
+#   * `221-unbox-box-to-map` cancels an unbox against the box behind it —
+#     anything but `"user"`.
+#   * `221-unbox-user-box-to-map` takes `"user"`, and only with an unbox pinned
+#     behind it.
+#   * `411`, the two `443-unsandwich` rules and `602` want a box whoever minted
+#     it, and bind the value without reading it.
+#
+# #1016 is what the missing distinction cost: a primitive `distinct()` or
+# `skip(n)` with a `boxed()` right behind it ends `214`'s sandwich in an unbox,
+# `221` cancelled that unbox against the user's box and kept only the unbox, and
+# the boxing the user asked for was gone — `501` then lowered the run to
+# `mapMultiToInt` while the caller held the `Stream` `boxed()` had promised, and
+# the first element threw `IncompatibleClassChangeError`.
 name: boxed-to-box
 pattern: |
   ⟦
@@ -15,7 +43,8 @@ pattern: |
 result: |
   ⟦
     φ ↦ Φ.hone.box,
-    stream-class ↦ 𝑒-target-stream-class
+    stream-class ↦ 𝑒-target-stream-class,
+    minted ↦ "user"
   ⟧
 when:
   or:

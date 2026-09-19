@@ -20,9 +20,12 @@ input: |
   ⟦
     φ ↦ Φ.hone.named-map,
     class ↦ "Foo",
-    object ↦ "Doubler",
-    init ↦ "()V",
-    args ↦ ⟦ ρ ↦ ∅ ⟧,
+    make ↦ ⟦
+      op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧,
+      op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Doubler", i3 ↦ "<init>", i4 ↦ "()V", i5 ↦ Φ.false ⟧,
+      ρ ↦ ∅
+    ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Integer;",
     accepted ↦ "Ljava/lang/Object;",

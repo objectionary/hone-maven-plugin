@@ -17,9 +17,13 @@ input: |
   ⟦
     φ ↦ Φ.hone.named-map,
     class ↦ "Foo",
-    object ↦ "Scaler",
-    init ↦ "(I)V",
-    args ↦ ⟦ op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧, ρ ↦ ∅ ⟧,
+    make ↦ ⟦
+      op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧,
+      op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧,
+      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧,
+      ρ ↦ ∅
+    ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Integer;",
     accepted ↦ "Ljava/lang/Object;",

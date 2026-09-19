@@ -1,0 +1,115 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A map or a filter whose operator is LOADED rather than built at the call site
+# (#1014, the puzzle #1008 left on `215-recognize-named-map`). `215` keys on the
+# `new`/`dup`/`<init>` run, which says where the operation begins as well as
+# that an object is being made; a `filter(p)` reading `p` out of a parameter has
+# no such run, and the lone `aload` in front of the call is indistinguishable
+# from the receiver Stream's own load. So `215-recognize-ref-map` / `-filter`
+# key on the CALL instead — its descriptor names the functional interface — and
+# take the opcode adjacent to it, which a one-argument JVM call site guarantees
+# is the argument.
+#
+# Five pipelines, each pinning one decision:
+#   * params   — the `refArg` shape `closures.yml` already had, on its own here
+#     so the count can say what happened to it: a predicate and a mapper, both
+#     parameters, both fused, one `mapMultiToInt` out. {3, 4, 5} tripled -> 36.
+#   * fields   — the same over two `static final` fields, which reach the call
+#     as `getstatic` rather than `aload`. Both opcodes are admitted for the same
+#     reason — each pushes the operator on its own, with nothing of the operator
+#     left behind for `502` to strand when it relocates the append into the
+#     caller. {4, 5, 6, 7, 8} survive `n > 3`, plus one each -> 35.
+#   * local    — the operator in a local variable. The same `aload` as `params`,
+#     but assigned in the method rather than passed in, which is what says the
+#     rule reads the opcode and not the method's signature. 2+4+6 -> 12.
+#   * instance — `this.mapper`, which reaches the call as a `getfield` whose
+#     RECEIVER was pushed by an opcode ahead of the run. That one is refused:
+#     relocating the `getfield` alone would leave the `aload_0` stranded on the
+#     caller's stack. It stays native and still prints 22, which is the whole
+#     point of having it here.
+#   * counted  — `Stream.of(...).map(COUNTING).count()` in a method of its own.
+#     The source is SIZED, `map` preserves SIZED, and the JDK answers `count()`
+#     from the spliterator without running the pipeline, so `apply` is called
+#     ZERO times. Fusing the map into a `mapMulti` would clear SIZED and call it
+#     three times — same answer, work that was never going to happen — so
+#     `143-count-keeps-elidable-ref-map-native` stamps the map native, the third
+#     rule to make that decision after `142` for a lambda and its own `143`
+#     sibling for a `new Foo()`. The trailing 0 is the assertion, and it reads 3
+#     if the guard is taken away. It sits in its own method because `101`'s
+#     guard is method-scoped.
+#
+# `invokedynamic` does NOT move, and that is worth saying because it is the
+# count one reaches for first. An operator that arrives in a register carries no
+# invokedynamic of its own — that is the whole reason `111` never saw it — so
+# fusing one removes no dispatch, and the `mapMultiToInt` it becomes adds one
+# while swallowing the `Integer::intValue` methodref that used to follow it. One
+# in, one out, three times over: 11 before and 11 after.
+#
+# `iinc` is the count that only fusion can move, one per `Φ.hone.fetch` that
+# `521` lowers into `List.get(counter++)`. Zero before; five after — two
+# operators for `params`, two for `fields`, one for `local`, and none for the
+# two pipelines that stay native. `checkcast` moves with it, the fetch's own
+# narrowing plus the cast `317` puts behind every `Function.apply`.
+java: |
+  package refoperators;
+  import java.util.function.Function;
+  import java.util.function.Predicate;
+  import java.util.stream.Stream;
+  public class X {
+    private static int touched;
+    private static final Predicate<Integer> OVER_THREE = n -> n > 3;
+    private static final Function<Integer, Integer> PLUS_ONE = n -> n + 1;
+    private static final Function<Integer, Integer> COUNTING = n -> {
+      X.touched = X.touched + 1;
+      return n;
+    };
+    private final Function<Integer, Integer> mapper;
+    X(Function<Integer, Integer> m) { this.mapper = m; }
+    static int params(Predicate<Integer> p, Function<Integer, Integer> f) {
+      return Stream.of(1, 2, 3, 4, 5).filter(p).map(f)
+        .mapToInt(Integer::intValue).sum();
+    }
+    static int fields() {
+      return Stream.of(3, 4, 5, 6, 7, 8).filter(OVER_THREE).map(PLUS_ONE)
+        .mapToInt(Integer::intValue).sum();
+    }
+    static int local() {
+      Function<Integer, Integer> twice = n -> n * 2;
+      return Stream.of(1, 2, 3).map(twice)
+        .mapToInt(Integer::intValue).sum();
+    }
+    int instance() {
+      return Stream.of(1, 2, 3, 4).map(this.mapper)
+        .mapToInt(Integer::intValue).sum();
+    }
+    static long counted() {
+      return Stream.of(1, 2, 3).map(COUNTING).count();
+    }
+    public static void main(String[] a) {
+      int params = X.params(n -> n > 2, n -> n * 3);
+      int fields = X.fields();
+      int local = X.local();
+      int instance = new X(n -> n + 1).instance();
+      long counted = X.counted();
+      System.out.printf(
+        "The result is %d %d %d %d %d %d%n",
+        params, fields, local, instance, counted, X.touched
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 36 35 12 14 3 0"
+before:
+  invokedynamic: 11
+  iinc: 0
+  checkcast: 0
+after:
+  invokedynamic: 11
+  iinc: 5
+  checkcast: 8

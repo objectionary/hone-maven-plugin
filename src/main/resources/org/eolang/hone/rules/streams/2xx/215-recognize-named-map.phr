@@ -55,16 +55,19 @@
 # double or two one-slot arguments all pass, which is every capturing mapper
 # worth writing.
 #
-# @todo #1008:45min Fuse a map whose object argument is not built at the call
-#  site. `filter(p)` reads its operator from a method argument or a field (the
-#  refArg case in streams/closures.yml), so there is no `new` to anchor on and
-#  the lone `aload` cannot be told apart from the receiver Stream's own. The
-#  anchor has to come from somewhere else — the descriptor of the stream call is
-#  the obvious candidate, since it names the functional interface — and that is a
-#  different shape from this one rather than a wider version of it. A
-#  constructor whose arguments exceed two slots is left out for the stack reason
-#  above; widening it means teaching 502 to bump by the append it actually
-#  relocated instead of by a constant.
+# A mapper that is LOADED rather than built — out of a parameter, a local or a
+# static field — is `215-recognize-ref-map`'s (#1014). It is a different shape
+# rather than a wider version of this one: there is no `new` to anchor on, so it
+# keys on the stream call's descriptor and takes the opcode adjacent to it. What
+# the two share is everything downstream — the same pragma, differing only in
+# what its `make` block holds.
+#
+# @todo #1008:45min Fuse a constructor whose arguments exceed two JVM slots.
+#  The `when` below bounds them for the stack reason above: `502` bumps the
+#  caller's max-stack by a fixed 6 and this append peaks at 4 with no arguments,
+#  so two more slots reach exactly what is guaranteed and a third would need a
+#  bump nobody made. Widening it means teaching `502` to bump by the append it
+#  actually relocated instead of by a constant.
 name: recognize-named-map
 pattern: |
   ⟦
@@ -124,9 +127,19 @@ result: |
         𝜏-named ↦ ⟦
           φ ↦ Φ.hone.named-map,
           class ↦ 𝑒-class-name,
-          object ↦ 𝑒-object,
-          init ↦ 𝑒-init,
-          args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
+          make ↦ ⟦
+            𝜏-make-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
+            𝜏-make-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+            𝐵-args,
+            𝜏-make-init ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokespecial,
+              i2 ↦ 𝑒-object,
+              i3 ↦ "<init>",
+              i4 ↦ 𝑒-init,
+              i5 ↦ Φ.false
+            ⟧,
+            ρ ↦ ∅
+          ⟧,
           bridge-input ↦ "Ljava/lang/Object;",
           bridge-output ↦ "Ljava/lang/Object;",
           accepted ↦ "Ljava/lang/Object;",
@@ -144,4 +157,10 @@ when:
   matches: ['^\(((\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])|[JD]|(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ]))?\)V$', 𝑒-init]
 where:
   - meta: 𝜏-named
+    function: random-tau
+  - meta: 𝜏-make-new
+    function: random-tau
+  - meta: 𝜏-make-dup
+    function: random-tau
+  - meta: 𝜏-make-init
     function: random-tau

@@ -29,5 +29,5 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-filter, class ↦ "Foo", object ↦ "Good", init ↦ "()V", args ↦ ⟦ ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ φ ↦ Φ.hone.named-filter, class ↦ "Foo", make ↦ ⟦ 𝐵-make, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
   - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-filter, 𝐵-rest ⟧, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧, ρ ↦ ∅ ⟧

@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The loaded-mapper half of the `count()` guard (#973, #1014), and the third
+# rule to say the same thing: `142` for a lambda, `143-count-keeps-elidable-
+# named-map-native` for a `new Foo()`, this one for a mapper that arrives in a
+# parameter, a local or a static field.
+#
+# The defect is `101`'s, verbatim. A `count()` that `101` did NOT stamp is one
+# the JVM can elide: the source is SIZED, `map` preserves SIZED, and
+# `ReferencePipeline.count()` answers from the spliterator without running the
+# pipeline at all. `Stream.of(1, 2, 3).map(f).count()` therefore calls
+# `f.apply` zero times; fuse the map into a `mapMulti`, which clears SIZED by
+# design, and it is called once per element. Same specification, more work, and
+# the fusion it buys optimises a pipeline that was never going to run.
+#
+# So the `invokeinterface Stream.map` is stamped `reverted ↦ Φ.true`.
+# `215-recognize-ref-map` is closed on the four-binding opcode jeo emits, so a
+# stamped one stops matching it, never becomes a Φ.hone.named-map, never folds
+# into a distill, and the load in front of it is left where javac put it. jeo
+# ignores the extra binding when assembling.
+#
+# Only the map needs it. A `filter(p)` clears SIZED whatever its argument is, so
+# `101` stamps the terminal, `142` and both `143` rules stand down, and the
+# filter fuses as it should.
+#
+# The load is bound but not read, and admitted for whatever it is: the guard
+# here does not care which opcode pushed the mapper, only that the map ahead of
+# an elidable `count()` is one no 2xx rule should lift. `215-recognize-ref-map`
+# is the rule that decides which loads it can actually fuse.
+#
+# Closed on the unstamped opcode, so it cannot re-fire on its own output, and it
+# runs after `102` has taken the own-line label out from between the load and
+# the call.
+name: count-keeps-elidable-ref-map-native
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-load ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-load-op,
+      𝐵-load-operands
+    ⟧,
+    𝜏-map ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏6 ↦ "java/util/stream/Stream",
+      𝜏7 ↦ "map",
+      𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      𝜏9 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-load ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-load-op,
+      𝐵-load-operands
+    ⟧,
+    𝜏-map ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏6 ↦ "java/util/stream/Stream",
+      𝜏7 ↦ "map",
+      𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+      𝜏9 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-count ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏-cclass ↦ 𝑒-cclass,
+      𝜏-cmethod ↦ "count",
+      𝜏-csignature ↦ "()J",
+      𝜏-ciface ↦ 𝑒-ciface
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - eq: [𝜏-load-op, 'aload']
+    - eq: [𝜏-load-op, 'getstatic']

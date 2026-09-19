@@ -205,7 +205,19 @@ An operation whose argument is an OBJECT rather than a lambda
   and nothing downstream could see the operation at all (#635).
 Rules `215-recognize-named-map` and `215-recognize-named-filter`
   lift that run the way `216-` lifts a bare `distinct`,
-  with the constructor's own pushes bound whole when it captures (#1008),
+  with the constructor's own pushes bound whole when it captures (#1008).
+An operator that is LOADED rather than built —
+  out of a parameter, a local, or a static field —
+  has no such run to anchor on,
+  and the lone `aload` in front of the call
+  cannot be told apart from the receiver stream's own,
+  so `215-recognize-ref-map` and `215-recognize-ref-filter`
+  key on the call's own descriptor instead,
+  which names the functional interface,
+  and take the opcode adjacent to it —
+  which a one-argument call site guarantees is the argument (#1014).
+Both shapes mint the same pragma,
+  differing only in what its `make` block holds,
   and because `Function.apply` is erased —
   the call site javac emits says only `java.lang.Object` —
   `247-` reads the element type off the pragma that consumes it
@@ -613,7 +625,9 @@ It promises not to add work:
   whenever the terminal is one the JVM can elide (#973),
   and `143-count-keeps-elidable-named-map-native` does the same
   for a `map` whose argument is an object,
-  which has no lambda for `142-` to stamp (#635).
+  which has no lambda for `142-` to stamp (#635),
+  as does `143-count-keeps-elidable-ref-map-native`
+  for one whose operator arrives in a register (#1014).
 Nothing is forfeited by doing so —
   in exactly that case the fused `mapMulti`
   would have optimised a pipeline that was never going to run.
@@ -657,10 +671,12 @@ stream.skip(list.size() - 3L)
 // one long or two one-slot arguments all fuse.
 stream.map(new Wide(a, b, c))
 
-// The same operation reading its object from a parameter or a field,
-// where there is no `new` to anchor on at all and the lone `aload`
-// cannot be told apart from the receiver stream's.
-static int run(Predicate<Integer> p) { return ... .filter(p) ... }
+// A map or a filter reading its operator from an INSTANCE field
+// (#1014). 215-recognize-ref-map takes an aload or a getstatic, each of
+// which pushes the operator on its own; a getfield's receiver was
+// pushed by an opcode ahead of the run, and relocating the getfield
+// into the state append 502 moves would strand it.
+stream.map(this.mapper)
 ```
 
 A CAPTURING `mapMulti` stage is also left as two calls,

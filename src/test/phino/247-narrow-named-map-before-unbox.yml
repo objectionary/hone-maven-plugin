@@ -9,6 +9,13 @@
 # output. Without it 451 splices `lambda$main$1(Ljava/lang/Integer;)I` onto a
 # distill tail still holding the Object that `Function.apply` left, and the
 # class dies with "Bad type on operand stack".
+
+# The input pragma carries the `make` block 215 mints, and pinning a stale shape
+# here is precisely how this pack went on passing while the rule it covers had
+# stopped matching anything at all (#1022): #1008 put `init` and `args` on the
+# pragma, 317 was taught them, 247 was not, and the pack still spelled the
+# pre-#1008 shape. 247's pattern is CLOSED, so a binding added to what 215 emits
+# and not added here silently takes the rule out of the pipeline.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/247-narrow-named-map-before-unbox.phr
 input: |
@@ -17,7 +24,7 @@ input: |
       op1 ↦ ⟦
         φ ↦ Φ.hone.named-map,
         class ↦ "Foo",
-        object ↦ "Doubler",
+        make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧, ρ ↦ ∅ ⟧,
         bridge-input ↦ "Ljava/lang/Object;",
         bridge-output ↦ "Ljava/lang/Object;",
         accepted ↦ "Ljava/lang/Object;",
@@ -36,5 +43,5 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", object ↦ "Doubler", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Integer;", static ↦ "true" ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Integer;", static ↦ "true" ⟧
   - ⟦ φ ↦ Φ.hone.unbox, opcode ↦ "invokestatic", class ↦ "Foo", bridge-signature ↦ "(Ljava/lang/Integer;)I", static ↦ "true", 𝐵-tail ⟧

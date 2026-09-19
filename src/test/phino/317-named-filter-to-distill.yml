@@ -16,9 +16,12 @@ input: |
   ⟦
     φ ↦ Φ.hone.named-filter,
     class ↦ "Foo",
-    object ↦ "Good",
-    init ↦ "()V",
-    args ↦ ⟦ ρ ↦ ∅ ⟧,
+    make ↦ ⟦
+      op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Good" ⟧,
+      op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Good", i3 ↦ "<init>", i4 ↦ "()V", i5 ↦ Φ.false ⟧,
+      ρ ↦ ∅
+    ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Object;",
     accepted ↦ "Ljava/lang/Object;",

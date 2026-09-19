@@ -34,6 +34,14 @@
 # A `distinct` or a `skip` behind the mapper carries no `accepted` at all and so
 # is left alone, exactly as 245 and 246 leave it: both hand the item on
 # untouched, so the narrowing is simply deferred to whatever types it next.
+
+# The pragma pattern is CLOSED, so it must list every binding 215 mints — the
+# `init` descriptor and the `args` block #1008 added included. It did not, and
+# between #1011 and #1022 this rule therefore matched nothing at all: the
+# narrowing never happened, `returned` stayed Object, and 317 emitted a
+# `checkcast java/lang/Object` in front of a consumer that wanted an Integer,
+# so the class failed JVM verification. Add a binding to what 215 emits and it
+# has to be added here too.
 name: narrow-named-map-output
 pattern: |
   ⟦
@@ -41,7 +49,7 @@ pattern: |
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.named-map,
       class ↦ 𝑒-class,
-      object ↦ 𝑒-object,
+      make ↦ 𝑒-make,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ "Ljava/lang/Object;",
       accepted ↦ 𝑒-accepted,
@@ -62,7 +70,7 @@ result: |
     𝜏-first ↦ ⟦
       φ ↦ Φ.hone.named-map,
       class ↦ 𝑒-class,
-      object ↦ 𝑒-object,
+      make ↦ 𝑒-make,
       bridge-input ↦ 𝑒-bridge-input,
       bridge-output ↦ 𝑒-wanted,
       accepted ↦ 𝑒-accepted,

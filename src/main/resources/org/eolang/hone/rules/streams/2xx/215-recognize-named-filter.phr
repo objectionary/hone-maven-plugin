@@ -76,9 +76,19 @@ result: |
         𝜏-named ↦ ⟦
           φ ↦ Φ.hone.named-filter,
           class ↦ 𝑒-class-name,
-          object ↦ 𝑒-object,
-          init ↦ 𝑒-init,
-          args ↦ ⟦ 𝐵-args, ρ ↦ ∅ ⟧,
+          make ↦ ⟦
+            𝜏-make-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ 𝑒-object ⟧,
+            𝜏-make-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+            𝐵-args,
+            𝜏-make-init ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokespecial,
+              i2 ↦ 𝑒-object,
+              i3 ↦ "<init>",
+              i4 ↦ 𝑒-init,
+              i5 ↦ Φ.false
+            ⟧,
+            ρ ↦ ∅
+          ⟧,
           bridge-input ↦ "Ljava/lang/Object;",
           bridge-output ↦ "Ljava/lang/Object;",
           accepted ↦ "Ljava/lang/Object;",
@@ -96,4 +106,10 @@ when:
   matches: ['^\(((\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])|[JD]|(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ])(\[+[BCDFIJSZ]|\[*L[^;]*;|[BCFISZ]))?\)V$', 𝑒-init]
 where:
   - meta: 𝜏-named
+    function: random-tau
+  - meta: 𝜏-make-new
+    function: random-tau
+  - meta: 𝜏-make-dup
+    function: random-tau
+  - meta: 𝜏-make-init
     function: random-tau

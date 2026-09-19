@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The loaded-mapper third of the count() guard (#973, #1014). 142 stamps a
+# lambda, 143-count-keeps-elidable-named-map-native stamps a `map(new Loud())`,
+# and this one stamps a `map(f)` whose mapper came out of a parameter, a local
+# or a static field — a shape that had no rule at all until 215-recognize-ref-map
+# started lifting it, at which point `Stream.of(1, 2, 3).map(f).count()` would
+# have gone from calling `apply` zero times to calling it three.
+#
+# The terminal here is unstamped, meaning 101 found nothing that clears SIZED,
+# meaning the JDK answers `count()` from the spliterator and never runs the
+# pipeline. So the `invokeinterface Stream.map` is stamped `reverted ↦ Φ.true`;
+# 215-recognize-ref-map is closed on the four-binding opcode and stops matching
+# it, and the load in front of it stays exactly where javac put it — which is
+# what the second expectation pins.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/143-count-keeps-elidable-ref-map-native.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v1 ↦ 0 ⟧,
+      op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
+      op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true, reverted ↦ Φ.true ⟧
+  - ⟦ op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v1 ↦ 0 ⟧, 𝐵-tail ⟧
+  - ⟦ 𝐵-head, op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true ⟧, ρ ↦ ∅ ⟧

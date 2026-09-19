@@ -10,11 +10,11 @@
 # 211, so every unbox/box adjacency it sees is a genuine boxed() round-trip and
 # never 211's compensating box around a primitive operator.
 #
-# The box here carries 206's `user ↦ Φ.true` (#1016), because a genuine
-# `boxed()` is what this rule folds. 209's box pattern takes a trailing
-# `𝐵-box-rest` for it: the stamp would otherwise close the pattern against the
-# one pair the rule exists for, which is how `closures` and `named-objects`
-# died with a VerifyError while #1016 was being fixed the other way round.
+# The box here carries 206's `minted ↦ "user"` (#1016). That binding, not the
+# rule's position in the sort, is what keeps 209 off `211`'s and `214`'s
+# sandwich heads: the set runs to a fixpoint, so "before 211" holds for the
+# first pass only, and on the next one the adjacency 209 sees is the sandwich
+# seam. Its `when` admits `"user"` and `"crossing"` and nothing else.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/2xx/209-unbox-box-to-distill.phr
 input: |
@@ -37,7 +37,7 @@ input: |
       op2 ↦ ⟦
         φ ↦ Φ.hone.box,
         stream-class ↦ "java/util/stream/LongStream",
-        user ↦ Φ.true
+        minted ↦ "user"
       ⟧,
       ρ ↦ ∅
     ⟧

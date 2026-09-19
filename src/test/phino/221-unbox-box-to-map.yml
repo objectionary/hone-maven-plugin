@@ -6,9 +6,9 @@
 # unbox; where two split ops meet, the tail unbox of one and the head box of
 # the next are redundant and 221 collapses them back to a single object map.
 # This pack exercises that collapse on a 211-style longValue pair. The box
-# pattern is CLOSED and has no `user ↦ Φ.true` on it, which is how the rule
-# keeps its hands off a `boxed()` the user wrote: 206 stamps that one and this
-# pattern then stops matching it. 221 used to take any box at all, on the
+# box is stamped `minted ↦ "split"`, and the `when` admits `"crossing"`,
+# `"split"` and `"sandwich"` — every box but the `"user"` one 206 lifts from a
+# `boxed()` the user wrote. 221 used to take any box at all, on the
 # argument that by this point every pair left is 211's own — which was wrong,
 # and #1016 is what it cost. `221-unbox-box-to-map-user-left` is the other
 # half, and `221-unbox-user-box-to-map` the one user box still cancelled.
@@ -33,7 +33,8 @@ input: |
       ⟧,
       op2 ↦ ⟦
         φ ↦ Φ.hone.box,
-        stream-class ↦ "java/util/stream/LongStream"
+        stream-class ↦ "java/util/stream/LongStream",
+        minted ↦ "split"
       ⟧,
       ρ ↦ ∅
     ⟧

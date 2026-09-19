@@ -28,10 +28,15 @@
 # suspenders: every 205 unbox targets a lambda$ anyway, but the gate makes the
 # "user pair only" intent explicit and survives any future reordering.
 #
-# The box pattern carries a trailing `𝐵-box-rest` so that the `user ↦ Φ.true`
-# `206` stamps on a real `boxed()` (#1016) does not close this pattern against
-# the very pair the rule exists for. The group is there to be ignored: this
-# rule wants a box of any provenance, exactly as it did before the stamp.
+# ORDER IS NOT ENOUGH, and #1016 is where that showed. The rule set runs to a
+# FIXPOINT, so "runs before 211" only holds for the first pass: once `211` and
+# `214` have put their sandwiches in, this rule comes round again and the
+# unbox/box adjacency it then sees is the sandwich seam, not a user round trip.
+# The `minted` binding is what actually decides it now — `"user"` and
+# `"crossing"`, the two boxes that stand for a real boxing, and never `"split"`
+# or `"sandwich"`. Taking a sandwich seam here costs the run its fusion: `221`
+# never gets to cancel the seam, so the operations either side of it end up in
+# two distills instead of one.
 name: unbox-box-to-distill
 pattern: |
   ⟦
@@ -53,7 +58,7 @@ pattern: |
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
       stream-class ↦ 𝑒-stream-class,
-      𝐵-box-rest
+      minted ↦ 𝑒-box-minted
     ⟧,
     𝐵-after
   ⟧
@@ -91,6 +96,9 @@ result: |
   ⟧
 when:
   and:
+    - or:
+        - eq: [𝑒-box-minted, '"user"']
+        - eq: [𝑒-box-minted, '"crossing"']
     - matches: ['lambda\$.+', 𝑒-target-method]
     - or:
         - and:

@@ -38,9 +38,9 @@
 #     asked for disappeared and the run handed a `mapMultiToInt`'s IntStream to
 #     code holding the `Stream` `boxed()` promised —
 #     "IncompatibleClassChangeError: ReferencePipeline$12 does not implement
-#     java.util.stream.Stream". `211`, `214` and `208-mapToObj` now stamp the
-#     boxes they mint `synthetic ↦ Φ.true` and `221-unbox-box-to-map` cancels
-#     only those, so the user's `boxed()` survives. The one user box still
+#     java.util.stream.Stream". Every box now records which rule minted it, and
+#     `221-unbox-box-to-map` takes every one but the `minted ↦ "user"` box 206
+#     lifts from a `boxed()`, so the user's survives. The one user box still
 #     cancelled is one an unbox takes straight back — `boxed().mapToInt(...)`,
 #     which `221-unbox-user-box-to-map` handles and `boxed-filter-tail.yml`
 #     covers. These two pipelines did not load at all before the fix, which

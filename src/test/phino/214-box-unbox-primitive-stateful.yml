@@ -25,7 +25,7 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.box, stream-class ↦ "java/util/stream/IntStream" ⟧
+  - ⟦ φ ↦ Φ.hone.box, stream-class ↦ "java/util/stream/IntStream", minted ↦ "sandwich" ⟧
   - ⟦
       φ ↦ Φ.hone.distinct,
       class ↦ "Foo",

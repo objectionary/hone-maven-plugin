@@ -532,10 +532,18 @@ All three fuse on a wide element now.
   whose boxing then simply disappeared,
   handing a `mapMultiToInt`'s `IntStream`
   to code holding the `Stream` that `boxed()` promised.
-`211`, `214` and `208-mapToObj` now stamp every box they mint
-  `synthetic ↦ Φ.true`,
-  and `221-unbox-box-to-map` cancels only those,
-  so a box the user wrote is left where it is.
+Four rules mint a box and they are not interchangeable,
+  so every box now records which one minted it:
+  `minted ↦ "user"` for a `boxed()` the user wrote,
+  `"crossing"` for `208-mapToObj`'s primitive-to-reference step,
+  `"split"` for `211`'s sandwich head
+  and `"sandwich"` for `214`'s.
+`221-unbox-box-to-map` takes every box but the user's own,
+  and `209-unbox-box-to-distill` takes only the user's and the crossing,
+  which is what its header always said it wanted
+  and what its position in the sort never actually gave it —
+  the rule set runs to a fixpoint,
+  so `209` comes round again after `211` and `214` have fired.
 The one user `boxed()` that is still safe to cancel against
   is one the user's own `mapToX` unboxes on the very next step,
   and `221-unbox-user-box-to-map` takes that one,

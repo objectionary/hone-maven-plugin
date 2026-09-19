@@ -10,8 +10,8 @@
 # and so does the head box `211` wedges right after a user `mapToInt(ref)` that
 # feeds a primitive op, and the one `208-mapToObj` mints for the crossing.
 #
-# The box pattern is CLOSED and carries no `user ↦ Φ.true`, which is what keeps
-# the user's own `boxed()` out of it (#1016). The older reading — that `209`
+# The `when` admits every box but the user's own `boxed()` — `"crossing"`,
+# `"split"` and `"sandwich"`, never `"user"` (#1016). The older reading — that `209`
 # has already folded away every genuine `mapToX(...).boxed()` round trip, so
 # whatever box is left here must be synthetic — is simply not true: `209` only
 # folds a `boxed()` that an unbox feeds, and a `boxed()` written straight
@@ -43,7 +43,8 @@ pattern: |
     ⟧,
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
-      stream-class ↦ 𝑒-stream-class
+      stream-class ↦ 𝑒-stream-class,
+      minted ↦ 𝑒-box-minted
     ⟧,
     𝐵-after
   ⟧
@@ -69,6 +70,11 @@ result: |
     ⟧,
     𝐵-after
   ⟧
+when:
+  or:
+    - eq: [𝑒-box-minted, '"crossing"']
+    - eq: [𝑒-box-minted, '"split"']
+    - eq: [𝑒-box-minted, '"sandwich"']
 where:
   - meta: 𝜏-map
     function: random-tau

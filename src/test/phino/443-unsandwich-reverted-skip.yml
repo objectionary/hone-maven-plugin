@@ -10,7 +10,7 @@ rules:
 input: |
   ⟦
     body ↦ ⟦
-      op1 ↦ ⟦ φ ↦ Φ.hone.box, stream-class ↦ "java/util/stream/IntStream" ⟧,
+      op1 ↦ ⟦ φ ↦ Φ.hone.box, stream-class ↦ "java/util/stream/IntStream", minted ↦ "sandwich" ⟧,
       op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
       op3 ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokeinterface,

@@ -37,9 +37,9 @@
 #     element. They were held back when #1012 landed, because their lift goes
 #     through `214`'s sandwich and #1016 was still open: `221` cancelled that
 #     sandwich's trailing unbox against the user's own `boxed()` and kept only
-#     the unbox. `211`, `214` and `208-mapToObj` now stamp every box they mint
-#     `synthetic ↦ Φ.true` and only a stamped box is cancelled, so these two
-#     lift like the dropWhile does.
+#     the unbox. Every box now records which rule minted it, and the only one
+#     `221-unbox-box-to-map` refuses is the `minted ↦ "user"` box 206 lifts
+#     from a `boxed()`, so these two lift like the dropWhile does.
 #
 java: |
   package widestateful;

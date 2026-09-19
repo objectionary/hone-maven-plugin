@@ -38,9 +38,9 @@
 # Sorted after `441` and `442` so the revert it cleans up has already happened;
 # `443-unsandwich-reverted-skip` does the same for `212`'s skip sibling.
 #
-# The box pattern carries a trailing `𝐵-box-rest` so the `user ↦ Φ.true`
-# stamp `206` puts on a real `boxed()` (#1016) does not close it: this rule
-# takes a box of either provenance, exactly as it did before the stamp.
+# The box pattern binds `minted` to an expression rather than pinning it, so
+# this rule takes a box whoever minted it — which is what it did before every
+# box carried the binding (#1016).
 name: unsandwich-reverted-distinct
 pattern: |
   ⟦
@@ -48,7 +48,7 @@ pattern: |
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
       stream-class ↦ 𝑒-stream-class,
-      𝐵-box-rest
+      minted ↦ 𝑒-box-minted
     ⟧,
     𝜏-distinct ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,

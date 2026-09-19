@@ -11,9 +11,9 @@
 # call, unbox — and the push comes back out with the call, in the same order
 # `212` absorbed it.
 #
-# The box pattern carries a trailing `𝐵-box-rest` so the `user ↦ Φ.true`
-# stamp `206` puts on a real `boxed()` (#1016) does not close it: this rule
-# takes a box of either provenance, exactly as it did before the stamp.
+# The box pattern binds `minted` to an expression rather than pinning it, so
+# this rule takes a box whoever minted it — which is what it did before every
+# box carried the binding (#1016).
 name: unsandwich-reverted-skip
 pattern: |
   ⟦
@@ -21,7 +21,7 @@ pattern: |
     𝜏-box ↦ ⟦
       φ ↦ Φ.hone.box,
       stream-class ↦ 𝑒-stream-class,
-      𝐵-box-rest
+      minted ↦ 𝑒-box-minted
     ⟧,
     𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-pop, 𝐵-push-rest ⟧,
     𝜏-skip ↦ ⟦

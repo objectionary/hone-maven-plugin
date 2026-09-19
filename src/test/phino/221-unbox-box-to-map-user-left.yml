@@ -3,7 +3,8 @@
 ---
 # yamllint disable rule:line-length
 # The other half of #1016: a box the USER wrote is not cancelled. 206 stamps it
-# `user ↦ Φ.true` and 221's closed box pattern stops matching it, so the pair
+# `minted ↦ "user"` and 221's `when` admits every other box but not that one,
+# so the pair
 # survives as an unbox and a box, which 603 and 602 lower back into the
 # `mapToInt(Wrapper::xValue)` and the `boxed()` the user's pipeline had.
 # Cancelling here kept only the unbox, and the run then handed a
@@ -30,7 +31,7 @@ input: |
       op2 ↦ ⟦
         φ ↦ Φ.hone.box,
         stream-class ↦ "java/util/stream/LongStream",
-        user ↦ Φ.true
+        minted ↦ "user"
       ⟧,
       ρ ↦ ∅
     ⟧
@@ -39,6 +40,6 @@ expected:
   - ⟦
       φ ↦ Φ.hone.box,
       stream-class ↦ "java/util/stream/LongStream",
-      user ↦ Φ.true
+      minted ↦ "user"
     ⟧
   - ⟦ 𝐵-a, 𝜏-u ↦ ⟦ φ ↦ Φ.hone.unbox, 𝐵-c ⟧, 𝜏-b ↦ ⟦ φ ↦ Φ.hone.box, 𝐵-d ⟧, 𝐵-b ⟧

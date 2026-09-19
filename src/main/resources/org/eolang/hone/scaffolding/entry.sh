@@ -4,6 +4,15 @@
 
 set -e -o pipefail
 
+# Print the content of a directory, with "tree" when the host has it.
+print_tree() {
+  if command -v tree > /dev/null; then
+    tree "$1"
+  else
+    ls -R "$1"
+  fi
+}
+
 RP=""
 if command -v realpath >/dev/null 2>&1 && realpath --version >/dev/null 2>&1 && realpath --version 2>&1 | head -1 | grep -q 'GNU coreutils'; then
   RP="realpath"
@@ -96,11 +105,7 @@ after the 'compile' phase is finished"
     exit
   fi
   echo "This is what is in the '${TARGET}' directory:"
-  if command -v tree > /dev/null; then
-    tree "${TARGET}"
-  else
-    ls -R "${TARGET}"
-  fi
+  print_tree "${TARGET}"
   echo "We can't continue and must fail here. Set skipIfNoClasses to 'true' if you need a quiet pass."
   exit 1
 fi
@@ -159,7 +164,7 @@ fi
 for rule in ${RULES}; do
   if [ ! -e "${rule}" ]; then
     echo "YAML rule file does not exist: ${rule}"
-    tree "${SELF}"
+    print_tree "${SELF}"
     exit 1
   fi
 done

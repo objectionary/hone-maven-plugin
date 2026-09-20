@@ -22,6 +22,28 @@
 # Multi-argument refs (Integer::sum), constructor refs, argument boxing and
 # return widening do not match either rule and stay native; those are follow-up
 # puzzles.
+#
+# THE RETURN MAY BE VOID, and the `𝑒-return-op` table below has to say so
+# (#1053). This rule's `when` gates the ARGUMENT and demands the instantiated
+# SAM type equal the target signature; it gates the return not at all, so a
+# `peek(X::traced)` over `static void traced(Long)` matches — `Consumer.accept`
+# returns void, both signatures read `(Ljava/lang/Long;)V` — and it is the only
+# one of these rules that a void return can reach. Without the `V` case the sed
+# fell through, the meta kept the literal `V`, and `tau` was asked for an
+# attribute by that name; phino answered "Couldn't parse given attribute ...
+# unexpected 'V'" and took the WHOLE optimize goal down with it, rather than
+# leaving the one class alone. `return` is the opcode, and the max-stack
+# arithmetic below needs nothing: `𝑒-widths` concatenates the parameter width
+# with the return type, and `1V` and `2V` already fall through to 1 and 2, which
+# is what a body that pushes the argument and discards nothing peaks at.
+#
+# The three siblings with the same table shape were checked and none of them can
+# be handed a void return. `103` gates the target signature to `()[IZBCS]`,
+# `()J` or `()D`; `107` gates it to `()L` and hard-codes `areturn`; `108`
+# enumerates the eight wrapper/primitive pairs, so its bridge return is one of
+# `ZBCSIJDF` and its table covers all eight. `105` is the rule that DOES expect
+# void, and it hard-codes `Φ.jeo.opcode.return` — but its target must take no
+# arguments, so the shape above is not its.
 name: static-methodref-to-lambda
 pattern: |
   ⟦
@@ -252,6 +274,7 @@ where:
       - '"s/^D$/dreturn/g"'
       - '"s/^F$/freturn/g"'
       - '"s/^(L.+;|\\[.+)$/areturn/g"'
+      - '"s/^V$/return/g"'
   - meta: 𝜏-return
     function: tau
     args: [𝑒-return-op]

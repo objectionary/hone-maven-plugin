@@ -62,13 +62,16 @@ function statistics_row {
 
 function atomic_write {
   # Run a command, capture its stdout into a temp file next to the target,
-  # and atomically move it into place only on success. A crashed command
-  # leaves no half-written file behind that a later skip-if-newer check
-  # could mistake for a fresh result (see #837).
+  # and atomically move it into place only when the command succeeds and
+  # actually wrote something. A crashed command leaves no half-written file
+  # behind that a later skip-if-newer check could mistake for a fresh result
+  # (see #837), and a command that exits zero having written nothing is
+  # refused the same way, instead of shipping an empty result downstream
+  # (see #1039).
   local destination="${1}"
   shift
   local tmp="${destination}.tmp.$$"
-  if "${@}" > "${tmp}"; then
+  if "${@}" > "${tmp}" && [ -s "${tmp}" ]; then
     mv -f "${tmp}" "${destination}"
   else
     rm -f "${tmp}"

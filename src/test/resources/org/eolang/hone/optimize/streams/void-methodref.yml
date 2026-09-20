@@ -1,0 +1,97 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A STATIC method reference whose referenced method returns void (#1053).
+# `peek(X::traced)` over `static void traced(Long)` compiles to an invokedynamic
+# with a kind-6 handle, an instantiated SAM type of `(Ljava/lang/Long;)V` — a
+# `Consumer.accept` returns void — and a target signature that reads exactly the
+# same, which is the adaptation-free shape `104-static-methodref-to-lambda`
+# exists for. Its `when` gates the ARGUMENT and does not gate the return, so it
+# takes this shape; its `𝑒-return-op` sed table had no `V` case, so the meta kept
+# the literal `V` and `tau` was asked for an attribute by that name.
+#
+# What that cost is why this fixture is here rather than a note in another one:
+# phino answered
+#
+#     [ERROR]: Couldn't parse given attribute, cause: attribute:1:1:
+#     1 | V
+#       | ^
+#     unexpected 'V'
+#
+# and the WHOLE optimize goal failed. Not the one class skipped — the build
+# dead, for any project with a static void method reference anywhere in it. So
+# the assertion that matters most here is simply that `BUILD SUCCESS` appears
+# and the two runs print the same line; the opcode counts are the second-order
+# check.
+#
+# Three pipelines, each pinning one decision:
+#   * traced   — the reported shape, a `peek` of a static void reference behind a
+#     map, where 104 desugars it to `aload 0; invokestatic traced; return` and
+#     the run lowers to one mapMulti. The counter it accumulates into is printed,
+#     so the peek is pinned as having run once per element and not more: `peek`
+#     is not `count()`-elidable here because `reduce` traverses anyway.
+#   * noted    — the same over a reference element rather than a boxed primitive,
+#     so the wrapper's parameter is a `String` and the load is the same `aload`.
+#     Its tag list proves the order the consumer saw.
+#   * tripled  — a value-returning static reference in the same class, so the
+#     `areturn` arm of the very same table is exercised beside the `return` one.
+#     Take the `V` case away and this pipeline never gets the chance to be
+#     rewritten either, because the failure is global.
+#
+# The counts are the second-order check, and they move the way three fused runs
+# move them: nine invokedynamic become six, because each pipeline trades its map
+# lambda, its reference and its `Long::sum` for one mapMulti dispatch, and
+# invokestatic goes 18 -> 27 as the wrappers 104 synthesises and the bodies 511
+# lifts take their place. No `Stream.map` or `Stream.peek` call is left native.
+#
+# `105` is the rule that already knew about void, and it does not compete for
+# this shape: it takes an unbound-INSTANCE reference (handle 5) whose target
+# takes no arguments, and hard-codes `Φ.jeo.opcode.return` for the drop. The
+# other two tables of this shape cannot be handed a void return at all — `103`
+# gates its target signature to `()[IZBCS]`, `()J` or `()D`, `107` gates it to
+# `()L` and hard-codes `areturn`, and `108` enumerates the eight
+# wrapper/primitive pairs.
+java: |
+  package voidref;
+  import java.util.ArrayList;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.Stream;
+  public class X {
+    private static long seen;
+    private static final List<String> TAGS = new ArrayList<>();
+    static void traced(Long n) { X.seen = X.seen + n; }
+    static void note(String s) { X.TAGS.add(s); }
+    static Long triple(Long n) { return n * 3L; }
+    public static void main(String[] a) {
+      long traced = Stream.of(1L, 2L, 3L)
+        .map(n -> n + 1L)
+        .peek(X::traced)
+        .reduce(0L, Long::sum);
+      List<String> noted = Stream.of("a", "bb", "ccc")
+        .map(s -> s + "!")
+        .peek(X::note)
+        .collect(Collectors.toList());
+      long tripled = Stream.of(1L, 2L, 3L)
+        .map(n -> n + 1L)
+        .map(X::triple)
+        .reduce(0L, Long::sum);
+      System.out.printf(
+        "The result is %d %d %s %s %d%n",
+        traced, X.seen, noted, X.TAGS, tripled
+      );
+    }
+  }
+grep-in: ".*"
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 9 9 [a!, bb!, ccc!] [a!, bb!, ccc!] 27"
+before:
+  invokedynamic: 9
+  invokestatic: 18
+after:
+  invokedynamic: 6
+  invokestatic: 27

@@ -705,6 +705,10 @@ A method reference is fused only when the wrapper the rules synthesise
   `105` the return-dropping one a `peek` needs,
   `107` the one whose erased return needs narrowing,
   and `108` the one whose return needs unboxing.
+The referenced method may return void —
+  `peek(X::traced)` over a `static void traced(Long)`
+  is `104`'s shape, since a `Consumer.accept` returns void
+  and the instantiated SAM type then equals the target signature (#1053).
 
 ```java
 static Integer length(String s) { ... }

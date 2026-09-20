@@ -202,6 +202,21 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean skipIfNoClasses;
 
     /**
+     * Skip quietly if nothing is suitable for rewrite.
+     *
+     * <p>Some {@code .class} files may all get excluded from the pipeline
+     * (for example, the {@code streams/} rules require Java 16 bytecode and
+     * exclude every class below it), leaving nothing for the rewrite to work
+     * on. If this is set to {@code true}, that situation is only logged and
+     * the build proceeds; if {@code false}, the build fails.</p>
+     *
+     * @since 0.74.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skip-if-not-suitable", defaultValue = "true")
+    private boolean skipIfNotSuitable;
+
+    /**
      * Print all commands of all Bash scripts.
      *
      * <p>If this is set to {@code true}, all our internal bash scripts will
@@ -544,6 +559,11 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         command.addAll(
             Arrays.asList(
+                "--env", String.format("SKIP_IF_NOT_SUITABLE=%s", this.skipIfNotSuitable)
+            )
+        );
+        command.addAll(
+            Arrays.asList(
                 "--env", String.format("VERBOSE=%s", Logger.isDebugEnabled(this))
             )
         );
@@ -721,6 +741,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("CLASSES", this.classes)
                 .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
                 .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
+                .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
                 .withEnv("GREP_IN", this.grepIn)
                 .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
                 .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))

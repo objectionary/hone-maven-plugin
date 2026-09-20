@@ -198,8 +198,10 @@ function streams_selected {
 # so they are never disassembled and the rest of the project still is.
 if streams_selected; then
   declare -a outdated=()
+  total_classes=0
   while IFS= read -r classfile; do
     [ -z "${classfile}" ] && continue
+    total_classes=$(( total_classes + 1 ))
     high=''
     low=''
     if ! read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}" 2> /dev/null) || [ -z "${low}" ]; then
@@ -217,16 +219,22 @@ if streams_selected; then
     EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${outdated[*]}")"
     echo "Excluded ${#outdated[@]} class(es) older than Java 16 from the disassembly, leaving the rest to the streams rules"
   fi
+  # When every single .class file just got excluded as pre-Java-16 bytecode,
+  # jeo would disassemble nothing, never create its output directory, and
+  # "rewrite.sh" would fail with "The source directory ... does not exist", a
+  # message that names nothing the user recognises. Treat it the same as
+  # skipIfNoClasses above: quit quietly by default, or fail when the caller
+  # wants to be told that nothing was suitable for rewrite (see #1010).
+  if [ "${total_classes}" -gt 0 ] && [ "${#outdated[@]}" -eq "${total_classes}" ]; then
+    echo "All ${total_classes} class(es) under '${TARGET}/${CLASSES}' are older than Java 16, so nothing is suitable for the streams rules to rewrite"
+    if [ "${SKIP_IF_NOT_SUITABLE}" == 'true' ]; then
+      echo "We don't fail but quit quietly, because of skipIfNotSuitable=true"
+      exit
+    fi
+    echo "We can't continue and must fail here. Set skipIfNotSuitable to 'true' if you need a quiet pass."
+    exit 1
+  fi
 fi
-
-# @todo #1010:30min Decide what this guard should do when it excludes every
-#  class. jeo then disassembles nothing and never creates its output
-#  directory, so "rewrite.sh" ends the build with "The source directory ...
-#  does not exist" — the abort #930 asked us to stop doing, now under a
-#  message that names nothing the user recognises. Both integration projects
-#  hit it the day the deep workflow began running them. Finishing quietly,
-#  with an empty statistics file, the way skipIfNoClasses does, is probably
-#  the answer.
 
 if [ -e /proc/meminfo ]; then
   printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"

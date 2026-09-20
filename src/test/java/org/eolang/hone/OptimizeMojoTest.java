@@ -86,6 +86,26 @@ final class OptimizeMojoTest {
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
     @Timeout(180L)
+    @DisabledWithoutPhino
+    @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
+    void skipsQuietlyWhenNothingIsSuitableForStreams(@Mktmp final Path home) throws Exception {
+        new Farea(home).together(f -> OptimizeMojoTest.runWithoutSuitableClasses(f, true));
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(180L)
+    @DisabledWithoutPhino
+    @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
+    void failsWhenNothingIsSuitableAndSkipIsDisabled(@Mktmp final Path home) throws Exception {
+        new Farea(home).together(f -> OptimizeMojoTest.runWithoutSuitableClasses(f, false));
+    }
+
+    @Test
+    @Tag("deep")
+    @ExtendWith(MayBeSlow.class)
+    @Timeout(180L)
     @DisabledWithoutDocker
     @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
     void transformsSimpleAppWithoutPhino(@Mktmp final Path home,
@@ -188,6 +208,59 @@ final class OptimizeMojoTest {
             fea.log(),
             RequisiteMatcher.SUCCESS
         );
+    }
+
+    private static void runWithoutSuitableClasses(final Farea fea, final boolean skip)
+        throws IOException {
+        fea.clean();
+        fea.files()
+            .file("src/main/java/foo/Foo.java").write(
+                """
+                package foo;
+                class Foo {
+                    int foo() {
+                        return 42;
+                    }
+                }
+                """.getBytes(StandardCharsets.UTF_8)
+            );
+        fea.properties().set("maven.compiler.release", "8");
+        fea.build()
+            .plugins()
+            .appendItself()
+            .execution("default")
+            .phase("process-classes")
+            .goals("build", "optimize")
+            .configuration()
+            .set("debug", "true")
+            .set("alwaysWithDocker", "false")
+            .set("rules", "streams/*")
+            .set("skipIfNotSuitable", Boolean.toString(skip));
+        if (skip) {
+            fea.exec("process-classes");
+            MatcherAssert.assertThat(
+                "the build must be successful when skipIfNotSuitable=true, even if every "
+                    + "class is older than Java 16 and streams rules cannot rewrite anything",
+                fea.log(),
+                RequisiteMatcher.SUCCESS
+            );
+            MatcherAssert.assertThat(
+                "the log must explain that nothing was suitable and it was skipped quietly",
+                fea.log().content(),
+                Matchers.containsString("nothing is suitable for the streams rules to rewrite")
+            );
+        } else {
+            Assertions.assertThrows(
+                Farea.BuildFailureException.class,
+                () -> fea.exec("process-classes"),
+                "the build must fail when skipIfNotSuitable=false and no class is suitable"
+            );
+            MatcherAssert.assertThat(
+                "the log must explain why the build failed",
+                fea.log().content(),
+                Matchers.containsString("nothing is suitable for the streams rules to rewrite")
+            );
+        }
     }
 
     private static void runWithoutPhino(final Farea fea, final String image) throws IOException {

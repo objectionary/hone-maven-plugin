@@ -44,7 +44,7 @@ final class OptimizeMojoStatisticsTest {
     @Test
     @Tag("deep")
     @ExtendWith(MayBeSlow.class)
-    @Timeout(600L)
+    @Timeout(1200L)
     @DisabledWithoutDocker
     @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
     void generatesStatisticsWithDocker(

@@ -219,14 +219,14 @@ if streams_selected; then
   fi
 fi
 
-# @todo #1007:30min Let CI run the two integration projects this guard used to
-#  abort. "src/it/bench/pom.xml" and "src/it/modular/pom.xml" set
-#  maven.compiler.target to 1.8 while selecting streams/*, so before this change
-#  they died here; now their classes are excluded and the build goes on. Nobody
-#  sees either outcome, because ".github/workflows/mvn.yml" passes
-#  "-Dinvoker.skip", so neither project can turn a build red when it breaks.
-#  Dropping that flag, or running the invoker in a job of its own, would put the
-#  exclusion path under test instead of trusting it.
+# @todo #1010:30min Decide what this guard should do when it excludes every
+#  class. jeo then disassembles nothing and never creates its output
+#  directory, so "rewrite.sh" ends the build with "The source directory ...
+#  does not exist" — the abort #930 asked us to stop doing, now under a
+#  message that names nothing the user recognises. Both integration projects
+#  hit it the day the deep workflow began running them. Finishing quietly,
+#  with an empty statistics file, the way skipIfNoClasses does, is probably
+#  the answer.
 
 if [ -e /proc/meminfo ]; then
   printf 'Memory available: %s Gb\n' "$(grep MemAvailable /proc/meminfo | awk '{printf "%.2f\n", $2/1024/1024}')"

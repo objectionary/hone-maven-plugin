@@ -239,8 +239,7 @@ final class OptimizeMojoTest {
         if (skip) {
             fea.exec("process-classes");
             MatcherAssert.assertThat(
-                "the build must be successful when skipIfNotSuitable=true, even if every "
-                    + "class is older than Java 16 and streams rules cannot rewrite anything",
+                "the build must be successful when skipIfNotSuitable=true",
                 fea.log(),
                 RequisiteMatcher.SUCCESS
             );

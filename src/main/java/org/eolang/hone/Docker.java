@@ -39,6 +39,11 @@ final class Docker {
     private final boolean sudo;
 
     /**
+     * The Docker executable.
+     */
+    private final String binary;
+
+    /**
      * Creates a Docker executor without sudo.
      */
     Docker() {
@@ -51,7 +56,18 @@ final class Docker {
      * @param root Whether to run Docker commands with sudo
      */
     Docker(final boolean root) {
+        this(root, "docker");
+    }
+
+    /**
+     * Creates a Docker executor with optional sudo and a custom executable.
+     *
+     * @param root Whether to run Docker commands with sudo
+     * @param bin The Docker executable
+     */
+    Docker(final boolean root, final String bin) {
         this.sudo = root;
+        this.binary = bin;
     }
 
     /**
@@ -73,12 +89,19 @@ final class Docker {
      * socket, so a machine with a stopped daemon answered that Docker was
      * usable and the build failed later inside {@code docker run}.</p>
      *
+     * <p>The probe has its own short deadline, because a wedged daemon
+     * must not block the build for the whole {@link #TIMEOUT} before we
+     * fall back to a local phino (see #1060).</p>
+     *
      * @return TRUE if Docker is here
      */
     boolean available() {
         boolean yes = true;
         try {
-            this.exec("info", "--format", "{{.ServerVersion}}");
+            this.fire(
+                this.command(Arrays.asList("info", "--format", "{{.ServerVersion}}")),
+                10L
+            );
         } catch (final IOException | IllegalStateException ex) {
             Logger.warn(this, "Docker is not available: %s", ex.getMessage());
             yes = false;
@@ -94,13 +117,7 @@ final class Docker {
      * @throws IOException If the command fails or returns non-zero exit code
      */
     int exec(final Collection<String> args) throws IOException {
-        final List<String> command = new ArrayList<>(args.size() + 2);
-        if (this.sudo) {
-            command.add("sudo");
-        }
-        command.add("docker");
-        command.addAll(args);
-        return this.fire(command);
+        return this.fire(this.command(args), Docker.TIMEOUT);
     }
 
     private static void drained(final Thread... pumps) throws IOException {
@@ -114,7 +131,17 @@ final class Docker {
         }
     }
 
-    private int fire(final List<String> command) throws IOException {
+    private List<String> command(final Collection<String> args) {
+        final List<String> command = new ArrayList<>(args.size() + 2);
+        if (this.sudo) {
+            command.add("sudo");
+        }
+        command.add(this.binary);
+        command.addAll(args);
+        return command;
+    }
+
+    private int fire(final List<String> command, final long timeout) throws IOException {
         final long start = System.currentTimeMillis();
         Logger.info(this, "+ %s ...", String.join(" ", command));
         final Process proc = new ProcessBuilder(command).start();
@@ -132,7 +159,7 @@ final class Docker {
         stderr.start();
         final boolean done;
         try {
-            done = proc.waitFor(Docker.TIMEOUT, TimeUnit.SECONDS);
+            done = proc.waitFor(timeout, TimeUnit.SECONDS);
         } catch (final InterruptedException ex) {
             proc.destroyForcibly();
             Thread.currentThread().interrupt();
@@ -147,7 +174,7 @@ final class Docker {
             throw new IOException(
                 String.format(
                     "Docker command timed out after %d seconds: %s",
-                    Docker.TIMEOUT, String.join(" ", command)
+                    timeout, String.join(" ", command)
                 )
             );
         }

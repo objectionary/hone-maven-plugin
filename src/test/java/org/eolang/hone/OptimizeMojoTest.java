@@ -166,6 +166,17 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void mountsRelativeHostPathAsAbsolute() {
+        MatcherAssert.assertThat(
+            "a relative host path must be mounted as an absolute one, not as a named volume",
+            OptimizeMojo.mount(new File("target"), "/target"),
+            Matchers.equalTo(
+                String.format("%s:/target", new File("target").getAbsolutePath())
+            )
+        );
+    }
+
+    @Test
     void rejectsWindowsDrivePathInMount() {
         Assertions.assertThrows(
             IllegalStateException.class,

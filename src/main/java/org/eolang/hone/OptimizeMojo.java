@@ -666,6 +666,9 @@ public final class OptimizeMojo extends AbstractMojo {
             if (extdir.toFile().mkdirs()) {
                 Logger.info(this, "Directory %[file]s created", extdir);
             }
+            try (Stream<Path> stale = Files.list(extdir)) {
+                stale.map(Path::toFile).forEach(File::delete);
+            }
             for (final String ext : this.extra) {
                 final Path src = Paths.get(ext);
                 if (src.toFile().isDirectory()) {

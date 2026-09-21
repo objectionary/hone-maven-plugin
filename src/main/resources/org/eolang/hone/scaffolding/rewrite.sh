@@ -203,7 +203,7 @@ function rewrite {
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
   else
-    changed=$(diff "${phi}" "${pho}" | grep -cE '^>' || true)
+    changed=$(diff "${phi}" "${pho}" | awk '/^>/ { a++ } /^</ { d++ } END { print (a > d ? a : d) + 0 }' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
   statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"

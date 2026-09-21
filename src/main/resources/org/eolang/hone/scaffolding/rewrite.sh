@@ -139,18 +139,21 @@ function rewrite {
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
   mark="${xo}.stamp"
+  # The input is compared by its content, not by its modification time,
+  # because jeo:disassemble writes it again on every run (see #1032).
+  seal="${stamp}|$(cksum < "${xi}")"
   fresh=false
-  if [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${stamp}" ] && [ -f "${xo}" ] && [ "${xo}" -nt "${xi}" ]; then
+  if [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${seal}" ] && [ -f "${xo}" ]; then
     if [ ! -f "${phi}" ]; then
       # There are no intermediates, because grep-in excluded this file the
       # previous time and the output is a plain copy of the input.
       fresh=true
-    elif [ "${phi}" -nt "${xi}" ] && [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ "${xo}" -nt "${pho}" ]; then
+    elif [ -f "${pho}" ] && [ "${pho}" -nt "${phi}" ] && [ "${xo}" -nt "${pho}" ]; then
       fresh=true
     fi
   fi
   if [ "${fresh}" == 'true' ]; then
-    echo "Output $(basename "${xo}") is newer than input $(basename "${xi}") all the way through the chain, with the same rules and options; skipping transformation for ${idx}"
+    echo "Output $(basename "${xo}") was made from the same input $(basename "${xi}") all the way through the chain, with the same rules and options; skipping transformation for ${idx}"
     return
   fi
   verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
@@ -163,7 +166,7 @@ function rewrite {
     fi
     if [ "${rc}" -ne 0 ]; then
       cp "${xi}" "${xo}"
-      printf '%s' "${stamp}" > "${mark}"
+      printf '%s' "${seal}" > "${mark}"
       echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
       return
     fi
@@ -214,7 +217,7 @@ function rewrite {
   else
     verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^>') lines"
   fi
-  printf '%s' "${stamp}" > "${mark}"
+  printf '%s' "${seal}" > "${mark}"
 }
 
 # Kill a process together with its whole descendant tree, escalating from a
@@ -354,6 +357,15 @@ verbose "Target directory for PHI files: ${HONE_TO}"
 
 mkdir -p "${HONE_XMIR_OUT}"
 verbose "Output directory for XMIR files: ${HONE_XMIR_OUT}"
+
+# The output of a class that is no longer disassembled must not be assembled
+# back (see #948), while the output of every other class stays for the skip
+# check above (see #1032).
+find "${HONE_XMIR_OUT}" -name '*.xmir' -type f | while IFS= read -r o; do
+  if [ ! -f "${HONE_XMIR_IN}/${o#"${HONE_XMIR_OUT}"/}" ]; then
+    rm -f "${o}" "${o}.stamp"
+  fi
+done
 
 statistics_header "${statistics_csv}"
 

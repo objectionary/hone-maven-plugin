@@ -87,6 +87,22 @@ final class SummaryTest {
         );
     }
 
+    @Test
+    void keepsStatisticsOfSingleModule(@Mktmp final Path temp) throws Exception {
+        final Path own = Files.createDirectories(temp.resolve("target"))
+            .resolve("hone-statistics.csv");
+        Files.write(
+            own,
+            new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
+        );
+        new Summary(temp, temp.resolve("target")).collect();
+        MatcherAssert.assertThat(
+            "statistics of a project without modules must survive the summary",
+            own.toFile().exists(),
+            Matchers.is(true)
+        );
+    }
+
     private static Path modular(final Path root) throws Exception {
         Files.createDirectories(root.resolve("server"));
         Files.createDirectories(root.resolve("client"));

@@ -166,7 +166,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * save time. This is a good example to filter in only the files
      * that contain {@code filter()} and {@code map()} methods:</p>
      *
-     * <pre>"&lt;o&gt;(66-69-6C-74-65-72|6D-61-70)&lt;/o&gt;</pre>
+     * <pre>&gt;(66-69-6C-74-65-72|6D-61-70)&lt;</pre>
      *
      * <p>Here, {@code 66-69-6C-74-65-72} stands for the {@code "filter"}
      * and {@code 6D-61-70} for the {@code "map"}, in hexadecimal format.</p>

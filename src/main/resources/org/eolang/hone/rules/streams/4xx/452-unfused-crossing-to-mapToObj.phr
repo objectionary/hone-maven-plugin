@@ -1,0 +1,163 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a crossing that never fused — the analogue of 441 and 442 for the
+# `Φ.hone.box` + `Φ.hone.map` pair 208 mints out of a `mapToObj`. That split
+# pays for itself only when the map joins a run: 602 emits the box as a
+# `boxed()` invokeinterface, so a map that ends up alone in its distill costs
+# one more stream stage than the `mapToObj` it replaced, and the `mapMulti`
+# that stage runs is an identity — it unboxes with the `intValue()` 421 spliced
+# in and reboxes with the mapper, which is what `boxed()` had just done (#1105).
+#
+# The shape matched here is exactly what the pipeline leaves when nothing fused:
+# the crossing box still in front, and behind it a `map` distill whose body is
+# the two opcodes and no more — 421's unwrapping and the call to the mapper 208
+# took from the lambda. A distill that found a neighbour carries the neighbour's
+# opcodes too, and `accepted` equal to `bridge-input` says 421 has already run,
+# so neither a fused run nor a crossing on the primitive side can match.
+#
+# ORDER MATTERS: it runs after 401 (every object operator has collapsed into one
+# distill), after 421 (the unwrapping is in place, and matching it is how the
+# rule recognises its own crossing) and after 451 (a trailing mapToX has had its
+# chance to fuse into the same distill). By 452 nothing else will be added to
+# the body, so a body of two is a map that stayed alone.
+#
+# What goes back is the `Φ.hone.lambda` 208 consumed, not an invokeinterface:
+# the pair carries a mapper, and 701 is the rule that knows how to lower a
+# lambda to `invokedynamic` + the stream call. Reverting one step earlier than
+# 441 does also hands the wrapper back to 711/712, which drop it when the mapper
+# was a method reference 103/104 desugared, so `.mapToObj(Long::valueOf)` comes
+# out byte-identical to what javac emitted. Every binding the lambda needs is
+# recovered: the primitive from the unwrapping's signature, the functional
+# interface and the stream signature from the primitive, and the mapper from
+# the body's own call.
+#
+# The lambda carries a `reverted ↦ Φ.true` marker, the same defence 441 and 442
+# put on their opcodes. 208's pattern is closed on the ten bindings 111 mints,
+# so the eleventh stops it splitting this crossing a second time and the
+# 208 -> 306 -> 452 cycle cannot spin on a run with more than one cycle. 701's
+# pattern ends in a wildcard block, so it lowers the marked lambda all the same.
+name: unfused-crossing-to-mapToObj
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-box ↦ ⟦
+      φ ↦ Φ.hone.box,
+      stream-class ↦ 𝑒-stream-class,
+      minted ↦ "crossing"
+    ⟧,
+    𝜏-distill ↦ ⟦
+      φ ↦ Φ.hone.distill,
+      class ↦ 𝑒-class,
+      bridge-input ↦ 𝑒-wrapper,
+      bridge-output ↦ 𝑒-bridge-output,
+      start ↦ "map",
+      accepted ↦ 𝑒-wrapper,
+      returned ↦ 𝑒-returned,
+      static ↦ "true",
+      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      body ↦ ⟦
+        𝜏-unwrap ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokevirtual,
+          i2 ↦ 𝑒-unwrap-class,
+          i3 ↦ 𝑒-unwrap-method,
+          i4 ↦ 𝑒-unwrap-signature,
+          i5 ↦ Φ.false
+        ⟧,
+        𝜏-call ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokestatic,
+          i2 ↦ 𝑒-target-class,
+          i3 ↦ 𝑒-target-method,
+          i4 ↦ 𝑒-target-signature,
+          i5 ↦ 𝑒-target-is-interface
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-lambda ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ "apply",
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ "true",
+      opcode ↦ "invokestatic",
+      target ↦ ⟦
+        handle ↦ 6,
+        class ↦ 𝑒-target-class,
+        method ↦ 𝑒-target-method,
+        signature ↦ 𝑒-target-signature,
+        is-interface ↦ 𝑒-target-is-interface
+      ⟧,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ "mapToObj",
+        signature ↦ 𝑒-stream-signature
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - matches: ['^L.+;$', 𝑒-bridge-output]
+    - or:
+        - and:
+            - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+            - eq: [𝑒-wrapper, '"Ljava/lang/Integer;"']
+            - eq: [𝑒-unwrap-class, '"java/lang/Integer"']
+            - eq: [𝑒-unwrap-method, '"intValue"']
+            - eq: [𝑒-unwrap-signature, '"()I"']
+            - matches: ['^\(I\)L.+;$', 𝑒-target-signature]
+        - and:
+            - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+            - eq: [𝑒-wrapper, '"Ljava/lang/Long;"']
+            - eq: [𝑒-unwrap-class, '"java/lang/Long"']
+            - eq: [𝑒-unwrap-method, '"longValue"']
+            - eq: [𝑒-unwrap-signature, '"()J"']
+            - matches: ['^\(J\)L.+;$', 𝑒-target-signature]
+        - and:
+            - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+            - eq: [𝑒-wrapper, '"Ljava/lang/Double;"']
+            - eq: [𝑒-unwrap-class, '"java/lang/Double"']
+            - eq: [𝑒-unwrap-method, '"doubleValue"']
+            - eq: [𝑒-unwrap-signature, '"()D"']
+            - matches: ['^\(D\)L.+;$', 𝑒-target-signature]
+where:
+  - meta: 𝜏-lambda
+    function: random-tau
+  - meta: 𝑒-primitive
+    function: sed
+    args:
+      - 𝑒-unwrap-signature
+      - '"s/[(][)]//g"'
+  - meta: 𝑒-flavour
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/I/Int/g"'
+      - '"s/J/Long/g"'
+      - '"s/D/Double/g"'
+  - meta: 𝑒-function
+    function: concat
+    args: ['"Ljava/util/function/"', 𝑒-flavour, '"Function;"']
+  - meta: 𝑒-interface
+    function: concat
+    args: ['"()"', 𝑒-function]
+  - meta: 𝑒-stream-signature
+    function: concat
+    args: ['"("', 𝑒-function, '")Ljava/util/stream/Stream;"']
+  - meta: 𝑒-lambda-signature
+    function: concat
+    args: ['"("', 𝑒-primitive, '")Ljava/lang/Object;"']
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-primitive, '")"', 𝑒-bridge-output]

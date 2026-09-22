@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The IntStream flavour of the revert, where every binding the lambda gets back
+# is derived rather than copied: the `int` comes out of the `intValue()`
+# signature 421 spliced in, and the `IntFunction` of the interface, of the
+# lambda signature and of the `mapToObj` signature is built from it. The mapper
+# here is a javac lambda rather than a desugared method reference, so nothing in
+# 7xx follows and the reverted `mapToObj` is the one the class came in with.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/452-unfused-crossing-to-mapToObj.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      box ↦ ⟦
+        φ ↦ Φ.hone.box,
+        stream-class ↦ "java/util/stream/IntStream",
+        minted ↦ "crossing"
+      ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Ljava/lang/String;",
+        start ↦ "map",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Ljava/lang/String;",
+        static ↦ "true",
+        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        body ↦ ⟦
+          b1 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokevirtual,
+            i2 ↦ "java/lang/Integer",
+            i3 ↦ "intValue",
+            i4 ↦ "()I",
+            i5 ↦ Φ.false
+          ⟧,
+          b2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i2 ↦ "Foo",
+            i3 ↦ "lambda$main$0",
+            i4 ↦ "(I)Ljava/lang/String;",
+            i5 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, interface ↦ "()Ljava/util/function/IntFunction;", lambda-signature ↦ "(I)Ljava/lang/Object;", bridge-signature ↦ "(I)Ljava/lang/String;", 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, stream ↦ ⟦ class ↦ "java/util/stream/IntStream", method ↦ "mapToObj", signature ↦ "(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;" ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(I)Ljava/lang/String;", is-interface ↦ Φ.false ⟧, 𝐵-c ⟧

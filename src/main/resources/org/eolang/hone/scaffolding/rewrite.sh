@@ -71,11 +71,13 @@ function atomic_write {
   local destination="${1}"
   shift
   local tmp="${destination}.tmp.$$"
-  if "${@}" > "${tmp}" && [ -s "${tmp}" ]; then
+  local code=0
+  "${@}" > "${tmp}" || code=$?
+  if [ "${code}" -eq 0 ] && [ -s "${tmp}" ]; then
     mv -f "${tmp}" "${destination}"
   else
     rm -f "${tmp}"
-    return 1
+    return "$(( code == 0 ? 1 : code ))"
   fi
 }
 

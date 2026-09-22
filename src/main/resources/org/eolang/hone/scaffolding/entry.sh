@@ -267,8 +267,15 @@ declare -a assemble_opts=(
   "${opts[@]}"
   "-Djeo.assemble.outputDir=${TARGET}/${CLASSES}"
   "-Djeo.assemble.xmir.verification=false"
-  "-Djeo.assemble.skip.verification=true"
 )
+# jeo verifies every class it assembles, which is the cheapest moment to catch
+# a rule that produced unloadable bytecode: without it the class reaches the
+# user's JVM and fails there with a VerifyError, far from the build that made
+# it (see #1102). Skipping is therefore opt-in and buys build time only.
+if [ "${SKIP_VERIFICATION}" == 'true' ]; then
+  echo "Assembled bytecode won't be verified, because of skipVerification=true"
+  assemble_opts+=("-Djeo.assemble.skip.verification=true")
+fi
 # Only the disassembly is filtered. The assemble goal has no such parameters,
 # and it does not need them: it takes back what the disassembly left behind.
 if [ -n "${INCLUDES}" ]; then

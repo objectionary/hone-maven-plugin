@@ -129,6 +129,22 @@ The "small-steps" mode (`<smallSteps>true</smallSteps>`)
   so that a `diff` between two adjacent files
   reveals exactly which rule changed what.
 
+When [jeo-maven-plugin] assembles the rewritten `.class` files back,
+  it verifies each of them against the JVM specification,
+  so that a rule that produced unloadable bytecode
+  fails the build that made it
+  instead of the runtime of the user.
+The check costs build time,
+  which `<skipVerification>true</skipVerification>` buys back,
+  at the price of a `VerifyError` arriving much later.
+The same switch is the way out
+  when the verifier stops on a type it cannot resolve:
+  jeo knows only the classes it assembles,
+  so a method that touches a type from a dependency
+  fails with a `ClassNotFoundException`
+  instead of a verdict on the bytecode
+  (see [jeo#1763](https://github.com/objectionary/jeo-maven-plugin/issues/1763)).
+
 ## Optimization Pipeline
 
 The `.phi` file that arrives from [jeo-maven-plugin]

@@ -217,6 +217,26 @@ public final class OptimizeMojo extends AbstractMojo {
     private boolean skipIfNotSuitable;
 
     /**
+     * Skip the verification of the assembled bytecode.
+     *
+     * <p>After the rewriting, jeo assembles {@code .class} files back from
+     * XMIR and verifies that each of them conforms to the JVM specification
+     * and can be loaded. If this is set to {@code true}, that check is not
+     * performed: the build is faster, but a broken class reaches the runtime
+     * of the user and fails there with a {@code VerifyError}.</p>
+     *
+     * <p>Turn it on when the verifier stops on a type it can not resolve:
+     * jeo knows only the classes it assembles, so a method that touches a
+     * type from a dependency fails with {@code ClassNotFoundException}
+     * instead of a verdict on the bytecode (see jeo#1763).</p>
+     *
+     * @since 0.31.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.skip-verification", defaultValue = "false")
+    private boolean skipVerification;
+
+    /**
      * Print all commands of all Bash scripts.
      *
      * <p>If this is set to {@code true}, all our internal bash scripts will
@@ -559,7 +579,8 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         command.addAll(
             Arrays.asList(
-                "--env", String.format("SKIP_IF_NOT_SUITABLE=%s", this.skipIfNotSuitable)
+                "--env", String.format("SKIP_IF_NOT_SUITABLE=%s", this.skipIfNotSuitable),
+                "--env", String.format("SKIP_VERIFICATION=%s", this.skipVerification)
             )
         );
         command.addAll(
@@ -745,6 +766,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
                 .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
                 .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
+                .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
                 .withEnv("GREP_IN", this.grepIn)
                 .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
                 .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))

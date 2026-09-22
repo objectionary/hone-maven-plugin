@@ -101,6 +101,13 @@ final class OptimizeMojoRulesTest {
         );
     }
 
+    /*
+     * Verification is off here because this fixture puts one single class into
+     * target/classes, while jeo resolves types only among the classes it
+     * assembles: Pointer returns a Pointer$Opaque that the verifier never
+     * sees, and the build dies with ClassNotFoundException. The same gap hits
+     * any type that lives in a dependency, which is jeo#1763.
+     */
     private static void runOneLargeJnaClass(final Farea fea, final String path,
         final Path bin, final String image) throws IOException {
         fea.clean();
@@ -116,6 +123,7 @@ final class OptimizeMojoRulesTest {
             .configuration()
             .set("alwaysWithDocker", "true")
             .set("image", image)
+            .set("skipVerification", "true")
             .set("grepIn", ".*");
         fea.exec("process-classes");
         final Path pre = fea.files().file(

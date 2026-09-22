@@ -30,10 +30,28 @@ final class OptimizeMojoChangedTest {
 
     @Test
     void countsEveryReplacedLineOnce(@Mktmp final Path temp) throws IOException {
+        MatcherAssert.assertThat(
+            "three replaced lines must be counted as three, not as six",
+            this.changed(temp, "a%nb%nc%n", "x%ny%nz%n"),
+            Matchers.equalTo("3")
+        );
+    }
+
+    @Test
+    void countsLinesThatWereOnlyRemoved(@Mktmp final Path temp) throws IOException {
+        MatcherAssert.assertThat(
+            "three removed lines must be counted as three, not as zero",
+            this.changed(temp, "a%nb%nc%nd%n", "a%n"),
+            Matchers.equalTo("3")
+        );
+    }
+
+    private String changed(final Path temp, final String first, final String second)
+        throws IOException {
         final Path before = temp.resolve("before.phi");
         final Path after = temp.resolve("after.phi");
-        Files.write(before, "a%nb%nc%n".formatted().getBytes(StandardCharsets.UTF_8));
-        Files.write(after, "x%ny%nz%n".formatted().getBytes(StandardCharsets.UTF_8));
+        Files.write(before, first.formatted().getBytes(StandardCharsets.UTF_8));
+        Files.write(after, second.formatted().getBytes(StandardCharsets.UTF_8));
         final Matcher matcher = Pattern.compile("    changed=.*?\\n").matcher(
             new String(
                 Files.readAllBytes(
@@ -45,16 +63,12 @@ final class OptimizeMojoChangedTest {
         if (!matcher.find()) {
             throw new IllegalStateException("No edit count found in rewrite.sh");
         }
-        MatcherAssert.assertThat(
-            "three replaced lines must be counted as three, not as six",
-            new Jaxec(
-                "bash", "-c",
-                String.format(
-                    "phi=%s%npho=%s%n%sprintf '%%s' \"${changed}\"",
-                    before, after, matcher.group()
-                )
-            ).exec().stdout().trim(),
-            Matchers.equalTo("3")
-        );
+        return new Jaxec(
+            "bash", "-c",
+            String.format(
+                "phi=%s%npho=%s%n%sprintf '%%s' \"${changed}\"",
+                before, after, matcher.group()
+            )
+        ).exec().stdout().trim();
     }
 }

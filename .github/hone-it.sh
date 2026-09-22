@@ -35,7 +35,7 @@ if [ "${installed}" != "${phino}" ]; then
 fi
 echo "pinning hone to locally installed phino ${phino}"
 
-name=$(basename "${repo}")
+name=${repo//\//__}
 dir="${work}/${name}"
 rm -rf "${dir}"
 mkdir -p "${dir}"

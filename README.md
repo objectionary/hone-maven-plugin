@@ -260,6 +260,11 @@ Rule `208-mapToObj-to-boxed-map` moves the crossing instead,
   and a plain `Φ.hone.map` carrying the original mapper —
   which puts the operation on the reference side of the crossing,
   where everything downstream can fuse it.
+The split is a bet on that fusion,
+  since the `boxed()` is a stream stage the original `mapToObj` did not have,
+  so when nothing fuses into the map
+  rule `452-unfused-crossing-to-mapToObj` takes the bet back
+  and hands the operation over to stage 7 as the `mapToObj` it was (#1105).
 Rules `206-` through `261-` then tidy up the boxing and primitive
   conversions that the compiler inserted around the lambda
   (for example moving an `Integer.valueOf` call from outside the lambda

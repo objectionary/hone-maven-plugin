@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A crossing that carries no run behind it. 208 splits every `mapToObj` into a
+# `Φ.hone.box` and a `Φ.hone.map` in the hope that the map joins a fused run;
+# when nothing fuses into it, 602 emits the box as a `boxed()` and 501/511 lower
+# the lone map to a `Stream.mapMulti` that unboxes what the `boxed()` had just
+# boxed — one extra stream stage and one synthesised method, all to compute the
+# identity (#1105).
+#
+# 452 gives that pair back: the `Φ.hone.lambda` 208 consumed returns, 701 lowers
+# it to the `mapToObj` the class came in with, and 712 then drops the wrapper
+# 104 had minted for the method reference. Four pipelines:
+#
+#   * ints    — `IntStream.range(...).mapToObj(Integer::toString)` and nothing
+#     else. "0-1-2-3".
+#   * longs   — the LongStream sibling with a lambda mapper: "L1+L2+L3".
+#   * doubles — the DoubleStream sibling: "d1.5;d2.5".
+#   * fused   — the crossing that DOES pay for itself, so the pack proves the
+#     revert is not indiscriminate: a filter and a map behind it collapse the
+#     three operators into one `boxed()` plus one `mapMulti`. "0!,1!,2!,4!,5!".
+java: |
+  package lone;
+  import java.util.stream.Collectors;
+  import java.util.stream.DoubleStream;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      String ints = IntStream.range(0, 4)
+        .mapToObj(Integer::toString)
+        .collect(Collectors.joining("-"));
+      String longs = LongStream.of(1L, 2L, 3L)
+        .mapToObj(n -> "L" + n)
+        .collect(Collectors.joining("+"));
+      String doubles = DoubleStream.of(1.5, 2.5)
+        .mapToObj(d -> "d" + d)
+        .collect(Collectors.joining(";"));
+      String fused = IntStream.range(0, 6)
+        .mapToObj(Integer::toString)
+        .filter(s -> !s.equals("3"))
+        .map(s -> s + "!")
+        .collect(Collectors.joining(","));
+      System.out.printf("The result is %s/%s/%s/%s\n", ints, longs, doubles, fused);
+    }
+  }
+log:
+  - "Modified 1/1 X.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 0-1-2-3/L1+L2+L3/d1.5;d2.5/0!,1!,2!,4!,5!"
+# Ten interface calls go in: four `collect`, four `mapToObj` and the `filter`
+# and `map` of the fused pipeline. Ten come out, but not the same ten — the
+# fused pipeline's three operators become one `boxed()` and one `mapMulti`,
+# while the three lone crossings stay the `mapToObj` they were. Without 452
+# each of those three would grow a `boxed()` and a `mapMulti` of its own and
+# the count would be sixteen. The two invokedynamic that go are the filter and
+# the map of the fused run, folded into its one `mapMulti` bootstrap, and the
+# four invokestatic that arrive are the calls that run inside it.
+before:
+  invokeinterface: 10
+  invokedynamic: 9
+  invokestatic: 8
+after:
+  invokeinterface: 10
+  invokedynamic: 7
+  invokestatic: 12

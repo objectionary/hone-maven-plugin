@@ -41,6 +41,11 @@
 #     vocabulary 241-243 read. 244 is the sibling that covers that one case, and
 #     the reason it exists.
 #
+# The box that survives is paid for by whatever fuses into the map BEHIND it,
+# and nothing here can see that either: a map that ends up alone in its distill
+# costs a `boxed()` stage to compute the identity. 452 is the rule that spots
+# that at the end of the fuse pass and hands the pair back (#1105).
+#
 # ORDER MATTERS: it runs before 209 (and therefore before 211 and 221), so that
 # on all three shapes the box minted here is already in place, adjacent to
 # whatever precedes it, when those rules look.

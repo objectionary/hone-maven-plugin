@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `skip(-1L)` written on its own line keeps its native call (#1081): the
+# label between the push and the call does not hide the negative count, so
+# neither `219` nor `220` lifts it and the stream still throws.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/212-keep-negative-skip-native.phr
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/219-remove-label-before-skip.phr
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/220-recognize-skip.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    m1 ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ -1 ⟧ ⟧,
+        l1 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L1" ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/Stream",
+          i3 ↦ "skip",
+          i4 ↦ "(J)Ljava/util/stream/Stream;",
+          i5 ↦ Φ.true,
+          ρ ↦ ∅
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, i3 ↦ "skip", 𝐵-t ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, reverted ↦ Φ.true, 𝐵-t ⟧

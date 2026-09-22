@@ -57,14 +57,13 @@ public final class Summary {
      */
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
-        final String stats = "hone-statistics.csv";
-        final Path destination = this.target.resolve(stats);
+        final Path destination = this.target.resolve("hone-summary.csv");
         try {
             Files.walkFileTree(
                 this.root,
                 EnumSet.of(FileVisitOption.FOLLOW_LINKS),
                 Integer.MAX_VALUE,
-                new Collector(found, stats, destination)
+                new Collector(found, "hone-statistics.csv", destination)
             );
         } catch (final IOException exception) {
             throw new IllegalStateException(

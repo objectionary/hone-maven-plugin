@@ -25,9 +25,9 @@ assert Files.exists(server): "File 'server/target/hone-statistics.csv' does not 
 assert Files.readAllLines(server).size() == 2: "header and one line";
 assert server.toFile().text.contains("Server.phi");
 
-// 'main' module contains hone-statistics.csv file with all three lines
-def main = new File(basedir, 'target/hone-statistics.csv').toPath();
-assert Files.exists(main): "File 'target/hone-statistics.csv' does not exist";
+// 'main' module contains hone-summary.csv file with all three lines
+def main = new File(basedir, 'target/hone-summary.csv').toPath();
+assert Files.exists(main): "File 'target/hone-summary.csv' does not exist";
 assert Files.readAllLines(main).size() == 4: "header and three lines";
 assert main.toFile().text.contains("Common.phi");
 assert main.toFile().text.contains("Client.phi");

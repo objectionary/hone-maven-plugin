@@ -250,7 +250,7 @@ printf 'Using the following %d rules:\n\t%b\n' \
   "$(printf '%s' "${RULES}" | wc -w)" \
   "${RULES// /\\n\\t}"
 
-rm -rf "${TARGET}/hone/jeo-disassemble" "${TARGET}/hone/unphi"
+rm -rf "${TARGET}/hone/jeo-disassemble"
 
 declare -a disassemble_opts=(
   "${opts[@]}"

@@ -404,7 +404,7 @@ public final class OptimizeMojo extends AbstractMojo {
      * @return The bind-mount string
      */
     static String mount(final File host, final String container) {
-        final String path = host.toString();
+        final String path = host.getAbsolutePath();
         if (path.indexOf(':') >= 0) {
             throw new IllegalStateException(
                 String.format(

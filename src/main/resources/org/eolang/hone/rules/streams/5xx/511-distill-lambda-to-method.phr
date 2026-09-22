@@ -87,7 +87,7 @@ where:
     args:
       - 𝑒-bridge-input
       - '"s/^[DJ]$/3/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/2/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;|\\[.+)$/2/g"'
   - meta: 𝑒-max-locals-without-this
     function: number
     args: [𝑒-max-locals-str]
@@ -107,7 +107,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-input
-      - '"s/^L.+;$/aload/g"'
+      - '"s/^(L.+;|\\[.+)$/aload/g"'
       - '"s/^D$/dload/g"'
       - '"s/^I$/iload/g"'
       - '"s/^J$/lload/g"'
@@ -151,7 +151,7 @@ where:
     args:
       - 𝑒-bridge-input
       - '"s/^[DJ]$/2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/1/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;|\\[.+)$/1/g"'
   - meta: 𝑒-pop-consumer-index-without-this
     function: number
     args: [𝑒-pop-consumer-index-str]

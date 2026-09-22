@@ -90,4 +90,4 @@ where:
     args:
       - 𝑒-first-returned
       - '"s/^[DJ]$/dup2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;|\\[.+)$/dup/g"'

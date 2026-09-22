@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A filter over `String[]` elements gets a one-slot `dup` guard (#1080). The
+# `sed` that turns the accepted type into an opcode name did not know array
+# descriptors, so `[Ljava/lang/String;` reached `tau` and phino aborted the
+# rewrite of the whole class.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/413-dup-before-filter-distill.phr
+input: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ "Foo",
+    bridge-input ↦ "[Ljava/lang/String;",
+    bridge-output ↦ "[Ljava/lang/String;",
+    start ↦ "filter",
+    accepted ↦ "[Ljava/lang/String;",
+    returned ↦ "[Ljava/lang/String;",
+    static ↦ "true",
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "([Ljava/lang/String;)Z", i5 ↦ Φ.false ⟧,
+      i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
+      i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      i4 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
+      i5 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.dup ⟧
+  - ⟦ φ ↦ Φ.hone.distill, class ↦ "Foo", bridge-input ↦ "[Ljava/lang/String;", 𝐵-a, start ↦ "dup", 𝐵-b ⟧

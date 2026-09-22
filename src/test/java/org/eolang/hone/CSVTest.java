@@ -133,6 +133,77 @@ final class CSVTest {
     }
 
     @Test
+    void releasesFileHandleAfterParsing(@Mktmp final Path temp) throws Exception {
+        final Path path = temp.resolve("handle.csv");
+        Files.write(
+            path,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/1,a.phi,b.phi,5,1000",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        new CSV(path).size();
+        MatcherAssert.assertThat(
+            "file handle must be released after parsing so the file can be deleted",
+            Files.deleteIfExists(path),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void flushesAndRereadsRoundTrip(@Mktmp final Path temp) throws Exception {
+        final Path source = temp.resolve("input.csv");
+        Files.write(
+            source,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/2,a.phi,b.phi,5,1000",
+                "2/2,c.phi,d.phi,3,800",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        final Path flushed = temp.resolve("output.csv");
+        new CSV(source).flush(flushed);
+        MatcherAssert.assertThat(
+            "round-trip through flush must preserve row count",
+            new CSV(flushed).size(),
+            Matchers.is(2)
+        );
+    }
+
+    @Test
+    void combinesTwoCsvFiles(@Mktmp final Path temp) throws Exception {
+        final Path first = temp.resolve("first.csv");
+        Files.write(
+            first,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/1,a.phi,b.phi,5,1000",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        final Path second = temp.resolve("second.csv");
+        Files.write(
+            second,
+            String.join(
+                System.lineSeparator(),
+                "ID,Before,After,Changed,LinesPerSec",
+                "1/1,c.phi,d.phi,3,800",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        MatcherAssert.assertThat(
+            "combined CSV must contain rows from both files",
+            new CSV(first).add(new CSV(second)).size(),
+            Matchers.is(2)
+        );
+    }
+
+    @Test
     void parsesHeaderOnlyCsv(@Mktmp final Path temp) throws Exception {
         final Path path = temp.resolve("test.csv");
         Files.write(

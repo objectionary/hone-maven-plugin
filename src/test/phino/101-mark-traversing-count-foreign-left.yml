@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `filter` that is not a stream call does not stamp the `count()` (#1082).
+# `Optional.filter` clears no SIZED flag, so the count stays elidable and 142
+# must still see the four-operand opcode it keys on.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/101-mark-traversing-count.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-stage ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokevirtual,
+        v0 ↦ "java/util/Optional",
+        v1 ↦ "filter",
+        v2 ↦ "(Ljava/util/function/Predicate;)Ljava/util/Optional;",
+        v3 ↦ Φ.false
+      ⟧,
+      op-count ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "count",
+        v2 ↦ "()J",
+        v3 ↦ Φ.true
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "count", v2 ↦ "()J", v3 ↦ Φ.true ⟧

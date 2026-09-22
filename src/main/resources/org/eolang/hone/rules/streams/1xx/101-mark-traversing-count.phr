@@ -63,7 +63,10 @@
 # Detection is method-local and over-broad, exactly as `224`'s and `454`'s are,
 # and here too that errs safe: a `filter` on an unrelated, locally-consumed
 # stream in the same method stamps this `count()` as well, which only means the
-# chain in front of it keeps a fusion it could have kept anyway.
+# chain in front of it keeps a fusion it could have kept anyway. The owner of
+# the resizing call must be a stream interface, though (#1082): an
+# `Optional.filter` or a user type's `distinct()` clears nothing, and a stamp
+# taken from it lets the chain fuse in front of a count the JVM would elide.
 #
 # The stamp is a fifth operand on the opcode, the same trick `441`/`442`/`454`
 # use: jeo ignores it when assembling, so the bytecode is an ordinary
@@ -119,3 +122,6 @@ when:
     - matches:
         - '^(filter|distinct|takeWhile|dropWhile|flatMap|flatMapTo(Int|Long|Double)|mapMulti|mapMultiTo(Int|Long|Double|Obj))$'
         - 𝑒-rmethod
+    - matches:
+        - '^java/util/stream/(Stream|IntStream|LongStream|DoubleStream)$'
+        - 𝑒-rclass

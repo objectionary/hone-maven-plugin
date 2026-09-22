@@ -95,20 +95,36 @@
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>          );
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>      }
 <a class="jxr_linenumber" name="L89" href="#L89">89</a>  
-<a class="jxr_linenumber" name="L90" href="#L90">90</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Path modular(<strong class="jxr_keyword">final</strong> Path root) <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L91" href="#L91">91</a>          Files.createDirectories(root.resolve(<span class="jxr_string">"server"</span>));
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>          Files.createDirectories(root.resolve(<span class="jxr_string">"client"</span>));
-<a class="jxr_linenumber" name="L93" href="#L93">93</a>          Files.write(
-<a class="jxr_linenumber" name="L94" href="#L94">94</a>              root.resolve(<span class="jxr_string">"server/hone-statistics.csv"</span>),
-<a class="jxr_linenumber" name="L95" href="#L95">95</a>              <strong class="jxr_keyword">new</strong> BytesOf(<strong class="jxr_keyword">new</strong> ResourceOf(<span class="jxr_string">"csv/hone-statistics-server.csv"</span>)).asBytes()
-<a class="jxr_linenumber" name="L96" href="#L96">96</a>          );
-<a class="jxr_linenumber" name="L97" href="#L97">97</a>          Files.write(
-<a class="jxr_linenumber" name="L98" href="#L98">98</a>              root.resolve(<span class="jxr_string">"client/hone-statistics.csv"</span>),
-<a class="jxr_linenumber" name="L99" href="#L99">99</a>              <strong class="jxr_keyword">new</strong> BytesOf(<strong class="jxr_keyword">new</strong> ResourceOf(<span class="jxr_string">"csv/hone-statistics-client.csv"</span>)).asBytes()
-<a class="jxr_linenumber" name="L100" href="#L100">100</a>         );
-<a class="jxr_linenumber" name="L101" href="#L101">101</a>         <strong class="jxr_keyword">return</strong> root;
-<a class="jxr_linenumber" name="L102" href="#L102">102</a>     }
-<a class="jxr_linenumber" name="L103" href="#L103">103</a> }
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>      @Test
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>      <strong class="jxr_keyword">void</strong> keepsStatisticsOfSingleModule(@Mktmp <strong class="jxr_keyword">final</strong> Path temp) <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          <strong class="jxr_keyword">final</strong> Path own = Files.createDirectories(temp.resolve(<span class="jxr_string">"target"</span>))
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>              .resolve(<span class="jxr_string">"hone-statistics.csv"</span>);
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>          Files.write(
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>              own,
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>              <strong class="jxr_keyword">new</strong> BytesOf(<strong class="jxr_keyword">new</strong> ResourceOf(<span class="jxr_string">"csv/hone-statistics-server.csv"</span>)).asBytes()
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>          );
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>          <strong class="jxr_keyword">new</strong> Summary(temp, temp.resolve(<span class="jxr_string">"target"</span>)).collect();
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>          MatcherAssert.assertThat(
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>             <span class="jxr_string">"statistics of a project without modules must survive the summary"</span>,
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>             own.toFile().exists(),
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>             Matchers.is(<strong class="jxr_keyword">true</strong>)
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>         );
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>     }
+<a class="jxr_linenumber" name="L105" href="#L105">105</a> 
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Path modular(<strong class="jxr_keyword">final</strong> Path root) <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>         Files.createDirectories(root.resolve(<span class="jxr_string">"server"</span>));
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>         Files.createDirectories(root.resolve(<span class="jxr_string">"client"</span>));
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>         Files.write(
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>             root.resolve(<span class="jxr_string">"server/hone-statistics.csv"</span>),
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>             <strong class="jxr_keyword">new</strong> BytesOf(<strong class="jxr_keyword">new</strong> ResourceOf(<span class="jxr_string">"csv/hone-statistics-server.csv"</span>)).asBytes()
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>         );
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>         Files.write(
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>             root.resolve(<span class="jxr_string">"client/hone-statistics.csv"</span>),
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>             <strong class="jxr_keyword">new</strong> BytesOf(<strong class="jxr_keyword">new</strong> ResourceOf(<span class="jxr_string">"csv/hone-statistics-client.csv"</span>)).asBytes()
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         );
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>         <strong class="jxr_keyword">return</strong> root;
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>     }
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> }
 </pre>
 <hr/>
 <div id="footer">© 2024–2026 <a href="https://github.com/objectionary">Objectionary</a></div>

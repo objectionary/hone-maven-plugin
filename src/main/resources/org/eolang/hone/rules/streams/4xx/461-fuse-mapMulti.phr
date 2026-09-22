@@ -239,12 +239,12 @@ where:
     function: sed
     args:
       - 𝑒-first-signature
-      - '"s/^[(](L[^;]*;).*/$1/"'
+      - '"s/^[(](\\[*(L[^;]*;|[ZBCSIJFD])).*/$1/"'
   - meta: 𝑒-second-input
     function: sed
     args:
       - 𝑒-second-signature
-      - '"s/^[(](L[^;]*;).*/$1/"'
+      - '"s/^[(](\\[*(L[^;]*;|[ZBCSIJFD])).*/$1/"'
   - meta: 𝑒-fused-signature
     function: concat
     args: [ '"("', 𝑒-first-input, '"Ljava/util/function/Consumer;)V"' ]

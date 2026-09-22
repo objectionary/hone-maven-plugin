@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `flatMap` over `String[]` elements gets an adapter whose descriptor takes
+# one `[Ljava/lang/String;` (#1079). The element type used to be read with a
+# `sed` that only knew `L...;`, so the whole target signature was spliced in
+# and the class failed to load with an illegal signature.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/455-flatMap-to-mapMulti.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of,
+        op0 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "apply",
+          interface ↦ "()Ljava/util/function/Function;",
+          lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+          bridge-signature ↦ "([Ljava/lang/String;)Ljava/util/stream/Stream;",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "([Ljava/lang/String;)Ljava/util/stream/Stream;", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "flatMap", signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.method, 𝐵-head, descriptor ↦ "([Ljava/lang/String;Ljava/util/function/Consumer;)V", 𝐵-tail ⟧
+  - ⟦ φ ↦ Φ.jeo.param, index ↦ 0, access ↦ 0, type ↦ "[Ljava/lang/String;" ⟧

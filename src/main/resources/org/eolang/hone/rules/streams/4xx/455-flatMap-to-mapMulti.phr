@@ -314,7 +314,7 @@ where:
     function: sed
     args:
       - 𝑒-target-signature
-      - '"s/^[(](L[^;]*;).*/$1/"'
+      - '"s/^[(](\\[*(L[^;]*;|[ZBCSIJFD])).*/$1/"'
   - meta: 𝑒-frame-input
     function: sed
     args:

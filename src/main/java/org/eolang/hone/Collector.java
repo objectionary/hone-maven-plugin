@@ -11,7 +11,9 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A file visitor that gathers statistics files, following symlinks.
@@ -36,6 +38,11 @@ final class Collector extends SimpleFileVisitor<Path> {
     private final Path output;
 
     /**
+     * Real paths of the statistics files already taken.
+     */
+    private final Set<Path> seen;
+
+    /**
      * Ctor.
      *
      * @param found Where to put the found CSVs
@@ -46,14 +53,16 @@ final class Collector extends SimpleFileVisitor<Path> {
         this.found = found;
         this.stats = stats;
         this.output = output;
+        this.seen = new HashSet<>(0);
     }
 
     @Override
     public FileVisitResult visitFile(
         final Path file, final BasicFileAttributes attrs
-    ) {
+    ) throws IOException {
         if (this.stats.equals(file.getFileName().toString())
-            && !Collector.same(this.output, file)) {
+            && !Collector.same(this.output, file)
+            && this.seen.add(file.toRealPath())) {
             this.found.add(new CSV(file));
         }
         return FileVisitResult.CONTINUE;

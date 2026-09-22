@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Keeps a `skip(n)` with a negative constant count native (#1081).
+# `Stream.skip` and its primitive twins throw `IllegalArgumentException`
+# eagerly when `n` is negative. `212-recognize-primitive-skip` and
+# `220-recognize-skip` admit any `ldc` push, and `308` folds the count into a
+# countdown that never fires, so the fused pipeline passes every element through
+# instead of throwing.
+#
+# This rule stamps such a call `reverted ↦ Φ.true` before either recogniser
+# runs. Both are closed on the bare call, so a stamped one is never lifted and
+# stays the native call that throws. The count is read off the `n0` number jeo
+# writes for a long within 2^53; javac pushes it with `ldc`, since
+# `lconst_0` and `lconst_1` are never negative. At most one binding may sit
+# between the push and the call: the label an own-line `.skip(n)` leaves there,
+# which `219-remove-label-before-skip` drops only later.
+#
+# The pattern is closed on the unstamped call, so the rule cannot re-fire on
+# its own output.
+name: keep-negative-skip-native
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦
+      φ ↦ Φ.jeo.opcode.ldc,
+      𝜏-value ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 𝑒-count, ρ ↦ ∅ ⟧,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-gap,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ 𝑒-stream-class,
+      𝜏2 ↦ "skip",
+      𝜏3 ↦ 𝑒-signature,
+      𝜏4 ↦ Φ.true,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-push ↦ ⟦
+      φ ↦ Φ.jeo.opcode.ldc,
+      𝜏-value ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 𝑒-count, ρ ↦ ∅ ⟧,
+      ρ ↦ ∅
+    ⟧,
+    𝐵-gap,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏1 ↦ 𝑒-stream-class,
+      𝜏2 ↦ "skip",
+      𝜏3 ↦ 𝑒-signature,
+      𝜏4 ↦ Φ.true,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  not:
+    gt: [{length: 𝐵-gap}, 1]
+where:
+  - meta: 𝑒-text
+    function: string
+    args: [𝑒-count]
+having:
+  matches: ['^-', 𝑒-text]

@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# `StreamSupport.stream(spliterator, true)` opens a parallel stream with no
+# `parallel()` call, and the skip after it is reverted all the same (#1083).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/222-parallel-reverts-skip.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
+      op1 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        v0 ↦ "java/util/stream/StreamSupport",
+        v1 ↦ "stream",
+        v2 ↦ "(Ljava/util/Spliterator;Z)Ljava/util/stream/Stream;",
+        v3 ↦ Φ.false
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.skip,
+        class ↦ "Foo",
+        stream-class ↦ "java/util/stream/Stream",
+        push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 10 ⟧ ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, 𝐵-h, reverted ↦ Φ.true, 𝐵-t ⟧

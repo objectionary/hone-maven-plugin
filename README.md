@@ -458,7 +458,8 @@ The fused counter is correct only if arrival order equals encounter order:
   fixed in #715, except that no thread-safe data structure can recover
   encounter order once it is lost).
 The JDK's native `Stream.skip(n)` honours the ordered/parallel contract,
-  so when a method contains a `parallel()` or `parallelStream()` call the
+  so when a method contains a `parallel()`, `parallelStream()` or
+  `StreamSupport.stream()` call the
   rules `222-parallel-reverts-skip` and `223-parallel-reverts-skip-after`
   revert the recognised `skip` back to the native call before `308` can fold
   it (#719, #717).

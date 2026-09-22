@@ -263,6 +263,7 @@ function rewrite_with_timeout {
     sleep "${HONE_KILL_GRACE:-10}"
     kill_tree KILL "${sid}"
     kill -KILL "-${sid}" 2>/dev/null || true
+    rm -f "${flag}"
     exit 143
   }
   trap stop_worker TERM INT HUP
@@ -305,6 +306,9 @@ function rewrite_with_timeout {
     rm -f "${flag}"
     sec=$(perl -E "say int($(now) - ${start})")
     echo "Timeout in ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)) after ${sec} seconds"
+    # The killed worker had no chance to remove the temp file of its
+    # atomic_write, so it is swept here (see #1038).
+    rm -f "${phi}".tmp.* "${pho}".tmp.* "${xo}".tmp.*
     cp "${xi}" "${xo}"
   else
     rm -f "${flag}"

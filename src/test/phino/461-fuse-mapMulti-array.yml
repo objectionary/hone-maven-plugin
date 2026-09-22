@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Two `mapMulti` stages over `int[][]` elements fuse into methods whose
+# descriptors take one `[[I` (#1079). The element type used to be read with a
+# `sed` that only knew `L...;`, so the whole lambda signature was spliced in.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/461-fuse-mapMulti.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    jm$main ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        φ ↦ Φ.jeo.seq.of2,
+        op0 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "([[ILjava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "([[ILjava/util/function/Consumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.hone.lambda,
+          class ↦ "Foo",
+          method ↦ "accept",
+          interface ↦ "()Ljava/util/function/BiConsumer;",
+          lambda-signature ↦ "(Ljava/lang/Object;Ljava/lang/Object;)V",
+          bridge-signature ↦ "([[ILjava/util/function/Consumer;)V",
+          static ↦ "true",
+          opcode ↦ "invokestatic",
+          target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "([[ILjava/util/function/Consumer;)V", is-interface ↦ Φ.false ⟧,
+          stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧
+        ⟧,
+        ρ ↦ ∅
+      ⟧
+    ⟧,
+    ρ ↦ ∅
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.method, 𝐵-head, descriptor ↦ "([[ILjava/util/function/Consumer;)V", 𝐵-tail ⟧
+  - ⟦ φ ↦ Φ.jeo.method, 𝐵-head, descriptor ↦ "(Ljava/util/function/Consumer;[[I)V", 𝐵-tail ⟧

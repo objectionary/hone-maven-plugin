@@ -36,6 +36,19 @@
 # the skip (`source.skip(n).parallel()`). Binding groups are order-preserving,
 # so both layouts need their own rule.
 #
+# A `StreamSupport.stream(spliterator, true)` call, or its `intStream`,
+# `longStream` and `doubleStream` twins, counts as a parallel call as well
+# (#1083): it opens a parallel stream without any `parallel()` in sight. The
+# guard takes every such call, whatever its flag, which again only forfeits
+# the optimisation.
+#
+# @todo #1083:30min Let a `StreamSupport` call with a constant `false` flag keep the fusion.
+#  The fourteen parallel guards (`115`, `116`, `210`, `213`, `222`-`227`) now revert
+#  on any `StreamSupport.stream`, `intStream`, `longStream` or `doubleStream` call,
+#  so the common sequential idiom `StreamSupport.stream(iterable.spliterator(), false)`
+#  loses its fusion. They should decline only when the flag pushed right before the
+#  call is not `iconst_0`, and a phino pack should pin that case.
+#
 # When a future `dropWhile` lifting lands, the same revert-on-parallel guard
 # applies to its pragma verbatim.
 #
@@ -85,9 +98,14 @@ result: |
 when:
   and:
     - or:
-        - eq: [𝜏-op, 'invokeinterface']
-        - eq: [𝜏-op, 'invokevirtual']
-    - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+        - and:
+            - or:
+                - eq: [𝜏-op, 'invokeinterface']
+                - eq: [𝜏-op, 'invokevirtual']
+            - matches: ['^(parallel|parallelStream)$', 𝑒-pmethod]
+        - and:
+            - eq: [𝑒-pclass, '"java/util/stream/StreamSupport"']
+            - matches: ['^(stream|intStream|longStream|doubleStream)$', 𝑒-pmethod]
 where:
   - meta: 𝜏-push-back
     function: random-tau

@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Method references inside an INTERFACE (#1116). Rules 103, 104, 105, 107 and
+# 108 desugar a reference into a `lambda$hone$N` wrapper they add to the
+# enclosing class, and they used to repoint the invokedynamic at it through a
+# handle whose interface flag was hardcoded to false. When the enclosing class
+# is an interface, that handle has to be an InterfaceMethodref, and the JVM
+# refuses anything else: `mybatis-dynamic-sql` has
+# `values.stream().filter(Objects::nonNull)` in a static method of the
+# interface `Utilities`, and after `optimize` its first call died with
+#
+#     java.lang.IncompatibleClassChangeError: Method 'boolean
+#     Utilities.lambda$hone$1048152(java.lang.Object)' must be
+#     InterfaceMethodref constant
+#
+# The flag now comes from the `interface` modifier of the enclosing class. It
+# flows through 111 into the lifted lambda's `is-interface`, so the
+# invokestatic a fused distill makes into the wrapper is flagged too, and 711
+# and 712 accept either value when they revert an unfused wrapper.
+#
+# Three pipelines, all in static methods of the interface `U`:
+#   * kept    — the reported shape, `filter(Objects::nonNull)` behind a map it
+#     fuses with, so the wrapper 104 synthesises is called from the distill.
+#   * alone   — the same reference with nothing to fuse with, so 712 reverts the
+#     wrapper to the native reference.
+#   * summed  — an unbound instance reference, `mapToInt(Integer::intValue)`,
+#     which is 103's shape.
+java: |
+  package ifaceref;
+  import java.util.Arrays;
+  import java.util.List;
+  import java.util.Objects;
+  import java.util.stream.Collectors;
+  public class X {
+    public static void main(String[] a) {
+      List<String> v = Arrays.asList("a", null, "bb", null, "ccc");
+      System.out.printf(
+        "The result is %s %s %d%n",
+        U.kept(v), U.alone(v), U.summed(Arrays.asList(1, 2, 3))
+      );
+    }
+  }
+  interface U {
+    static List<String> kept(List<String> v) {
+      return v.stream()
+        .map(s -> s == null ? null : s + "!")
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    }
+    static List<String> alone(List<String> v) {
+      return v.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    }
+    static int summed(List<Integer> v) {
+      return v.stream().map(n -> n + 1).mapToInt(Integer::intValue).sum();
+    }
+  }
+grep-in: ".*"
+log:
+  - " U.phi ("
+  - "Finished rewriting 2 file(s)"
+  - "BUILD SUCCESS"
+  - "The result is [a!, bb!, ccc!] [a, bb, ccc] 9"

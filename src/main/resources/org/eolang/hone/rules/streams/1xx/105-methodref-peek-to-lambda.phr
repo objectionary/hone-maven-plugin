@@ -32,13 +32,25 @@
 # the trailing pop. A single basic block needs no stackmap frames (see 511).
 # Captured/bound refs (System.out::println), static refs (handle 6) and any
 # argument adaptation stay native and are follow-up puzzles.
+#
+# The wrapper lives in the enclosing class, so the handle the invokedynamic is
+# repointed at takes its interface flag from that class's `interface` modifier
+# (#1116). When the class is an interface the handle must be an
+# InterfaceMethodref; with the flag hardcoded to false the JVM threw
+# IncompatibleClassChangeError "must be InterfaceMethodref constant" on the
+# first call. 111 carries the flag into the lifted lambda's `is-interface`, and
+# 711/712 accept either value when they revert an unfused wrapper.
 name: methodref-peek-to-lambda
 pattern: |
   ⟦
     φ ↦ Φ.jeo.class,
     version ↦ 𝑒-class-version,
     access ↦ 𝑒-class-access,
-    modifiers ↦ 𝑒-class-modifiers,
+    modifiers ↦ ⟦
+      𝐵-class-modifiers-before,
+      interface ↦ 𝑒-class-is-interface,
+      𝐵-class-modifiers-after
+    ⟧,
     name ↦ 𝑒-class,
     supername ↦ 𝑒-class-supername,
     interfaces ↦ 𝑒-class-interfaces,
@@ -123,7 +135,11 @@ result: |
     φ ↦ Φ.jeo.class,
     version ↦ 𝑒-class-version,
     access ↦ 𝑒-class-access,
-    modifiers ↦ 𝑒-class-modifiers,
+    modifiers ↦ ⟦
+      𝐵-class-modifiers-before,
+      interface ↦ 𝑒-class-is-interface,
+      𝐵-class-modifiers-after
+    ⟧,
     name ↦ 𝑒-class,
     supername ↦ 𝑒-class-supername,
     interfaces ↦ 𝑒-class-interfaces,
@@ -177,7 +193,7 @@ result: |
             𝜏15 ↦ 𝑒-class,
             𝜏16 ↦ 𝑒-wrapper-name,
             𝜏17 ↦ 𝑒-bridge-signature,
-            𝜏18 ↦ Φ.false,
+            𝜏18 ↦ 𝑒-class-is-interface,
             ρ ↦ ∅
           ⟧,
           𝜏19 ↦ ⟦

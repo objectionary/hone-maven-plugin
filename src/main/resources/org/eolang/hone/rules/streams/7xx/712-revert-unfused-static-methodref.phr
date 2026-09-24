@@ -23,6 +23,10 @@
 # the referenced target; jeo ignores the extra binding (see 441's `reverted`).
 # A fused wrapper is never matched here — its invokedynamic is gone and the
 # wrapper is reached only through an invokestatic inside the distill method.
+#
+# The wrapper handle's interface flag is bound, not matched as false: 103-108
+# set it from the enclosing class's `interface` modifier (#1116), so a wrapper
+# minted inside an interface carries true and must still be reverted here.
 name: revert-unfused-static-methodref
 pattern: |
   ⟦
@@ -45,7 +49,7 @@ pattern: |
             𝜏15 ↦ 𝑒-class,
             𝜏16 ↦ 𝑒-wrapper-name,
             𝜏17 ↦ 𝑒-wrapper-descriptor,
-            𝜏18 ↦ Φ.false,
+            𝜏18 ↦ 𝑒-wrapper-is-interface,
             ρ ↦ ∅
           ⟧,
           𝜏19 ↦ 𝑒-instantiated-type,

@@ -2,22 +2,21 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-# The ordinary, value-returning shape 104 was written for: a static method
-# reference whose instantiated SAM type equals its target signature, desugared
-# into a private-static `lambda$hone$104…` wrapper that forwards the argument and
-# returns what the referenced method returned. 111 lifts the wrapper afterwards.
-#
-# The rule had no pack until #1053, which is a large part of why its
-# `𝑒-return-op` table could lose a case without anything noticing. The void half
-# is `104-static-methodref-to-lambda-void`.
+# The shape #1116 found in mybatis-dynamic-sql: a static method reference
+# inside an INTERFACE (there `Utilities.filterNulls` calling
+# `filter(Objects::nonNull)`). The `lambda$hone$104…` wrapper is added to the
+# interface itself, so the handle the invokedynamic is repointed at must be an
+# InterfaceMethodref; with the interface flag hardcoded to false the JVM threw
+# IncompatibleClassChangeError "must be InterfaceMethodref constant" on the
+# first call. The flag is now taken from the class's `interface` modifier.
 rules:
   - src/main/resources/org/eolang/hone/rules/streams/1xx/104-static-methodref-to-lambda.phr
 input: |
   ⟦
     φ ↦ Φ.jeo.class,
     version ↦ 61,
-    access ↦ 33,
-    modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, public ↦ Φ.true, interface ↦ Φ.false, ρ ↦ ∅ ⟧,
+    access ↦ 1537,
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, public ↦ Φ.true, interface ↦ Φ.true, abstract ↦ Φ.true, ρ ↦ ∅ ⟧,
     name ↦ "Foo",
     supername ↦ "java/lang/Object",
     interfaces ↦ ⟦ φ ↦ Φ.jeo.interfaces, ρ ↦ ∅ ⟧,
@@ -76,6 +75,5 @@ input: |
     ρ ↦ ∅
   ⟧
 expected:
-  - ⟦ 𝐵-a, w-return ↦ ⟦ φ ↦ Φ.jeo.opcode.areturn ⟧, ρ ↦ ∅ ⟧
-  - ⟦ 𝐵-b, w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, w-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, v0 ↦ "Foo", v1 ↦ "triple", v2 ↦ "(Ljava/lang/Long;)Ljava/lang/Long;", v3 ↦ Φ.false, origin ↦ Φ.true ⟧, 𝐵-c ⟧
-  - ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 1, max-locals ↦ 1 ⟧
+  - ⟦ 𝐵-a, v13 ↦ ⟦ φ ↦ Φ.jeo.handle, v14 ↦ 6, v15 ↦ "Foo", v16 ↦ 𝑒-w, v17 ↦ "(Ljava/lang/Long;)Ljava/lang/Long;", v18 ↦ Φ.true, ρ ↦ ∅ ⟧, 𝐵-b ⟧
+  - ⟦ 𝐵-c, w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, w-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, v0 ↦ "Foo", v1 ↦ "triple", v2 ↦ "(Ljava/lang/Long;)Ljava/lang/Long;", v3 ↦ Φ.false, origin ↦ Φ.true ⟧, 𝐵-d ⟧

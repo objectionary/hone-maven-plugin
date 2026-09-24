@@ -103,6 +103,20 @@ final class SummaryTest {
         );
     }
 
+    @Test
+    void countsSymlinkedModuleOnce(@Mktmp final Path temp) throws Exception {
+        Files.write(
+            Files.createDirectories(temp.resolve("server")).resolve("hone-statistics.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
+        );
+        Files.createSymbolicLink(temp.resolve("linked"), temp.resolve("server"));
+        MatcherAssert.assertThat(
+            "report must count a module reached through a symlink only once",
+            new CSV(new Summary(temp).collect()).size(),
+            Matchers.equalTo(1)
+        );
+    }
+
     private static Path modular(final Path root) throws Exception {
         Files.createDirectories(root.resolve("server"));
         Files.createDirectories(root.resolve("client"));

@@ -49,11 +49,9 @@ pattern: |
             𝜏15 ↦ 𝑒-class,
             𝜏16 ↦ 𝑒-wrapper-name,
             𝜏17 ↦ 𝑒-wrapper-descriptor,
-            𝜏18 ↦ 𝑒-wrapper-is-interface,
-            ρ ↦ ∅
+            𝜏18 ↦ 𝑒-wrapper-is-interface
           ⟧,
-          𝜏19 ↦ 𝑒-instantiated-type,
-          ρ ↦ ∅
+          𝜏19 ↦ 𝑒-instantiated-type
         ⟧,
         𝐵-body-tail
       ⟧,
@@ -71,13 +69,11 @@ pattern: |
           v1 ↦ 𝑒-origin-method,
           v2 ↦ 𝑒-origin-signature,
           v3 ↦ 𝑒-origin-is-interface,
-          origin ↦ Φ.true,
-          ρ ↦ ∅
+          origin ↦ Φ.true
         ⟧,
         𝐵-wrapper-body-tail
       ⟧,
-      name ↦ 𝑒-wrapper-name,
-      ρ ↦ ∅
+      name ↦ 𝑒-wrapper-name
     ⟧,
     𝐵-class-tail
   ⟧
@@ -102,11 +98,9 @@ result: |
             𝜏15 ↦ 𝑒-origin-class,
             𝜏16 ↦ 𝑒-origin-method,
             𝜏17 ↦ 𝑒-origin-signature,
-            𝜏18 ↦ 𝑒-origin-is-interface,
-            ρ ↦ ∅
+            𝜏18 ↦ 𝑒-origin-is-interface
           ⟧,
-          𝜏19 ↦ 𝑒-instantiated-type,
-          ρ ↦ ∅
+          𝜏19 ↦ 𝑒-instantiated-type
         ⟧,
         𝐵-body-tail
       ⟧,

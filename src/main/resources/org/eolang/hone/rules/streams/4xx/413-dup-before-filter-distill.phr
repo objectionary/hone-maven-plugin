@@ -38,7 +38,7 @@ pattern: |
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     state ↦ 𝑒-state,
-    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    body ↦ ⟦ 𝐵-body ⟧
   ⟧
 result: |
   ⟦
@@ -53,8 +53,7 @@ result: |
     state ↦ 𝑒-state,
     body ↦ ⟦
       i-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-dup ⟧,
-      𝐵-body,
-      ρ ↦ ∅
+      𝐵-body
     ⟧
   ⟧
 where:

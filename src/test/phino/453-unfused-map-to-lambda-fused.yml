@@ -19,7 +19,7 @@ input: |
         accepted ↦ "Ljava/lang/String;",
         returned ↦ "Ljava/lang/Integer;",
         static ↦ "true",
-        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        state ↦ ⟦⟧,
         body ↦ ⟦
           b1 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokestatic,
@@ -34,11 +34,9 @@ input: |
             i3 ↦ "lambda$main$1",
             i4 ↦ "(Ljava/lang/String;)Ljava/lang/Integer;",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

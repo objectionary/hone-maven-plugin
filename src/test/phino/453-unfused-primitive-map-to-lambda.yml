@@ -22,7 +22,7 @@ input: |
         accepted ↦ "J",
         returned ↦ "J",
         static ↦ "true",
-        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        state ↦ ⟦⟧,
         body ↦ ⟦
           b1 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokestatic,
@@ -30,11 +30,9 @@ input: |
             i3 ↦ "lambda$ordered$3",
             i4 ↦ "(J)J",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

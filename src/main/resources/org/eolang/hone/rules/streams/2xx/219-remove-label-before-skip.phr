@@ -42,8 +42,7 @@ pattern: |
       𝜏1 ↦ 𝑒-stream-class,
       𝜏2 ↦ "skip",
       𝜏3 ↦ 𝑒-signature,
-      𝜏4 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏4 ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧
@@ -56,8 +55,7 @@ result: |
       𝜏1 ↦ 𝑒-stream-class,
       𝜏2 ↦ "skip",
       𝜏3 ↦ 𝑒-signature,
-      𝜏4 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏4 ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧

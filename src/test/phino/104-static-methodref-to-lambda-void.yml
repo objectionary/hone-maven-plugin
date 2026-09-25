@@ -24,21 +24,21 @@ input: |
     φ ↦ Φ.jeo.class,
     version ↦ 61,
     access ↦ 33,
-    modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, public ↦ Φ.true, interface ↦ Φ.false, ρ ↦ ∅ ⟧,
+    modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, public ↦ Φ.true, interface ↦ Φ.false ⟧,
     name ↦ "Foo",
     supername ↦ "java/lang/Object",
-    interfaces ↦ ⟦ φ ↦ Φ.jeo.interfaces, ρ ↦ ∅ ⟧,
+    interfaces ↦ ⟦ φ ↦ Φ.jeo.interfaces ⟧,
     jm$main ↦ ⟦
       φ ↦ Φ.jeo.method,
       access ↦ 9,
-      modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, static ↦ Φ.true, ρ ↦ ∅ ⟧,
+      modifiers ↦ ⟦ φ ↦ Φ.jeo.modifiers, static ↦ Φ.true ⟧,
       name ↦ "main",
       descriptor ↦ "([Ljava/lang/String;)V",
       signature ↦ "",
-      exceptions ↦ ⟦ φ ↦ Φ.jeo.exceptions, ρ ↦ ∅ ⟧,
+      exceptions ↦ ⟦ φ ↦ Φ.jeo.exceptions ⟧,
       maxs ↦ ⟦ φ ↦ Φ.jeo.maxs, m1 ↦ 4, m2 ↦ 3 ⟧,
-      params ↦ ⟦ φ ↦ Φ.jeo.params, ρ ↦ ∅ ⟧,
-      annotations ↦ ⟦ φ ↦ Φ.jeo.annotations, ρ ↦ ∅ ⟧,
+      params ↦ ⟦ φ ↦ Φ.jeo.params ⟧,
+      annotations ↦ ⟦ φ ↦ Φ.jeo.annotations ⟧,
       body ↦ ⟦
         op0 ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokedynamic,
@@ -50,40 +50,33 @@ input: |
             v7 ↦ "java/lang/invoke/LambdaMetafactory",
             v8 ↦ "metafactory",
             v9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-            v10 ↦ Φ.false,
-            ρ ↦ ∅
+            v10 ↦ Φ.false
           ⟧,
-          v11 ↦ ⟦ φ ↦ Φ.jeo.type, v12 ↦ "(Ljava/lang/Object;)V", ρ ↦ ∅ ⟧,
+          v11 ↦ ⟦ φ ↦ Φ.jeo.type, v12 ↦ "(Ljava/lang/Object;)V" ⟧,
           v13 ↦ ⟦
             φ ↦ Φ.jeo.handle,
             v14 ↦ 6,
             v15 ↦ "Foo",
             v16 ↦ "traced",
             v17 ↦ "(Ljava/lang/Long;)V",
-            v18 ↦ Φ.false,
-            ρ ↦ ∅
+            v18 ↦ Φ.false
           ⟧,
-          v19 ↦ ⟦ φ ↦ Φ.jeo.type, v21 ↦ "(Ljava/lang/Long;)V", ρ ↦ ∅ ⟧,
-          ρ ↦ ∅
+          v19 ↦ ⟦ φ ↦ Φ.jeo.type, v21 ↦ "(Ljava/lang/Long;)V" ⟧
         ⟧,
         op1 ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
           v24 ↦ "java/util/stream/Stream",
           v25 ↦ "peek",
           v26 ↦ "(Ljava/util/function/Consumer;)Ljava/util/stream/Stream;",
-          v27 ↦ Φ.true,
-          ρ ↦ ∅
-        ⟧,
-        ρ ↦ ∅
+          v27 ↦ Φ.true
+        ⟧
       ⟧,
-      jt$tcb ↦ ⟦ φ ↦ Φ.jeo.trycatchblocks, ρ ↦ ∅ ⟧,
-      local-variable-table ↦ ⟦ φ ↦ Φ.jeo.local-variable-table, ρ ↦ ∅ ⟧,
-      ρ ↦ ∅
-    ⟧,
-    ρ ↦ ∅
+      jt$tcb ↦ ⟦ φ ↦ Φ.jeo.trycatchblocks ⟧,
+      local-variable-table ↦ ⟦ φ ↦ Φ.jeo.local-variable-table ⟧
+    ⟧
   ⟧
 expected:
-  - ⟦ 𝐵-a, w-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝐵-a, w-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧ ⟧
   - ⟦ 𝐵-b, w-load ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, w-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, v0 ↦ "Foo", v1 ↦ "traced", v2 ↦ "(Ljava/lang/Long;)V", v3 ↦ Φ.false, origin ↦ Φ.true ⟧, 𝐵-c ⟧
   - ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 1, max-locals ↦ 1 ⟧
   - ⟦ 𝐵-d, φ ↦ Φ.jeo.method, 𝐵-e, descriptor ↦ "(Ljava/lang/Long;)V", 𝐵-f ⟧

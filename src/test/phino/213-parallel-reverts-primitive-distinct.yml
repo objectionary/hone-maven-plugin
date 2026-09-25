@@ -23,8 +23,7 @@ input: |
         φ ↦ Φ.hone.primitive-distinct,
         class ↦ "Foo",
         stream-class ↦ "java/util/stream/IntStream"
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

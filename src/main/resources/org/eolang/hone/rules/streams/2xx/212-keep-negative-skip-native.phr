@@ -25,8 +25,7 @@ pattern: |
     𝐵-before,
     𝜏-push ↦ ⟦
       φ ↦ Φ.jeo.opcode.ldc,
-      𝜏-value ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 𝑒-count, ρ ↦ ∅ ⟧,
-      ρ ↦ ∅
+      𝜏-value ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 𝑒-count ⟧
     ⟧,
     𝐵-gap,
     𝜏-call ↦ ⟦
@@ -34,8 +33,7 @@ pattern: |
       𝜏1 ↦ 𝑒-stream-class,
       𝜏2 ↦ "skip",
       𝜏3 ↦ 𝑒-signature,
-      𝜏4 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏4 ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧
@@ -44,8 +42,7 @@ result: |
     𝐵-before,
     𝜏-push ↦ ⟦
       φ ↦ Φ.jeo.opcode.ldc,
-      𝜏-value ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 𝑒-count, ρ ↦ ∅ ⟧,
-      ρ ↦ ∅
+      𝜏-value ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 𝑒-count ⟧
     ⟧,
     𝐵-gap,
     𝜏-call ↦ ⟦

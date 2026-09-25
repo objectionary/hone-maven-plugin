@@ -99,8 +99,7 @@ result: |
         i4 ↦ "(Ljava/lang/Object;)Z",
         i5 ↦ Φ.true
       ⟧,
-      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-      ρ ↦ ∅
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧
     ⟧,
     body ↦ ⟦
       i1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,

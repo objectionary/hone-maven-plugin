@@ -18,8 +18,7 @@ input: |
         i3 ↦ "distinct",
         i4 ↦ "()Ljava/util/stream/Stream;",
         i5 ↦ Φ.true,
-        reverted ↦ Φ.true,
-        ρ ↦ ∅
+        reverted ↦ Φ.true
       ⟧,
       op3 ↦ ⟦
         φ ↦ Φ.hone.unbox,
@@ -34,8 +33,7 @@ input: |
           signature ↦ "()I",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
@@ -48,7 +46,6 @@ expected:
           i4 ↦ "()Ljava/util/stream/IntStream;",
           i5 ↦ Φ.true,
           reverted ↦ Φ.true
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
     ⟧

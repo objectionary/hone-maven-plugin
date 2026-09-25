@@ -12,8 +12,7 @@ input: |
         class ↦ "Foo",
         stream-class ↦ "java/util/stream/Stream",
         unordered ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

@@ -53,8 +53,7 @@ input: |
           signature ↦ "(Ljava/lang/Long;)Z",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

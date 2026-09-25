@@ -19,9 +19,8 @@ input: |
       op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Loud", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
       op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-      op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true, traverses ↦ Φ.true ⟧,
-      ρ ↦ ∅
+      op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true, traverses ↦ Φ.true ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧

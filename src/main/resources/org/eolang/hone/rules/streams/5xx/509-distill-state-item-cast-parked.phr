@@ -83,8 +83,7 @@ pattern: |
         i3 ↦ 𝑒-invoke-signature,
         i4 ↦ 𝑒-invoke-is-interface
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 result: |
@@ -106,8 +105,7 @@ result: |
         i3 ↦ 𝑒-invoke-signature,
         i4 ↦ 𝑒-invoke-is-interface
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 when:

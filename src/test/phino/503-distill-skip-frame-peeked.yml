@@ -40,8 +40,7 @@ input: |
       i15 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       i16 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       i17 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
-      i18 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      ρ ↦ ∅
+      i18 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
     ⟧
   ⟧
 expected:

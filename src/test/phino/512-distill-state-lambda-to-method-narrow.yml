@@ -17,9 +17,8 @@ input: |
         consumer ↦ "Ljava/util/function/Consumer;",
         target-method ↦ "distill_0",
         captured ↦ "Ljava/util/List;",
-        body ↦ ⟦ b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.nop ⟧, ρ ↦ ∅ ⟧
-      ⟧,
-      ρ ↦ ∅
+        body ↦ ⟦ b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.nop ⟧ ⟧
+      ⟧
     ⟧
   ⟧
 expected:

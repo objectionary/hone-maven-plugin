@@ -20,7 +20,7 @@ input: |
         accepted ↦ "Ljava/lang/Object;",
         returned ↦ "Ljava/lang/Object;",
         static ↦ "true",
-        state ↦ ⟦ s ↦ ⟦ set ↦ "synchronizedSet" ⟧, ρ ↦ ∅ ⟧,
+        state ↦ ⟦ s ↦ ⟦ set ↦ "synchronizedSet" ⟧ ⟧,
         body ↦ ⟦
           b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/Set" ⟧,
           b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.swap ⟧,
@@ -36,11 +36,9 @@ input: |
           b6 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
           b7 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
           b8 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
-          b9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-          ρ ↦ ∅
+          b9 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

@@ -57,7 +57,7 @@ pattern: |
     consumer ↦ 𝑒-consumer,
     target-method ↦ 𝑒-target-method,
     captured ↦ 𝑒-captured,
-    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    body ↦ ⟦ 𝐵-body ⟧
   ⟧
 result: |
   ⟦
@@ -92,8 +92,7 @@ result: |
         i4 ↦ 𝑒-invokeinterface-signature,
         i5 ↦ Φ.true
       ⟧,
-      i-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-      ρ ↦ ∅
+      i-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
     ⟧,
     name ↦ 𝑒-target-method
   ⟧

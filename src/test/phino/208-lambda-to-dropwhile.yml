@@ -32,4 +32,4 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ body ↦ ⟦ 𝜏-op ↦ ⟦ φ ↦ Φ.hone.dropWhile, opcode ↦ "invokestatic", class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Integer;", returned ↦ "Ljava/lang/Integer;", 𝐵 ⟧, ρ ↦ ∅ ⟧ ⟧
+  - ⟦ body ↦ ⟦ 𝜏-op ↦ ⟦ φ ↦ Φ.hone.dropWhile, opcode ↦ "invokestatic", class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Integer;", returned ↦ "Ljava/lang/Integer;", 𝐵 ⟧ ⟧ ⟧

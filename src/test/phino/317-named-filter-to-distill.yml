@@ -19,8 +19,7 @@ input: |
     make ↦ ⟦
       op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Good" ⟧,
       op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Good", i3 ↦ "<init>", i4 ↦ "()V", i5 ↦ Φ.false ⟧,
-      ρ ↦ ∅
+      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Good", i3 ↦ "<init>", i4 ↦ "()V", i5 ↦ Φ.false ⟧
     ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Object;",
@@ -31,4 +30,4 @@ input: |
 expected:
   - ⟦ φ ↦ Φ.hone.distill, class ↦ "Foo", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", start ↦ "named-filter", 𝐵-rest ⟧
   - ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-n ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Good" ⟧, 𝐵-state ⟧
-  - ⟦ 𝜏-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Predicate" ⟧, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/function/Predicate", i3 ↦ "test", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧, 𝜏-if ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-l ⟧ ⟧, 𝜏-ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧, 𝜏-lab ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-l ⟧, 𝜏-fr ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝜏-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Predicate" ⟧, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/function/Predicate", i3 ↦ "test", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧, 𝜏-if ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-l ⟧ ⟧, 𝜏-ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧, 𝜏-lab ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-l ⟧, 𝜏-fr ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧ ⟧

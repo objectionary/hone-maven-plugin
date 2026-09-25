@@ -58,15 +58,13 @@ pattern: |
           𝜏1 ↦ "java/util/stream/Stream",
           𝜏2 ↦ "skip",
           𝜏3 ↦ "(J)Ljava/util/stream/Stream;",
-          𝜏4 ↦ Φ.true,
-          ρ ↦ ∅
+          𝜏4 ↦ Φ.true
         ⟧,
         𝐵-body-tail
       ⟧,
       𝐵-caller-tail
     ⟧,
-    𝐵-class-tail,
-    ρ ↦ ∅
+    𝐵-class-tail
   ⟧
 result: |
   ⟦
@@ -89,8 +87,7 @@ result: |
       ⟧,
       𝐵-caller-tail
     ⟧,
-    𝐵-class-tail,
-    ρ ↦ ∅
+    𝐵-class-tail
   ⟧
 where:
   - meta: 𝜏-skip

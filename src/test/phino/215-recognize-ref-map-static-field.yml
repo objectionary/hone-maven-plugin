@@ -21,12 +21,11 @@ input: |
         name ↦ "run",
         body ↦ ⟦
           op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.getstatic, v1 ↦ "Foo", v2 ↦ "DOUBLER", v3 ↦ "Ljava/util/function/Function;" ⟧,
-          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-          ρ ↦ ∅
+          op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧
         ⟧
       ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.getstatic, v1 ↦ "Foo", v2 ↦ "DOUBLER", v3 ↦ "Ljava/util/function/Function;" ⟧, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
-  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.getstatic, v1 ↦ "Foo", v2 ↦ "DOUBLER", v3 ↦ "Ljava/util/function/Function;" ⟧ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧ ⟧

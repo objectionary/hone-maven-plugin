@@ -64,8 +64,7 @@ pattern: |
         ⟧,
         stack ↦ 𝑒-frame-stack
       ⟧,
-      𝐵-body-tail,
-      ρ ↦ ∅
+      𝐵-body-tail
     ⟧
   ⟧
 result: |
@@ -92,8 +91,7 @@ result: |
         ⟧,
         stack ↦ 𝑒-frame-stack
       ⟧,
-      𝐵-body-tail,
-      ρ ↦ ∅
+      𝐵-body-tail
     ⟧
   ⟧
 having:

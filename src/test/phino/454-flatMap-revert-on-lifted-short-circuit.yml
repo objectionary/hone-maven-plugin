@@ -44,11 +44,9 @@ input: |
           opcode ↦ "invokestatic",
           target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(Ljava/lang/Long;)Z", is-interface ↦ Φ.false ⟧,
           stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "takeWhile", signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;" ⟧
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.jeo.opcode.invokedynamic, i2 ↦ "apply", i3 ↦ "()Ljava/util/function/Function;", 𝐵-rest ⟧

@@ -38,8 +38,8 @@ name: c-map-to-distill
 pattern: |
   ⟦
     φ ↦ Φ.hone.c-map,
-    state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
-    body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+    state-acc ↦ ⟦ 𝐵-sacc ⟧,
+    body-acc ↦ ⟦ 𝐵-bacc ⟧,
     captures ↦ 𝑒-captures,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
@@ -65,7 +65,7 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    state ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
+    state ↦ ⟦ 𝐵-sacc ⟧,
     body ↦ ⟦
       𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
       𝐵-bacc,
@@ -76,8 +76,7 @@ result: |
         i2 ↦ 𝑒-target-method,
         i3 ↦ 𝑒-target-signature,
         i4 ↦ 𝑒-target-is-interface
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 where:

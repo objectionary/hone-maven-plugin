@@ -44,7 +44,7 @@ pattern: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ "true",
-    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    state ↦ ⟦⟧,
     body ↦ ⟦
       𝜏-call ↦ ⟦
         φ ↦ Φ.jeo.opcode.invokestatic,
@@ -52,8 +52,7 @@ pattern: |
         i3 ↦ 𝑒-target-method,
         i4 ↦ 𝑒-target-signature,
         i5 ↦ 𝑒-target-is-interface
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 result: |

@@ -74,7 +74,7 @@ result: |
       accepted ↦ 𝑒-bridge-input,
       returned ↦ 𝑒-wrapper,
       static ↦ 𝑒-static,
-      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      state ↦ ⟦⟧,
       body ↦ ⟦
         b1 ↦ ⟦
           φ ↦ Φ.jeo.opcode.𝜏-opcode,

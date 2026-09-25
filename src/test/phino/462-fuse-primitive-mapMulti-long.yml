@@ -53,11 +53,9 @@ input: |
           opcode ↦ "invokestatic",
           target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(JLjava/util/function/LongConsumer;)V", is-interface ↦ Φ.false ⟧,
           stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "mapMulti", signature ↦ "(Ljava/util/stream/LongStream$LongMapMultiConsumer;)Ljava/util/stream/LongStream;" ⟧
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧

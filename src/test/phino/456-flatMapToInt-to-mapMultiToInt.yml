@@ -42,11 +42,9 @@ input: |
           opcode ↦ "invokestatic",
           target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/Integer;)Ljava/util/stream/IntStream;", is-interface ↦ Φ.false ⟧,
           stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "flatMapToInt", signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/IntStream;" ⟧
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMultiToInt", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;" ⟧

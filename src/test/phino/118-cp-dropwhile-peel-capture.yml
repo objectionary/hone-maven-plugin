@@ -17,10 +17,10 @@ input: |
       p2 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 8 ⟧,
       op ↦ ⟦
         φ ↦ Φ.hone.cp-dropWhile,
-        state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
-        body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
-        skip-acc ↦ ⟦ ρ ↦ ∅ ⟧,
-        undo-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+        state-acc ↦ ⟦⟧,
+        body-acc ↦ ⟦⟧,
+        skip-acc ↦ ⟦⟧,
+        undo-acc ↦ ⟦⟧,
         captures ↦ "ILjava/lang/String;",
         class ↦ "dw/X",
         bridge-input ↦ "Ljava/lang/Integer;",
@@ -35,13 +35,12 @@ input: |
           signature ↦ "(ILjava/lang/String;Ljava/lang/Integer;)Z",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
   - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, captures ↦ "", 𝐵-c ⟧
-  - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧, ρ ↦ ∅ ⟧, 𝐵-c ⟧
-  - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, skip-acc ↦ ⟦ 𝜏-t1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧, 𝜏-t2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧, ρ ↦ ∅ ⟧, 𝐵-c ⟧
-  - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, undo-acc ↦ ⟦ 𝜏-u1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧, 𝜏-u2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧, ρ ↦ ∅ ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧ ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, skip-acc ↦ ⟦ 𝜏-t1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧, 𝜏-t2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧ ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.cp-dropWhile, 𝐵-b, undo-acc ↦ ⟦ 𝜏-u1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧, 𝜏-u2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧ ⟧, 𝐵-c ⟧
   - ⟦ 𝐵-a, 𝜏-load ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, i1 ↦ 7 ⟧, 𝐵-b, 𝜏-box ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "I" ⟧, 𝐵-c ⟧

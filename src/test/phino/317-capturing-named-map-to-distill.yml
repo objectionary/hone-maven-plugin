@@ -21,8 +21,7 @@ input: |
       op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧,
       op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧,
-      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧,
-      ρ ↦ ∅
+      op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧
     ⟧,
     bridge-input ↦ "Ljava/lang/Object;",
     bridge-output ↦ "Ljava/lang/Integer;",
@@ -32,5 +31,5 @@ input: |
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.distill, class ↦ "Foo", bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", start ↦ "named-map", 𝐵-rest ⟧
-  - ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-n ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧, 𝜏-d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧, 𝜏-i ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧, 𝜏-a ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧, ρ ↦ ∅ ⟧
-  - ⟦ 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Function" ⟧, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/function/Function", i3 ↦ "apply", i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;", i5 ↦ Φ.true ⟧, 𝜏-x ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "java/lang/Integer" ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝜏-d ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-n ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧, 𝜏-d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧, 𝜏-i ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧, 𝜏-a ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧ ⟧
+  - ⟦ 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/function/Function" ⟧, 𝜏-r ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-c ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/function/Function", i3 ↦ "apply", i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;", i5 ↦ Φ.true ⟧, 𝜏-x ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ "java/lang/Integer" ⟧ ⟧

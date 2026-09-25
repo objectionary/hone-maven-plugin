@@ -34,8 +34,7 @@ pattern: |
         nstack ↦ 1,
         stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ 𝑒-item ⟧
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 result: |
@@ -63,8 +62,7 @@ result: |
           x0 ↦ 𝑒-item
         ⟧
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 where:

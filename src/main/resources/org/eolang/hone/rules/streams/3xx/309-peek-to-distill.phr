@@ -38,7 +38,7 @@ result: |
     accepted ↦ 𝑒-accepted,
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
-    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    state ↦ ⟦⟧,
     body ↦ ⟦
       i1 ↦ ⟦
         φ ↦ Φ.jeo.opcode.dup

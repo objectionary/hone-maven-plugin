@@ -20,13 +20,10 @@ input: |
           i2 ↦ "java/util/stream/Stream",
           i3 ↦ "skip",
           i4 ↦ "(J)Ljava/util/stream/Stream;",
-          i5 ↦ Φ.true,
-          ρ ↦ ∅
-        ⟧,
-        ρ ↦ ∅
+          i5 ↦ Φ.true
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.skip, class ↦ "Foo", stream-class ↦ "java/util/stream/Stream", push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧ ⟧

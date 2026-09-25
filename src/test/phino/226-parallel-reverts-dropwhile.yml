@@ -35,8 +35,7 @@ input: |
           signature ↦ "(Ljava/lang/Integer;)Z",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

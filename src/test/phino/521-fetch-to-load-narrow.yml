@@ -18,8 +18,7 @@ input: |
       i3 ↦ ⟦ φ ↦ Φ.jeo.param, index ↦ 2, access ↦ 0, type ↦ "Ljava/util/function/Consumer;" ⟧
     ⟧,
     body ↦ ⟦
-      b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
-      ρ ↦ ∅
+      b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧
     ⟧,
     name ↦ "distill_0"
   ⟧

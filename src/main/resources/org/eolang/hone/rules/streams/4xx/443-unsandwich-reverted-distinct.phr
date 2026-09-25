@@ -56,8 +56,7 @@ pattern: |
       𝜏2 ↦ "distinct",
       𝜏3 ↦ "()Ljava/util/stream/Stream;",
       𝜏4 ↦ Φ.true,
-      reverted ↦ Φ.true,
-      ρ ↦ ∅
+      reverted ↦ Φ.true
     ⟧,
     𝜏-unbox ↦ ⟦
       φ ↦ Φ.hone.unbox,

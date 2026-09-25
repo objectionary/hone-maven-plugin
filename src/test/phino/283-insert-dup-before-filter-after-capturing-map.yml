@@ -24,12 +24,10 @@ input: |
       op1 ↦ ⟦
         φ ↦ Φ.hone.c-map,
         state-acc ↦ ⟦
-          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-          ρ ↦ ∅
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧
         ⟧,
         body-acc ↦ ⟦
-          b1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "J" ⟧,
-          ρ ↦ ∅
+          b1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "J" ⟧
         ⟧,
         captures ↦ "",
         class ↦ "cap/X",
@@ -62,8 +60,7 @@ input: |
           signature ↦ "(Lcap/X$Pair;)Z",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

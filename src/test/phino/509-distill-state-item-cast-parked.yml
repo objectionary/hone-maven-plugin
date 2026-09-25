@@ -57,8 +57,7 @@ input: |
             i2 ↦ "lambda$main$0",
             i3 ↦ "(JLA$Pair;)LA$Pair;",
             i4 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
       ⟧,
       op2 ↦ ⟦
@@ -88,11 +87,9 @@ input: |
             i2 ↦ "lambda$main$1",
             i3 ↦ "(JLjava/util/LinkedList;LA$Level;)LA$Level;",
             i4 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

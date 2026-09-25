@@ -19,9 +19,8 @@ input: |
     body-acc ↦ ⟦
       f1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/util/ArrayList;" ⟧,
       f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧,
-      f3 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧,
-      ρ ↦ ∅
+      f3 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/ArrayList" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧, 𝜏-f3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/String" ⟧, ρ ↦ ∅ ⟧ ⟧
+  - ⟦ body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/ArrayList" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧, 𝜏-f3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/String" ⟧ ⟧ ⟧

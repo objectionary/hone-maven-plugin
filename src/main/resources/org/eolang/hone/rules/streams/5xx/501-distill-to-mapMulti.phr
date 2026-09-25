@@ -27,15 +27,14 @@ pattern: |
           accepted ↦ 𝑒-accepted,
           returned ↦ 𝑒-returned,
           static ↦ 𝑒-static,
-          state ↦ ⟦ ρ ↦ ∅ ⟧,
+          state ↦ ⟦⟧,
           body ↦ 𝑒-body
         ⟧,
         𝐵-body-tail
       ⟧,
       𝐵-method-tail
     ⟧,
-    𝐵-class-tail,
-    ρ ↦ ∅
+    𝐵-class-tail
   ⟧
 result: |
   ⟦
@@ -80,8 +79,7 @@ result: |
       consumer ↦ 𝑒-consumer,
       target-method ↦ 𝑒-target-method,
       body ↦ 𝑒-body
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 where:
   - meta: 𝜏-distill-lambda

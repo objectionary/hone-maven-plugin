@@ -31,11 +31,9 @@ input: |
             i3 ↦ "intValue",
             i4 ↦ "()I",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

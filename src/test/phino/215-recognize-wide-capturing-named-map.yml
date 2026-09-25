@@ -35,14 +35,13 @@ input: |
           op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 2 ⟧,
           op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.dload, v0 ↦ 4 ⟧,
           op6 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Wide", v3 ↦ "<init>", v4 ↦ "(IJD)V", v5 ↦ Φ.false ⟧,
-          op7 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-          ρ ↦ ∅
+          op7 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧
         ⟧
       ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝐵-make, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
-  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-a, make ↦ ⟦ 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Wide" ⟧, 𝐵-m, 𝜏-init ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Wide", i3 ↦ "<init>", i4 ↦ "(IJD)V", i5 ↦ Φ.false ⟧, ρ ↦ ∅ ⟧, 𝐵-b ⟧
-  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-c, make ↦ ⟦ 𝐵-m1, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 2 ⟧, 𝐵-m2, ρ ↦ ∅ ⟧, 𝐵-d ⟧
-  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝐵-make ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-a, make ↦ ⟦ 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Wide" ⟧, 𝐵-m, 𝜏-init ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Wide", i3 ↦ "<init>", i4 ↦ "(IJD)V", i5 ↦ Φ.false ⟧ ⟧, 𝐵-b ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-c, make ↦ ⟦ 𝐵-m1, 𝜏-l ↦ ⟦ φ ↦ Φ.jeo.opcode.lload, v0 ↦ 2 ⟧, 𝐵-m2 ⟧, 𝐵-d ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧ ⟧

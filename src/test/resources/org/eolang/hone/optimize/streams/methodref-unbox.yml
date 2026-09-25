@@ -31,10 +31,11 @@
 # The `after` counts assert all of it: invokedynamic 11 -> 7 (the first three
 # pipelines each lose one factory, the fourth loses none), exactly one int[1]
 # latch for the fused dropWhile (newarray 0 -> 1) inside its one captured
-# java/util/ArrayList (new 0 -> 1), invokestatic 26 -> 37 as the three
+# java/util/ArrayList (new 0 -> 1), invokestatic 26 -> 36 as the three
 # synthesised wrappers and the relocated boxing land in the class, and
-# invokeinterface 13 -> 15 as the fused dropWhile gains a List.add and a
-# List.get.
+# invokeinterface 13 -> 14 as the fused dropWhile gains a List.add and a
+# List.get while the lone map in front of the native widened reference goes
+# back to a plain Stream.map, since nothing fused into it.
 java: |
   package unbox;
   import java.util.stream.Stream;
@@ -77,8 +78,8 @@ before:
   new: 0
 after:
   invokedynamic: 7
-  invokeinterface: 15
-  invokestatic: 37
+  invokeinterface: 14
+  invokestatic: 36
   invokevirtual: 10
   newarray: 1
   new: 1

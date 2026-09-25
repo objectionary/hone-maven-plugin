@@ -56,7 +56,7 @@ pattern: |
       accepted ↦ 𝑒-wrapper,
       returned ↦ 𝑒-returned,
       static ↦ "true",
-      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      state ↦ ⟦⟧,
       body ↦ ⟦
         𝜏-unwrap ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokevirtual,
@@ -71,8 +71,7 @@ pattern: |
           i3 ↦ 𝑒-target-method,
           i4 ↦ 𝑒-target-signature,
           i5 ↦ 𝑒-target-is-interface
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
     ⟧,
     𝐵-after

@@ -53,7 +53,7 @@ pattern: |
   ⟦
     φ ↦ Φ.hone.named-map,
     class ↦ 𝑒-class,
-    make ↦ ⟦ 𝐵-make, ρ ↦ ∅ ⟧,
+    make ↦ ⟦ 𝐵-make ⟧,
     bridge-input ↦ 𝑒-bridge-input,
     bridge-output ↦ 𝑒-bridge-output,
     accepted ↦ 𝑒-accepted,
@@ -80,8 +80,7 @@ result: |
         i4 ↦ "(Ljava/lang/Object;)Z",
         i5 ↦ Φ.true
       ⟧,
-      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-      ρ ↦ ∅
+      𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧
     ⟧,
     body ↦ ⟦
       𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧,
@@ -94,8 +93,7 @@ result: |
         i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
         i5 ↦ Φ.true
       ⟧,
-      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧,
-      ρ ↦ ∅
+      𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-cast-class ⟧
     ⟧
   ⟧
 where:

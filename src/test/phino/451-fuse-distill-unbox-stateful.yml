@@ -27,8 +27,7 @@ input: |
         returned ↦ "Ljava/lang/Double;",
         static ↦ "true",
         state ↦ ⟦
-          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
-          ρ ↦ ∅
+          s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧
         ⟧,
         body ↦ ⟦
           g1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
@@ -38,8 +37,7 @@ input: |
             i3 ↦ "lambda$f$0",
             i4 ↦ "(Ljava/lang/Double;)Ljava/lang/Double;",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
       ⟧,
       op2 ↦ ⟦
@@ -55,8 +53,7 @@ input: |
           signature ↦ "(Ljava/lang/Double;)D",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

@@ -29,7 +29,7 @@ input: |
         accepted ↦ "Ljava/lang/String;",
         returned ↦ "Ljava/lang/Integer;",
         static ↦ "true",
-        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        state ↦ ⟦⟧,
         body ↦ ⟦
           b1 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokestatic,
@@ -37,8 +37,7 @@ input: |
             i3 ↦ "lambda$main$0",
             i4 ↦ "(Ljava/lang/String;)Ljava/lang/Integer;",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
       ⟧,
       sink ↦ ⟦
@@ -47,8 +46,7 @@ input: |
         i3 ↦ "toList",
         i4 ↦ "()Ljava/util/List;",
         i5 ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

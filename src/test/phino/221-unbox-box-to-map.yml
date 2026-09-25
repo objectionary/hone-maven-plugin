@@ -35,8 +35,7 @@ input: |
         φ ↦ Φ.hone.box,
         stream-class ↦ "java/util/stream/LongStream",
         minted ↦ "split"
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

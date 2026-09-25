@@ -33,11 +33,9 @@ input: |
             i3 ↦ "lambda$main$0",
             i4 ↦ "(Ljava/lang/Integer;)D",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

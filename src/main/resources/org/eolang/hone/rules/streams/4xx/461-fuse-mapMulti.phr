@@ -88,8 +88,7 @@ pattern: |
       ⟧,
       𝐵-method-tail
     ⟧,
-    𝐵-class-tail,
-    ρ ↦ ∅
+    𝐵-class-tail
   ⟧
 result: |
   ⟦
@@ -172,8 +171,7 @@ result: |
           i4 ↦ 𝑒-first-signature,
           i5 ↦ 𝑒-first-is-interface
         ⟧,
-        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-        ρ ↦ ∅
+        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
       ⟧,
       name ↦ 𝑒-fused-name
     ⟧,
@@ -199,12 +197,10 @@ result: |
           i4 ↦ 𝑒-second-signature,
           i5 ↦ 𝑒-second-is-interface
         ⟧,
-        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-        ρ ↦ ∅
+        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
       ⟧,
       name ↦ 𝑒-wrap-name
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 # Fire only on user-written mapMultis (javac names their bodies `lambda$…`), on
 # flatMaps that 455 converted into mapMultis (`flatadapt_…`), and on this rule's

@@ -26,7 +26,7 @@ input: |
       op1 ↦ ⟦
         φ ↦ Φ.hone.named-map,
         class ↦ "Foo",
-        make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Tagger" ⟧, ρ ↦ ∅ ⟧,
+        make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Tagger" ⟧ ⟧,
         bridge-input ↦ "Ljava/lang/Object;",
         bridge-output ↦ "Ljava/lang/Object;",
         accepted ↦ "Ljava/lang/Object;",
@@ -43,10 +43,9 @@ input: |
         returned ↦ "Z",
         static ↦ "true",
         target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/String;)Z", is-interface ↦ Φ.false ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Tagger" ⟧, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/String;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/String;", static ↦ "true" ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Tagger" ⟧ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/String;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/String;", static ↦ "true" ⟧
   - ⟦ φ ↦ Φ.hone.o-filter, 𝐵-head, accepted ↦ "Ljava/lang/String;", returned ↦ "Z", static ↦ "true", 𝐵-tail ⟧

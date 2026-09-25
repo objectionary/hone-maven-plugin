@@ -25,12 +25,11 @@ input: |
           op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Doubler" ⟧,
           op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
           op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Doubler", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
-          op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-          ρ ↦ ∅
+          op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧
         ⟧
       ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝐵-make, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
-  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ 𝐵-make ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧ ⟧

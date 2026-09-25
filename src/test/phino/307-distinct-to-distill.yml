@@ -11,8 +11,7 @@ input: |
         φ ↦ Φ.hone.distinct,
         class ↦ "Foo",
         stream-class ↦ "java/util/stream/Stream"
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

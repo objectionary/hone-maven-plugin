@@ -15,8 +15,8 @@
 #
 # Five pipelines, one per branch of the decision:
 #   * ordered    — `parallel()` and no `unordered()`. Still reverted: the map
-#     fuses into a mapMulti of its own and a native `Stream.distinct` stays
-#     between it and the sink. This is the case the relaxation must NOT touch.
+#     goes back to a native `Stream.map`, since nothing fused into it, and a
+#     native `Stream.distinct` stays between it and the sink. This is the case the relaxation must NOT touch.
 #   * unordered  — `unordered().parallel()`. The map and the distinct fuse into
 #     ONE mapMulti and no native distinct is left. This is #975.
 #   * after      — `distinct().unordered()`. Reverted, and deliberately so:
@@ -43,8 +43,8 @@
 #
 # The pinned `invokeinterface` total goes UP, not down, and that is the point:
 # a fused distinct trades ONE `Stream.distinct` dispatch for the seen-set and
-# state calls inside the body it fused into. With `217` the class ends at 55;
-# with the rule taken away it ends at 50 and five native `Stream.distinct`
+# state calls inside the body it fused into. With `217` the class ends at 53;
+# with the rule taken away it ends at 47 and five native `Stream.distinct`
 # calls survive instead of three. So the number is not decoration — it moves
 # with exactly the pipelines this rule re-permits, and it moves the other way
 # if the relaxation ever over-applies to the three that must stay reverted.
@@ -53,7 +53,7 @@
 # through `307-unordered-distinct-to-distill`, whose seen-set is a
 # `Collections.synchronizedSet(new HashSet<>())` reached by `invokeinterface`
 # — the sequential fold's bare HashSet would race across ForkJoin workers.
-# That is part of why the delta is +5 and not +2.
+# That is part of why the delta is +6 and not +2.
 java: |
   package unordereddistinct;
   import java.util.List;
@@ -103,4 +103,4 @@ before:
   invokeinterface: 42
 after:
   invokedynamic: 12
-  invokeinterface: 55
+  invokeinterface: 53

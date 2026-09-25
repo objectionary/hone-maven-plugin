@@ -24,13 +24,12 @@ input: |
           op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
           op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, v0 ↦ "2" ⟧,
           op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Scaler", v3 ↦ "<init>", v4 ↦ "(I)V", v5 ↦ Φ.false ⟧,
-          op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-          ρ ↦ ∅
+          op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧
         ⟧
       ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-before, make ↦ ⟦ 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧, 𝐵-m, 𝜏-init ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧, ρ ↦ ∅ ⟧, 𝐵-after ⟧
-  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-a, make ↦ ⟦ 𝐵-m1, 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, 𝐵-p ⟧, 𝐵-m2, ρ ↦ ∅ ⟧, 𝐵-b ⟧
-  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-before, make ↦ ⟦ 𝜏-new ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Scaler" ⟧, 𝐵-m, 𝜏-init ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Scaler", i3 ↦ "<init>", i4 ↦ "(I)V", i5 ↦ Φ.false ⟧ ⟧, 𝐵-after ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, 𝐵-a, make ↦ ⟦ 𝐵-m1, 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.bipush, 𝐵-p ⟧, 𝐵-m2 ⟧, 𝐵-b ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-map, 𝐵-rest ⟧ ⟧

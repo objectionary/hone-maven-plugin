@@ -33,8 +33,7 @@ input: |
         v2 ↦ "()J",
         v3 ↦ Φ.true,
         traverses ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

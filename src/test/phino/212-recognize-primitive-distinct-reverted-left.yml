@@ -23,13 +23,10 @@ input: |
           i3 ↦ "distinct",
           i4 ↦ "()Ljava/util/stream/IntStream;",
           i5 ↦ Φ.true,
-          reverted ↦ Φ.true,
-          ρ ↦ ∅
-        ⟧,
-        ρ ↦ ∅
+          reverted ↦ Φ.true
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦
@@ -38,6 +35,5 @@ expected:
       i3 ↦ "distinct",
       i4 ↦ "()Ljava/util/stream/IntStream;",
       i5 ↦ Φ.true,
-      reverted ↦ Φ.true,
-      ρ ↦ ∅
+      reverted ↦ Φ.true
     ⟧

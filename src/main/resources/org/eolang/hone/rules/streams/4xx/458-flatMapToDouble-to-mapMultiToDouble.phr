@@ -63,8 +63,7 @@ pattern: |
       ⟧,
       𝐵-method-tail
     ⟧,
-    𝐵-class-tail,
-    ρ ↦ ∅
+    𝐵-class-tail
   ⟧
 result: |
   ⟦
@@ -231,8 +230,7 @@ result: |
           locals ↦ ⟦ φ ↦ Φ.jeo.seq.of2, x0 ↦ 𝑒-frame-input, x1 ↦ "java/util/function/DoubleConsumer" ⟧,
           stack ↦ ⟦ φ ↦ Φ.jeo.seq.of0 ⟧
         ⟧,
-        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
-        ρ ↦ ∅
+        ret ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧
       ⟧,
       trycatchblocks ↦ ⟦
         φ ↦ Φ.jeo.seq.of2,
@@ -252,8 +250,7 @@ result: |
         ⟧
       ⟧,
       name ↦ 𝑒-adapter-name
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 where:
   - meta: 𝜏-adapter-method

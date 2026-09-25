@@ -40,11 +40,9 @@ input: |
           opcode ↦ "invokestatic",
           target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/Integer;)Ljava/util/stream/Stream;", is-interface ↦ Φ.false ⟧,
           stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "flatMap", signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;" ⟧
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ class ↦ "java/util/stream/Stream", method ↦ "mapMulti", signature ↦ "(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;" ⟧

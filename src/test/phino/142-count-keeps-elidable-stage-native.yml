@@ -40,8 +40,7 @@ input: |
         v1 ↦ "count",
         v2 ↦ "()J",
         v3 ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

@@ -8,8 +8,7 @@ pattern: |
     𝐵-before,
     𝜏-load-this ↦ ⟦
       φ ↦ Φ.jeo.opcode.aload,
-      𝜏-idx ↦ 0,
-      ρ ↦ ∅
+      𝜏-idx ↦ 0
     ⟧,
     𝜏-lambda ↦ ⟦
       φ ↦ Φ.hone.lambda,

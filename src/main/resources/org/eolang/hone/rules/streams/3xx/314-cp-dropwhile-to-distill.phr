@@ -56,10 +56,10 @@ name: cp-dropwhile-to-distill
 pattern: |
   ⟦
     φ ↦ Φ.hone.cp-dropWhile,
-    state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
-    body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
-    skip-acc ↦ ⟦ 𝐵-kacc, ρ ↦ ∅ ⟧,
-    undo-acc ↦ ⟦ 𝐵-uacc, ρ ↦ ∅ ⟧,
+    state-acc ↦ ⟦ 𝐵-sacc ⟧,
+    body-acc ↦ ⟦ 𝐵-bacc ⟧,
+    skip-acc ↦ ⟦ 𝐵-kacc ⟧,
+    undo-acc ↦ ⟦ 𝐵-uacc ⟧,
     captures ↦ 𝑒-captures,
     class ↦ 𝑒-class,
     bridge-input ↦ 𝑒-bridge-input,
@@ -97,8 +97,7 @@ result: |
         i5 ↦ Φ.true
       ⟧,
       𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-      𝐵-sacc,
-      ρ ↦ ∅
+      𝐵-sacc
     ⟧,
     body ↦ ⟦
       𝜏-latch ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[I" ⟧,
@@ -137,8 +136,7 @@ result: |
       ⟧,
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
-      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      ρ ↦ ∅
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
     ⟧
   ⟧
 where:

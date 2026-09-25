@@ -64,8 +64,7 @@ pattern: |
       𝜏-cclass ↦ 𝑒-cclass,
       𝜏-cmethod ↦ "count",
       𝜏-csignature ↦ "()J",
-      𝜏-ciface ↦ 𝑒-ciface,
-      ρ ↦ ∅
+      𝜏-ciface ↦ 𝑒-ciface
     ⟧,
     𝐵-after
   ⟧

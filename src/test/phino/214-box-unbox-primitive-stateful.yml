@@ -20,8 +20,7 @@ input: |
         class ↦ "Foo",
         stream-class ↦ "java/util/stream/IntStream",
         push ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

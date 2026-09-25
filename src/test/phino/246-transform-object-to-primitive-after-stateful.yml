@@ -29,8 +29,7 @@ input: |
         returned ↦ "I",
         static ↦ "true",
         target ↦ ⟦ class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(I)Z" ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

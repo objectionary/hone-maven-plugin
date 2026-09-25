@@ -27,4 +27,4 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ body ↦ ⟦ 𝜏-op ↦ ⟦ φ ↦ Φ.hone.distill, class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", start ↦ "peek", accepted ↦ "Ljava/lang/Integer;", returned ↦ "Ljava/lang/Integer;", static ↦ "true", state ↦ ⟦⟧, body ↦ ⟦ i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵 ⟧ ⟧ ⟧, ρ ↦ ∅ ⟧ ⟧
+  - ⟦ body ↦ ⟦ 𝜏-op ↦ ⟦ φ ↦ Φ.hone.distill, class ↦ "fusion/X", bridge-input ↦ "Ljava/lang/Integer;", bridge-output ↦ "Ljava/lang/Integer;", start ↦ "peek", accepted ↦ "Ljava/lang/Integer;", returned ↦ "Ljava/lang/Integer;", static ↦ "true", state ↦ ⟦⟧, body ↦ ⟦ i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵 ⟧ ⟧ ⟧ ⟧ ⟧

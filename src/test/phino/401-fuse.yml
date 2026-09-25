@@ -26,12 +26,10 @@ input: |
         static ↦ "true",
         state ↦ ⟦
           s1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
-          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧,
-          ρ ↦ ∅
+          s2 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "java/util/HashSet" ⟧
         ⟧,
         body ↦ ⟦
-          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧,
-          ρ ↦ ∅
+          b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/HashSet" ⟧
         ⟧
       ⟧,
       op2 ↦ ⟦
@@ -45,15 +43,12 @@ input: |
         static ↦ "true",
         state ↦ ⟦
           t1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iconst_1 ⟧,
-          t2 ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧,
-          ρ ↦ ∅
+          t2 ↦ ⟦ φ ↦ Φ.jeo.opcode.newarray, i1 ↦ 11 ⟧
         ⟧,
         body ↦ ⟦
-          c1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧,
-          ρ ↦ ∅
+          c1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "[J" ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

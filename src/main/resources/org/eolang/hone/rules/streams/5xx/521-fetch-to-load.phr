@@ -49,8 +49,7 @@ pattern: |
         φ ↦ Φ.hone.fetch,
         type ↦ 𝑒-type
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧,
     𝐵-tail
   ⟧
@@ -78,8 +77,7 @@ result: |
       ⟧,
       𝜏-inc ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 𝑒-counter-slot, i2 ↦ 1 ⟧,
       𝜏-cast ↦ ⟦ φ ↦ Φ.jeo.opcode.checkcast, i1 ↦ 𝑒-type ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧,
     𝐵-tail
   ⟧

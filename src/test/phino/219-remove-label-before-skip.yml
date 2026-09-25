@@ -22,9 +22,8 @@ input: |
         v1 ↦ "skip",
         v2 ↦ "(J)Ljava/util/stream/Stream;",
         v3 ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, 𝐵-push ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", 𝐵-call ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, 𝐵-push ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", 𝐵-call ⟧ ⟧

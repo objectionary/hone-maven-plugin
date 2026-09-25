@@ -14,7 +14,7 @@ pattern: |
     returned ↦ 𝑒-returned,
     static ↦ 𝑒-static,
     state ↦ 𝑒-state,
-    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    body ↦ ⟦ 𝐵-body ⟧
   ⟧
 result: |
   ⟦
@@ -35,8 +35,7 @@ result: |
         i4 ↦ 𝑒-transform-signature,
         i5 ↦ Φ.false
       ⟧,
-      𝐵-body,
-      ρ ↦ ∅
+      𝐵-body
     ⟧
   ⟧
 when:

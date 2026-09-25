@@ -20,7 +20,7 @@ input: |
     accepted ↦ "Ljava/lang/Object;",
     returned ↦ "Ljava/lang/Object;",
     static ↦ "true",
-    state ↦ ⟦ s ↦ ⟦ set ↦ "HashSet" ⟧, ρ ↦ ∅ ⟧,
+    state ↦ ⟦ s ↦ ⟦ set ↦ "HashSet" ⟧ ⟧,
     body ↦ ⟦
       b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       b2 ↦ ⟦

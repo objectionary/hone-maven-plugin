@@ -15,8 +15,7 @@ input: |
       f1 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "I" ⟧,
       f2 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "J" ⟧,
       f3 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "D" ⟧,
-      f4 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧,
-      ρ ↦ ∅
+      f4 ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ "Ljava/lang/String;" ⟧
     ⟧
   ⟧
 expected:

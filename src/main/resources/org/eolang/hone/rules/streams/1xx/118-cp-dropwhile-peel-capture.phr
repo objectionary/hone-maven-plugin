@@ -36,10 +36,10 @@ pattern: |
     𝜏-push ↦ 𝑒-push,
     𝜏-cd ↦ ⟦
       φ ↦ Φ.hone.cp-dropWhile,
-      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
-      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
-      skip-acc ↦ ⟦ 𝐵-kacc, ρ ↦ ∅ ⟧,
-      undo-acc ↦ ⟦ 𝐵-uacc, ρ ↦ ∅ ⟧,
+      state-acc ↦ ⟦ 𝐵-sacc ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc ⟧,
+      skip-acc ↦ ⟦ 𝐵-kacc ⟧,
+      undo-acc ↦ ⟦ 𝐵-uacc ⟧,
       captures ↦ 𝑒-captures,
       𝐵-cd-tail
     ⟧,
@@ -62,23 +62,19 @@ result: |
           i5 ↦ Φ.true
         ⟧,
         𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-        𝐵-sacc,
-        ρ ↦ ∅
+        𝐵-sacc
       ⟧,
       body-acc ↦ ⟦
         𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ 𝑒-code ⟧,
-        𝐵-bacc,
-        ρ ↦ ∅
+        𝐵-bacc
       ⟧,
       skip-acc ↦ ⟦
         𝜏-tick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ 1 ⟧,
-        𝐵-kacc,
-        ρ ↦ ∅
+        𝐵-kacc
       ⟧,
       undo-acc ↦ ⟦
         𝜏-untick ↦ ⟦ φ ↦ Φ.jeo.opcode.iinc, i1 ↦ 3, i2 ↦ -1 ⟧,
-        𝐵-uacc,
-        ρ ↦ ∅
+        𝐵-uacc
       ⟧,
       captures ↦ 𝑒-rest,
       𝐵-cd-tail

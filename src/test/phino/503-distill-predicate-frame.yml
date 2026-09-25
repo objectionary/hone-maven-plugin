@@ -32,8 +32,7 @@ input: |
       i4 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
       i5 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       i6 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
-      i7 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      ρ ↦ ∅
+      i7 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
     ⟧
   ⟧
 expected:

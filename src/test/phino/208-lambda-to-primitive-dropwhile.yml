@@ -63,8 +63,7 @@ input: |
           method ↦ "dropWhile",
           signature ↦ "(Ljava/util/function/LongPredicate;)Ljava/util/stream/LongStream;"
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

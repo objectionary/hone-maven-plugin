@@ -56,8 +56,7 @@ pattern: |
       𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-label ⟧,
-      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      ρ ↦ ∅
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
     ⟧
   ⟧
 result: |

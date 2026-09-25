@@ -40,14 +40,13 @@ input: |
     accepted ↦ "J",
     returned ↦ "J",
     static ↦ "true",
-    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    state ↦ ⟦⟧,
     body ↦ ⟦
       i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", i4 ↦ "(J)Z", i5 ↦ Φ.false ⟧,
       i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.ifne, i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧ ⟧,
       i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       i4 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L1" ⟧,
-      i5 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      ρ ↦ ∅
+      i5 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
     ⟧
   ⟧
 expected:

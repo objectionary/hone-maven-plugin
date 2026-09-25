@@ -42,8 +42,7 @@ input: |
             x3 ↦ "integer"
           ⟧,
           stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ "java/lang/Double" ⟧
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
     ⟧
   ⟧

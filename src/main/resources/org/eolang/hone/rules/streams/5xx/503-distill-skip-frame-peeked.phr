@@ -66,8 +66,7 @@ pattern: |
       𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
       𝜏-keep-label ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ 𝑒-keep-label ⟧,
       𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 result: |
@@ -116,8 +115,7 @@ result: |
           x0 ↦ 𝑒-frame-item
         ⟧
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 when:

@@ -81,13 +81,11 @@ pattern: |
             𝜏7 ↦ "java/lang/invoke/LambdaMetafactory",
             𝜏8 ↦ "metafactory",
             𝜏9 ↦ "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-            𝜏10 ↦ Φ.false,
-            ρ ↦ ∅
+            𝜏10 ↦ Φ.false
           ⟧,
           𝜏11 ↦ ⟦
             φ ↦ Φ.jeo.type,
-            𝜏12 ↦ 𝑒-lambda-signature,
-            ρ ↦ ∅
+            𝜏12 ↦ 𝑒-lambda-signature
           ⟧,
           𝜏13 ↦ ⟦
             φ ↦ Φ.jeo.handle,
@@ -95,29 +93,24 @@ pattern: |
             𝜏15 ↦ 𝑒-target-class,
             𝜏16 ↦ 𝑒-target-method,
             𝜏17 ↦ 𝑒-target-signature,
-            𝜏18 ↦ 𝑒-target-is-interface,
-            ρ ↦ ∅
+            𝜏18 ↦ 𝑒-target-is-interface
           ⟧,
           𝜏19 ↦ ⟦
             φ ↦ Φ.jeo.type,
-            𝜏21 ↦ "(Ljava/lang/Integer;)Z",
-            ρ ↦ ∅
-          ⟧,
-          ρ ↦ ∅
+            𝜏21 ↦ "(Ljava/lang/Integer;)Z"
+          ⟧
         ⟧,
         𝜏-invokeinterface ↦ ⟦
           φ ↦ Φ.jeo.opcode.invokeinterface,
           𝜏24 ↦ "java/util/stream/Stream",
           𝜏25 ↦ "filter",
           𝜏26 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;",
-          𝜏27 ↦ Φ.true,
-          ρ ↦ ∅
+          𝜏27 ↦ Φ.true
         ⟧,
         𝐵-body-tail
       ⟧,
       𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
-      local-variable-table ↦ 𝑒-lvt,
-      ρ ↦ ∅
+      local-variable-table ↦ 𝑒-lvt
     ⟧,
     𝐵-class-body-tail
   ⟧
@@ -154,8 +147,8 @@ result: |
         𝐵-body-head,
         𝜏-cp-filter ↦ ⟦
           φ ↦ Φ.hone.cp-filter,
-          state-acc ↦ ⟦ ρ ↦ ∅ ⟧,
-          body-acc ↦ ⟦ ρ ↦ ∅ ⟧,
+          state-acc ↦ ⟦⟧,
+          body-acc ↦ ⟦⟧,
           captures ↦ 𝑒-captures,
           class ↦ 𝑒-class,
           bridge-input ↦ "Ljava/lang/Integer;",
@@ -174,8 +167,7 @@ result: |
         𝐵-body-tail
       ⟧,
       𝜏-trycatchblocks ↦ 𝑒-trycatchblocks,
-      local-variable-table ↦ 𝑒-lvt,
-      ρ ↦ ∅
+      local-variable-table ↦ 𝑒-lvt
     ⟧,
     𝐵-class-body-tail
   ⟧

@@ -22,7 +22,7 @@ input: |
         accepted ↦ "Ljava/lang/Integer;",
         returned ↦ "Ljava/lang/Integer;",
         static ↦ "true",
-        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        state ↦ ⟦⟧,
         body ↦ ⟦
           i1 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokestatic,
@@ -30,8 +30,7 @@ input: |
             i3 ↦ "lambda$f$0",
             i4 ↦ "(Ljava/lang/Integer;)Ljava/lang/Integer;",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
       ⟧,
       op2 ↦ ⟦
@@ -47,10 +46,9 @@ input: |
           signature ↦ "(Ljava/lang/Integer;)I",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
   - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, bridge-input ↦ "Ljava/lang/Integer;", 𝐵-c, bridge-output ↦ "I", 𝐵-d ⟧
-  - ⟦ 𝐵-p, 𝜏-first ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$f$0", 𝐵-y ⟧, 𝜏-second ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i3 ↦ "lambda$f$1", 𝐵-w ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝐵-p, 𝜏-first ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$f$0", 𝐵-y ⟧, 𝜏-second ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i3 ↦ "lambda$f$1", 𝐵-w ⟧ ⟧

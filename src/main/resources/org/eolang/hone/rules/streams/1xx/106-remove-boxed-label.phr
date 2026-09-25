@@ -26,26 +26,22 @@ pattern: |
     𝐵-before,
     𝜏-label ↦ ⟦
       φ ↦ Φ.jeo.label,
-      𝜏-label-value ↦ 𝑒-label-value,
-      ρ ↦ ∅
+      𝜏-label-value ↦ 𝑒-label-value
     ⟧,
     𝜏-line-number ↦ ⟦
       φ ↦ Φ.jeo.line-number,
       number ↦ 𝑒-line-number,
       𝜏-ln-label ↦ ⟦
         φ ↦ Φ.jeo.label,
-        𝜏-ln-label-value ↦ 𝑒-label-value,
-        ρ ↦ ∅
-      ⟧,
-      ρ ↦ ∅
+        𝜏-ln-label-value ↦ 𝑒-label-value
+      ⟧
     ⟧,
     𝜏-call ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
       𝜏1 ↦ 𝑒-owner,
       𝜏2 ↦ "boxed",
       𝜏3 ↦ "()Ljava/util/stream/Stream;",
-      𝜏4 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏4 ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧
@@ -57,8 +53,7 @@ result: |
       𝜏1 ↦ 𝑒-owner,
       𝜏2 ↦ "boxed",
       𝜏3 ↦ "()Ljava/util/stream/Stream;",
-      𝜏4 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏4 ↦ Φ.true
     ⟧,
     𝐵-after
   ⟧

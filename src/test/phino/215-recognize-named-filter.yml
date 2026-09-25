@@ -22,12 +22,11 @@ input: |
           op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
           op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Good", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
           op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "filter", v8 ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-          op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧,
-          ρ ↦ ∅
+          op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧
         ⟧
       ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-filter, class ↦ "Foo", make ↦ ⟦ 𝐵-make, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
-  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-filter, 𝐵-rest ⟧, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧, ρ ↦ ∅ ⟧
+  - ⟦ φ ↦ Φ.hone.named-filter, class ↦ "Foo", make ↦ ⟦ 𝐵-make ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Object;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Object;", static ↦ "true" ⟧
+  - ⟦ 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-filter, 𝐵-rest ⟧, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, v10 ↦ 2 ⟧ ⟧

@@ -24,4 +24,4 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ body ↦ ⟦ 𝜏-prev ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "mapToLong", 𝐵-p ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/LongStream", v1 ↦ "boxed", 𝐵-c ⟧, ρ ↦ ∅ ⟧ ⟧
+  - ⟦ body ↦ ⟦ 𝜏-prev ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "mapToLong", 𝐵-p ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/LongStream", v1 ↦ "boxed", 𝐵-c ⟧ ⟧ ⟧

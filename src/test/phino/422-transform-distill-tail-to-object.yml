@@ -25,14 +25,12 @@ input: |
       accepted ↦ "J",
       returned ↦ "J",
       static ↦ "true",
-      state ↦ ⟦ ρ ↦ ∅ ⟧,
+      state ↦ ⟦⟧,
       body ↦ ⟦
         i2 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
-        i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.ladd ⟧,
-        ρ ↦ ∅
+        i3 ↦ ⟦ φ ↦ Φ.jeo.opcode.ladd ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   # The head Long is unboxed (accepted now carries the object type) ...

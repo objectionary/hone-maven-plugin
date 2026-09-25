@@ -125,6 +125,6 @@ before:
   new: 0
 after:
   invokedynamic: 6
-  invokeinterface: 37
-  invokestatic: 45
+  invokeinterface: 35
+  invokestatic: 43
   new: 3

@@ -22,13 +22,10 @@ input: |
           i2 ↦ "java/util/stream/IntStream",
           i3 ↦ "skip",
           i4 ↦ "(J)Ljava/util/stream/IntStream;",
-          i5 ↦ Φ.true,
-          ρ ↦ ∅
-        ⟧,
-        ρ ↦ ∅
+          i5 ↦ Φ.true
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦
@@ -39,8 +36,7 @@ expected:
         i2 ↦ "java/util/stream/IntStream",
         i3 ↦ "skip",
         i4 ↦ "(J)Ljava/util/stream/IntStream;",
-        i5 ↦ Φ.true,
-        ρ ↦ ∅
+        i5 ↦ Φ.true
       ⟧,
       𝐵-b
     ⟧

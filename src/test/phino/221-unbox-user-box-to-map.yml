@@ -47,8 +47,7 @@ input: |
           signature ↦ "()I",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

@@ -32,8 +32,7 @@ pattern: |
     body ↦ ⟦
       𝐵-before,
       𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 result: |
@@ -54,8 +53,7 @@ result: |
         nstack ↦ 1,
         stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, item ↦ 𝑒-frame-item ⟧
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 where:

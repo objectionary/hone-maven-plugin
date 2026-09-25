@@ -38,12 +38,11 @@ input: |
         returned ↦ "Ljava/lang/Integer;",
         static ↦ "true",
         target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(Ljava/util/List;ILjava/lang/Integer;)Z", is-interface ↦ Φ.false ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.hone.cp-filter, state-acc ↦ ⟦ 𝜏-d1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l1 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 0 ⟧, 𝜏-a1 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", 𝐵-a1x ⟧, 𝜏-po1 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧, 𝜏-d2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l2 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧, 𝜏-b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", 𝐵-b2x ⟧, 𝐵-sr ⟧, 𝐵-rest ⟧
-  - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-a, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/List" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝜏-iv ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", 𝐵-ivx ⟧, ρ ↦ ∅ ⟧, 𝐵-c ⟧
+  - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-a, body-acc ↦ ⟦ 𝜏-f1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/util/List" ⟧, 𝜏-f2 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝜏-iv ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", 𝐵-ivx ⟧ ⟧, 𝐵-c ⟧
   - ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-d, captures ↦ "", 𝐵-e ⟧
   - ⟦ 𝐵-x, 𝜏-p ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", 𝐵-pr ⟧, 𝜏-cf ↦ ⟦ φ ↦ Φ.hone.cp-filter, 𝐵-cr ⟧, 𝐵-y ⟧

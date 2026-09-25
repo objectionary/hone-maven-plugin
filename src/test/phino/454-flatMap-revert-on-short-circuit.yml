@@ -37,11 +37,9 @@ input: |
           i3 ↦ "limit",
           i4 ↦ "(J)Ljava/util/stream/Stream;",
           i5 ↦ Φ.true
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.jeo.opcode.invokedynamic, i2 ↦ "apply", i3 ↦ "()Ljava/util/function/Function;", 𝐵-rest ⟧

@@ -20,8 +20,10 @@
 # int-side operation (filter) with one long-side operation (map) across an
 # asLongStream(). Across both pipelines the optimizer drops invokedynamic
 # 6 -> 4 (the two two-operation runs on the first pipeline each fuse 2 -> 1),
-# the four lambda factories become four mapMulti dispatches, and both
-# conversion calls are preserved, so the result is byte-for-byte equivalent.
+# three of the four lambda factories become mapMulti dispatches, the lone
+# long-side map goes back to a native LongStream.map because nothing fused
+# into it, and both conversion calls are preserved, so the result is
+# byte-for-byte equivalent.
 java: |
   package asstream;
   import java.util.stream.IntStream;
@@ -52,4 +54,4 @@ before:
   invokeinterface: 10
 after:
   invokedynamic: 4
-  invokeinterface: 12
+  invokeinterface: 11

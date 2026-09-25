@@ -18,7 +18,7 @@ input: |
     accepted ↦ "J",
     returned ↦ "J",
     static ↦ "true",
-    state ↦ ⟦ s ↦ ⟦ latch ↦ "[I" ⟧, ρ ↦ ∅ ⟧,
+    state ↦ ⟦ s ↦ ⟦ latch ↦ "[I" ⟧ ⟧,
     body ↦ ⟦
       b1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       b2 ↦ ⟦

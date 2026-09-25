@@ -22,7 +22,7 @@ input: |
         accepted ↦ "Ljava/lang/Integer;",
         returned ↦ "Ljava/lang/Integer;",
         static ↦ "true",
-        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        state ↦ ⟦⟧,
         body ↦ ⟦
           b1 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokestatic,
@@ -56,8 +56,7 @@ input: |
           signature ↦ "(I)Ljava/lang/String;",
           is-interface ↦ Φ.false
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

@@ -22,8 +22,7 @@ input: |
         class ↦ "Foo",
         stream-class ↦ "java/util/stream/Stream",
         push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 10 ⟧ ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

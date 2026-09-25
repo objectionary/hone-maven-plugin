@@ -25,15 +25,13 @@ input: |
       s7 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 1 ⟧,
       s8 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "java/lang/Integer", i3 ↦ "valueOf", i4 ↦ "(I)Ljava/lang/Integer;", i5 ↦ Φ.false ⟧,
       s9 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, i2 ↦ "java/util/List", i3 ↦ "add", i4 ↦ "(Ljava/lang/Object;)Z", i5 ↦ Φ.true ⟧,
-      s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-      ρ ↦ ∅
+      s10 ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧
     ⟧,
     body-acc ↦ ⟦
       b1 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
       b2 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
       b3 ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧,
-      b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧,
-      ρ ↦ ∅
+      b4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokevirtual, i1 ↦ "java/lang/Integer", i2 ↦ "intValue", i3 ↦ "()I", i4 ↦ Φ.false ⟧
     ⟧,
     captures ↦ "",
     class ↦ "Foo",
@@ -47,5 +45,5 @@ input: |
 expected:
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-a, start ↦ "c-map", 𝐵-b ⟧
   - ⟦ 𝜏-park ↦ ⟦ φ ↦ Φ.jeo.opcode.astore, i1 ↦ 1 ⟧, 𝜏-f ↦ ⟦ φ ↦ Φ.hone.fetch, type ↦ "java/lang/Integer" ⟧, 𝐵-br ⟧
-  - ⟦ 𝐵-e, 𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$1", i3 ↦ "(IILjava/lang/Integer;)Ljava/lang/Integer;", i4 ↦ Φ.false ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝐵-e, 𝜏-reload ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 1 ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i1 ↦ "Foo", i2 ↦ "lambda$run$1", i3 ↦ "(IILjava/lang/Integer;)Ljava/lang/Integer;", i4 ↦ Φ.false ⟧ ⟧
   - ⟦ φ ↦ Φ.hone.distill, 𝐵-f, state ↦ ⟦ 𝜏-d1 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, 𝜏-l1 ↦ ⟦ φ ↦ Φ.jeo.opcode.iload, v0 ↦ 0 ⟧, 𝐵-sr ⟧, 𝐵-g ⟧

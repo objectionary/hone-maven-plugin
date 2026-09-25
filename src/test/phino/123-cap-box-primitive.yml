@@ -27,8 +27,7 @@ input: |
       b3 ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "D" ⟧,
       d4 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       l4 ↦ ⟦ φ ↦ Φ.jeo.opcode.aload, v0 ↦ 5 ⟧,
-      b4 ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "Ljava/util/List;" ⟧,
-      ρ ↦ ∅
+      b4 ↦ ⟦ φ ↦ Φ.hone.cap-box, code ↦ "Ljava/util/List;" ⟧
     ⟧
   ⟧
 expected:

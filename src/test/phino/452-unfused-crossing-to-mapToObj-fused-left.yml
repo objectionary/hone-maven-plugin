@@ -26,7 +26,7 @@ input: |
         accepted ↦ "Ljava/lang/Integer;",
         returned ↦ "I",
         static ↦ "true",
-        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        state ↦ ⟦⟧,
         body ↦ ⟦
           b1 ↦ ⟦
             φ ↦ Φ.jeo.opcode.invokevirtual,
@@ -48,11 +48,9 @@ input: |
             i3 ↦ "length",
             i4 ↦ "()I",
             i5 ↦ Φ.false
-          ⟧,
-          ρ ↦ ∅
+          ⟧
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

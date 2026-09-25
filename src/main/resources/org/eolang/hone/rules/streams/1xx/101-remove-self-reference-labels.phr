@@ -12,18 +12,15 @@ pattern: |
     ⟧,
     𝜏-label ↦ ⟦
       φ ↦ Φ.jeo.label,
-      𝜏-label-value ↦ 𝑒-label-value,
-      ρ ↦ ∅
+      𝜏-label-value ↦ 𝑒-label-value
     ⟧,
     𝜏-line-number ↦ ⟦
       φ ↦ Φ.jeo.line-number,
       number ↦ 𝑒-line-number,
       𝜏-ln-label ↦ ⟦
         φ ↦ Φ.jeo.label,
-        𝜏-ln-label-value ↦ 𝑒-label-value,
-        ρ ↦ ∅
-      ⟧,
-      ρ ↦ ∅
+        𝜏-ln-label-value ↦ 𝑒-label-value
+      ⟧
     ⟧,
     𝜏-invokeinterface ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,

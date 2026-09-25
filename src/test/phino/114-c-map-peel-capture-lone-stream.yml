@@ -32,8 +32,7 @@ input: |
         returned ↦ "Ljava/lang/Integer;",
         static ↦ "true",
         target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$run$0", signature ↦ "(Ljava/util/List;Ljava/lang/Integer;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

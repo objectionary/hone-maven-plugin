@@ -83,8 +83,7 @@ pattern: |
           static ↦ "true",
           state ↦ ⟦
             𝜏-state-first ↦ 𝑒-state-first,
-            𝐵-state-rest,
-            ρ ↦ ∅
+            𝐵-state-rest
           ⟧,
           body ↦ 𝑒-body
         ⟧,
@@ -92,8 +91,7 @@ pattern: |
       ⟧,
       𝐵-method-tail
     ⟧,
-    𝐵-class-tail,
-    ρ ↦ ∅
+    𝐵-class-tail
   ⟧
 result: |
   ⟦
@@ -155,8 +153,7 @@ result: |
       target-method ↦ 𝑒-target-method,
       captured ↦ "Ljava/util/List;",
       body ↦ 𝑒-body
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 where:
   # Six is the peak of the deepest state append, 308's: from [.. list] it goes

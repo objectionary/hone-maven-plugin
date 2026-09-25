@@ -11,7 +11,7 @@ pattern: |
     returned ↦ 𝑒-returned,
     consumer ↦ 𝑒-consumer,
     target-method ↦ 𝑒-target-method,
-    body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+    body ↦ ⟦ 𝐵-body ⟧
   ⟧
 result: |
   ⟦
@@ -61,8 +61,7 @@ result: |
       ⟧,
       i-return ↦ ⟦
         φ ↦ Φ.jeo.opcode.return
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧,
     name ↦ 𝑒-target-method
   ⟧

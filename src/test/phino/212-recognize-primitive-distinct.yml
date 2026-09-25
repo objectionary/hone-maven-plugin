@@ -19,13 +19,10 @@ input: |
           i2 ↦ "java/util/stream/IntStream",
           i3 ↦ "distinct",
           i4 ↦ "()Ljava/util/stream/IntStream;",
-          i5 ↦ Φ.true,
-          ρ ↦ ∅
-        ⟧,
-        ρ ↦ ∅
+          i5 ↦ Φ.true
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦

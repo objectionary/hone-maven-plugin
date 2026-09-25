@@ -37,28 +37,24 @@ pattern: |
     𝐵-before,
     𝜏-new ↦ ⟦
       φ ↦ Φ.jeo.opcode.new,
-      𝜏1 ↦ 𝑒-object,
-      ρ ↦ ∅
+      𝜏1 ↦ 𝑒-object
     ⟧,
     𝜏-dup ↦ ⟦
-      φ ↦ Φ.jeo.opcode.dup,
-      ρ ↦ ∅
+      φ ↦ Φ.jeo.opcode.dup
     ⟧,
     𝜏-init ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokespecial,
       𝜏2 ↦ 𝑒-object,
       𝜏3 ↦ "<init>",
       𝜏4 ↦ "()V",
-      𝜏5 ↦ Φ.false,
-      ρ ↦ ∅
+      𝜏5 ↦ Φ.false
     ⟧,
     𝜏-map ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
       𝜏6 ↦ "java/util/stream/Stream",
       𝜏7 ↦ "map",
       𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
-      𝜏9 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏9 ↦ Φ.true
     ⟧,
     𝐵-between,
     𝜏-count ↦ ⟦
@@ -66,8 +62,7 @@ pattern: |
       𝜏-cclass ↦ 𝑒-cclass,
       𝜏-cmethod ↦ "count",
       𝜏-csignature ↦ "()J",
-      𝜏-ciface ↦ 𝑒-ciface,
-      ρ ↦ ∅
+      𝜏-ciface ↦ 𝑒-ciface
     ⟧,
     𝐵-after
   ⟧

@@ -76,8 +76,7 @@ pattern: |
         i4 ↦ 𝑒-invoke-signature,
         i5 ↦ 𝑒-invoke-is-interface
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 result: |
@@ -106,8 +105,7 @@ result: |
         i4 ↦ 𝑒-invoke-signature,
         i5 ↦ 𝑒-invoke-is-interface
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 when:

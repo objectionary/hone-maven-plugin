@@ -38,11 +38,10 @@ input: |
         φ ↦ Φ.hone.box,
         stream-class ↦ "java/util/stream/LongStream",
         minted ↦ "user"
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
   - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, bridge-input ↦ "Ljava/lang/Integer;", 𝐵-c, bridge-output ↦ "Ljava/lang/Long;", 𝐵-d ⟧
-  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, accepted ↦ "Ljava/lang/Integer;", 𝐵-c, returned ↦ "Ljava/lang/Long;", 𝐵-d, state ↦ ⟦ ρ ↦ ∅ ⟧, 𝐵-e ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.distill, 𝐵-b, accepted ↦ "Ljava/lang/Integer;", 𝐵-c, returned ↦ "Ljava/lang/Long;", 𝐵-d, state ↦ ⟦⟧, 𝐵-e ⟧
   - ⟦ 𝐵-p, 𝜏-mapper ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-x, i3 ↦ "lambda$main$0", 𝐵-y ⟧, 𝜏-valueof ↦ ⟦ φ ↦ Φ.jeo.opcode.invokestatic, 𝐵-z, i2 ↦ "java/lang/Long", i3 ↦ "valueOf", i4 ↦ "(J)Ljava/lang/Long;", 𝐵-w ⟧, 𝐵-q ⟧

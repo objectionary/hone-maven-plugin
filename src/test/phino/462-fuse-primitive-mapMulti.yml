@@ -65,11 +65,9 @@ input: |
           opcode ↦ "invokestatic",
           target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$2", signature ↦ "(ILjava/util/function/IntConsumer;)V", is-interface ↦ Φ.false ⟧,
           stream ↦ ⟦ class ↦ "java/util/stream/IntStream", method ↦ "mapMulti", signature ↦ "(Ljava/util/stream/IntStream$IntMapMultiConsumer;)Ljava/util/stream/IntStream;" ⟧
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
-    ⟧,
-    ρ ↦ ∅
+    ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.jeo.opcode.invokestatic, i2 ↦ "Foo", i3 ↦ "lambda$main$0", 𝐵-rest ⟧

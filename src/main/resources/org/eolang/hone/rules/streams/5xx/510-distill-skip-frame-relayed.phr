@@ -75,8 +75,7 @@ pattern: |
         ⟧,
         stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-stale ⟧
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧
 result: |
@@ -127,7 +126,6 @@ result: |
         ⟧,
         stack ↦ ⟦ φ ↦ Φ.jeo.seq.of1, x0 ↦ 𝑒-survivor ⟧
       ⟧,
-      𝐵-after,
-      ρ ↦ ∅
+      𝐵-after
     ⟧
   ⟧

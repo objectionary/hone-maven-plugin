@@ -35,13 +35,15 @@
 #
 # The printed line is most of the assertion, since `computed()` did not load at
 # all before the guard. What the disassembly shows is the intended shape: the
-# three unliftable skips each stay NATIVE with the operators on either side
-# fused into a mapMulti of their own — a fusion barrier, which is what the rule
-# always claimed to leave — while `constant()` comes out as ONE
-# `Stream.mapMulti` with no skip left in it. The counts pin the second half:
-# `invokedynamic` 10 -> 9 and `invokeinterface` 18 -> 25 both move only because
-# fusion still happens around and through the constant count, so a guard
-# written tightly enough to refuse `ldc` would show up here.
+# three unliftable skips each stay NATIVE — a fusion barrier, which is what the
+# rule always claimed to leave — with the lone operators on either side left
+# alone too: each map goes back to a plain `map`, since nothing fused into it,
+# and the primitive filter becomes a mapMulti of its own. `constant()` comes
+# out as ONE `Stream.mapMulti` with no skip left in it. The counts pin the
+# second half: `invokedynamic` 10 -> 9 moves only because fusion still happens
+# through the constant count, and `invokeinterface` 18 -> 20 because its fused
+# body gains the state calls, so a guard written tightly enough to refuse
+# `ldc` would show up here.
 java: |
   package skipcomputed;
   import java.util.List;
@@ -83,5 +85,5 @@ before:
   invokestatic: 30
 after:
   invokedynamic: 9
-  invokeinterface: 25
-  invokestatic: 38
+  invokeinterface: 20
+  invokestatic: 33

@@ -22,8 +22,7 @@ input: |
         v1 ↦ "parallel",
         v2 ↦ "()Ljava/util/stream/Stream;",
         v3 ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

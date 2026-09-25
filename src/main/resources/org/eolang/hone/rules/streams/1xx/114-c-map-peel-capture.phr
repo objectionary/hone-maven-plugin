@@ -48,8 +48,8 @@ pattern: |
     𝜏-push ↦ 𝑒-push,
     𝜏-cm ↦ ⟦
       φ ↦ Φ.hone.c-map,
-      state-acc ↦ ⟦ 𝐵-sacc, ρ ↦ ∅ ⟧,
-      body-acc ↦ ⟦ 𝐵-bacc, ρ ↦ ∅ ⟧,
+      state-acc ↦ ⟦ 𝐵-sacc ⟧,
+      body-acc ↦ ⟦ 𝐵-bacc ⟧,
       captures ↦ 𝑒-captures,
       𝐵-cm-tail
     ⟧,
@@ -72,13 +72,11 @@ result: |
           i5 ↦ Φ.true
         ⟧,
         𝜏-pop ↦ ⟦ φ ↦ Φ.jeo.opcode.pop ⟧,
-        𝐵-sacc,
-        ρ ↦ ∅
+        𝐵-sacc
       ⟧,
       body-acc ↦ ⟦
         𝜏-fetch ↦ ⟦ φ ↦ Φ.hone.cap-fetch, code ↦ 𝑒-code ⟧,
-        𝐵-bacc,
-        ρ ↦ ∅
+        𝐵-bacc
       ⟧,
       captures ↦ 𝑒-rest,
       𝐵-cm-tail

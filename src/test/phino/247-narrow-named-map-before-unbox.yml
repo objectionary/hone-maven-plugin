@@ -24,7 +24,7 @@ input: |
       op1 ↦ ⟦
         φ ↦ Φ.hone.named-map,
         class ↦ "Foo",
-        make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧, ρ ↦ ∅ ⟧,
+        make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧ ⟧,
         bridge-input ↦ "Ljava/lang/Object;",
         bridge-output ↦ "Ljava/lang/Object;",
         accepted ↦ "Ljava/lang/Object;",
@@ -38,10 +38,9 @@ input: |
         bridge-signature ↦ "(Ljava/lang/Integer;)I",
         static ↦ "true",
         target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$1", signature ↦ "(Ljava/lang/Integer;)I", is-interface ↦ Φ.false ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:
-  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧, ρ ↦ ∅ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Integer;", static ↦ "true" ⟧
+  - ⟦ φ ↦ Φ.hone.named-map, class ↦ "Foo", make ↦ ⟦ op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Doubler" ⟧ ⟧, bridge-input ↦ "Ljava/lang/Object;", bridge-output ↦ "Ljava/lang/Integer;", accepted ↦ "Ljava/lang/Object;", returned ↦ "Ljava/lang/Integer;", static ↦ "true" ⟧
   - ⟦ φ ↦ Φ.hone.unbox, opcode ↦ "invokestatic", class ↦ "Foo", bridge-signature ↦ "(Ljava/lang/Integer;)I", static ↦ "true", 𝐵-tail ⟧

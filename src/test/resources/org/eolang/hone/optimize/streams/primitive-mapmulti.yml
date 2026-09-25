@@ -34,8 +34,9 @@
 #     two user stages fuse into distills, and since #982 an IntStream distill
 #     lowers to a primitive `IntStream.mapMulti` of its OWN — a shape this rule
 #     would otherwise match. Its `distill_…` prefix guard keeps it off that
-#     output. Four stream operations become three mapMulti stages: the user pair
-#     fused into one, plus one each for the map and the filter. 44.
+#     output. Four stream operations become two mapMulti stages and a map: the
+#     user pair fused into one, the filter in one of its own, and the map, with
+#     nothing fused into it, back to a native `IntStream.map`. 44.
 #   * objects    — the reference form, still fused by 461 and untouched here.
 #
 # The counts below are pinned on invokeinterface and invokestatic, NOT on
@@ -43,8 +44,8 @@
 # second stage's outer invokedynamic and adds the inner one that `fused` uses to
 # build its wrapper sink, so the invokedynamic total does not move at all — 23
 # before, 23 after. It is pinned here at that value precisely to record the
-# fact. What moves is the stream calls: invokeinterface 57 -> 51, six
-# `mapMulti` dispatches gone, and invokestatic 27 -> 45 for the `fused`/`wrap`
+# fact. What moves is the stream calls: invokeinterface 57 -> 50, six
+# `mapMulti` dispatches gone, and invokestatic 27 -> 44 for the `fused`/`wrap`
 # bodies the rule synthesises and the original lambda bodies they now call
 # directly instead of through a second stream stage.
 java: |
@@ -131,5 +132,5 @@ before:
   invokestatic: 27
 after:
   invokedynamic: 23
-  invokeinterface: 51
-  invokestatic: 45
+  invokeinterface: 50
+  invokestatic: 44

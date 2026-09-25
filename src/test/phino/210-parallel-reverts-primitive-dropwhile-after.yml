@@ -41,8 +41,7 @@ input: |
         v1 ↦ "parallel",
         v2 ↦ "()Ljava/util/stream/IntStream;",
         v3 ↦ Φ.true
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

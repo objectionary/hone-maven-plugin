@@ -24,11 +24,10 @@ input: |
       op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
       op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Loud", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧,
       op4 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true ⟧,
-      op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true ⟧,
-      ρ ↦ ∅
+      op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true ⟧
     ⟧
   ⟧
 expected:
   - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v6 ↦ "java/util/stream/Stream", v7 ↦ "map", v8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v9 ↦ Φ.true, reverted ↦ Φ.true ⟧
   - ⟦ op1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, v1 ↦ "Loud" ⟧, op2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧, op3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, v2 ↦ "Loud", v3 ↦ "<init>", v4 ↦ "()V", v5 ↦ Φ.false ⟧, 𝐵-tail ⟧
-  - ⟦ 𝐵-head, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true ⟧, ρ ↦ ∅ ⟧
+  - ⟦ 𝐵-head, op5 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v10 ↦ "java/util/stream/Stream", v11 ↦ "count", v12 ↦ "()J", v13 ↦ Φ.true ⟧ ⟧

@@ -18,4 +18,4 @@ input: |
     ⟧
   ⟧
 expected:
-  - ⟦ body ↦ ⟦ 𝜏-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", 𝐵-k ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "distinct", 𝐵-c ⟧, ρ ↦ ∅ ⟧ ⟧
+  - ⟦ body ↦ ⟦ 𝜏-keep ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", 𝐵-k ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "distinct", 𝐵-c ⟧ ⟧ ⟧

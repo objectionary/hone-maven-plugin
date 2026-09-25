@@ -37,8 +37,7 @@ input: |
           method ↦ "mapToObj",
           signature ↦ "(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;"
         ⟧
-      ⟧,
-      ρ ↦ ∅
+      ⟧
     ⟧
   ⟧
 expected:

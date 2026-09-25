@@ -46,8 +46,7 @@ pattern: |
       𝜏6 ↦ "java/util/stream/Stream",
       𝜏7 ↦ "map",
       𝜏8 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
-      𝜏9 ↦ Φ.true,
-      ρ ↦ ∅
+      𝜏9 ↦ Φ.true
     ⟧,
     𝐵-between,
     𝜏-count ↦ ⟦
@@ -55,8 +54,7 @@ pattern: |
       𝜏-cclass ↦ 𝑒-cclass,
       𝜏-cmethod ↦ "count",
       𝜏-csignature ↦ "()J",
-      𝜏-ciface ↦ 𝑒-ciface,
-      ρ ↦ ∅
+      𝜏-ciface ↦ 𝑒-ciface
     ⟧,
     𝐵-after
   ⟧

@@ -47,8 +47,8 @@ pattern: |
       accepted ↦ 𝑒-accepted,
       returned ↦ 𝑒-returned,
       static ↦ 𝑒-distill-static,
-      state ↦ ⟦ 𝐵-state, ρ ↦ ∅ ⟧,
-      body ↦ ⟦ 𝐵-body, ρ ↦ ∅ ⟧
+      state ↦ ⟦ 𝐵-state ⟧,
+      body ↦ ⟦ 𝐵-body ⟧
     ⟧,
     𝜏-unbox ↦ ⟦
       φ ↦ Φ.hone.unbox,
@@ -78,7 +78,7 @@ result: |
       accepted ↦ 𝑒-accepted,
       returned ↦ 𝑒-unbox-output,
       static ↦ 𝑒-result-static,
-      state ↦ ⟦ 𝐵-state, ρ ↦ ∅ ⟧,
+      state ↦ ⟦ 𝐵-state ⟧,
       body ↦ ⟦
         𝐵-body,
         𝜏-unbox-op ↦ ⟦
@@ -87,8 +87,7 @@ result: |
           i3 ↦ 𝑒-target-method,
           i4 ↦ 𝑒-target-signature,
           i5 ↦ 𝑒-target-is-interface
-        ⟧,
-        ρ ↦ ∅
+        ⟧
       ⟧
     ⟧,
     𝐵-body-tail

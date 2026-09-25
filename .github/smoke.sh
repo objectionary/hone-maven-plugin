@@ -15,7 +15,7 @@ sha=$2
 root=$(pwd)
 csv="${root}/target/smoke.csv"
 mkdir -p "$(dirname "${csv}")"
-printf 'repo,sha,build_before,time_before,classes_modified,build_after,time_after\n' > "${csv}"
+printf 'repo,sha,build_before,time_before,classes_total,classes_modified,time_hone,build_after,time_after,loc,streams\n' > "${csv}"
 
 mvn -ntp -B -q --batch-mode install -DskipTests -Dinvoker.skip
 echo "hone-maven-plugin installed into local Maven repository"

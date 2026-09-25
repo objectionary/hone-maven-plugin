@@ -4,14 +4,15 @@
 
 set -e -u -o pipefail
 
-if [ $# -ne 3 ]; then
-  echo "usage: $0 <owner/repo> <sha> <csv>" >&2
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+  echo "usage: $0 <owner/repo> <sha> <csv> [<maven flags>]" >&2
   exit 1
 fi
 
 repo=$1
 sha=$2
 csv=$3
+extra=${4:-}
 
 root=$(pwd)
 work="${root}/target/hone-it"
@@ -118,6 +119,11 @@ build_outcome() {
 budget=1200
 
 flags=(-ntp -B -q --batch-mode -Dlicense.skip -Drat.skip -Dspotbugs.skip -Dcheckstyle.skip -Dpmd.skip -Denforcer.skip)
+if [ -n "${extra}" ]; then
+  read -r -a words <<< "${extra}"
+  flags+=("${words[@]}")
+  echo "extra Maven flags for ${repo}: ${extra}"
+fi
 
 row="${repo},${sha}"
 echo "warming up and building ${repo}"

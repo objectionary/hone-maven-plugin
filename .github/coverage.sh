@@ -5,7 +5,7 @@
 set -e -u -o pipefail
 
 root=$(pwd)
-repos="${root}/.github/coverage.csv"
+repos="${root}/.github/coverage.txt"
 test -f "${repos}" || { echo "Repo list ${repos} not found" >&2; exit 1; }
 work="${root}/target/coverage"
 csv="${work}/coverage.csv"
@@ -16,11 +16,11 @@ echo "hone-maven-plugin installed into local Maven repository"
 
 printf 'repo,sha,build_before,time_before,classes_total,classes_modified,time_hone,build_after,time_after,loc,streams\n' > "${csv}"
 
-while IFS=',' read -r -u 3 repo sha; do
+while read -r -u 3 repo sha extra; do
   test -n "${repo}" || continue
   printf '\n=== %s @ %s ===\n' "${repo}" "${sha}"
-  "${root}/.github/hone-it.sh" "${repo}" "${sha}" "${csv}" </dev/null || true
-done 3< <(tail -n +2 "${repos}")
+  "${root}/.github/hone-it.sh" "${repo}" "${sha}" "${csv}" "${extra}" </dev/null || true
+done 3< "${repos}"
 
 echo ""
 echo "Final CSV:"
@@ -29,7 +29,7 @@ cat "${csv}"
 table=$(
   printf '| Repository | Forks | LoC | Classes | Before | Edits | Hone | After |\n'
   printf '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n'
-  while IFS=',' read -r repo sha; do
+  while read -r repo sha _; do
     test -n "${repo}" || continue
     name="${repo##*/}"
     forks=$(gh api "repos/${repo}" --jq '.forks_count' 2>/dev/null || echo '?')
@@ -46,7 +46,7 @@ table=$(
       printf '| [%s](https://github.com/%s/commit/%s) | %s | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |\n' \
         "${name}" "${repo}" "${sha}" "${forks}"
     fi
-  done < <(tail -n +2 "${repos}")
+  done < "${repos}"
 )
 
 cpus=$(nproc --all 2>/dev/null || echo "?")

@@ -1,0 +1,10 @@
+apache/commons-io cf5f9a20c3dd83251d930386fed226368e61c0e7 -Dmaven.compiler.testRelease=8
+apache/commons-configuration 6ef60965b273110bd83068312420c32421fef11d -Dmaven.compiler.testRelease=8
+vavr-io/vavr 3af14df99c6a99ecd984e516d5f5294335cfbe84 -Dmaven.compiler.testRelease=8
+apache/commons-compress 493575e0dd82ccb8f55cbba2da12fb0df1a7e191 -Dmaven.compiler.testRelease=8
+mybatis/mybatis-3 d3802feff2bef6122bd65c07782b00e4ceb6c99b -Dmaven.compiler.testRelease=17 -Djava.release.version=17
+networknt/json-schema-validator 2276a17e117c8977eacac2dcef04908939463bed -Dmaven.compiler.testRelease=17
+apache/commons-collections b533ad6c0527027ba08d9a9891b09d7eaf1af98e -Dmaven.compiler.testRelease=8
+mybatis/mybatis-dynamic-sql 7de4d498aef25e95025cda0f98d472a59d32a398 -Dmaven.compiler.testRelease=17 -Dtest=!examples.custom_render.CustomRenderingTest,!examples.kotlin.mybatis3.custom.render.KCustomRenderingTest,!examples.kotlin.mybatis3.mariadb.KMariaDBTest,!examples.mariadb.MariaDBTest,!examples.mariadb.OrderByCaseTest,!examples.mysql.MySQLTest,!examples.postgres.PostgresTest,!issues.gh655.Gh655Test
+apache/commons-csv 292d0b99f6ebd443fabd8f692b0b9e5a92dc2274 -Dmaven.compiler.testRelease=8
+apache/commons-lang f51d0615d034ae997611ac01fd4c79823122372b -Dmaven.compiler.testRelease=8

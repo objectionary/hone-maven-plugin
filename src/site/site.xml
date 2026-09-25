@@ -7,7 +7,7 @@
   <skin>
     <groupId>com.jcabi</groupId>
     <artifactId>jcabi-maven-skin</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
   </skin>
   <bannerLeft name="hone-maven-plugin" href="https://objectionary.github.io/hone-maven-plugin/index.html">
     <image src="https://www.objectionary.com/cactus.svg" alt="objectionary logo" width="64" height="64"/>

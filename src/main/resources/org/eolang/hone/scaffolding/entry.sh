@@ -48,7 +48,7 @@ if [ "${DEBUG}" == 'true' ]; then
   set -x
 fi
 
-SELF=$(dirname "$0")
+SELF=$("${RP}" "$(dirname "$0")")
 
 function now {
   # Current time in seconds with sub-second precision. macOS's BSD date has

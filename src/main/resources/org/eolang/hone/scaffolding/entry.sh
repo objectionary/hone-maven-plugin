@@ -333,7 +333,7 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   start=$(now)
   (
     set -x
-    "${SELF}/rewrite.sh"
+    bash "${SELF}/rewrite.sh"
   )
   record_timing "phino:rewrite (default-cli)" "$(elapsed "${start}")"
 fi

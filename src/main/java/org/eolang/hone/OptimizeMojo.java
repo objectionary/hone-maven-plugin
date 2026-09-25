@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -691,7 +690,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 stale.map(Path::toFile).forEach(File::delete);
             }
             for (final String ext : this.extra) {
-                final Path src = Paths.get(ext);
+                final Path src = this.basedir.toPath().resolve(ext);
                 if (src.toFile().isDirectory()) {
                     Logger.info(
                         this,

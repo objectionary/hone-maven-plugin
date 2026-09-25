@@ -821,16 +821,19 @@ is, how many of the stream-using classes the plugin actually rewrote.
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 156 | 52534 | 400 | 32s | 0/27 | 0s | 31s |
-| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 679 | 68282 | 388 | 75s | 0/24 | 0s | 76s |
-| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 320 | 79083 | 619 | 91s | 0/19 | 0s | 97s |
-| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12855 | 71445 | 486 | 46s | 0/14 | 0s | 47s |
+| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 737 | 64255 | 429 | 307s | 0/32 | 0s | 308s |
+| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 156 | 52534 | 400 | 32s | 0/27 | 0s | 32s |
+| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 679 | 68282 | 388 | 77s | 0/24 | 0s | 78s |
+| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 320 | 79083 | 619 | 91s | 0/19 | 0s | 92s |
+| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12853 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
 | [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 353 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
 | [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 529 | 73500 | 614 | 25s | 0/12 | 0s | 26s |
-| [jsoup](https://github.com/jhy/jsoup/commit/a7ec14364e2f9f84ecb795814b4fd05d028f709d) | 2301 | 39031 | 317 | 14s | 0/8 | 0s | 14s |
+| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 217 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
+| [commons-csv](https://github.com/apache/commons-csv/commit/292d0b99f6ebd443fabd8f692b0b9e5a92dc2274) | 306 | 11110 | 20 | 11s | 0/3 | 0s | 10s |
+| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2028 | 104400 | 433 | 870s | 0/34 | 0s | 694s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-09-24 at 12:44,
+on 2026-09-25 at 08:17,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -854,7 +857,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27192081741
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/35997741502
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/36103320077
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

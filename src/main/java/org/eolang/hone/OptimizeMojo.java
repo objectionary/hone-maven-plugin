@@ -484,11 +484,16 @@ public final class OptimizeMojo extends AbstractMojo {
 
     private void optimize() throws IOException {
         final long start = System.currentTimeMillis();
-        if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
-            this.withDocker();
-        } else {
-            this.withoutDocker();
-        }
+        this.timings.through(
+            "optimize",
+            () -> {
+                if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
+                    this.withDocker();
+                } else {
+                    this.withoutDocker();
+                }
+            }
+        );
         Logger.info(
             this,
             "Bytecode was optimized in '%s' in %[ms]s",
@@ -649,10 +654,7 @@ public final class OptimizeMojo extends AbstractMojo {
             )
         );
         command.add(this.image);
-        this.timings.through(
-            "optimize",
-            () -> new Docker(this.sudo).exec(command)
-        );
+        new Docker(this.sudo).exec(command);
     }
 
     private void saveExtra(final Path src, final Path target) throws IOException {

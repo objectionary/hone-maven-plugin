@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Maps with nothing to fuse into. 306 folds every map into a distill; when its
+# neighbours are all barriers the distill leaves the fuse pass alone, and
+# 501/511 used to lower it to a `mapMulti` over a fresh `distill_N` method — one
+# operation in, one operation out, plus a wrapper call and a sink (#1128).
+#
+# 453 gives each one back as the lambda 202/204 consumed, so 701 lowers it to
+# the very `map` javac emitted. Three pipelines, each with a lone map:
+#
+#   * words — an object `map` behind a `sorted()`. "A,BB,CCC".
+#   * longs — the `LongStream.map` of #1128, in a parallel pipeline that ends
+#     in `findFirst()`. 2.
+#   * ints  — an `IntStream.map` in front of a `limit()`. 9.
+java: |
+  package lone;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  public class X {
+    public static void main(String[] a) {
+      String words = List.of("ccc", "a", "bb").stream()
+        .sorted()
+        .map(s -> s.toUpperCase())
+        .collect(Collectors.joining(","));
+      long longs = LongStream.rangeClosed(1L, 5L)
+        .parallel()
+        .map(n -> n + 1L)
+        .findFirst()
+        .getAsLong();
+      int ints = IntStream.range(0, 4)
+        .map(i -> i * 3)
+        .limit(3)
+        .sum();
+      System.out.printf("The result is %s/%d/%d\n", words, longs, ints);
+    }
+  }
+log:
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is A,BB,CCC/2/9"
+# Nothing fused, so nothing may change: every `map` stays a `map` with its own
+# `invokedynamic`, and no `mapMulti`, `distill_N` method or `accept` call
+# arrives. Without 453 each of the three maps would add one invokestatic (the
+# wrapper calling the lambda) and one invokeinterface (the sink's `accept`).
+before:
+  invokeinterface: 10
+  invokedynamic: 3
+  invokestatic: 6
+after:
+  invokeinterface: 10
+  invokedynamic: 3
+  invokestatic: 6

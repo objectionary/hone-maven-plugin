@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive sibling of `453-unfused-map-to-lambda` (#1128); its header
+# carries the argument. An `IntStream.map`, `LongStream.map` or
+# `DoubleStream.map` goes 204 -> 211 -> 231 -> 306 and, once 411 has swallowed
+# the box and unbox 211 wedged around it, sits as a primitive distill whose
+# four types are all the one primitive. When nothing fused into it, its body is
+# still the single `invokestatic` of the `(X)X` lambda, and lowering it would
+# turn `.map(n -> n + 1L)` into a `mapMulti` over a `distill_N` wrapper.
+#
+# What goes back is the `Φ.hone.lambda` 204 consumed, rebuilt from the
+# primitive alone: the `XUnaryOperator` interface, its `applyAsX` method and
+# the `X` stream signature, exactly the quartets 204 pins. 204's pattern is
+# closed on ten bindings, so the `reverted ↦ Φ.true` marker stops it lifting
+# the map again; 701 lowers the marked lambda all the same.
+name: unfused-primitive-map-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-primitive,
+    bridge-output ↦ 𝑒-primitive,
+    start ↦ "map",
+    accepted ↦ 𝑒-primitive,
+    returned ↦ 𝑒-primitive,
+    static ↦ "true",
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ 𝑒-method,
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-target-signature,
+    static ↦ "true",
+    opcode ↦ "invokestatic",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ 𝑒-stream-class,
+      method ↦ "map",
+      signature ↦ 𝑒-stream-signature
+    ⟧,
+    reverted ↦ Φ.true
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - or:
+        - and:
+            - eq: [𝑒-primitive, '"I"']
+            - eq: [𝑒-target-signature, '"(I)I"']
+        - and:
+            - eq: [𝑒-primitive, '"J"']
+            - eq: [𝑒-target-signature, '"(J)J"']
+        - and:
+            - eq: [𝑒-primitive, '"D"']
+            - eq: [𝑒-target-signature, '"(D)D"']
+where:
+  - meta: 𝑒-flavour
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/I/Int/g"'
+      - '"s/J/Long/g"'
+      - '"s/D/Double/g"'
+  - meta: 𝑒-method
+    function: concat
+    args: ['"applyAs"', 𝑒-flavour]
+  - meta: 𝑒-operator
+    function: concat
+    args: ['"Ljava/util/function/"', 𝑒-flavour, '"UnaryOperator;"']
+  - meta: 𝑒-interface
+    function: concat
+    args: ['"()"', 𝑒-operator]
+  - meta: 𝑒-stream-class
+    function: concat
+    args: ['"java/util/stream/"', 𝑒-flavour, '"Stream"']
+  - meta: 𝑒-stream-signature
+    function: concat
+    args: ['"("', 𝑒-operator, '")L"', 𝑒-stream-class, '";"']

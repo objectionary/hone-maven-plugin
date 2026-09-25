@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a `Stream.map` that never fused — the analogue of 441 and 442 for the
+# plainest operator of all. 306 folds every `Φ.hone.map` into a distill in the
+# hope that a neighbour joins it; when its neighbours are barriers (a capturing
+# filter, a `limit`, a `sorted`, a terminal), the distill leaves the fuse pass
+# still carrying nothing but the one call to the mapper 202 took from the
+# lambda, and 501/511 would lower it into a `mapMulti` over a fresh
+# `distill_N` method. One operation becomes one operation, and the stage now
+# costs a wrapper call and a sink it did not have before (#1128).
+#
+# The shape matched here is exactly what 306 leaves when nothing fused: a
+# stateless, static `map` distill whose body is the single `invokestatic` of a
+# `lambda$…` method and no more (closed body, no 𝐵-rest). A distill that found
+# a neighbour carries the neighbour's opcodes too, a non-static one has had
+# 311's `this` load spliced in, and a map whose ends 421/422 re-typed has an
+# unwrapping on its body, so none of those can match. `accepted` and
+# `returned` must equal the bridge types: that is how 202 minted them for a
+# plain object lambda, and it is what makes the bridge signature rebuilt below
+# the very one javac emitted.
+#
+# ORDER MATTERS: it runs after 401 (every object operator has collapsed into
+# one distill), after 411/421/422 (the ends are aligned) and after 451 (a
+# trailing mapToX has had its chance to fuse into the same distill). By 453
+# nothing else will be added to the body, so a body of one is a map that
+# stayed alone.
+#
+# What goes back is the `Φ.hone.lambda` 202 consumed, as 452 does, so 701
+# lowers it to the original `invokedynamic` + `Stream.map` and 711/712 strip
+# the wrapper a desugared method reference left behind. The lambda carries the
+# `reverted ↦ Φ.true` marker: 202's pattern is closed on the ten bindings 111
+# mints, so the eleventh stops it recognising this map a second time and the
+# 202 -> 306 -> 453 cycle cannot spin on a run with more than one cycle.
+name: unfused-map-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-output,
+    start ↦ "map",
+    accepted ↦ 𝑒-accepted,
+    returned ↦ 𝑒-returned,
+    static ↦ "true",
+    state ↦ ⟦ ρ ↦ ∅ ⟧,
+    body ↦ ⟦
+      𝜏-call ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "apply",
+    interface ↦ "()Ljava/util/function/Function;",
+    lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ "invokestatic",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "map",
+      signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;"
+    ⟧,
+    reverted ↦ Φ.true
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - eq: [𝑒-accepted, 𝑒-bridge-input]
+    - eq: [𝑒-returned, 𝑒-bridge-output]
+    - matches: ['^(L.+;|\[.+)$', 𝑒-bridge-input]
+    - matches: ['^(L.+;|\[.+)$', 𝑒-bridge-output]
+where:
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-bridge-input, '")"', 𝑒-bridge-output]

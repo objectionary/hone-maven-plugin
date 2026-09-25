@@ -49,7 +49,7 @@ final class OptimizeMojoRuleChangeTest {
                             "export HONE_STATISTICS=false HONE_VERBOSE=false HONE_DEBUG=false",
                             "run() { bash %2$s rewrite 1/1 %1$s/a.phi %1$s/b.phi %1$s/in.xmir %1$s/out.xmir; }",
                             "run > /dev/null",
-                            "touch -d '+1 minute' %1$s/simple.phr",
+                            "touch -t 200001010000 %1$s/simple.phr",
                             "run"
                         ),
                         home,

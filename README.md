@@ -330,6 +330,14 @@ Rule `413-dup-before-filter-distill` re-applies the `DUP`
   it deliberately runs ahead of `421-`,
   so that a head unboxing lands in front of the guard
   and the copy the predicate eats is the primitive it expects.
+A `distill` that nothing fused into is not worth lowering:
+  as a `mapMulti` it would cost a wrapper call and a sink
+  the original operation did not have.
+Rules `441-` and `442-` put a lone `distinct` and a lone `skip` back,
+  `452-` a lone `mapToObj` crossing,
+  and `453-unfused-map-to-lambda` with its primitive sibling
+  a lone `map`, whose body is still the single call to its lambda,
+  so stage 7 emits it as the `map` it was (#1128).
 
 **Stage 5 (rules `501-` and `511-`): emit a single `mapMulti` call.**
 At this point each fused `distill` is one big anonymous function

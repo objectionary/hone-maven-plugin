@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A `LongStream.map` that never fused: once 411 has swallowed the box and the
+# unbox 211 wedged around it, the distill is all `J` and its body is still the
+# single call to the `(J)J` lambda. It goes back to the `Φ.hone.lambda` 204
+# consumed, rebuilt from the primitive — `LongUnaryOperator`, `applyAsLong`
+# and the `LongStream.map` signature — so 701 lowers it to the call javac
+# emitted instead of a `mapMulti` over a wrapper (#1128).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/453-unfused-primitive-map-to-lambda.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "J",
+        bridge-output ↦ "J",
+        start ↦ "map",
+        accepted ↦ "J",
+        returned ↦ "J",
+        static ↦ "true",
+        state ↦ ⟦ ρ ↦ ∅ ⟧,
+        body ↦ ⟦
+          b1 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i2 ↦ "Foo",
+            i3 ↦ "lambda$ordered$3",
+            i4 ↦ "(J)J",
+            i5 ↦ Φ.false
+          ⟧,
+          ρ ↦ ∅
+        ⟧
+      ⟧,
+      ρ ↦ ∅
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, method ↦ "applyAsLong", interface ↦ "()Ljava/util/function/LongUnaryOperator;", lambda-signature ↦ "(J)J", bridge-signature ↦ "(J)J", 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$ordered$3", signature ↦ "(J)J", is-interface ↦ Φ.false ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, stream ↦ ⟦ class ↦ "java/util/stream/LongStream", method ↦ "map", signature ↦ "(Ljava/util/function/LongUnaryOperator;)Ljava/util/stream/LongStream;" ⟧, 𝐵-c ⟧
+  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-a, reverted ↦ Φ.true, 𝐵-b ⟧

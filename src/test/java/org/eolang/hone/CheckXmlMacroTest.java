@@ -4,9 +4,9 @@
  */
 package org.eolang.hone;
 
+import com.yegor256.Jaxec;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
-import com.yegor256.Jaxec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -59,11 +59,6 @@ final class CheckXmlMacroTest {
         );
     }
 
-    /**
-     * Skip when the linter the macro calls is not installed.
-     *
-     * @throws IOException If fails to ask the shell
-     */
     private static void assumeLinter() throws IOException {
         Assumptions.assumeTrue(
             new Jaxec("bash", "-c", "command -v xmllint")
@@ -74,13 +69,6 @@ final class CheckXmlMacroTest {
         );
     }
 
-    /**
-     * The body of the macro, as a shell script over one file.
-     *
-     * @param file The XMIR to check
-     * @return The script
-     * @throws IOException If fails to read the Makefile
-     */
     private static String macro(final Path file) throws IOException {
         final String text = new String(
             Files.readAllBytes(
@@ -89,10 +77,7 @@ final class CheckXmlMacroTest {
             StandardCharsets.UTF_8
         );
         final int start = text.indexOf("define check_xml");
-        final String body = text.substring(
-            text.indexOf('\n', start) + 1, text.indexOf("endef", start)
-        );
-        return body
+        return text.substring(text.indexOf('\n', start) + 1, text.indexOf("endef", start))
             .replace("$(1)", file.toString())
             .replace("$(2)", "after-phino")
             .replace("$$", "$");

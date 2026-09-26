@@ -281,6 +281,12 @@ public final class OptimizeMojo extends AbstractMojo {
      * The larger the number, the longer optimization might take. We pass
      * this number to {@code phino} as the {@code --max-cycles} argument.</p>
      *
+     * <p>The default of one means phino walks the rule list once, in order,
+     * and stops, so a rule is never offered the output of a rule that comes
+     * after it. Phino's own default is 25, which keeps walking until nothing
+     * changes; raising this value therefore lets the set run toward a
+     * fixpoint, at the price of a longer build (see #1111).</p>
+     *
      * @since 0.4.0
      * @checkstyle MemberNameCheck (6 lines)
      */

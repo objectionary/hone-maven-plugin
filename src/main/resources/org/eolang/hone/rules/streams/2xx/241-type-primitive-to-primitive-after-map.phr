@@ -9,8 +9,9 @@
 # It must NOT mint one when the conversion is an identity. 271 deletes every
 # type node whose `from` equals its `to`, so on a `from == to` pair the two
 # rules take turns — 241 minting the no-op node, 271 taking it away — and,
-# because the whole streams/* selection runs to fixpoint inside ONE `phino
-# rewrite` invocation, the expression comes back to a state it already had and
+# because the whole streams/* selection is walked inside ONE `phino rewrite`
+# invocation, and above the default of one cycle an earlier rule sees a later
+# rule's output again, the expression comes back to a state it already had and
 # phino's loop detector aborts the run ("it seems rewriting is looping"),
 # killing the build (#801).
 #

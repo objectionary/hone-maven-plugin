@@ -35,7 +35,8 @@
 # `209-unbox-box-to-distill`, which folds a user `mapToX(...).boxed()`
 # round-trip and must never be handed the head of this sandwich instead — the
 # `minted ↦ "sandwich"` binding `214` stamps on it is what says so now, since
-# the set runs to a fixpoint and position in the sort does not — and after
+# position in the sort holds for one pass only and the set keeps walking as soon
+# as `hone.max-cycles` is above its default of one — and after
 # `211`, so the sandwich is one `221` can cancel against its neighbours like
 # any other.
 #

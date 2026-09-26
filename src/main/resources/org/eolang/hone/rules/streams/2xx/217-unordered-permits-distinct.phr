@@ -31,9 +31,10 @@
 # HOW, rather than a `when` clause on `224`: phino patterns cannot test a
 # binding group for the ABSENCE of a call, which is why `224` takes the
 # positive route in the first place, and a rule that stripped a marker back off
-# would only hand `224` another chance — the whole streams/* selection runs to
-# fixpoint inside one phino invocation, so a later rule's output is re-offered
-# to an earlier one and the pair would oscillate (#801). Instead the mark is
+# would only hand `224` another chance — the whole streams/* selection is walked
+# inside one phino invocation, and as soon as `hone.max-cycles` is above its
+# default of one a later rule's output is re-offered to an earlier one, so the
+# pair would oscillate (#801). Instead the mark is
 # MONOTONE: this rule adds `unordered ↦ Φ.true` to the pragma and nothing ever
 # removes it. `224` and `225` are closed on the three-binding form jeo's `216`
 # emits, so a marked pragma simply stops matching them, and this rule is closed

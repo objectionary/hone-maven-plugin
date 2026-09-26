@@ -42,7 +42,7 @@ final class SummaryTest {
     }
 
     @Test
-    void excludesPreviousSummaryFromCollection(@Mktmp final Path temp) throws Exception {
+    void keepsTheReportStableAcrossRepeatedCollections(@Mktmp final Path temp) throws Exception {
         final Path root = SummaryTest.modular(temp);
         final Summary summary = new Summary(
             root,

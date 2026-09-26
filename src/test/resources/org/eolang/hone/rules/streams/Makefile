@@ -112,5 +112,8 @@ define check_xml
 		printf "The XML file %s at %s is empty\n" "$(2)" "$(1)"
 		exit 1
 	fi
-	xmllint --quiet --xpath '/object/o/@name' "$(1)" > /dev/null || printf 'XML %s in %s is broken:\n===\n%s\n...\n%s\n===\n' "$(2)" "$(1)" "$$(head "$(1)")" "$$(tail "$(1)")"
+	if ! xmllint --quiet --xpath '/object/o/@name' "$(1)" > /dev/null; then
+		printf 'XML %s in %s is broken:\n===\n%s\n...\n%s\n===\n' "$(2)" "$(1)" "$$(head "$(1)")" "$$(tail "$(1)")"
+		exit 1
+	fi
 endef

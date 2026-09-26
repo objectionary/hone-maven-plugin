@@ -2,7 +2,19 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
-name: 131-remove-this-before-nonstatic-lambda
+# Drops the `aload 0` that pushes `this` in front of a lambda the metafactory
+# does not capture it for.
+#
+# The slot is 120, not the 131 this rule was written at: execution order is
+# alphabetical by filename, and `121-nonstatic-lambda-to-static` rewrites
+# `static ↦ "false"` to `"true"` for every lambda whose interface matches
+# `\(\).+`, which is the whole population `111-invokedynamic-to-lambda`
+# produces. At 131 there was nothing left with `static ↦ "false"` by the time
+# this rule ran, so the `this` push survived, the rule was dead and the
+# `pre-distill` branch that `209`, `304`, `305`, `306` and `309` gate on the
+# same flag was never reached (#1126). At 120 it sees the flag before `121`
+# flips it.
+name: 120-remove-this-before-nonstatic-lambda
 pattern: |
   ⟦
     𝐵-before,

@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# An own-line `.skip(n)` disassembles to `count-push, label, skip-call` once
+# 151 has dropped the line-number. This rule removes that one wedged label so
+# the push sits immediately before the call (220 then recognises the pair).
+# The match is scoped to the `push; label; Stream.skip(J)` shape, so it never
+# touches a method-entry or try-catch label, which never falls between the two
+# opcodes of a single skip expression. The closed body pattern confirms the
+# label is gone and the push now directly precedes the skip call.
+# The two rules in the order the sort gives them, with one cycle, which is what
+# rewrite.sh passes: the anchor label must be gone before `212` looks at the
+# pair, or the primitive skip stays a native call (#1123).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/211-remove-label-before-skip.phr
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/212-recognize-primitive-skip.phr
+input: |
+  ⟦
+    φ ↦ Φ.jeo.class,
+    name ↦ "Foo",
+    m1 ↦ ⟦
+      φ ↦ Φ.jeo.method,
+      name ↦ "main",
+      body ↦ ⟦
+        op0 ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧,
+        lb0 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L1" ⟧,
+        op1 ↦ ⟦
+          φ ↦ Φ.jeo.opcode.invokeinterface,
+          i2 ↦ "java/util/stream/IntStream",
+          i3 ↦ "skip",
+          i4 ↦ "(J)Ljava/util/stream/IntStream;",
+          i5 ↦ Φ.true
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.primitive-skip, class ↦ "Foo", stream-class ↦ "java/util/stream/IntStream", push ↦ ⟦ φ ↦ Φ.jeo.opcode.lconst_1 ⟧ ⟧

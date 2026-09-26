@@ -18,7 +18,7 @@
 # reverting an unfused skip.
 #
 # A single rule suffices because the prep pass has already normalised the
-# code: 151 strips line-numbers and 219 removes the leftover own-line label
+# code: 151 strips line-numbers and 211 removes the leftover own-line label
 # between the count-push and the call, so the count-push always sits
 # immediately before the call — whether or not `.skip(n)` was written on its
 # own source line.

@@ -31,6 +31,16 @@
 # statement boundary, try-region edge or variable scope falls between the two
 # opcodes of a single `push; skip` expression — does not depend on which
 # stream interface the call is on.
+#
+# The slot is 211, not the 219 this rule was written at. Execution order is
+# alphabetical by filename and `rewrite.sh` passes `--max-cycles 1` by default,
+# so the list is walked once: at 219 this rule ran seven slots after
+# `212-recognize-primitive-skip`, which therefore saw `push, label, call`,
+# declined, and left the skip a native call that splits the chain into two
+# independently fused runs (#1123). Its object twin `220` was always after this
+# rule and never had the problem. At 211 both recognisers see the normalised
+# pair, and the parallel reverts at `213` still run after the `212` that mints
+# the pragma.
 name: remove-label-before-skip
 pattern: |
   ⟦

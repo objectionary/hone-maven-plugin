@@ -117,13 +117,19 @@ fi
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
 # A fingerprint of everything that changes the result of a rewrite, except the
-# input file itself: the rules, their modification times, and the options. It
-# is stored next to the output and compared on the next run, so that an edited
-# rule or a changed option is not skipped (see #943).
-stamp="${HONE_RULES}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
+# input file itself: the rules, their content, and the options. It is stored
+# next to the output and compared on the next run, so that an edited rule or a
+# changed option is not skipped (see #943). The rules are fingerprinted by
+# content, not by modification time, and named by their path under the rules
+# directory, not by the absolute one, because the host path writes them out of
+# the jar into a fresh temporary directory before every run, which gives them
+# both a new mtime and a new prefix every time and would keep the skip from
+# ever firing (see #1119).
+stamp="${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
 for rule in "${rules[@]}"; do
+  stamp="${stamp}|${rule#*/rules/}"
   if [ -f "${rule}" ]; then
-    stamp="${stamp}|$(date -r "${rule}" '+%s' 2>/dev/null || echo '0')"
+    stamp="${stamp}|$(cksum < "${rule}")"
   fi
 done
 

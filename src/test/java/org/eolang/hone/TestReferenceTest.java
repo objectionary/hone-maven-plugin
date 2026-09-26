@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -37,7 +37,7 @@ final class TestReferenceTest {
 
     @Test
     void namesTheClassEveryReferencedMethodLivesIn() throws IOException {
-        final Collection<String> broken = new LinkedList<>();
+        final Collection<String> broken = new ArrayList<>(0);
         for (final Path source : TestReferenceTest.sources()) {
             final Matcher found = TestReferenceTest.REFERENCE.matcher(
                 new String(Files.readAllBytes(source), StandardCharsets.UTF_8)
@@ -62,7 +62,7 @@ final class TestReferenceTest {
     }
 
     private static Collection<Path> sources() throws IOException {
-        final Collection<Path> sources = new LinkedList<>();
+        final Collection<Path> sources = new ArrayList<>(0);
         sources.add(Paths.get("CLAUDE.md"));
         try (Stream<Path> found = Files.list(Paths.get(".github/workflows"))) {
             found.forEach(sources::add);

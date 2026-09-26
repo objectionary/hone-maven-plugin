@@ -48,10 +48,15 @@ rule, how to test, and what to avoid*.
    rule produces:
 
    ```bash
+   mvn install -DskipTests
    mvn -Dhone.small-steps=true -Dhone.rules='streams/*' \
-       org.eolang:hone-maven-plugin:build \
-       org.eolang:hone-maven-plugin:optimize
+       org.eolang:hone-maven-plugin:1.0-SNAPSHOT:build \
+       org.eolang:hone-maven-plugin:1.0-SNAPSHOT:optimize
    ```
+
+   The version matters: with no version Maven resolves the plugin to the
+   latest release on Central, whose own rules live inside its jar, so the rule
+   just written under `src/main/resources/.../rules/` is never loaded.
 
    Inspect `target/hone/phi-optimized/...phi.NN` files to verify the delta.
 4. **Add a single-rule unit test** under `src/test/phino/` (a `.yml` pack

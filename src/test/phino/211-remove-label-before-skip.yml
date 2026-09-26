@@ -10,7 +10,7 @@
 # opcodes of a single skip expression. The closed body pattern confirms the
 # label is gone and the push now directly precedes the skip call.
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/2xx/219-remove-label-before-skip.phr
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/211-remove-label-before-skip.phr
 input: |
   ⟦
     body ↦ ⟦

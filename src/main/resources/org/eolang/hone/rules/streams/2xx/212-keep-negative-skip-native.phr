@@ -15,7 +15,7 @@
 # writes for a long within 2^53; javac pushes it with `ldc`, since
 # `lconst_0` and `lconst_1` are never negative. At most one binding may sit
 # between the push and the call: the label an own-line `.skip(n)` leaves there,
-# which `219-remove-label-before-skip` drops only later.
+# which `211-remove-label-before-skip` drops only later.
 #
 # The pattern is closed on the unstamped call, so the rule cannot re-fire on
 # its own output.

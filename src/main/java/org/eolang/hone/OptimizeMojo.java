@@ -515,6 +515,10 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     private void withDocker() throws IOException {
+        new Docker(this.sudo).exec(this.dockerCommand());
+    }
+
+    private Collection<String> dockerCommand() throws IOException {
         final String tdir = "/target";
         final String cdir = "/eo-cache";
         final Collection<String> command = new ArrayList<>(
@@ -643,9 +647,6 @@ public final class OptimizeMojo extends AbstractMojo {
         command.addAll(Arrays.asList("--env", "HONE_STATISTICS=true"));
         command.add("--user");
         command.add(OptimizeMojo.whoami());
-        command.add("--privileged");
-        command.add("-v");
-        command.add("/var/run/docker.sock:/var/run/docker.sock");
         command.addAll(
             Arrays.asList(
                 "--env",
@@ -656,7 +657,7 @@ public final class OptimizeMojo extends AbstractMojo {
             )
         );
         command.add(this.image);
-        new Docker(this.sudo).exec(command);
+        return command;
     }
 
     private void saveExtra(final Path src, final Path target) throws IOException {

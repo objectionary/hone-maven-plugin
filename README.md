@@ -811,12 +811,13 @@ table stays reproducible across runs. For each pinned commit, the
 workflow shallow-fetches that revision, runs `mvn clean test` to record
 a baseline, applies `hone-maven-plugin` to every `target/classes/`
 directory, and then re-runs the tests to check that the bytecode still
-passes the project's own test suite. The number of modified `.class`
-files is computed by comparing MD5 checksums before and after. The
-`Edits` column reads as `NN/MM`: `NN` is that count of modified classes
-and `MM` is the number of compiled `.class` files whose bytecode
-references `Stream`, `IntStream`, `LongStream`, or `DoubleStream` — that
-is, how many of the stream-using classes the plugin actually rewrote.
+passes the project's own test suite. The `Edits` column reads as
+`NN/MM`: `NN` is the number of classes whose count of references to
+`Stream`, `IntStream`, `LongStream` or `DoubleStream` went down, and `MM`
+is the number of compiled `.class` files that reference any of them — that
+is, how many of the stream-using classes lost a stream call. A class the
+plugin rewrote without removing one of those references is not counted,
+so `0/27` means "no stream call disappeared", not "nothing was touched".
 
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |

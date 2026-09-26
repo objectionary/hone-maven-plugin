@@ -133,4 +133,4 @@ where:
     args:
       - 𝑒-second-bridge-input
       - '"s/^[DJ]$/dup2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;|\\[.+)$/dup/g"'

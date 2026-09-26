@@ -62,7 +62,7 @@ where:
     args:
       - 𝑒-accepted
       - '"s/^[DJ]$/dup2/g"'
-      - '"s/^(B|C|F|I|S|Z|L.+;)$/dup/g"'
+      - '"s/^(B|C|F|I|S|Z|L.+;|\\[.+)$/dup/g"'
   - meta: 𝜏-dup
     function: tau
     args: [𝑒-dup]

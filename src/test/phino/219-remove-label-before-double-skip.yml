@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The same normalisation on a `DoubleStream`, whose arm the `when` was missing, so
+# the anchor label stayed, the count-push never became adjacent to the call and
+# `212-recognize-primitive-skip` declined whatever the rule order was (#1124).
+# The closed body pattern confirms the label is gone and the push now directly
+# precedes the skip call.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/219-remove-label-before-skip.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      i1 ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, v0 ↦ ⟦ φ ↦ Φ.jeo.long, n0 ↦ 2 ⟧ ⟧,
+      l1 ↦ ⟦ φ ↦ Φ.jeo.label, v0 ↦ "L1" ⟧,
+      i2 ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/DoubleStream",
+        v1 ↦ "skip",
+        v2 ↦ "(J)Ljava/util/stream/DoubleStream;",
+        v3 ↦ Φ.true
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝜏-push ↦ ⟦ φ ↦ Φ.jeo.opcode.ldc, 𝐵-push ⟧, 𝜏-call ↦ ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/DoubleStream", 𝐵-call ⟧ ⟧

@@ -24,12 +24,12 @@
 # opcode" rule was withdrawn precisely because it also deleted method-entry
 # and try-catch labels that real classes do reference.)
 #
-# The interface is a metavariable pinned by the `when` to the two `skip`
-# signatures a recogniser reads: the object one `220` takes, and the
-# `IntStream` one `212-recognize-primitive-skip` takes (#996). Both need the
-# same normalisation, and the argument that makes the label dead — no
-# statement boundary, try-region edge or variable scope falls between the two
-# opcodes of a single `push; skip` expression — does not depend on which
+# The interface is a metavariable pinned by the `when` to the four `skip`
+# signatures a recogniser reads: the object one `220` takes, and the three
+# primitive ones `212-recognize-primitive-skip` takes (#996, #1124). All of
+# them need the same normalisation, and the argument that makes the label dead
+# — no statement boundary, try-region edge or variable scope falls between the
+# two opcodes of a single `push; skip` expression — does not depend on which
 # stream interface the call is on.
 name: remove-label-before-skip
 pattern: |
@@ -67,3 +67,9 @@ when:
     - and:
         - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
         - eq: [𝑒-signature, '"(J)Ljava/util/stream/IntStream;"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-signature, '"(J)Ljava/util/stream/LongStream;"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+        - eq: [𝑒-signature, '"(J)Ljava/util/stream/DoubleStream;"']

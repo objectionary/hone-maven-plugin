@@ -183,11 +183,16 @@ function rewrite {
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
     verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
     cp "${phi}" "${pho}"
+    width=${#rules[@]}
+    width=${#width}
+    if [ "${width}" -lt 2 ]; then
+      width=2
+    fi
     for rule in "${rules[@]}"; do
       m=$(basename "${rule}")
       m="${m%.*}"
       pos=$(( pos + 1 ))
-      t="${pho}.$(printf '%002d' "${pos}")"
+      t="${pho}.$(printf "%0${width}d" "${pos}")"
       atomic_write "${t}" phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}"
       if cmp -s "${pho}" "${t}"; then
         verbose "  No changes made by '${m}' to $(basename "${t}")"

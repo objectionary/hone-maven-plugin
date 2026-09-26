@@ -131,6 +131,22 @@ final class Docker {
         }
     }
 
+    private void kill(final String name) {
+        if (name != null) {
+            try {
+                new ProcessBuilder(this.command(Arrays.asList("kill", name))).start()
+                    .waitFor(10L, TimeUnit.SECONDS);
+            } catch (final IOException ex) {
+                Logger.warn(
+                    this, "Failed to kill orphaned container '%s': %s", name, ex.getMessage()
+                );
+            } catch (final InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                Logger.warn(this, "Interrupted while killing orphaned container '%s'", name);
+            }
+        }
+    }
+
     private List<String> command(final Collection<String> args) {
         final List<String> command = new ArrayList<>(args.size() + 2);
         if (this.sudo) {
@@ -143,6 +159,13 @@ final class Docker {
 
     private int fire(final List<String> command, final long timeout) throws IOException {
         final long start = System.currentTimeMillis();
+        final int idx = command.indexOf("run");
+        String container = null;
+        if (idx >= 0 && !command.contains("--name")) {
+            container = String.format("hone-%d", System.nanoTime());
+            command.add(idx + 1, "--name");
+            command.add(idx + 2, container);
+        }
         Logger.info(this, "+ %s ...", String.join(" ", command));
         final Process proc = new ProcessBuilder(command).start();
         final Thread stdout = new Thread(
@@ -162,6 +185,7 @@ final class Docker {
             done = proc.waitFor(timeout, TimeUnit.SECONDS);
         } catch (final InterruptedException ex) {
             proc.destroyForcibly();
+            this.kill(container);
             Thread.currentThread().interrupt();
             throw new IOException(
                 String.format("Docker was interrupted: %s", String.join(" ", command)),
@@ -170,6 +194,7 @@ final class Docker {
         }
         if (!done) {
             proc.destroyForcibly();
+            this.kill(container);
             Docker.drained(stdout, stderr);
             throw new IOException(
                 String.format(

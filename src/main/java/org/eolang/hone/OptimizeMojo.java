@@ -149,15 +149,6 @@ public final class OptimizeMojo extends AbstractMojo {
     private List<String> extra;
 
     /**
-     * EO version to use.
-     *
-     * @since 0.1.0
-     * @checkstyle MemberNameCheck (6 lines)
-     */
-    @Parameter(property = "hone.eo-version")
-    private String eoVersion;
-
-    /**
      * Grep XMIR files to rewrite.
      *
      * <p>Using this regular expression, you can filter in (include) XMIR files that
@@ -540,15 +531,6 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
-        if (this.eoVersion == null) {
-            Logger.info(this, "EO version is not set, we use the default one");
-        } else {
-            command.addAll(
-                Arrays.asList(
-                    "--env", String.format("EO_VERSION=%s", this.eoVersion)
-                )
-            );
-        }
         command.addAll(
             Arrays.asList(
                 "--env", String.format("JEO_VERSION=%s", this.jeo())
@@ -736,7 +718,6 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
-    // @checkstyle CyclomaticComplexityCheck (200 lines)
     // @checkstyle NPathComplexityCheck (200 lines)
     @SuppressWarnings("PMD.NPathComplexity")
     private void withoutDocker() throws IOException {
@@ -796,11 +777,6 @@ public final class OptimizeMojo extends AbstractMojo {
             }
             if (this.cache != null) {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
-            }
-            if (this.eoVersion == null) {
-                Logger.info(this, "EO version is not set, we use the default one");
-            } else {
-                jaxec = jaxec.withEnv("EO_VERSION", this.eoVersion);
             }
             jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();

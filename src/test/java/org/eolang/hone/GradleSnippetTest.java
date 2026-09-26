@@ -27,14 +27,10 @@ final class GradleSnippetTest {
     @Test
     void pinsTheSameVersionAsTheMavenSnippet() throws IOException {
         final String readme = GradleSnippetTest.text("README.md");
-        final Matcher maven = Pattern.compile("<version>([^<]+)</version>").matcher(readme);
-        MatcherAssert.assertThat("the Maven snippet must pin a version", maven.find());
-        final Matcher gradle = Pattern.compile("hone-maven-plugin:([^:]+):").matcher(readme);
-        MatcherAssert.assertThat("the Gradle snippet must pin a version", gradle.find());
         MatcherAssert.assertThat(
             "the Gradle snippet must pin the version the Maven snippet pins, or it names a release that does not exist",
-            gradle.group(1),
-            Matchers.equalTo(maven.group(1))
+            GradleSnippetTest.first("hone-maven-plugin:([^:]+):", readme),
+            Matchers.equalTo(GradleSnippetTest.first("<version>([^<]+)</version>", readme))
         );
     }
 
@@ -45,6 +41,16 @@ final class GradleSnippetTest {
             GradleSnippetTest.text(".github/workflows/up.yml"),
             Matchers.containsString("hone-maven-plugin:${latest}:")
         );
+    }
+
+    private static String first(final String regex, final String text) {
+        final Matcher found = Pattern.compile(regex).matcher(text);
+        if (!found.find()) {
+            throw new IllegalStateException(
+                String.format("no %s in the README, while both snippets must pin a version", regex)
+            );
+        }
+        return found.group(1);
     }
 
     private static String text(final String path) throws IOException {

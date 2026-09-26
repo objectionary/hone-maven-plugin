@@ -32,8 +32,10 @@ final class OptimizeMojoSymlinkTest {
 
     @Test
     void findsClassesBehindASymlink(@Mktmp final Path home) throws Exception {
-        final Path real = Files.createDirectories(home.resolve("real/org"));
-        Files.write(real.resolve("Foo.class"), "bytes".getBytes(StandardCharsets.UTF_8));
+        Files.write(
+            Files.createDirectories(home.resolve("real/org")).resolve("Foo.class"),
+            "bytes".getBytes(StandardCharsets.UTF_8)
+        );
         final Path target = Files.createDirectories(home.resolve("target"));
         Files.createSymbolicLink(target.resolve("classes"), home.resolve("real"));
         MatcherAssert.assertThat(

@@ -760,8 +760,8 @@ task hone(type: Exec, dependsOn: compileJava) {
       "-Dhone.target=${buildDir}",
       "-Dhone.classes=${buildDir.toPath().relativize(sourceSets.main.output.classesDirs.singleFile.toPath())}",
       '-Dhone.rules=streams/*',
-      'org.eolang:hone-maven-plugin:0.0.0:build',
-      'org.eolang:hone-maven-plugin:0.0.0:optimize'
+      'org.eolang:hone-maven-plugin:0.29.4:build',
+      'org.eolang:hone-maven-plugin:0.29.4:optimize'
 }
 compileJava.finalizedBy hone
 classes.dependsOn hone

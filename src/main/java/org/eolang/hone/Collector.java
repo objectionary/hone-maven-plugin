@@ -33,11 +33,6 @@ final class Collector extends SimpleFileVisitor<Path> {
     private final String stats;
 
     /**
-     * The summary output, excluded from the walk.
-     */
-    private final Path output;
-
-    /**
      * Real paths of the statistics files already taken.
      */
     private final Set<Path> seen;
@@ -47,12 +42,10 @@ final class Collector extends SimpleFileVisitor<Path> {
      *
      * @param found Where to put the found CSVs
      * @param stats The statistics file name to look for
-     * @param output The summary output to exclude
      */
-    Collector(final List<CSV> found, final String stats, final Path output) {
+    Collector(final List<CSV> found, final String stats) {
         this.found = found;
         this.stats = stats;
-        this.output = output;
         this.seen = new HashSet<>(0);
     }
 
@@ -61,7 +54,6 @@ final class Collector extends SimpleFileVisitor<Path> {
         final Path file, final BasicFileAttributes attrs
     ) throws IOException {
         if (this.stats.equals(file.getFileName().toString())
-            && !Collector.same(this.output, file)
             && this.seen.add(file.toRealPath())) {
             this.found.add(new CSV(file));
         }
@@ -86,10 +78,5 @@ final class Collector extends SimpleFileVisitor<Path> {
             );
         }
         return FileVisitResult.CONTINUE;
-    }
-
-    private static boolean same(final Path first, final Path second) {
-        return first.toAbsolutePath().normalize()
-            .equals(second.toAbsolutePath().normalize());
     }
 }

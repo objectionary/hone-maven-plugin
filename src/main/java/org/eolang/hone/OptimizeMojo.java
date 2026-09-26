@@ -728,7 +728,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     private String rulesAsString() {
         return String.join(
-            " ",
+            "\n",
             new Mapped<>(
                 p -> String.format("rules/%s", p),
                 new Rules(this.rules).yamls()

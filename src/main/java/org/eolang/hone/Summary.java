@@ -9,6 +9,8 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,9 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Summary {
 
     /**
-     * Where to look for statistics.
+     * Directories where to look for statistics.
      */
-    private final Path root;
+    private final Collection<Path> roots;
 
     /**
      * Where to save the summary report.
@@ -46,7 +48,17 @@ public final class Summary {
      * @param target Directory to save the summary report
      */
     Summary(final Path root, final Path target) {
-        this.root = root;
+        this(Collections.singletonList(root), target);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param roots Directories to search for statistics, one per module
+     * @param target Directory to save the summary report
+     */
+    Summary(final Collection<Path> roots, final Path target) {
+        this.roots = roots;
         this.target = target;
     }
 
@@ -58,13 +70,18 @@ public final class Summary {
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
         final Path destination = this.target.resolve("hone-summary.csv");
+        final Collector collector = new Collector(found, "hone-statistics.csv", destination);
         try {
-            Files.walkFileTree(
-                this.root,
-                EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                Integer.MAX_VALUE,
-                new Collector(found, "hone-statistics.csv", destination)
-            );
+            for (final Path root : this.roots) {
+                if (Files.exists(root)) {
+                    Files.walkFileTree(
+                        root,
+                        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                        Integer.MAX_VALUE,
+                        collector
+                    );
+                }
+            }
         } catch (final IOException exception) {
             throw new IllegalStateException(
                 "Failed to collect summary statistics",

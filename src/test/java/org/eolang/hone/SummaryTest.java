@@ -8,6 +8,7 @@ import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import org.cactoos.bytes.BytesOf;
 import org.cactoos.io.ResourceOf;
 import org.cactoos.text.TextOf;
@@ -114,6 +115,21 @@ final class SummaryTest {
             "report must count a module reached through a symlink only once",
             new CSV(new Summary(temp).collect()).size(),
             Matchers.equalTo(1)
+        );
+    }
+
+    @Test
+    void ignoresStatisticsOfModulesOutsideTheBuild(@Mktmp final Path temp) throws Exception {
+        final Path root = SummaryTest.modular(temp);
+        MatcherAssert.assertThat(
+            "report must not include statistics of a module that is not in the build",
+            new TextOf(
+                new Summary(
+                    Collections.singletonList(root.resolve("client")),
+                    Files.createDirectories(root.resolve("target"))
+                ).collect()
+            ).asString(),
+            Matchers.not(Matchers.containsString("Server.phi"))
         );
     }
 

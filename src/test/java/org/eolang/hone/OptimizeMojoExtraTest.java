@@ -91,6 +91,36 @@ final class OptimizeMojoExtraTest {
         }
     }
 
+    @Test
+    void takesRulesFromASubdirectoryOfAnExtraDirectory(@Mktmp final Path dir) throws Exception {
+        final Path rules = Files.createDirectories(dir.resolve("src/rules/deeper"));
+        Files.write(
+            rules.getParent().resolve("one.yml"), "name: one".getBytes(StandardCharsets.UTF_8)
+        );
+        Files.write(
+            rules.resolve("three.phr"), "name: three".getBytes(StandardCharsets.UTF_8)
+        );
+        final OptimizeMojo mojo = new OptimizeMojo();
+        OptimizeMojoExtraTest.set(mojo, AbstractMojo.class, "basedir", dir.toFile());
+        OptimizeMojoExtraTest.set(
+            mojo, OptimizeMojo.class, "extra", Collections.singletonList("src/rules")
+        );
+        OptimizeMojoExtraTest.set(
+            mojo, OptimizeMojo.class, "extraExtensions", "yml,yaml,phr"
+        );
+        final Path extdir = Files.createDirectories(dir.resolve("target/hone-extra"));
+        final Method copy = OptimizeMojo.class.getDeclaredMethod("copyExtras", Path.class);
+        copy.setAccessible(true);
+        copy.invoke(mojo, extdir);
+        try (Stream<Path> files = Files.list(extdir)) {
+            MatcherAssert.assertThat(
+                "a rule in a subdirectory must be taken too, in path order, since the built-in set is nested and sorted the same way",
+                files.map(p -> p.getFileName().toString()).sorted().collect(Collectors.toList()),
+                Matchers.contains("0000-three.yml", "0001-one.yml")
+            );
+        }
+    }
+
     private static void set(
         final Object target, final Class<?> owner, final String name, final Object value
     ) throws Exception {

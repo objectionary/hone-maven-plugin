@@ -143,6 +143,9 @@ public final class OptimizeMojo extends AbstractMojo {
      * List of extra rules to use for optimization, provided as
      * YAML files.
      *
+     * <p>An entry may be a file or a directory. A directory is walked
+     * recursively, so rules may be nested the way the built-in set is.</p>
+     *
      * @since 0.1.0
      */
     @Parameter(property = "hone.extra")
@@ -703,8 +706,8 @@ public final class OptimizeMojo extends AbstractMojo {
                         src, this.extraExtensions
                     );
                     final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
-                    try (Stream<Path> files = Files.list(src)) {
-                        final List<Path> yamls = files.filter(
+                    try (Stream<Path> files = Files.walk(src)) {
+                        final List<Path> yamls = files.filter(Files::isRegularFile).filter(
                             f -> Arrays.stream(exts).anyMatch(
                                 extn -> f.getFileName().toString().endsWith(
                                     String.format(".%s", extn.trim())

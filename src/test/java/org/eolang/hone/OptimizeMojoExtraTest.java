@@ -7,9 +7,12 @@ package org.eolang.hone;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.hamcrest.MatcherAssert;
@@ -23,7 +26,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @since 0.6.1
  */
 @ExtendWith(MktmpResolver.class)
-@SuppressWarnings("JTCOP.RuleEveryTestHasProductionClass")
+@SuppressWarnings({
+    "JTCOP.RuleEveryTestHasProductionClass",
+    "PMD.AvoidAccessibilityAlteration"
+})
 final class OptimizeMojoExtraTest {
 
     @Test
@@ -57,5 +63,39 @@ final class OptimizeMojoExtraTest {
                 Matchers.contains("0000-one.yml")
             );
         }
+    }
+
+    @Test
+    void resolvesRelativeExtraAgainstBasedirNotCwd(@Mktmp final Path dir) throws Exception {
+        final Path module = Files.createDirectories(dir.resolve("module"));
+        Files.write(
+            Files.createDirectories(module.resolve("src/rules")).resolve("sevens.yml"),
+            "name: sevens".getBytes(StandardCharsets.UTF_8)
+        );
+        final OptimizeMojo mojo = new OptimizeMojo();
+        OptimizeMojoExtraTest.set(mojo, AbstractMojo.class, "basedir", module.toFile());
+        OptimizeMojoExtraTest.set(
+            mojo, OptimizeMojo.class, "extra",
+            Collections.singletonList("src/rules/sevens.yml")
+        );
+        final Path extdir = Files.createDirectories(module.resolve("target/hone-extra"));
+        final Method copy = OptimizeMojo.class.getDeclaredMethod("copyExtras", Path.class);
+        copy.setAccessible(true);
+        copy.invoke(mojo, extdir);
+        try (Stream<Path> files = Files.list(extdir)) {
+            MatcherAssert.assertThat(
+                "a relative extra path must be resolved against basedir, not the JVM's cwd",
+                files.map(p -> p.getFileName().toString()).collect(Collectors.toList()),
+                Matchers.contains("0000-sevens.yml")
+            );
+        }
+    }
+
+    private static void set(
+        final Object target, final Class<?> owner, final String name, final Object value
+    ) throws Exception {
+        final Field field = owner.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 }

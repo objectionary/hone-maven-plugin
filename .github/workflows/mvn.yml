@@ -37,4 +37,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-jdk-${{ matrix.java }}-maven-
       - run: mvn clean install -ntp --errors -Dinvoker.skip --batch-mode
+      - run: mvn invoker:install invoker:run -ntp --errors --batch-mode
+        if: matrix.java == 22
       - run: mvn clean test -Pgradle

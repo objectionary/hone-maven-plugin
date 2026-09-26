@@ -25,9 +25,9 @@
 # The call this rule emits carries `reverted ↦ Φ.true`, the same fifth-operand
 # guard the rest of the pass uses. `212` is closed on the four-operand opcode
 # jeo emits, so it cannot lift this one again — and it must not: the whole set
-# runs to fixpoint inside one phino invocation, so an unmarked call would be
-# re-lifted, reverted and collapsed on every pass, and because each pass mints
-# fresh random names the tree would never settle. jeo ignores the extra binding
+# is walked inside one phino invocation, and above the default of one cycle an
+# unmarked call would be re-lifted, reverted and collapsed on every pass, and
+# because each pass mints fresh random names the tree would never settle. jeo ignores the extra binding
 # when assembling.
 #
 # A parallel pipeline never reaches here: `213` reverts the pragma ahead of

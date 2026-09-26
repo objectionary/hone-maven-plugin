@@ -15,8 +15,9 @@
 #     round trip, so `"user"` and `"crossing"` only. Handed a `"split"` or a
 #     `"sandwich"` it splices a stray `Wrapper.valueOf` into the middle of a
 #     primitive chain, which its own header has warned about since it was
-#     written; ordering alone did not prevent it, because the whole rule set
-#     runs to a fixpoint and `209` gets another turn after `211` and `214` fire.
+#     written; ordering alone did not prevent it, because a rule must not rely
+#     on its position: with `hone.max-cycles` above its default of one, the set
+#     keeps walking and `209` gets another turn after `211` and `214` fire.
 #   * `221-unbox-box-to-map` cancels an unbox against the box behind it —
 #     anything but `"user"`.
 #   * `221-unbox-user-box-to-map` takes `"user"`, and only with an unbox pinned

@@ -452,6 +452,11 @@ final class OptimizeMojoTest {
             fea.files().file("target/hone/unphi/foo/Bytes.xmir").exists(),
             Matchers.is(true)
         );
+        MatcherAssert.assertThat(
+            "the non-Docker path must record the optimize goal in hone-timings.csv (see #1065)",
+            fea.files().file("target/hone-timings.csv").content(),
+            Matchers.containsString("\"optimize\"")
+        );
     }
 
     private static void runSimpleApp(final Farea fea, final String image) throws IOException {

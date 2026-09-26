@@ -28,18 +28,11 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("JTCOP.RuleEveryTestHasProductionClass")
 final class TestReferenceTest {
 
-    /**
-     * A reference to a test method, as the documents and the workflows write it.
-     */
-    private static final Pattern REFERENCE = Pattern.compile(
-        "(\\w+Test)#(\\w+)"
-    );
-
     @Test
     void namesTheClassEveryReferencedMethodLivesIn() throws IOException {
         final Collection<String> broken = new ArrayList<>(0);
         for (final Path source : TestReferenceTest.sources()) {
-            final Matcher found = TestReferenceTest.REFERENCE.matcher(
+            final Matcher found = Pattern.compile("(\\w+Test)#(\\w+)").matcher(
                 new String(Files.readAllBytes(source), StandardCharsets.UTF_8)
             );
             while (found.find()) {

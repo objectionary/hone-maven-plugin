@@ -398,6 +398,9 @@ public final class OptimizeMojo extends AbstractMojo {
         } else {
             Logger.info(this, "Target directory %[file]s already exists", this.target);
         }
+        if (this.cache.mkdirs()) {
+            Logger.info(this, "Cache directory %[file]s created", this.cache);
+        }
         this.optimize();
     }
 

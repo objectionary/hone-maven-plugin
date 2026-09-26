@@ -41,6 +41,14 @@ function verbose {
   fi
 }
 
+# Whether the verbose messages are printed at all. A message whose text costs
+# a "du" or a "diff" must be built inside this test, because the shell expands
+# every substitution in the arguments of "verbose" before the function is
+# entered, and a thrown away message then costs six forks per class (see #1041).
+function verbosely {
+  [ "${HONE_VERBOSE}" == 'true' ]
+}
+
 function statistics_header {
   if [ "${HONE_STATISTICS}" == 'true' ]; then
     local csv="${1}"
@@ -159,7 +167,9 @@ function rewrite {
     statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",0,0"
     return
   fi
-  verbose "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
+  if verbosely; then
+    echo "Next ${idx} XMIR is ${xi} ($(du -sh "${xi}" | cut -f1))"
+  fi
   if [ -n "${HONE_GREP_IN}" ]; then
     rc=0
     grep_in_check "${HONE_GREP_IN}" "${xi}" || rc=$?
@@ -176,12 +186,16 @@ function rewrite {
     fi
   fi
   atomic_write "${phi}" phino rewrite "${phinopts[@]}" --input=xmir --sweet "${xi}"
-  verbose "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
+  if verbosely; then
+    echo "Converted ${idx} XMIR ($(du -sh "${xi}" | cut -f1)) to $(basename "${phi}") ($(du -sh "${phi}" | cut -f1))"
+  fi
   rm -f "${pho}".*
   pos=0
   start=$(now)
   if [ "${HONE_SMALL_STEPS}" == "true" ]; then
-    verbose "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
+    if verbosely; then
+      echo "Applying ${#rules[@]} rule(s) one by one to ${idx} $(basename "${phi}")..."
+    fi
     cp "${phi}" "${pho}"
     width=${#rules[@]}
     width=${#width}
@@ -194,10 +208,12 @@ function rewrite {
       pos=$(( pos + 1 ))
       t="${pho}.$(printf "%0${width}d" "${pos}")"
       atomic_write "${t}" phino rewrite "${phinopts[@]}" --max-cycles "${HONE_MAX_CYCLES}" --max-depth "${HONE_MAX_DEPTH}" --sweet --rule "${rule}" "${pho}"
-      if cmp -s "${pho}" "${t}"; then
-        verbose "  No changes made by '${m}' to $(basename "${t}")"
-      else
-        verbose "  $(diff "${pho}" "${t}" | grep -cE '^>') lines changed by '${m}' in $(basename "${t}")"
+      if verbosely; then
+        if cmp -s "${pho}" "${t}"; then
+          echo "  No changes made by '${m}' to $(basename "${t}")"
+        else
+          echo "  $(diff "${pho}" "${t}" | grep -cE '^>') lines changed by '${m}' in $(basename "${t}")"
+        fi
       fi
       cp "${t}" "${pho}"
     done
@@ -220,11 +236,15 @@ function rewrite {
   fi
   statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"
   atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
-  verbose "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
-  if cmp -s "${xi}" "${xo}"; then
-    verbose "No changes made to ${idx} $(basename "${xi}")"
-  else
-    verbose "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^>') lines"
+  if verbosely; then
+    echo "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
+  fi
+  if verbosely; then
+    if cmp -s "${xi}" "${xo}"; then
+      echo "No changes made to ${idx} $(basename "${xi}")"
+    else
+      echo "Changes made to ${idx} $(basename "${xi}"): $(diff "${xi}" "${xo}" | grep -cE '^>') lines"
+    fi
   fi
   printf '%s' "${seal}" > "${mark}"
 }

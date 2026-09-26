@@ -18,8 +18,11 @@
 # body-local rule cannot see. This rule is scoped to the one provably dead
 # case (the same reasoning 101 and 219 rely on): a label whose ONLY reference
 # is the line-number entry that immediately follows it (the `𝑒-label-value`
-# bound on both sides forces that pairing), sitting right before a
-# `java/util/stream/Stream` call. A jump target carries a stackmap frame, not
+# bound on both sides forces that pairing), sitting right before a call on one
+# of the four stream interfaces. The owner used to be the literal
+# `java/util/stream/Stream`, which left the anchor in place on every primitive
+# operator, so a recognised pragma stayed separated from its neighbour and the
+# chain fused into two distills instead of one (#1125). A jump target carries a stackmap frame, not
 # a bare line-number, so this never matches a branch target; no statement
 # boundary, try-region edge or variable scope falls between two operators of
 # one fluent chain. Run before 151 so the line-number is still present to
@@ -42,7 +45,7 @@ pattern: |
     ⟧,
     𝜏-call ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
-      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏1 ↦ 𝑒-owner,
       𝐵-call
     ⟧,
     𝐵-after
@@ -52,8 +55,14 @@ result: |
     𝐵-before,
     𝜏-call ↦ ⟦
       φ ↦ Φ.jeo.opcode.invokeinterface,
-      𝜏1 ↦ "java/util/stream/Stream",
+      𝜏1 ↦ 𝑒-owner,
       𝐵-call
     ⟧,
     𝐵-after
   ⟧
+when:
+  or:
+    - eq: [𝑒-owner, '"java/util/stream/Stream"']
+    - eq: [𝑒-owner, '"java/util/stream/IntStream"']
+    - eq: [𝑒-owner, '"java/util/stream/LongStream"']
+    - eq: [𝑒-owner, '"java/util/stream/DoubleStream"']

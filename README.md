@@ -172,6 +172,12 @@ The Java compiler emits a stream pipeline as a chain of
   the noise around those instructions must go.
 Rule `101-remove-self-reference-labels` deletes labels and line-number
   entries that no longer point anywhere meaningful,
+  while `151-remove-line-numbers` drops every line-number entry of the class,
+  the methods with no pipeline in them included,
+  so a class the plugin touched carries no `LineNumberTable`
+  and its stack traces name no lines;
+  exclude the rule with `streams/*,!streams/1xx/151-*` to keep them,
+  at the price of fusing fewer pipelines,
   `111-invokedynamic-to-lambda` rewrites the `invokedynamic` formation
   into a higher-level `Φ.hone.lambda` pragma that exposes
   the interface, the target method, and the captured arguments,

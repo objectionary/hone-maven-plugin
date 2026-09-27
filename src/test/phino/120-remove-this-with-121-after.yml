@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: MIT
 ---
 # yamllint disable rule:line-length
+# The two rules in the order the sort gives them: the `this` push must be gone
+# before `121` flips the flag, or nothing ever removes it (#1126).
 rules:
-  - src/main/resources/org/eolang/hone/rules/streams/1xx/131-remove-this-before-nonstatic-lambda.phr
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/120-remove-this-before-nonstatic-lambda.phr
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/121-nonstatic-lambda-to-static.phr
 input: |
   ⟦
     body ↦ ⟦

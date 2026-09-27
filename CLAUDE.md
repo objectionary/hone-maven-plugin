@@ -127,7 +127,7 @@ of `javac`-verified programs, not the number of Maven builds, so it costs little
 The walk picks more than operators. It picks the frame the pipeline sits in — a
 `static` method or an instance one, a body that catches what the pipeline throws
 or one that does not — and each frame opens productions the others cannot reach:
-a lambda that reads `this`, which is the population `121` and `131` exist for
+a lambda that reads `this`, which is the population `120` and `121` exist for
 and that #689 found empty, and a `boom` operator that throws from inside the
 walk and names the element it threw on, so the message is the oracle for how far
 a fused body got before it unwound. Every frame passes four arguments — a

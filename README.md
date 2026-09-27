@@ -175,7 +175,7 @@ Rule `101-remove-self-reference-labels` deletes labels and line-number
   `111-invokedynamic-to-lambda` rewrites the `invokedynamic` formation
   into a higher-level `Φ.hone.lambda` pragma that exposes
   the interface, the target method, and the captured arguments,
-  `121-` and `131-` normalise the static-vs-instance shape
+  `120-` and `121-` normalise the static-vs-instance shape
   of the produced lambda,
   and `141-set-opcode-in-lambda` records the original opcode
   on the pragma so that later stages can reverse the lowering.

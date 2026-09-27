@@ -605,8 +605,11 @@ Four rules mint a box and they are not interchangeable,
   and `209-unbox-box-to-distill` takes only the user's and the crossing,
   which is what its header always said it wanted
   and what its position in the sort never actually gave it —
-  the rule set runs to a fixpoint,
-  so `209` comes round again after `211` and `214` have fired.
+  a rule cannot lean on its position:
+  with `hone.max-cycles` above its default of one
+  the set keeps walking and `209` comes round again
+  after `211` and `214` have fired,
+  which is why the guard is the `minted` binding and not the sort order.
 The one user `boxed()` that is still safe to cancel against
   is one the user's own `mapToX` unboxes on the very next step,
   and `221-unbox-user-box-to-map` takes that one,

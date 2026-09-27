@@ -28,10 +28,12 @@
 # suspenders: every 205 unbox targets a lambda$ anyway, but the gate makes the
 # "user pair only" intent explicit and survives any future reordering.
 #
-# ORDER IS NOT ENOUGH, and #1016 is where that showed. The rule set runs to a
-# FIXPOINT, so "runs before 211" only holds for the first pass: once `211` and
-# `214` have put their sandwiches in, this rule comes round again and the
-# unbox/box adjacency it then sees is the sandwich seam, not a user round trip.
+# ORDER IS NOT ENOUGH, and #1016 is where that showed. With `hone.max-cycles`
+# above its default of one the set keeps walking, so "runs before 211" only
+# holds for the first pass: once `211` and `214` have put their sandwiches in,
+# this rule comes round again and the unbox/box adjacency it then sees is the
+# sandwich seam, not a user round trip. The `minted` binding, not the position
+# in the sort, is what keeps this rule off it either way.
 # The `minted` binding is what actually decides it now — `"user"` and
 # `"crossing"`, the two boxes that stand for a real boxing, and never `"split"`
 # or `"sandwich"`. Taking a sandwich seam here costs the run its fusion: `221`

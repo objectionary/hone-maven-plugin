@@ -19,7 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: |
+          cd src/main/resources/org/eolang/hone/scaffolding
+          rm -rf rules
+          cp -R ../rules rules
+      - run: |
           docker build \
             --build-arg "PHINO_VERSION=$(cat src/main/resources/org/eolang/hone/default-phino-version.txt)" \
             --build-arg "JEO_VERSION=$(cat src/main/resources/org/eolang/hone/default-jeo-version.txt)" \
             src/main/resources/org/eolang/hone/scaffolding -t hone
+      - run: |
+          test "$(docker run --rm --entrypoint sh hone -c 'find /hone/rules -name "*.phr" | wc -l')" -gt 0

@@ -6,7 +6,22 @@
 # mode (a Φ.jeo.line-number per statement boundary). They are pure
 # LineNumberTable bookkeeping with no stack effect, so dropping them leaves
 # the bytecode semantically identical — the optimised class simply carries no
-# line-number table, which is fine for transformed code.
+# line-number table.
+#
+# The pattern is not scoped to a method, and cannot be: a rule matches a
+# subtree, while "this method holds a pipeline" is a fact about the whole
+# method body. So the class loses its line numbers everywhere, including the
+# methods no later rule touches, and a stack trace through them reads
+# "Foo.java" with no line (see #1084). A class with no stream operator at all
+# is spared, because grep-in skips it before any rule runs.
+#
+# A project that would rather keep its stack traces can leave this rule out and
+# take the rest, since the selection grammar supports negation:
+#
+#   <rules>streams/*,!streams/1xx/151-*</rules>
+#
+# The later rules then see a line-number between the opcodes they reason about,
+# and fuse fewer pipelines.
 #
 # Labels are deliberately left intact: a label may be a jump, a frame, a
 # try-catch boundary or a local-variable-table scope target, and deciding

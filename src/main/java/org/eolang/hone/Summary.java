@@ -70,7 +70,7 @@ public final class Summary {
     Path collect() {
         final List<CSV> found = new ArrayList<>(0);
         final Path destination = this.target.resolve("hone-summary.csv");
-        final Collector collector = new Collector(found, "hone-statistics.csv", destination);
+        final Collector collector = new Collector(found, "hone-statistics.csv");
         try {
             for (final Path root : this.roots) {
                 if (Files.exists(root)) {

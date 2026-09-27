@@ -15,7 +15,7 @@
 # recover it when reverting an unfused skip. The push is captured as a whole
 # `Φ.jeo.opcode.*` object, so a stray label or debug entry can never be
 # mistaken for it — `151` has already stripped line-numbers and
-# `219-remove-label-before-skip` (widened to this interface by #996) has
+# `211-remove-label-before-skip` (widened to this interface by #996) has
 # removed the own-line label, so the push always sits immediately before the
 # call. The count must be a COMPILE-TIME CONSTANT, and the `when` below is what
 # makes that true rather than merely intended: `220`'s header carries the

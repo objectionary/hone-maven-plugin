@@ -47,7 +47,7 @@
 #     makes the printed line their whole assertion.
 #   * ownLine       — `.skip(2)` written on its own source line. `212` needs
 #     the count push and the call adjacent, exactly as `220` does, and this
-#     layout is the one that separates them; `219` (widened to the IntStream
+#     layout is the one that separates them; `211` (widened to the IntStream
 #     interface here) is what normalises it. This pipeline is a CORRECTNESS
 #     case, not a discriminating one: the phi shows this skip is still the only
 #     one in the class that no rule lifted, so what it pins is that an

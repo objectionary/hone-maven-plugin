@@ -16,7 +16,7 @@
 # Removing a label is unsafe in general — a try-catch boundary or a
 # local-variable-table scope may reference it by name from a sibling binding a
 # body-local rule cannot see. This rule is scoped to the one provably dead
-# case (the same reasoning 101 and 219 rely on): a label whose ONLY reference
+# case (the same reasoning 101 and 211 rely on): a label whose ONLY reference
 # is the line-number entry that immediately follows it (the `𝑒-label-value`
 # bound on both sides forces that pairing), sitting right before a
 # `java/util/stream/Stream` call. A jump target carries a stackmap frame, not

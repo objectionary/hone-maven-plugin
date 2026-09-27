@@ -112,7 +112,7 @@ every `@Tag("deep")` test runs against the real `phino` binary on the host.
 
 Every fixture under `optimize/streams/` is a pipeline somebody wrote on
 purpose, which makes the suite evidence about the shapes we thought of and
-nothing at all about the rest. `OptimizeMojoTest#preservesWhatRandomPipelinesPrint`
+nothing at all about the rest. `RandomPipelineOptimizationTest#preservesWhatRandomPipelinesPrint`
 covers the rest: `RandomPipeline` walks the typed grammar of the Stream API that
 `Grammar` holds — its productions, one per line, are where an operator or a
 terminal joins the walk — and emits one pipeline per class, seeded by its index,

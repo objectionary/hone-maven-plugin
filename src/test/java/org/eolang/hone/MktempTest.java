@@ -32,6 +32,37 @@ final class MktempTest {
     }
 
     @Test
+    void deletesDirectoryOnClose() throws Exception {
+        final Path path;
+        try (Mktemp temp = new Mktemp()) {
+            path = temp.path();
+        }
+        MatcherAssert.assertThat(
+            "the directory must be gone after close, or every run leaves one behind",
+            path.toFile().exists(),
+            Matchers.is(false)
+        );
+    }
+
+    @Test
+    void deletesDirectoryWithFilesInIt() throws Exception {
+        final Path path;
+        try (Mktemp temp = new Mktemp()) {
+            path = temp.path();
+            path.resolve("a").resolve("b").toFile().mkdirs();
+            Files.write(
+                path.resolve("a/b/test.txt"),
+                "Hello, world!".getBytes(StandardCharsets.UTF_8)
+            );
+        }
+        MatcherAssert.assertThat(
+            "a directory with files in it must be gone after close too",
+            path.toFile().exists(),
+            Matchers.is(false)
+        );
+    }
+
+    @Test
     void runsInLargerDirectory() throws Exception {
         try (Mktemp temp = new Mktemp()) {
             temp.path().resolve("a").resolve("b").toFile().mkdirs();

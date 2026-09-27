@@ -41,11 +41,20 @@ final class DockerTest {
     }
 
     @Test
-    void checksDockerPresence() {
+    void findsNoDockerWhenTheBinaryFails(@Mktmp final Path home) throws IOException {
         MatcherAssert.assertThat(
-            "checks if docker is present",
-            new Docker().available(),
-            Matchers.either(Matchers.is(true)).or(Matchers.is(false))
+            "a binary that exits non-zero must read as no Docker, or the build waits for a daemon that is not there",
+            new Docker(false, DockerTest.fake(home, "exit 1").toString()).available(),
+            Matchers.is(false)
+        );
+    }
+
+    @Test
+    void findsDockerWhenTheBinaryAnswers(@Mktmp final Path home) throws IOException {
+        MatcherAssert.assertThat(
+            "a binary that prints a server version must read as Docker present, or the plugin never uses the image",
+            new Docker(false, DockerTest.fake(home, "echo 28.0.1").toString()).available(),
+            Matchers.is(true)
         );
     }
 
@@ -133,5 +142,17 @@ final class DockerTest {
             throw new IllegalStateException("Can't make the fake docker executable");
         }
         return docker;
+    }
+
+    private static Path fake(final Path home, final String body) throws IOException {
+        final Path bin = home.resolve("docker");
+        Files.write(
+            bin,
+            String.format("#!/bin/sh%n%s%n", body).getBytes(StandardCharsets.UTF_8)
+        );
+        if (!bin.toFile().setExecutable(true)) {
+            throw new IOException(String.format("cannot make %s executable", bin));
+        }
+        return bin;
     }
 }

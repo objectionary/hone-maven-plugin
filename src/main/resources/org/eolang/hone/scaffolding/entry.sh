@@ -142,15 +142,10 @@ declare -a opts=(
   '--no-transfer-progress'
   '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
-  "-Djeo.version=${JEO_VERSION}"
 )
 if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
   opts+=("--settings=${WORKDIR}/settings.xml")
   echo "Using Maven settings file at ${WORKDIR}"
-fi
-if [ -n "${EO_VERSION}" ]; then
-  opts+=("-Deo.version=${EO_VERSION}")
-  echo "Using EO version ${EO_VERSION}"
 fi
 echo "Using JEO version ${JEO_VERSION}"
 

@@ -10,6 +10,7 @@ import com.sun.jna.Native;
 import com.yegor256.Jaxec;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -464,7 +465,7 @@ public final class OptimizeMojo extends AbstractMojo {
         final boolean exists = dir.toFile().exists();
         final boolean without;
         if (exists) {
-            try (Stream<Path> files = Files.walk(dir)) {
+            try (Stream<Path> files = Files.walk(dir, FileVisitOption.FOLLOW_LINKS)) {
                 without = !files
                     .filter(f -> f.toString().endsWith(".class"))
                     .findAny()

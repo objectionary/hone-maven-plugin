@@ -49,7 +49,7 @@ final class OptimizeMojoRulesCountTest {
 
     private String summary(final String rules) throws IOException {
         final Matcher matcher = Pattern.compile(
-            "printf 'Using the following.*?\\n\\n",
+            "rule_count=\\$\\(printf.*?done <<< \\\"\\$\\{RULES\\}\\\"\\n",
             Pattern.DOTALL
         ).matcher(
             new String(

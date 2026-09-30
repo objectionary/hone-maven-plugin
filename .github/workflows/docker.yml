@@ -12,6 +12,7 @@ name: docker
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+permissions: read-all
 jobs:
   docker:
     timeout-minutes: 30

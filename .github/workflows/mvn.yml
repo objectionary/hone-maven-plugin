@@ -12,6 +12,7 @@ name: mvn
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+permissions: read-all
 jobs:
   mvn:
     strategy:

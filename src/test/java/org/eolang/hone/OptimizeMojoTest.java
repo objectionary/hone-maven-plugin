@@ -197,6 +197,17 @@ final class OptimizeMojoTest {
         );
     }
 
+    @Test
+    void doesNotRewritePathsWhoseFirstSegmentOnlyStartsWithTarget() {
+        MatcherAssert.assertThat(
+            "only the literal target directory prefix must be rewritten (see #1109)",
+            OptimizeMojo.localPaths(
+                "/home/user/project/target", "/targetfoo/classes", "/target-generated/classes"
+            ),
+            Matchers.equalTo("/targetfoo/classes,/target-generated/classes")
+        );
+    }
+
     private static void runWithoutClasses(final Farea fea) throws IOException {
         fea.clean();
         fea.build()

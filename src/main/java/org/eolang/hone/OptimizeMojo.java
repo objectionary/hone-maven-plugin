@@ -452,7 +452,7 @@ public final class OptimizeMojo extends AbstractMojo {
             ",",
             new Mapped<>(
                 p -> p.replaceAll(
-                    "^[/\\\\]target",
+                    "^[/\\\\]target(?=[/\\\\]|$)",
                     Matcher.quoteReplacement(target)
                 ),
                 paths

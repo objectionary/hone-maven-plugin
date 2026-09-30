@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Half two of the guard for a pipeline that leaves the method unterminated
+# (#1122) — see `101-mark-escaping-stream` for the defect.
+#
+# A stage in front of an `areturn` that `101-mark-escaping-stream` stamped with
+# `escapes ↦ Φ.true` belongs to a stream the caller terminates, and the caller
+# may well end it with a `count()` the JVM elides. Fusing the stage into a
+# `mapMulti` would make its lambda run where it never ran, so this rule keeps it
+# native with the same `reverted ↦ Φ.true` mark `142-count-keeps-elidable-stage-native`
+# uses, and `701` lowers it back to the invokedynamic it came from.
+#
+# The stage list and the position after `121`/`141` are the same as in
+# `142-count-keeps-elidable-stage-native`, for the same reasons. The pattern is
+# closed on the unmarked lambda, so the rule cannot re-fire on its own output.
+name: returned-stream-keeps-stage-native
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-stage ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      opcode ↦ 𝑒-opcode,
+      target ↦ 𝑒-target,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧
+    ⟧,
+    𝐵-between,
+    𝜏-return ↦ ⟦
+      φ ↦ Φ.jeo.opcode.areturn,
+      escapes ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-stage ↦ ⟦
+      φ ↦ Φ.hone.lambda,
+      class ↦ 𝑒-class,
+      method ↦ 𝑒-method,
+      interface ↦ 𝑒-interface,
+      lambda-signature ↦ 𝑒-lambda-signature,
+      bridge-signature ↦ 𝑒-bridge-signature,
+      static ↦ 𝑒-static,
+      opcode ↦ 𝑒-opcode,
+      target ↦ 𝑒-target,
+      stream ↦ ⟦
+        class ↦ 𝑒-stream-class,
+        method ↦ 𝑒-stream-method,
+        signature ↦ 𝑒-stream-signature
+      ⟧,
+      reverted ↦ Φ.true
+    ⟧,
+    𝐵-between,
+    𝜏-return ↦ ⟦
+      φ ↦ Φ.jeo.opcode.areturn,
+      escapes ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  matches:
+    - '^(map|mapTo(Int|Long|Double|Obj)|peek)$'
+    - 𝑒-stream-method

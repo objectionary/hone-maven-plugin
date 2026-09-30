@@ -13,6 +13,7 @@ name: make
 concurrency:
   group: make-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   make:
     runs-on: ubuntu-24.04

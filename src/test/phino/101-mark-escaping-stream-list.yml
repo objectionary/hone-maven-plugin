@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 101 leaves alone an `areturn` of something that is not a stream, here the
+# `List` a terminal `toList()` produced: the pipeline was terminated in this
+# method, so nothing escapes and the fusion in front of it stays allowed.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/101-mark-escaping-stream.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-list ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "toList",
+        v2 ↦ "()Ljava/util/List;",
+        v3 ↦ Φ.true
+      ⟧,
+      op-return ↦ ⟦
+        φ ↦ Φ.jeo.opcode.areturn
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ op-list ↦ 𝑒-l, op-return ↦ ⟦ φ ↦ Φ.jeo.opcode.areturn ⟧ ⟧

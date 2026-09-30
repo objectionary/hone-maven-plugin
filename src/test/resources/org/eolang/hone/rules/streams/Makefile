@@ -40,8 +40,7 @@ jeo-test: $(TARGET)/before/Foo.xmir
 	cp $< "$(TARGET)/tmp/assemble"
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):assemble" \
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
-		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \
-		"-Djeo.assemble.skip.verification"
+		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble"
 
 $(TARGET)/before/%.class: %.java Makefile
 	javac -d "$$(dirname $@)" $<
@@ -87,8 +86,7 @@ $(TARGET)/after/%.class: $(TARGET)/after/%.xmir Makefile
 	@$(call check_xml,$<,"before-assemble")
 	mvn --quiet "org.eolang:jeo-maven-plugin:$(JEO_VERSION):assemble" \
 		"-Djeo.assemble.sourcesDir=$(TARGET)/tmp/assemble" \
-		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble" \
-		"-Djeo.assemble.skip.verification"
+		"-Djeo.assemble.outputDir=$(TARGET)/tmp/assemble"
 	cp "$(TARGET)/tmp/assemble/Foo.class" $@
 
 $(TARGET)/after/%.bc: $(TARGET)/after/%.class Makefile

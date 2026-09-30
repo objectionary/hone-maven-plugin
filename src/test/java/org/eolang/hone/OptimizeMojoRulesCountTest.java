@@ -28,7 +28,7 @@ final class OptimizeMojoRulesCountTest {
     void countsEveryRuleOfTheList() throws IOException {
         MatcherAssert.assertThat(
             "all three rules must be counted and listed one per line",
-            this.summary("a.yml b.yml c.yml"),
+            this.summary("a.yml\nb.yml\nc.yml"),
             Matchers.allOf(
                 Matchers.containsString("Using the following 3 rules:"),
                 Matchers.containsString("\ta.yml"),

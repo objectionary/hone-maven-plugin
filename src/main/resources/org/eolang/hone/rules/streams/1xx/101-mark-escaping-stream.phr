@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Half one of the guard for a pipeline that leaves the method unterminated
+# (#1122), the cross-method twin of the `count()` guard `101-mark-traversing-count`
+# and `142-count-keeps-elidable-stage-native` (#973).
+#
+# Those two keep a chain native when a bare `count()` the JVM elides ends it in
+# the same method body. When the chain is built in one method and returned, the
+# terminal lives in the caller and neither of them can see it:
+#
+#   static Stream<Integer> make() { return W.stream().map(s -> bump(s)); }
+#   ... make().count()
+#
+# The map would be fused into a `mapMulti`, which clears SIZED, and a lambda the
+# JVM never ran would run once per element in the caller. Nothing in this body
+# can tell what the caller does, so the guard takes the conservative branch:
+# a stream that is returned keeps its stages native. This rule records that a
+# stream is returned, by stamping an `areturn` that directly follows a call
+# answering `Stream`, `IntStream`, `LongStream` or `DoubleStream` with
+# `escapes ↦ Φ.true`; `142-returned-stream-keeps-stage-native` then reverts the
+# stages in front of it.
+#
+# It runs here, before any stage is lifted into a Φ.hone.lambda, for the reason
+# `101-mark-traversing-count` gives: the call is still a raw opcode carrying its
+# own signature. The stamp is an extra operand on the `areturn`, which jeo
+# ignores when assembling, and the pattern is closed on the bare `areturn`, so
+# the rule cannot re-fire on its own output.
+#
+# Detection is method-local and errs safe: another, locally consumed pipeline
+# in a method that also returns a stream keeps its stages native too, which
+# only forfeits a fusion. A stream that leaves the method in another way, say
+# stored in a field or passed to a call, is not seen by this rule.
+name: mark-escaping-stream
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-class ↦ 𝑒-class,
+      𝜏-method ↦ 𝑒-method,
+      𝜏-signature ↦ 𝑒-signature,
+      𝐵-call-rest
+    ⟧,
+    𝜏-return ↦ ⟦
+      φ ↦ Φ.jeo.opcode.areturn
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.𝜏-op,
+      𝜏-class ↦ 𝑒-class,
+      𝜏-method ↦ 𝑒-method,
+      𝜏-signature ↦ 𝑒-signature,
+      𝐵-call-rest
+    ⟧,
+    𝜏-return ↦ ⟦
+      φ ↦ Φ.jeo.opcode.areturn,
+      escapes ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  and:
+    - or:
+        - eq: [𝜏-op, 'invokeinterface']
+        - eq: [𝜏-op, 'invokevirtual']
+        - eq: [𝜏-op, 'invokestatic']
+    - matches:
+        - '^\(.*\)Ljava/util/stream/(Stream|IntStream|LongStream|DoubleStream);$'
+        - 𝑒-signature

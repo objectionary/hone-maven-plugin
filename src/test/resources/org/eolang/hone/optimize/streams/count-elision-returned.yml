@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The cross-method twin of `count-elision.yml` (#1122).
+#
+# `made()` builds the pipeline and returns it unterminated, `used()` ends it
+# with a bare `count()` the JVM elides, so the map lambda never runs. The
+# `count()` guard of #973 cannot see a terminal in another method, so the map
+# used to be fused into a `mapMulti`, which clears SIZED, and the lambda ran
+# once per element. `101-mark-escaping-stream` and
+# `142-returned-stream-keeps-stage-native` keep a returned pipeline native, so
+# the `runs` value stays 0 before and after the optimisation.
+java: |
+  package countreturned;
+  import java.util.Arrays;
+  import java.util.List;
+  import java.util.stream.Stream;
+  public class X {
+    private static final int[] R = new int[1];
+    private static final List<String> W = List.of("a", "bb", "ccc", "dddd");
+    private static Stream<Integer> made() {
+      return W.stream().map(s -> { R[0]++; return s.length(); });
+    }
+    private static long used() {
+      return made().count();
+    }
+    public static void main(String[] a) {
+      System.out.printf("R %d runs %s%n", used(), Arrays.toString(R));
+    }
+  }
+grep-in: ".*"
+log:
+  - "BUILD SUCCESS"
+  - "R 4 runs [0]"

@@ -688,6 +688,10 @@ It promises not to add work:
   which has no lambda for `142-` to stamp (#635),
   as does `143-count-keeps-elidable-ref-map-native`
   for one whose operator arrives in a register (#1014).
+A pipeline returned from the method unterminated is kept native too,
+  by `101-mark-escaping-stream` and
+  `142-returned-stream-keeps-stage-native`,
+  since its `count()` may be in the caller, where no rule can see it (#1122).
 Nothing is forfeited by doing so —
   in exactly that case the fused `mapMulti`
   would have optimised a pipeline that was never going to run.

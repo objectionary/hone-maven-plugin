@@ -57,7 +57,7 @@ import org.cactoos.text.TextOf;
  * @since 0.1.0
  */
 @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresProject = false)
-@SuppressWarnings({"PMD.TooManyFields", "PMD.GodClass"})
+@SuppressWarnings("PMD.TooManyFields")
 public final class OptimizeMojo extends AbstractMojo {
 
     /**

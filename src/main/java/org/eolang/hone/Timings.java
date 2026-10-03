@@ -48,11 +48,11 @@ final class Timings {
      * Creates a new timings recorder.
      *
      * @param file Path to the CSV file where timings will be recorded
-     * @param start The moment the build started, in milliseconds since the epoch
+     * @param since The moment the build started, in milliseconds since the epoch
      */
-    Timings(final Path file, final long start) {
+    Timings(final Path file, final long since) {
         this.path = file;
-        this.start = start;
+        this.start = since;
     }
 
     /**

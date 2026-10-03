@@ -38,6 +38,23 @@ final class TimingsTest {
     }
 
     @Test
+    void forgetsRowsOfAnEarlierBuildInTheSameJvm() throws Exception {
+        try (Mktemp temp = new Mktemp()) {
+            final Path file = temp.path().resolve("baz.csv");
+            Files.write(
+                file,
+                String.format("\"old\";1%n").getBytes(StandardCharsets.UTF_8)
+            );
+            new Timings(file, System.currentTimeMillis() + 60_000L).through("foo", () -> { });
+            MatcherAssert.assertThat(
+                "the rows of an earlier build in the same JVM must go, as under mvnd (see #1198)",
+                new String(Files.readAllBytes(file), StandardCharsets.UTF_8),
+                Matchers.not(Matchers.containsString("old"))
+            );
+        }
+    }
+
+    @Test
     @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void savesTime() throws Exception {
         try (Mktemp temp = new Mktemp()) {

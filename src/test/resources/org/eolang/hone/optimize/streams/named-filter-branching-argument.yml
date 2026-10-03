@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that a named filter whose constructor argument branches is
+# left native (issue #1225). `215-recognize-named-filter` used to move the
+# argument run, with the frames of its `?:`, into the state block in front of
+# the `ArrayList`, where the stack is deeper, and the class failed to load with
+# "VerifyError: Inconsistent stackmap frames". `215-decline-named-with-frames`
+# now keeps the operator out of the fusion.
+#
+# invokedynamic: none before and none after, the filter is an object.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.function.*;
+  import java.util.stream.*;
+  public class CNamedBranch {
+    static class P implements Predicate<Integer> {
+      private final int k;
+      P(int k) {
+        this.k = k;
+      }
+      public boolean test(Integer x) {
+        return x > this.k;
+      }
+    }
+    static List<Integer> run(boolean flag) {
+      return Stream.of(1, 2, 3).filter(new P(flag ? 1 : 0)).collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %s%n", run(true));
+    }
+  }
+before:
+  invokedynamic: 0
+after:
+  invokedynamic: 0
+log:
+  - "BUILD SUCCESS"
+  - "The result is [2, 3]"

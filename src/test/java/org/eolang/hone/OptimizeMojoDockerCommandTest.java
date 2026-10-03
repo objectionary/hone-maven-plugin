@@ -49,6 +49,15 @@ final class OptimizeMojoDockerCommandTest {
     }
 
     @Test
+    void startsAnInitProcess(@Mktmp final Path home) throws Exception {
+        MatcherAssert.assertThat(
+            "without an init process as PID 1, Ctrl+C never reaches entry.sh and the container keeps running (see #1185)",
+            OptimizeMojoDockerCommandTest.command(home),
+            Matchers.hasItem("--init")
+        );
+    }
+
+    @Test
     void namesTheImageLast(@Mktmp final Path home) throws Exception {
         final Collection<String> command = OptimizeMojoDockerCommandTest.command(home);
         MatcherAssert.assertThat(

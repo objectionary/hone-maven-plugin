@@ -144,22 +144,6 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     /**
-     * Add a target directory for invocations that do not have a Maven project.
-     *
-     * @param configured The target directory from Maven
-     * @return The configured target or a local {@code target} directory
-     */
-    static File targetOrDefault(final File configured) {
-        final File target;
-        if (configured == null) {
-            target = new File("target");
-        } else {
-            target = configured;
-        }
-        return target;
-    }
-
-    /**
      * Returns the version of this plugin.
      *
      * @return The version of hone-maven-plugin
@@ -209,6 +193,22 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
+
+    /**
+     * Add a target directory for invocations that do not have a Maven project.
+     *
+     * @param configured The target directory from Maven
+     * @return The configured target or a local {@code target} directory
+     */
+    static File targetOrDefault(final File configured) {
+        final File target;
+        if (configured == null) {
+            target = new File("target");
+        } else {
+            target = configured;
+        }
+        return target;
+    }
 
     /*
      * There is nothing to run with: no Docker, and no local phino either.

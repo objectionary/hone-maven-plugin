@@ -11,7 +11,7 @@ ROOT=../../../../../../../..
 RULES_DIR=$(ROOT)/src/main/resources/org/eolang/hone/rules/streams
 TARGET=$(ROOT)/target/foo
 
-RULE_FILES=$(wildcard $(RULES_DIR)/*.phr)
+RULE_FILES=$(wildcard $(RULES_DIR)/*/*.phr)
 RULES=$(sort $(subst $(RULES_DIR)/,,$(RULE_FILES)))
 RULE_NAMES=$(subst .phr,,$(RULES))
 
@@ -65,7 +65,7 @@ $(TARGET)/before/%.out: $(TARGET)/before/%.class Makefile
 $(TARGET)/after/%.phi: $(TARGET)/before/%.phi Makefile $(RULE_FILES) | $(TARGET)/after
 	phino rewrite --sweet < $< > $@
 	for r in $(RULE_NAMES); do
-		n="$$(dirname $@)/$$(echo "$${r}" | sed 's/-.*$$//g').phi"
+		n="$$(dirname $@)/$$(basename "$${r}" | sed 's/-.*$$//g').phi"
 	    printf 'Applying %s rule...\n' "$${r}"
 		phino rewrite --sweet --max-depth=100 --rule "$(RULES_DIR)/$${r}.phr" < $@ > "$${n}"
 	    printf 'Applied \e[1m%s\e[0m rule:\n' "$${r}"

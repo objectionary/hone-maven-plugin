@@ -34,7 +34,7 @@ final class Timings {
     /**
      * The moment the build started, in milliseconds since the epoch.
      */
-    private final long start;
+    private final long beginning;
 
     /**
      * Creates a new timings recorder for a build that started with the JVM.
@@ -53,7 +53,7 @@ final class Timings {
      */
     Timings(final Path file, final long since) {
         this.path = file;
-        this.start = since;
+        this.beginning = since;
     }
 
     /**
@@ -94,7 +94,7 @@ final class Timings {
         final boolean stale;
         if (Files.exists(this.path)) {
             stale = Files.getLastModifiedTime(this.path).toMillis()
-                < this.start;
+                < this.beginning;
         } else {
             stale = true;
         }

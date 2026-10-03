@@ -48,7 +48,25 @@ final class RewriteScriptStampTest {
         );
     }
 
+    @Test
+    void changesWhenThePhinoVersionChanges(@Mktmp final Path home) throws IOException {
+        MatcherAssert.assertThat(
+            "another version of phino must give another stamp, or its output is never made (see #1209)",
+            RewriteScriptStampTest.stamp(home.resolve("old"), "name: one", "0.0.140"),
+            Matchers.not(
+                Matchers.equalTo(
+                    RewriteScriptStampTest.stamp(home.resolve("new"), "name: one", "0.0.141")
+                )
+            )
+        );
+    }
+
     private static String stamp(final Path dir, final String body) throws IOException {
+        return RewriteScriptStampTest.stamp(dir, body, "0.0.140");
+    }
+
+    private static String stamp(final Path dir, final String body, final String phino)
+        throws IOException {
         final Path rule = Files.createDirectories(dir.resolve("rules/streams"))
             .resolve("101-demo.phr");
         Files.write(rule, body.getBytes(StandardCharsets.UTF_8));
@@ -62,7 +80,8 @@ final class RewriteScriptStampTest {
         return new Jaxec(
             "bash", "-c",
             String.format(
-                "set -e%nrules=(%s)%n%s%nprintf '%%s' \"${stamp}\"",
+                "set -e%nPHINO_VERSION=%s%nrules=(%s)%n%s%nprintf '%%s' \"${stamp}\"",
+                phino,
                 rule,
                 text.substring(start, text.indexOf(String.format("%ndone"), start) + 5)
             )

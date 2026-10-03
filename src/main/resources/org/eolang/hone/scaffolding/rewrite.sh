@@ -286,7 +286,7 @@ function rewrite_with_timeout {
   # whole process group (and any stragglers in its tree) so phino dies too.
   flag=$(mktemp)
   rm -f "${flag}"
-  "${SETSID}" --wait "${0}" rewrite "$@" &
+  "${SETSID}" --wait bash "${0}" rewrite "$@" &
   sid=$!
   group=""
   # shellcheck disable=SC2329
@@ -452,7 +452,7 @@ while IFS= read -r f; do
   xi="${HONE_XMIR_IN}/${f}.xmir"
   xo="${HONE_XMIR_OUT}/${f}.xmir"
   i="${idx}/${total}"
-  printf "%s rewrite_with_timeout %s %s %s %s %s\n" "$(q "${0}")" "$(q "${i}")" "$(q "${phi}")" "$(q "${pho}")" "$(q "${xi}")" "$(q "${xo}")" >> "${tasks}"
+  printf "bash %s rewrite_with_timeout %s %s %s %s %s\n" "$(q "${0}")" "$(q "${i}")" "$(q "${phi}")" "$(q "${pho}")" "$(q "${xi}")" "$(q "${xo}")" >> "${tasks}"
 done <<< "${files}"
 
 threads=${HONE_THREADS}

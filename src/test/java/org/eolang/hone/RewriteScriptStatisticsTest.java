@@ -30,13 +30,15 @@ final class RewriteScriptStatisticsTest {
     @Test
     void writesFiveColumnsForExcludedAndFreshFiles(@Mktmp final Path home) throws IOException {
         final Path source = Files.createDirectories(home.resolve("source"));
+        Files.createDirectories(home.resolve("target"));
         Files.write(
             source.resolve("Foo.xmir"), "<xmir/>".getBytes(StandardCharsets.UTF_8)
         );
         final Path phino = home.resolve("phino");
         Files.write(
             phino,
-            "#!/usr/bin/env bash\nprintf '0.0.1\\n'\n".getBytes(StandardCharsets.UTF_8)
+            String.format("#!/usr/bin/env bash%n.\nprintf '0.0.1\\n'%n")
+                .getBytes(StandardCharsets.UTF_8)
         );
         if (!phino.toFile().setExecutable(true)) {
             throw new IllegalStateException("Can't make the fake phino executable");

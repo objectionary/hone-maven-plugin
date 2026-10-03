@@ -121,6 +121,32 @@ final class OptimizeMojoExtraTest {
         }
     }
 
+    @Test
+    void takesRulesFromASymlinkedExtraDirectory(@Mktmp final Path dir) throws Exception {
+        final Path shared = Files.createDirectories(dir.resolve("shared-rules"));
+        Files.write(shared.resolve("one.yml"), "name: one".getBytes(StandardCharsets.UTF_8));
+        Files.createSymbolicLink(
+            Files.createDirectories(dir.resolve("src")).resolve("rules"), shared
+        );
+        final OptimizeMojo mojo = new OptimizeMojo();
+        OptimizeMojoExtraTest.set(mojo, AbstractMojo.class, "basedir", dir.toFile());
+        OptimizeMojoExtraTest.set(
+            mojo, OptimizeMojo.class, "extra", Collections.singletonList("src/rules")
+        );
+        OptimizeMojoExtraTest.set(mojo, OptimizeMojo.class, "extraExtensions", "yml");
+        final Path extdir = Files.createDirectories(dir.resolve("target/hone-extra"));
+        final Method copy = OptimizeMojo.class.getDeclaredMethod("copyExtras", Path.class);
+        copy.setAccessible(true);
+        copy.invoke(mojo, extdir);
+        try (Stream<Path> files = Files.list(extdir)) {
+            MatcherAssert.assertThat(
+                "an extra directory that is a symlink must give its rules, not nothing (see #1192)",
+                files.map(p -> p.getFileName().toString()).collect(Collectors.toList()),
+                Matchers.contains("0000-one.yml")
+            );
+        }
+    }
+
     private static void set(
         final Object target, final Class<?> owner, final String name, final Object value
     ) throws Exception {

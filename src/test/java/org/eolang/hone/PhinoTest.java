@@ -73,11 +73,11 @@ final class PhinoTest {
         while (!Files.exists(pid) || Files.size(pid) == 0L) {
             Thread.sleep(10L);
         }
-        probe.interrupt();
-        probe.join();
         final ProcessHandle proc = ProcessHandle.of(
             Long.parseLong(new String(Files.readAllBytes(pid), StandardCharsets.UTF_8).trim())
         ).orElseThrow(() -> new IllegalStateException("The probe is gone too early"));
+        probe.interrupt();
+        probe.join();
         final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5L);
         while (proc.isAlive() && System.nanoTime() < deadline) {
             Thread.sleep(10L);

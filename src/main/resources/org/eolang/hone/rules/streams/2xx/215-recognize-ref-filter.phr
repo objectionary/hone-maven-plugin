@@ -46,6 +46,10 @@
 # a whole `new`/`dup`/`args`/`<init>` run there. `317` splices whichever it is
 # between the `dup` and the `List.add` of the append, and `247` leaves a filter alone, since a predicate
 # hands its item on untouched.
+#
+# Like `215-recognize-ref-map`, the `make` block null-checks the loaded
+# predicate with `Objects.requireNonNull`, so `filter(null)` keeps failing at
+# the call (#1219).
 name: recognize-ref-filter
 pattern: |
   ⟦
@@ -93,6 +97,13 @@ result: |
             𝜏-make-load ↦ ⟦
               φ ↦ Φ.jeo.opcode.𝜏-load-op,
               𝐵-load-operands
+            ⟧,
+            𝜏-make-check ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ "java/util/Objects",
+              i3 ↦ "requireNonNull",
+              i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+              i5 ↦ Φ.false
             ⟧
           ⟧,
           bridge-input ↦ "Ljava/lang/Object;",
@@ -115,4 +126,6 @@ where:
   - meta: 𝜏-named
     function: random-tau
   - meta: 𝜏-make-load
+    function: random-tau
+  - meta: 𝜏-make-check
     function: random-tau

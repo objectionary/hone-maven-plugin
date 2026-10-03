@@ -64,6 +64,14 @@
 # (which turns each `fetch` into a List.get plus a checkcast), applied at
 # fixpoint: the cast it inserts now sits between the `aload` and the
 # `invokestatic`, so the adjacency does not re-match.
+#
+# @todo #1229:30min Cast an array item in `509-distill-state-item-cast-parked` too.
+#  `505`, `508` and `509-distill-state-item-cast-latch` insert `checkcast [I` and the like
+#  for an array item since #1229, but this rule still requires the LAST parameter of the
+#  next call to be `L...;`, and its `sed` walk drops the trailing `;` of an array of
+#  references and keeps the primitive captures in front of a primitive array. It should
+#  accept `\[[^)]+` as the last parameter, isolate it as one descriptor, and a phino pack
+#  with a parked capture and an `int[]` item should pin it.
 name: distill-state-item-cast-parked
 pattern: |
   ⟦

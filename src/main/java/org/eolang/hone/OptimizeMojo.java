@@ -526,6 +526,7 @@ public final class OptimizeMojo extends AbstractMojo {
             Arrays.asList(
                 "run",
                 "--rm",
+                "--init",
                 "--volume", OptimizeMojo.mount(this.target, tdir),
                 "--volume", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),

@@ -419,24 +419,20 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     /**
-     * Build a {@code host:container} bind mount for Docker, rejecting paths
-     * that Docker would misparse (Windows drive letters contain a colon).
+     * Build a bind mount for the {@code --mount} option of Docker.
+     *
+     * <p>The long syntax is used, because the short {@code host:container}
+     * one of {@code --volume} misparses a colon in the host path, which is
+     * legal on Linux and is a part of every Windows drive (see #868, #1193).</p>
      *
      * @param host The host path
      * @param container The container path
      * @return The bind-mount string
      */
     static String mount(final File host, final String container) {
-        final String path = host.getAbsolutePath();
-        if (path.indexOf(':') >= 0) {
-            throw new IllegalStateException(
-                String.format(
-                    "Docker bind mounts are not supported for paths containing ':' (Windows drives): %s",
-                    path
-                )
-            );
-        }
-        return String.format("%s:%s", path, container);
+        return String.format(
+            "type=bind,source=%s,target=%s", host.getAbsolutePath(), container
+        );
     }
 
     /**
@@ -526,8 +522,8 @@ public final class OptimizeMojo extends AbstractMojo {
             Arrays.asList(
                 "run",
                 "--rm",
-                "--volume", OptimizeMojo.mount(this.target, tdir),
-                "--volume", OptimizeMojo.mount(this.cache, cdir),
+                "--mount", OptimizeMojo.mount(this.target, tdir),
+                "--mount", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
                 "--env", String.format("EO_CACHE=%s", cdir),
                 "--env", "WORKDIR=/hone"

@@ -696,7 +696,7 @@ public final class OptimizeMojo extends AbstractMojo {
                         src, this.extraExtensions
                     );
                     final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
-                    try (Stream<Path> files = Files.walk(src)) {
+                    try (Stream<Path> files = Files.walk(src, FileVisitOption.FOLLOW_LINKS)) {
                         final List<Path> yamls = files.filter(Files::isRegularFile).filter(
                             f -> Arrays.stream(exts).anyMatch(
                                 extn -> f.getFileName().toString().endsWith(
@@ -704,6 +704,9 @@ public final class OptimizeMojo extends AbstractMojo {
                                 )
                             )
                         ).sorted().collect(Collectors.toList());
+                        if (yamls.isEmpty()) {
+                            Logger.warn(this, "No extra rules found in %[file]s", src);
+                        }
                         for (final Path yaml : yamls) {
                             this.saveExtra(yaml, extdir);
                         }

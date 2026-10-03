@@ -10,13 +10,19 @@ import com.sun.jna.Native;
 import com.yegor256.Jaxec;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystemLoopException;
 import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -465,11 +471,35 @@ public final class OptimizeMojo extends AbstractMojo {
         final boolean exists = dir.toFile().exists();
         final boolean without;
         if (exists) {
-            try (Stream<Path> files = Files.walk(dir, FileVisitOption.FOLLOW_LINKS)) {
-                without = !files
-                    .filter(f -> f.toString().endsWith(".class"))
-                    .findAny()
-                    .isPresent();
+            final AtomicBoolean found = new AtomicBoolean(false);
+            try {
+                Files.walkFileTree(
+                    dir,
+                    EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                    Integer.MAX_VALUE,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(final Path file,
+                            final BasicFileAttributes attrs) {
+                            FileVisitResult res = FileVisitResult.CONTINUE;
+                            if (file.toString().endsWith(".class")) {
+                                found.set(true);
+                                res = FileVisitResult.TERMINATE;
+                            }
+                            return res;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(final Path file,
+                            final IOException exc) throws IOException {
+                            if (!(exc instanceof FileSystemLoopException)) {
+                                throw exc;
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    }
+                );
+                without = !found.get();
             } catch (final IOException exception) {
                 throw new IllegalStateException(
                     String.format(

@@ -4,6 +4,7 @@
  */
 package org.eolang.hone;
 
+import java.io.File;
 import java.io.IOException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -15,6 +16,25 @@ import org.junit.jupiter.api.Test;
  * @since 0.1.0
  */
 final class AbstractMojoTest {
+
+    @Test
+    void usesLocalTargetWithoutMavenProject() {
+        MatcherAssert.assertThat(
+            "a goal without Maven project must still have a target directory for timings",
+            AbstractMojo.targetOrDefault(null),
+            Matchers.equalTo(new File("target"))
+        );
+    }
+
+    @Test
+    void preservesConfiguredTarget() {
+        final File target = new File("build-output");
+        MatcherAssert.assertThat(
+            "a configured Maven target must remain the timings directory",
+            AbstractMojo.targetOrDefault(target),
+            Matchers.equalTo(target)
+        );
+    }
 
     @Test
     void returnsDefaultPhinoVersion() throws IOException {

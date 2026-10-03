@@ -37,7 +37,7 @@ final class RewriteScriptStatisticsTest {
         final Path phino = home.resolve("phino");
         Files.write(
             phino,
-            String.format("#!/usr/bin/env bash%n.\nprintf '0.0.1\\n'%n")
+            String.format("#!/usr/bin/env bash%nprintf '0.0.1\\n'%n")
                 .getBytes(StandardCharsets.UTF_8)
         );
         if (!phino.toFile().setExecutable(true)) {

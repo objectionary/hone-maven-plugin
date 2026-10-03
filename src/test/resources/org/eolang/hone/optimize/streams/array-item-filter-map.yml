@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that a distill over ARRAY items lowers to an object
+# mapMulti (issue #1228). `501` and `502` used to derive the stream class, the
+# consumer and the method name from `bridge-input` with arms for `L...;`, `I`,
+# `J` and `D` only, so an `[I` item gave the method name `[IO` and jeo refused
+# the class at assembly. An array is a reference, so it now takes the object arm.
+#
+# invokedynamic: before = filter + map + the Integer::sum reference = 3;
+# after = the fused mapMulti + the untouched reduce reference = 2.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class CArrayItem {
+    static int run() {
+      return Stream.of(new int[] {1, 2}, new int[] {3}, new int[] {4, 5})
+        .filter(x -> x.length > 1)
+        .map(x -> x[0] * 10)
+        .reduce(0, Integer::sum);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run());
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 50"

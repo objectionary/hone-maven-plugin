@@ -704,9 +704,6 @@ public final class OptimizeMojo extends AbstractMojo {
                                 )
                             )
                         ).sorted().collect(Collectors.toList());
-                        if (yamls.isEmpty()) {
-                            Logger.warn(this, "No extra rules found in %[file]s", src);
-                        }
                         for (final Path yaml : yamls) {
                             this.saveExtra(yaml, extdir);
                         }

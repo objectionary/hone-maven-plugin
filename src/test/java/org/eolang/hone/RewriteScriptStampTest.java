@@ -76,7 +76,7 @@ final class RewriteScriptStampTest {
             ),
             StandardCharsets.UTF_8
         );
-        final int start = text.indexOf("stamp=\"${HONE_GREP_IN}");
+        final int start = text.indexOf("stamp=\"${PHINO_VERSION}|${HONE_GREP_IN}");
         return new Jaxec(
             "bash", "-c",
             String.format(

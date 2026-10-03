@@ -68,7 +68,15 @@ final class Phino {
             );
             errs.setDaemon(true);
             errs.start();
-            final boolean probed = proc.waitFor(3L, TimeUnit.SECONDS);
+            final boolean probed;
+            try {
+                probed = proc.waitFor(3L, TimeUnit.SECONDS);
+            } catch (final InterruptedException ex) {
+                proc.destroyForcibly();
+                proc.getInputStream().close();
+                proc.getErrorStream().close();
+                throw ex;
+            }
             if (probed) {
                 pump.join();
                 errs.join();

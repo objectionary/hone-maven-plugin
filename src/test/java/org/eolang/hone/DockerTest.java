@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -110,6 +111,56 @@ final class DockerTest {
             "the orphaned container must be killed by its name after an interrupt (see #1067)",
             calls,
             Matchers.containsString(String.format("kill %s", named.group(1)))
+        );
+    }
+
+    @Test
+    @Timeout(60L)
+    void stopsAKillThatDoesNotFinish(@Mktmp final Path temp) throws Exception {
+        final Path pid = temp.resolve("kill.pid");
+        final Path docker = temp.resolve("docker");
+        Files.write(
+            docker,
+            String.format(
+                """
+                #!/usr/bin/env bash
+                if [ "$1" = "kill" ]; then
+                echo $$ > %s
+                fi
+                exec sleep 3600
+                """,
+                pid
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        if (!docker.toFile().setExecutable(true)) {
+            throw new IllegalStateException("Can't make the fake docker executable");
+        }
+        final Thread thread = new Thread(
+            () -> {
+                try {
+                    new Docker(false, docker.toString()).exec(
+                        "run", "--rm", "alpine:latest", "sleep", "60"
+                    );
+                } catch (final IOException ex) {
+                    Logger.debug(DockerTest.class, "exec threw: %s", ex.getMessage());
+                }
+            }
+        );
+        thread.start();
+        Thread.sleep(500L);
+        thread.interrupt();
+        thread.join(TimeUnit.SECONDS.toMillis(30L));
+        final Optional<ProcessHandle> kill = ProcessHandle.of(
+            Long.parseLong(new TextOf(pid).asString().trim())
+        );
+        final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5L);
+        while (kill.map(ProcessHandle::isAlive).orElse(false) && System.nanoTime() < deadline) {
+            Thread.sleep(50L);
+        }
+        MatcherAssert.assertThat(
+            "a docker kill that hangs must be stopped, not left running (see #1237)",
+            kill.map(ProcessHandle::isAlive).orElse(false),
+            Matchers.is(false)
         );
     }
 

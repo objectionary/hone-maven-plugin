@@ -44,6 +44,15 @@
 # frame lists one entry per VALUE and not per slot: (List, item, consumer,
 # counter) is four entries whether the item is one slot wide or two.
 #
+# max-stack is NOT computed. The fused body loads every captured value it
+# needs from the List before the user's code consumes them, so the depth grows
+# with the number and the width of the captures: five long captures of one map
+# already need more than ten (#1221). Counting it here would mean reading the
+# width of every capture of every fused operator, which no meta-function can
+# do over a body of unknown shape. The verifier only checks that the depth
+# never goes above the declared bound, so a generous bound is safe: 255 holds
+# over a hundred wide captures, far more than a lambda ever has.
+#
 # The OUTPUT may differ from the input: when 451 fuses a trailing mapToX into
 # this stateful distill the body ends on a primitive, so the closing dup /
 # Consumer.accept follow the consumer type (Int/Long/DoubleConsumer), exactly
@@ -67,7 +76,7 @@ result: |
     signature ↦ "",
     maxs ↦ ⟦
       φ ↦ Φ.jeo.maxs,
-      max-stack ↦ 10,
+      max-stack ↦ 255,
       max-locals ↦ 7
     ⟧,
     params ↦ ⟦

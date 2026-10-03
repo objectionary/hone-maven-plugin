@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that the wrapper 512 builds has room on its operand stack for
+# wide captures (issue #1221). The map below captures five `long` values, and the
+# fused body loads all of them, two slots each, before it adds them up, which is
+# deeper than the ten slots 512 used to declare: the class failed at load time
+# with "VerifyError: Operand stack overflow".
+#
+# invokedynamic: before = the capturing map + the Integer::sum reference = 2;
+# after = the fused mapMulti + the untouched reduce reference = 2. The runtime
+# line proves the captures reach the lambda: 1+2+3 plus three times 1+2+3+4+5.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class CFiveLongs {
+    static int run(long a, long b, long c, long d, long e) {
+      return Stream.of(1, 2, 3).map(x -> (int) (x + a + b + c + d + e)).reduce(0, Integer::sum);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run(1L, 2L, 3L, 4L, 5L));
+    }
+  }
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 51"

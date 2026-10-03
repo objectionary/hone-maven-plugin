@@ -516,13 +516,13 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     private void withDocker() throws IOException {
-        final Path classes = this.target.toPath().resolve(this.classes);
-        if (Files.isSymbolicLink(classes)
-            && !classes.toRealPath().startsWith(this.target.toPath().toRealPath())) {
+        final Path link = this.target.toPath().resolve(this.classes);
+        if (Files.isSymbolicLink(link)
+            && !link.toRealPath().startsWith(this.target.toPath().toRealPath())) {
             throw new IllegalStateException(
                 String.format(
                     "The '%s' directory is a link to '%s', outside of '%s', and the Docker container sees only that directory; install phino locally, or keep the classes inside '%3$s'",
-                    classes, classes.toRealPath(), this.target
+                    link, link.toRealPath(), this.target
                 )
             );
         }

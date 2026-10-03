@@ -159,9 +159,9 @@ final class OptimizeMojoTest {
     @Test
     void mountsUnixHostPath() {
         MatcherAssert.assertThat(
-            "a plain Unix host path mounts as host:container (see #868)",
+            "a plain Unix host path must be mounted as a bind of source to target (see #868)",
             OptimizeMojo.mount(new File("/repo/target"), "/target"),
-            Matchers.equalTo("/repo/target:/target")
+            Matchers.equalTo("type=bind,source=/repo/target,target=/target")
         );
     }
 
@@ -171,17 +171,20 @@ final class OptimizeMojoTest {
             "a relative host path must be mounted as an absolute one, not as a named volume",
             OptimizeMojo.mount(new File("target"), "/target"),
             Matchers.equalTo(
-                String.format("%s:/target", new File("target").getAbsolutePath())
+                String.format(
+                    "type=bind,source=%s,target=/target",
+                    new File("target").getAbsolutePath()
+                )
             )
         );
     }
 
     @Test
-    void rejectsWindowsDrivePathInMount() {
-        Assertions.assertThrows(
-            IllegalStateException.class,
-            () -> OptimizeMojo.mount(new File("C:\\repo\\target"), "/target"),
-            "a Windows drive path must be rejected for a Docker bind mount (see #868)"
+    void mountsHostPathWithColon() {
+        MatcherAssert.assertThat(
+            "a colon in the host path must stay inside the source of the bind (see #1193)",
+            OptimizeMojo.mount(new File("/ws/proj:v2/target"), "/target"),
+            Matchers.equalTo("type=bind,source=/ws/proj:v2/target,target=/target")
         );
     }
 

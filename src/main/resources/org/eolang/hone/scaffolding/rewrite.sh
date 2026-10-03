@@ -170,7 +170,7 @@ function rewrite {
   fi
   if [ "${fresh}" == 'true' ]; then
     echo "Output $(basename "${xo}") was made from the same input $(basename "${xi}") all the way through the chain, with the same rules and options; skipping transformation for ${idx}"
-    statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",0,0"
+    statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" 0 0
     return
   fi
   if verbosely; then
@@ -187,7 +187,7 @@ function rewrite {
       cp "${xi}" "${xo}"
       printf '%s' "${seal}" > "${mark}"
       echo "No grep-in match for ${idx} $(basename "${xi}") ($(du -sh "${xi}" | cut -f1)), skipping"
-      statistics_row "${statistics_csv}" "${idx},\"${phi}\",\"${pho}\",0,0"
+      statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" 0 0
       return
     fi
   fi

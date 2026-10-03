@@ -88,7 +88,7 @@ apply_hone() {
       "org.eolang:hone-maven-plugin:${version}:build" \
       "org.eolang:hone-maven-plugin:${version}:optimize" \
       -Dhone.rules='streams/*' \
-      -Dhone.phino-version="${phino}"
+      -Dhone.phino-version="${phino}" || return 1
   done < <(find "${base}" -type d -path '*/target/classes' -print0)
 }
 
@@ -153,8 +153,15 @@ fi
 
 total=$(count_classes "${dir}")
 hstart=$(date +%s)
-apply_hone "${dir}"
+rc=0
+apply_hone "${dir}" || rc=$?
 hone_seconds=$(( $(date +%s) - hstart ))
+if [ "${rc}" -ne 0 ]; then
+  echo "hone failed in ${repo}"
+  printf '%s,%s,0,%s,fail,0,%s,%s\n' "${row}" "${total}" "${hone_seconds}" "${loc}" "${streams}" >> "${csv}"
+  rm -rf "${dir}"
+  exit 1
+fi
 count=$(count_optimized "${dir}")
 row="${row},${total},${count},${hone_seconds}"
 echo "warming up the test runner for honed ${repo}"

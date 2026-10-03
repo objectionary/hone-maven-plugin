@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class RewriteScriptStatisticsTest {
 
     @Test
+    @SuppressWarnings("JTCOP.RuleAssertionMessage")
     void writesFiveColumnsForExcludedAndFreshFiles(@Mktmp final Path home) throws IOException {
         final Path source = Files.createDirectories(home.resolve("source"));
         Files.createDirectories(home.resolve("target"));

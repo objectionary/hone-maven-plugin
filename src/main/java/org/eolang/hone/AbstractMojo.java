@@ -145,7 +145,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
             this.target = AbstractMojo.targetOrDefault(this.target);
             this.timings = new Timings(
                 this.target.toPath().resolve("hone-timings.csv"),
-                this.session.getRequest().getStartTime().getTime()
+                this.session.getRequest().getStartTime().toInstant().toEpochMilli()
             );
             try {
                 this.exec();

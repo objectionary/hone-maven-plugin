@@ -77,7 +77,7 @@ public final class Summary {
                     Files.walkFileTree(
                         root,
                         EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                        Integer.MAX_VALUE,
+                        1,
                         collector
                     );
                 }

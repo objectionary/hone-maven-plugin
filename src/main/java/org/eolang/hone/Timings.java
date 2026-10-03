@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Performance timing recorder that measures and logs execution times.
@@ -47,7 +48,7 @@ final class Timings {
      * @throws IOException If recording the timing fails
      */
     void through(final String name, final Timings.Action action) throws IOException {
-        final long start = System.currentTimeMillis();
+        final long start = System.nanoTime();
         try {
             action.exec();
         } finally {
@@ -59,7 +60,8 @@ final class Timings {
             Files.write(
                 this.path,
                 String.format(
-                    "\"%s\";%d%n", name, System.currentTimeMillis() - start
+                    "\"%s\";%d%n", name,
+                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
                 ).getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.APPEND, StandardOpenOption.CREATE
             );

@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that `443-unsandwich-reverted-distinct` collapses only the
+# plain unwrapping unbox `214` minted, not a user's `mapToInt` (issue #1223).
+# `205` lifts the user's `x -> x * 10` into the same `Φ.hone.unbox` shape, and
+# the rule used to replace the whole box/distinct/unbox trio with a native
+# `IntStream.distinct()`, deleting the mapper: the sum came out as 6.
+#
+# invokedynamic: the user's lambda stays, so before = after = 1. The runtime
+# line proves the mapper still runs: distinct {1, 2, 3} times 10, summed, is 60.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class CUserMapToInt {
+    static int run() {
+      return IntStream.of(1, 2, 2, 3).boxed().distinct().mapToInt(x -> x * 10).sum();
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run());
+    }
+  }
+before:
+  invokedynamic: 1
+after:
+  invokedynamic: 1
+log:
+  - "BUILD SUCCESS"
+  - "The result is 60"

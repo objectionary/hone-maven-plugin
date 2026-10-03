@@ -481,12 +481,8 @@ public final class OptimizeMojo extends AbstractMojo {
                         @Override
                         public FileVisitResult visitFile(final Path file,
                             final BasicFileAttributes attrs) {
-                            FileVisitResult res = FileVisitResult.CONTINUE;
-                            if (file.toString().endsWith(".class")) {
-                                found.set(true);
-                                res = FileVisitResult.TERMINATE;
-                            }
-                            return res;
+                            found.compareAndSet(false, file.toString().endsWith(".class"));
+                            return found.get() ? FileVisitResult.TERMINATE : FileVisitResult.CONTINUE;
                         }
 
                         @Override

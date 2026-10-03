@@ -5,6 +5,7 @@
 .SHELLFLAGS := -e -o pipefail -c
 SHELL := bash
 .SECONDARY:
+.DELETE_ON_ERROR:
 .PHONY: all clean env diff jeo-test run
 
 ROOT=../../../../../../../..

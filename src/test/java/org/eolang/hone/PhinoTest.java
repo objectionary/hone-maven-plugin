@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
+import java.util.concurrent.TimeUnit;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,33 @@ final class PhinoTest {
         MatcherAssert.assertThat(
             "must not be available when the executable doesn't exist",
             new Phino(dir.resolve("no-such-executable").toString()).available("1.2.3"),
+            Matchers.is(false)
+        );
+    }
+
+    @Test
+    void stopsTheProbeWhenInterrupted(@TempDir final Path dir) throws Exception {
+        final Path pid = dir.resolve("pid");
+        final Phino phino = new Phino(
+            PhinoTest.fake(dir, String.format("echo $$ > %s%nexec sleep 30", pid)).toString()
+        );
+        final Thread probe = new Thread(() -> phino.available("1.2.3"));
+        probe.start();
+        while (!Files.exists(pid) || Files.size(pid) == 0L) {
+            Thread.sleep(10L);
+        }
+        probe.interrupt();
+        probe.join();
+        final ProcessHandle proc = ProcessHandle.of(
+            Long.parseLong(new String(Files.readAllBytes(pid), StandardCharsets.UTF_8).trim())
+        ).orElseThrow(() -> new IllegalStateException("The probe is gone too early"));
+        final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5L);
+        while (proc.isAlive() && System.nanoTime() < deadline) {
+            Thread.sleep(10L);
+        }
+        MatcherAssert.assertThat(
+            "an interrupted probe must not leave phino running (see #1243)",
+            proc.isAlive(),
             Matchers.is(false)
         );
     }

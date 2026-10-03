@@ -12,6 +12,7 @@ name: mvn-on-rultor-image
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+permissions: read-all
 jobs:
   mvn:
     strategy:

@@ -16,6 +16,7 @@ name: markdown-lint
     paths:
       - '**.md'
       - '.github/workflows/markdown-lint.yml'
+permissions: read-all
 jobs:
   markdown-lint:
     timeout-minutes: 15

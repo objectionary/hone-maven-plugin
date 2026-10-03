@@ -18,6 +18,7 @@ name: qulice
       - '**.java'
       - '**/pom.xml'
       - '.github/workflows/qulice.yml'
+permissions: read-all
 jobs:
   qulice:
     timeout-minutes: 15

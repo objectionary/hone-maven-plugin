@@ -10,6 +10,7 @@ name: make
   pull_request:
     branches:
       - master
+permissions: read-all
 jobs:
   make:
     runs-on: ubuntu-24.04

@@ -56,6 +56,20 @@ final class OptimizeMojoSymlinkTest {
         );
     }
 
+    @Test
+    void findsNoClassesInADirectoryWithASymlinkCycle(@Mktmp final Path home) throws Exception {
+        final Path target = Files.createDirectories(home.resolve("target"));
+        final Path classes = Files.createDirectories(target.resolve("classes"));
+        Files.createSymbolicLink(
+            Files.createDirectories(classes.resolve("child")).resolve("parent"), classes
+        );
+        MatcherAssert.assertThat(
+            "a symlink cycle with no classes in it must read as no classes, not break the goal (see #1246)",
+            OptimizeMojoSymlinkTest.withoutClasses(target),
+            Matchers.is(true)
+        );
+    }
+
     private static boolean withoutClasses(final Path target) throws Exception {
         final OptimizeMojo mojo = new OptimizeMojo();
         final Field dir = AbstractMojo.class.getDeclaredField("target");

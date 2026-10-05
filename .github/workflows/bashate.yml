@@ -9,14 +9,19 @@ name: bashate
       - master
     paths:
       - '**.sh'
+      - '**.bash'
       - '.github/workflows/bashate.yml'
   pull_request:
     branches:
       - master
     paths:
       - '**.sh'
+      - '**.bash'
       - '.github/workflows/bashate.yml'
 permissions: read-all
+concurrency:
+  group: bashate-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   bashate:
     timeout-minutes: 15

@@ -11,6 +11,9 @@ name: make
     branches:
       - master
 permissions: read-all
+concurrency:
+  group: make-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   make:
     runs-on: ubuntu-24.04

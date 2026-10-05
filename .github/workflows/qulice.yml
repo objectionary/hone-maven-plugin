@@ -19,6 +19,9 @@ name: qulice
       - '**/pom.xml'
       - '.github/workflows/qulice.yml'
 permissions: read-all
+concurrency:
+  group: qulice-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   qulice:
     timeout-minutes: 15

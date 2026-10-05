@@ -15,12 +15,15 @@ name: actionlint
     paths:
       - '.github/**'
 permissions: read-all
+concurrency:
+  group: actionlint-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   actionlint:
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: reviewdog/action-actionlint@v1.78.1
+      - uses: reviewdog/action-actionlint@v1.79.1
         with:
           fail_level: error

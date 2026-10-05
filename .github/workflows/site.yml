@@ -8,6 +8,9 @@ name: site
     tags:
       - '*'
 permissions: read-all
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   site:
     permissions:

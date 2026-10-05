@@ -12,6 +12,9 @@ name: docker
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   docker:
     timeout-minutes: 30

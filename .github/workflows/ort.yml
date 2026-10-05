@@ -10,6 +10,9 @@ name: ort
   pull_request:
     branches:
       - master
+concurrency:
+  group: ort-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   ort:
     timeout-minutes: 15

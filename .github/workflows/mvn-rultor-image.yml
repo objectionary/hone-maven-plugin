@@ -12,6 +12,9 @@ name: mvn-on-rultor-image
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+concurrency:
+  group: mvn-rultor-image-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   mvn:
     strategy:

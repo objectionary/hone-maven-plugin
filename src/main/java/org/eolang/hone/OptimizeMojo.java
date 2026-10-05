@@ -487,6 +487,10 @@ public final class OptimizeMojo extends AbstractMojo {
 
     private void optimize() throws IOException {
         final long start = System.currentTimeMillis();
+        final Path stats = this.target.toPath().resolve("hone-statistics.csv");
+        if (Files.deleteIfExists(stats)) {
+            Logger.debug(this, "Statistics of the previous run deleted: %[file]s", stats);
+        }
         this.timings.through(
             "optimize",
             () -> {
@@ -503,7 +507,6 @@ public final class OptimizeMojo extends AbstractMojo {
             this.target,
             System.currentTimeMillis() - start
         );
-        final Path stats = this.target.toPath().resolve("hone-statistics.csv");
         if (stats.toFile().exists()) {
             final CSV csv = new CSV(stats);
             Logger.info(

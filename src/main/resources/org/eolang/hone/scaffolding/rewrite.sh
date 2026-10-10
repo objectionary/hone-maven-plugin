@@ -240,8 +240,11 @@ function rewrite {
     changed=$(diff "${phi}" "${pho}" | awk '/^>/ { a++ } /^</ { d++ } END { print (a > d ? a : d) + 0 }' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
   fi
-  statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"
   atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
+  # The row goes in only once the output is written, so a file that runs out
+  # of time in the last step gets the row of the timeout branch, with nothing
+  # changed, and not this one (see #1211).
+  statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" "${changed}" "${per}"
   if verbosely; then
     echo "Converted PHI to ${idx} $(basename "${xo}") ($(du -sh "${xo}" | cut -f1))"
   fi
@@ -346,6 +349,9 @@ function rewrite_with_timeout {
     # atomic_write, so it is swept here (see #1038).
     rm -f "${phi}".tmp.* "${pho}".tmp.* "${xo}".tmp.*
     cp "${xi}" "${xo}"
+    # The worker was killed before it wrote its row, so the file gets one here,
+    # with nothing changed, since the input is what ships (see #1211).
+    statistics_row "${statistics_csv}" "${idx}" "${phi}" "${pho}" 0 0
   else
     rm -f "${flag}"
     sec=$(perl -E "say int($(now) - ${start})")

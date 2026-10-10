@@ -114,7 +114,7 @@ where:
       - '"s/^I$/iload/g"'
       - '"s/^J$/lload/g"'
       - '"s/^D$/dload/g"'
-      - '"s/^L.+;$/aload/g"'
+      - '"s/^(L.+;|\\[.+)$/aload/g"'
   - meta: 𝜏-load-item
     function: tau
     args: [𝑒-load-item]
@@ -128,7 +128,7 @@ where:
       - '"s/^J$/3/g"'
       - '"s/^D$/3/g"'
       - '"s/^I$/2/g"'
-      - '"s/^L.+;$/2/g"'
+      - '"s/^(L.+;|\\[.+)$/2/g"'
   - meta: 𝑒-consumer-slot
     function: number
     args: [𝑒-consumer-slot-str]
@@ -139,7 +139,7 @@ where:
       - '"s/^J$/4/g"'
       - '"s/^D$/4/g"'
       - '"s/^I$/3/g"'
-      - '"s/^L.+;$/3/g"'
+      - '"s/^(L.+;|\\[.+)$/3/g"'
   - meta: 𝑒-counter-slot
     function: number
     args: [𝑒-counter-slot-str]

@@ -31,12 +31,28 @@ final class Timings {
     private final Path path;
 
     /**
-     * Creates a new timings recorder.
+     * The moment the build started, in milliseconds since the epoch.
+     */
+    private final long beginning;
+
+    /**
+     * Creates a new timings recorder for a build that started with the JVM.
      *
      * @param file Path to the CSV file where timings will be recorded
      */
     Timings(final Path file) {
+        this(file, ManagementFactory.getRuntimeMXBean().getStartTime());
+    }
+
+    /**
+     * Creates a new timings recorder.
+     *
+     * @param file Path to the CSV file where timings will be recorded
+     * @param since The moment the build started, in milliseconds since the epoch
+     */
+    Timings(final Path file, final long since) {
         this.path = file;
+        this.beginning = since;
     }
 
     /**
@@ -66,15 +82,17 @@ final class Timings {
         }
     }
 
-    // The rows of a build that ran before this JVM are of no use here and
-    // "target" survives between runs unless "clean" is used, so a file older
-    // than the JVM is replaced by a fresh one with a header. The goals of this
-    // build write after that moment and append to each other.
+    // The rows of an earlier build are of no use here and "target" survives
+    // between runs unless "clean" is used, so a file older than the start of
+    // this build is replaced by a fresh one with a header. The goals of this
+    // build write after that moment and append to each other. The start of
+    // the build, not of the JVM, is what counts, because the Maven Daemon and
+    // an IDE run many builds in one JVM (see #1198).
     private void started() throws IOException {
         final boolean stale;
         if (Files.exists(this.path)) {
             stale = Files.getLastModifiedTime(this.path).toMillis()
-                < ManagementFactory.getRuntimeMXBean().getStartTime();
+                < this.beginning;
         } else {
             stale = true;
         }

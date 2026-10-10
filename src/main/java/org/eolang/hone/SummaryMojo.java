@@ -10,9 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Build summary statistics.
@@ -27,14 +25,6 @@ import org.apache.maven.plugins.annotations.Parameter;
     aggregator = true
 )
 public final class SummaryMojo extends AbstractMojo {
-
-    /**
-     * The current Maven session, whose projects are the only ones summarized.
-     *
-     * @since 0.1.0
-     */
-    @Parameter(defaultValue = "${session}", readonly = true, required = true)
-    private MavenSession session;
 
     /**
      * Ctor.

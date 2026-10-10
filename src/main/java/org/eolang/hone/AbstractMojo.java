@@ -8,6 +8,7 @@ import com.jcabi.log.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.cactoos.io.ResourceOf;
@@ -39,6 +40,14 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         defaultValue = "${project.build.directory}"
     )
     protected File target;
+
+    /**
+     * The current Maven session.
+     *
+     * @since 0.30.0
+     */
+    @Parameter(defaultValue = "${session}", readonly = true, required = true)
+    protected MavenSession session;
 
     /**
      * The base directory of the Maven project.
@@ -133,7 +142,10 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         } else if (this.skipOnWindows && AbstractMojo.windows()) {
             Logger.info(this, "Execution skipped due to hone.skipOnWindows=true");
         } else {
-            this.timings = new Timings(this.target.toPath().resolve("hone-timings.csv"));
+            this.timings = new Timings(
+                this.target.toPath().resolve("hone-timings.csv"),
+                this.session.getRequest().getStartTime().toInstant().toEpochMilli()
+            );
             try {
                 this.exec();
             } catch (final IOException ex) {

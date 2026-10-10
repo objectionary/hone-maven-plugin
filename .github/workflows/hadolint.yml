@@ -10,6 +10,7 @@ name: hadolint
   pull_request:
     branches:
       - master
+permissions: read-all
 concurrency:
   group: hadolint-${{ github.ref }}
   cancel-in-progress: true

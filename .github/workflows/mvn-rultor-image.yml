@@ -12,6 +12,7 @@ name: mvn-on-rultor-image
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+permissions: read-all
 concurrency:
   group: mvn-rultor-image-${{ github.ref }}
   cancel-in-progress: true

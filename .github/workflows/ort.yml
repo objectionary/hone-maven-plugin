@@ -10,6 +10,7 @@ name: ort
   pull_request:
     branches:
       - master
+permissions: read-all
 concurrency:
   group: ort-${{ github.ref }}
   cancel-in-progress: true

@@ -12,6 +12,7 @@ name: docker
     branches:
       - master
     paths-ignore: [ 'README.md' ]
+permissions: read-all
 concurrency:
   group: docker-${{ github.ref }}
   cancel-in-progress: true

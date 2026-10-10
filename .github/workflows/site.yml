@@ -7,11 +7,14 @@ name: site
   push:
     tags:
       - '*'
+permissions: read-all
 concurrency:
   group: site-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   site:
+    permissions:
+      contents: write
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:

@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that a fused `skip` behind a head that returns an ARRAY
+# gets a correct stack map frame (issue #1232). `503-distill-skip-frame` took
+# only `L...;` return types, so for an `int[]` head the fallback
+# `503-distill-state-frame` wrote the distill input, `Integer`, into the frame,
+# and the class failed in the JVM with "Type '[I' ... is not assignable to
+# 'java/lang/Integer'". The frame item is now the array descriptor itself.
+#
+# invokedynamic: before = the two maps = 2; after = the one fused mapMulti.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class CArrayHeadSkip {
+    static List<Integer> run() {
+      return Stream.of(1, 2, 3)
+        .map(x -> new int[] {x})
+        .skip(1)
+        .map(a -> a[0] * 10)
+        .collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %s%n", run());
+    }
+  }
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 1
+log:
+  - "BUILD SUCCESS"
+  - "The result is [20, 30]"

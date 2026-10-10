@@ -211,7 +211,13 @@ if streams_selected; then
     fi
   done < <(find "${TARGET}/${CLASSES}" -type f -name '*.class' -print)
   if [ "${#outdated[@]}" -gt 0 ]; then
-    EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${outdated[*]}")"
+    # jeo reads every entry as a glob, so a "[", "{", "?", "*" or "\" in the
+    # project path must be escaped, or the class is not excluded (see #1205).
+    declare -a globs=()
+    for classfile in "${outdated[@]}"; do
+      globs+=("$(printf '%s' "${classfile}" | sed 's/[][{}?*\\]/\\&/g')")
+    done
+    EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${globs[*]}")"
     echo "Excluded ${#outdated[@]} class(es) older than Java 16 from the disassembly, leaving the rest to the streams rules"
   fi
   # When every single .class file just got excluded as pre-Java-16 bytecode,

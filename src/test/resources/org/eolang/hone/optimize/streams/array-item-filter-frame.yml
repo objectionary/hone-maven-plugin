@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that a fused `filter` over ARRAY items gets a correct stack
+# map frame (issue #1231). `506-distill-predicate-frame` took only reference and
+# primitive predicate parameters, so for a `([J)Z` predicate the fallback `507`
+# wrote the distill input, `Integer`, into the frame, and the class failed in
+# the JVM with "Type '[J' ... is not assignable to 'java/lang/Integer'". The
+# frame item is now the array descriptor itself.
+#
+# invokedynamic: before = map + filter + map = 3; after = the one fused mapMulti.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.stream.*;
+  public class CArrayFilter {
+    static List<Long> run() {
+      return Stream.of(1, 2, 3)
+        .map(x -> new long[] {x})
+        .filter(a -> a[0] > 1)
+        .map(a -> a[0] * 10)
+        .collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %s%n", run());
+    }
+  }
+before:
+  invokedynamic: 3
+after:
+  invokedynamic: 1
+log:
+  - "BUILD SUCCESS"
+  - "The result is [20, 30]"

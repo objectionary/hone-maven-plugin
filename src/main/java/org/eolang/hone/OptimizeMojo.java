@@ -800,7 +800,7 @@ public final class OptimizeMojo extends AbstractMojo {
 
     private String jeo() throws IOException {
         String ver = this.jeoVersion;
-        if (ver == null) {
+        if (ver == null || ver.isEmpty()) {
             ver = new IoCheckedText(
                 new TextOf(
                     new ResourceOf(

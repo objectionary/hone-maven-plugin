@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 101 stamps an `areturn` that returns a stream straight from a call, since the
+# pipeline leaves the method unterminated and the caller may end it with a
+# `count()` the JVM elides (#1122).
+#
+# The first expectation pins the stamp on the `areturn`, the second pins the
+# `map` call itself as untouched: this rule reads the call, it must never
+# consume or alter it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/101-mark-escaping-stream.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-map ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokeinterface,
+        v0 ↦ "java/util/stream/Stream",
+        v1 ↦ "map",
+        v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;",
+        v3 ↦ Φ.true
+      ⟧,
+      op-return ↦ ⟦
+        φ ↦ Φ.jeo.opcode.areturn
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.jeo.opcode.areturn, escapes ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.invokeinterface, v0 ↦ "java/util/stream/Stream", v1 ↦ "map", v2 ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;", v3 ↦ Φ.true ⟧

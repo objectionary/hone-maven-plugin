@@ -39,6 +39,13 @@
 # pushed by an opcode ahead of the run and would be left behind, stranded on the
 # caller's stack. An instance field therefore stays native.
 #
+# The load is followed by `Objects.requireNonNull` in the `make` block.
+# `Stream.map(null)` throws at the call, while a fused operator is only added
+# to the state list and would fail on the first element or, with no elements,
+# never (#1219). The `make` block runs where the state list is built, which is
+# where the call was, so the check keeps the exception where it used to be. A
+# constructed operator needs no check: `new` never gives null.
+#
 # Everything downstream is shared with the constructed shape. The pragma is the
 # same `Φ.hone.named-map` with the same four erased type fields — `Function.apply`
 # tells us nothing about the element type, exactly as it tells `215` nothing —
@@ -93,6 +100,13 @@ result: |
             𝜏-make-load ↦ ⟦
               φ ↦ Φ.jeo.opcode.𝜏-load-op,
               𝐵-load-operands
+            ⟧,
+            𝜏-make-check ↦ ⟦
+              φ ↦ Φ.jeo.opcode.invokestatic,
+              i2 ↦ "java/util/Objects",
+              i3 ↦ "requireNonNull",
+              i4 ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+              i5 ↦ Φ.false
             ⟧
           ⟧,
           bridge-input ↦ "Ljava/lang/Object;",
@@ -115,4 +129,6 @@ where:
   - meta: 𝜏-named
     function: random-tau
   - meta: 𝜏-make-load
+    function: random-tau
+  - meta: 𝜏-make-check
     function: random-tau

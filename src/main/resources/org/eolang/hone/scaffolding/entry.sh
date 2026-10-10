@@ -307,6 +307,20 @@ start=$(now)
 )
 record_timing "jeo-maven-plugin:disassemble (default-cli)" "$(elapsed "${start}")"
 
+# The includes, the excludes and the Java 16 guard together may leave no class
+# to disassemble, in which case jeo doesn't even create its output directory.
+# That is the same "nothing is suitable" case as above, so it follows the same
+# skipIfNotSuitable decision instead of failing in "rewrite.sh" (see #1212).
+if [ -z "$(find "${TARGET}/hone/jeo-disassemble" -name '*.xmir' -print -quit 2> /dev/null)" ]; then
+  echo "No classes were disassembled, so nothing is suitable for the rules to rewrite"
+  if [ "${SKIP_IF_NOT_SUITABLE}" == 'true' ]; then
+    echo "We don't fail but quit quietly, because of skipIfNotSuitable=true"
+    exit
+  fi
+  echo "We can't continue and must fail here. Set skipIfNotSuitable to 'true' if you need a quiet pass."
+  exit 1
+fi
+
 if [ "${SKIP_PHINO}" != 'true' ]; then
   export TARGET
   export HONE_VERSION

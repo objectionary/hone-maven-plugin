@@ -20,7 +20,7 @@ Just add this to your `pom.xml` file (you must have [Docker] installed too):
       <plugin>
         <groupId>org.eolang</groupId>
         <artifactId>hone-maven-plugin</artifactId>
-        <version>0.29.4</version>
+        <version>0.32.0</version>
         <executions>
           <execution>
             <goals>
@@ -769,8 +769,8 @@ task hone(type: Exec, dependsOn: compileJava) {
       "-Dhone.target=${buildDir}",
       "-Dhone.classes=${buildDir.toPath().relativize(sourceSets.main.output.classesDirs.singleFile.toPath())}",
       '-Dhone.rules=streams/*',
-      'org.eolang:hone-maven-plugin:0.29.4:build',
-      'org.eolang:hone-maven-plugin:0.29.4:optimize'
+      'org.eolang:hone-maven-plugin:0.32.0:build',
+      'org.eolang:hone-maven-plugin:0.32.0:optimize'
 }
 compileJava.finalizedBy hone
 classes.dependsOn hone

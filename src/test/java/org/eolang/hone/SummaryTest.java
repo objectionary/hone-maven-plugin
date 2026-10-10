@@ -8,7 +8,9 @@ import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import org.cactoos.bytes.BytesOf;
 import org.cactoos.io.ResourceOf;
 import org.cactoos.text.TextOf;
@@ -29,7 +31,9 @@ final class SummaryTest {
     void compilesCommonSummaryStatistics(@Mktmp final Path temp) throws Exception {
         MatcherAssert.assertThat(
             "report must contain statistics from both modules",
-            new TextOf(new Summary(SummaryTest.modular(temp)).collect()).asString(),
+            new TextOf(
+                new Summary(SummaryTest.modules(SummaryTest.modular(temp)), temp).collect()
+            ).asString(),
             Matchers.allOf(
                 Matchers.containsString(
                     "/phi/org/eolang/hone/client/Client.phi,/phi-optimized/org/eolang/hone/client/Client.phi,2,4000"
@@ -45,7 +49,7 @@ final class SummaryTest {
     void keepsTheReportStableAcrossRepeatedCollections(@Mktmp final Path temp) throws Exception {
         final Path root = SummaryTest.modular(temp);
         final Summary summary = new Summary(
-            root,
+            SummaryTest.modules(root),
             Files.createDirectories(root.resolve("target"))
         );
         final Path report = summary.collect();
@@ -61,7 +65,7 @@ final class SummaryTest {
     @Test
     void removesPreviousSummaryWhenNoStatistics(@Mktmp final Path temp) throws Exception {
         final Path dir = SummaryTest.modular(temp);
-        final Summary summary = new Summary(dir);
+        final Summary summary = new Summary(SummaryTest.modules(dir), dir);
         summary.collect();
         Files.deleteIfExists(dir.resolve("server/hone-statistics.csv"));
         Files.deleteIfExists(dir.resolve("client/hone-statistics.csv"));
@@ -83,7 +87,9 @@ final class SummaryTest {
         );
         MatcherAssert.assertThat(
             "report must include statistics reached through a symlinked module (see #866)",
-            new TextOf(new Summary(temp).collect()).asString(),
+            new TextOf(
+                new Summary(Collections.singletonList(temp.resolve("linked")), temp).collect()
+            ).asString(),
             Matchers.containsString("Server.phi")
         );
     }
@@ -113,7 +119,11 @@ final class SummaryTest {
         Files.createSymbolicLink(temp.resolve("linked"), temp.resolve("server"));
         MatcherAssert.assertThat(
             "report must count a module reached through a symlink only once",
-            new CSV(new Summary(temp).collect()).size(),
+            new CSV(
+                new Summary(
+                    Arrays.asList(temp.resolve("server"), temp.resolve("linked")), temp
+                ).collect()
+            ).size(),
             Matchers.equalTo(1)
         );
     }
@@ -131,6 +141,32 @@ final class SummaryTest {
             ).asString(),
             Matchers.not(Matchers.containsString("Server.phi"))
         );
+    }
+
+    @Test
+    void ignoresStatisticsOfProjectsNestedInTheBuildDirectory(@Mktmp final Path temp)
+        throws Exception {
+        final Path target = Files.createDirectories(temp.resolve("target"));
+        Files.write(
+            target.resolve("hone-statistics.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-client.csv")).asBytes()
+        );
+        Files.write(
+            Files.createDirectories(target.resolve("it/modular/server/target"))
+                .resolve("hone-statistics.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
+        );
+        MatcherAssert.assertThat(
+            "report must not include statistics of a project kept inside the build directory (see #1197)",
+            new TextOf(
+                new Summary(Collections.singletonList(target), temp).collect()
+            ).asString(),
+            Matchers.not(Matchers.containsString("Server.phi"))
+        );
+    }
+
+    private static List<Path> modules(final Path root) {
+        return Arrays.asList(root.resolve("server"), root.resolve("client"));
     }
 
     private static Path modular(final Path root) throws Exception {

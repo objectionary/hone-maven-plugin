@@ -100,7 +100,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-input
-      - '"s/^L.+;$/Ljava\\/util\\/function\\/BiConsumer;/g"'
+      - '"s/^(L.+;|\\[.+)$/Ljava\\/util\\/function\\/BiConsumer;/g"'
       - '"s/^D$/Ljava\\/util\\/stream\\/DoubleStream$DoubleMapMultiConsumer;/g"'
       - '"s/^I$/Ljava\\/util\\/stream\\/IntStream$IntMapMultiConsumer;/g"'
       - '"s/^J$/Ljava\\/util\\/stream\\/LongStream$LongMapMultiConsumer;/g"'
@@ -108,7 +108,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-input
-      - '"s/^L.+;$/(Ljava\\/lang\\/Object;Ljava\\/lang\\/Object;)V/g"'
+      - '"s/^(L.+;|\\[.+)$/(Ljava\\/lang\\/Object;Ljava\\/lang\\/Object;)V/g"'
       - '"s/^D$/(DLjava\\/util\\/function\\/DoubleConsumer;)V/g"'
       - '"s/^I$/(ILjava\\/util\\/function\\/IntConsumer;)V/g"'
       - '"s/^J$/(JLjava\\/util\\/function\\/LongConsumer;)V/g"'
@@ -116,7 +116,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-output
-      - '"s/^L.+;$/Ljava\\/util\\/function\\/Consumer;/g"'
+      - '"s/^(L.+;|\\[.+)$/Ljava\\/util\\/function\\/Consumer;/g"'
       - '"s/^D$/Ljava\\/util\\/function\\/DoubleConsumer;/g"'
       - '"s/^I$/Ljava\\/util\\/function\\/IntConsumer;/g"'
       - '"s/^J$/Ljava\\/util\\/function\\/LongConsumer;/g"'
@@ -124,7 +124,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-input
-      - '"s/^L.+;$/java\\/util\\/stream\\/Stream/g"'
+      - '"s/^(L.+;|\\[.+)$/java\\/util\\/stream\\/Stream/g"'
       - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
       - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
       - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
@@ -132,7 +132,7 @@ where:
     function: sed
     args:
       - 𝑒-bridge-output
-      - '"s/^L.+;$/java\\/util\\/stream\\/Stream/g"'
+      - '"s/^(L.+;|\\[.+)$/java\\/util\\/stream\\/Stream/g"'
       - '"s/^D$/java\\/util\\/stream\\/DoubleStream/g"'
       - '"s/^I$/java\\/util\\/stream\\/IntStream/g"'
       - '"s/^J$/java\\/util\\/stream\\/LongStream/g"'
@@ -140,12 +140,12 @@ where:
     function: sed
     args:
       - 𝑒-bridge-input
-      - '"s/^L.+;$/O/g"'
+      - '"s/^(L.+;|\\[.+)$/O/g"'
   - meta: 𝑒-out-cat
     function: sed
     args:
       - 𝑒-bridge-output
-      - '"s/^L.+;$/O/g"'
+      - '"s/^(L.+;|\\[.+)$/O/g"'
   - meta: 𝑒-io
     function: concat
     args: [𝑒-in-cat, 𝑒-out-cat]

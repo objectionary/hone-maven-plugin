@@ -81,11 +81,11 @@ jobs:
       - name: install-phino
         run: |
           version=$(xargs < src/main/resources/org/eolang/hone/default-phino-version.txt)
-          if ! phino --pin="${version}" --version > /dev/null 2>&1; then
+          if [ "$(phino --version 2> /dev/null)" != "${version}" ]; then
             sudo wget -q -O /usr/bin/phino "http://phino.objectionary.com/releases/ubuntu-22.04/phino-${version}"
             sudo chmod +x /usr/bin/phino
           fi
-          phino --pin="${version}" --version
+          test "$(phino --version)" = "${version}"
       # A test that finds "phino" on the host runs "rewrite.sh" on the host
       # too, and that script refuses to rewrite in more than one thread
       # without GNU Parallel, by the decision of #409. The EC2 AMI doesn't

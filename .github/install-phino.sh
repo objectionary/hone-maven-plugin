@@ -4,7 +4,7 @@
 set -e -o pipefail
 version=$(xargs < src/main/resources/org/eolang/hone/default-phino-version.txt)
 expected=$(grep -v '^#' .github/phino-sha512.txt | xargs)
-if command -v phino > /dev/null 2>&1 && phino --pin="${version}" --version > /dev/null 2>&1; then
+if command -v phino > /dev/null 2>&1 && [ "$(phino --version 2> /dev/null)" = "${version}" ]; then
   echo "phino ${version} is already installed"
   exit 0
 fi
@@ -20,4 +20,4 @@ curl --silent --show-error --fail --location --output "${tmp}" "${url}"
 echo "${expected}  ${tmp}" | sha512sum --check --strict
 sudo mv "${tmp}" /usr/bin/phino
 sudo chmod a+x /usr/bin/phino
-phino --pin="${version}" --version
+test "$(phino --version)" = "${version}"

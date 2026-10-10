@@ -700,7 +700,7 @@ public final class OptimizeMojo extends AbstractMojo {
                         src, this.extraExtensions
                     );
                     final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
-                    try (Stream<Path> files = Files.walk(src)) {
+                    try (Stream<Path> files = Files.walk(src.toRealPath())) {
                         final List<Path> yamls = files.filter(Files::isRegularFile).filter(
                             f -> Arrays.stream(exts).anyMatch(
                                 extn -> f.getFileName().toString().endsWith(

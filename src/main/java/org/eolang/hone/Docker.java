@@ -159,9 +159,10 @@ final class Docker {
 
     private int fire(final List<String> command, final long timeout) throws IOException {
         final long start = System.currentTimeMillis();
-        final int idx = command.indexOf("run");
+        final int idx = this.sudo ? 2 : 1;
         String container = null;
-        if (idx >= 0 && !command.contains("--name")) {
+        final boolean dockerRun = idx < command.size() && "run".equals(command.get(idx));
+        if (dockerRun && !command.contains("--name")) {
             container = String.format("hone-%d", System.nanoTime());
             command.add(idx + 1, "--name");
             command.add(idx + 2, container);

@@ -92,6 +92,22 @@ final class RulesTest {
     }
 
     @Test
+    void listsAvailableRulesTheWayThePatternAcceptsThem() {
+        final String message = Assertions.assertThrows(
+            IllegalStateException.class,
+            () -> new Rules("nothing/like/this").yamls()
+        ).getMessage();
+        final String first = message.substring(
+            message.indexOf("available are: ") + "available are: ".length()
+        ).split(", ")[0];
+        MatcherAssert.assertThat(
+            "A listed rule name must be accepted by the pattern, so it has no extension",
+            new Rules(first).yamls(),
+            Matchers.iterableWithSize(Matchers.greaterThanOrEqualTo(1))
+        );
+    }
+
+    @Test
     void discoversRulesFromClasspath() {
         MatcherAssert.assertThat(
             "Should discover none.yml from classpath",

@@ -46,6 +46,11 @@ final class Rules {
     private static final Pattern SEPARATOR = Pattern.compile("\\s*,\\s*");
 
     /**
+     * File extension of a rule, which is not a part of its name in a pattern.
+     */
+    private static final Pattern EXTENSION = Pattern.compile("\\.(yml|phr)$");
+
+    /**
      * Compiled regex patterns for rule matching with inclusion/exclusion flags.
      */
     private final Map<Pattern, Boolean> patterns;
@@ -107,11 +112,24 @@ final class Rules {
             throw new IllegalStateException(
                 String.format(
                     "No rules matched the hone.rules pattern '%s', while the ones available are: %s",
-                    this.text, String.join(", ", Rules.discover())
+                    this.text, String.join(", ", Rules.names())
                 )
             );
         }
         return files;
+    }
+
+    /**
+     * Names of all available rules, as the <code>hone.rules</code> pattern accepts them.
+     *
+     * @return Names without the file extension
+     */
+    private static List<String> names() {
+        final List<String> names = new ArrayList<>(0);
+        for (final String file : Rules.discover()) {
+            names.add(Rules.EXTENSION.matcher(file).replaceFirst(""));
+        }
+        return names;
     }
 
     /**

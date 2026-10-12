@@ -390,6 +390,7 @@ public final class OptimizeMojo extends AbstractMojo {
     @Override
     public void exec() throws IOException {
         if (this.withoutClasses() && this.skipIfNoClasses) {
+            Files.deleteIfExists(this.target.toPath().resolve("hone-statistics.csv"));
             Logger.info(this, "The directory with classes is absent or empty, skipping");
             return;
         }

@@ -26,5 +26,5 @@ expected:
   - ⟦ φ ↦ Φ.jeo.opcode.istore, i1 ↦ 4 ⟧
   - ⟦ φ ↦ Φ.jeo.opcode.lload, i1 ↦ 1 ⟧
   - ⟦ φ ↦ Φ.jeo.opcode.aload, i1 ↦ 3 ⟧
-  - ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 10, max-locals ↦ 7 ⟧
+  - ⟦ φ ↦ Φ.jeo.maxs, max-stack ↦ 255, max-locals ↦ 7 ⟧
   - ⟦ 𝐵-a, descriptor ↦ "(Ljava/util/List;JLjava/util/function/LongConsumer;)V", 𝐵-b ⟧

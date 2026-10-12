@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Keeps `215-recognize-named-map` and `215-recognize-named-filter` away from an
+# operator whose constructor arguments branch (#1225). Both rules take any run
+# of opcodes between the `dup` and the `<init>` as the arguments, and `317`
+# moves that run into the state block `502` builds in front of the `ArrayList`.
+# A conditional argument, `new P(flag ? 1 : 0)` or `new M(o == null ? "a" : "b")`,
+# compiles to labels, a jump and stack map frames that describe the stack javac
+# had at that point. After the move the stack also holds the list, the frames
+# no longer match it, and the whole class fails to load with
+# "VerifyError: Inconsistent stackmap frames".
+#
+# A frame is what marks such a run: a jump inside the arguments always lands on
+# a label with a frame in front of the `<init>`. So when there is a
+# `Φ.jeo.frame` between the `dup` and the `<init>` of a `new` that feeds
+# `Stream.map` or `Stream.filter`, the `new` is stamped `reverted ↦ Φ.true`.
+# The two recognising rules match a `new` with exactly two bindings, so they
+# pass it by and the operator stays native: a missed fusion, never a wrong one.
+# jeo ignores the extra binding when assembling, as it does for the stamped
+# calls of the 2xx and 4xx reverts. This rule is named so that it sorts before
+# the two `215-recognize-named-*` rules.
+name: decline-named-with-frames
+pattern: |
+  ⟦
+    𝐵-before,
+    𝜏-new ↦ ⟦
+      φ ↦ Φ.jeo.opcode.new,
+      𝜏1 ↦ 𝑒-object
+    ⟧,
+    𝜏-dup ↦ ⟦
+      φ ↦ Φ.jeo.opcode.dup
+    ⟧,
+    𝐵-args-head,
+    𝜏-frame ↦ ⟦
+      φ ↦ Φ.jeo.frame,
+      𝐵-frame
+    ⟧,
+    𝐵-args-tail,
+    𝜏-init ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokespecial,
+      𝜏2 ↦ 𝑒-object,
+      𝜏3 ↦ "<init>",
+      𝜏4 ↦ 𝑒-init,
+      𝜏5 ↦ Φ.false
+    ⟧,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏6 ↦ "java/util/stream/Stream",
+      𝜏7 ↦ 𝑒-method,
+      𝜏8 ↦ 𝑒-descriptor,
+      𝜏9 ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+result: |
+  ⟦
+    𝐵-before,
+    𝜏-new ↦ ⟦
+      φ ↦ Φ.jeo.opcode.new,
+      𝜏1 ↦ 𝑒-object,
+      reverted ↦ Φ.true
+    ⟧,
+    𝜏-dup ↦ ⟦
+      φ ↦ Φ.jeo.opcode.dup
+    ⟧,
+    𝐵-args-head,
+    𝜏-frame ↦ ⟦
+      φ ↦ Φ.jeo.frame,
+      𝐵-frame
+    ⟧,
+    𝐵-args-tail,
+    𝜏-init ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokespecial,
+      𝜏2 ↦ 𝑒-object,
+      𝜏3 ↦ "<init>",
+      𝜏4 ↦ 𝑒-init,
+      𝜏5 ↦ Φ.false
+    ⟧,
+    𝜏-call ↦ ⟦
+      φ ↦ Φ.jeo.opcode.invokeinterface,
+      𝜏6 ↦ "java/util/stream/Stream",
+      𝜏7 ↦ 𝑒-method,
+      𝜏8 ↦ 𝑒-descriptor,
+      𝜏9 ↦ Φ.true
+    ⟧,
+    𝐵-after
+  ⟧
+when:
+  or:
+    - eq: [𝑒-method, '"map"']
+    - eq: [𝑒-method, '"filter"']

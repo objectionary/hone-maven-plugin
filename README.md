@@ -229,6 +229,10 @@ Rules `215-recognize-named-map` and `215-recognize-named-filter`
   lift that run the way `216-` lifts a bare `distinct`,
   with the constructor's own pushes bound whole when it captures (#1008).
 A capturing constructor is taken whatever its arguments weigh (#1029).
+A constructor whose arguments branch, like `new P(flag ? 1 : 0)`,
+  is left native by `215-decline-named-with-frames`:
+  the frames of the branch describe javac's stack,
+  not the one of the state append (#1225).
 The run being lifted is javac's own
   and stands at the depth javac sized `max_stack` for,
   so relocating it into `502`'s state append

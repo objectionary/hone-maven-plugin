@@ -134,8 +134,15 @@ final class Docker {
     private void kill(final String name) {
         if (name != null) {
             try {
-                new ProcessBuilder(this.command(Arrays.asList("kill", name))).start()
-                    .waitFor(10L, TimeUnit.SECONDS);
+                final Process proc = new ProcessBuilder(
+                    this.command(Arrays.asList("kill", name))
+                ).start();
+                if (!proc.waitFor(10L, TimeUnit.SECONDS)) {
+                    proc.destroyForcibly().waitFor();
+                    Logger.warn(
+                        this, "Killing of orphaned container '%s' did not finish in time", name
+                    );
+                }
             } catch (final IOException ex) {
                 Logger.warn(
                     this, "Failed to kill orphaned container '%s': %s", name, ex.getMessage()

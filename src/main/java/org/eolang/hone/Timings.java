@@ -67,21 +67,38 @@ final class Timings {
         final long start = System.nanoTime();
         try {
             action.exec();
-        } finally {
-            final File dir = this.path.toFile().getParentFile();
-            if (dir.mkdirs()) {
-                Logger.debug(this, "Directory created: %[file]s", dir);
+        } catch (final IOException | RuntimeException | Error ex) {
+            try {
+                this.record(name, start);
+            } catch (final IOException failure) {
+                ex.addSuppressed(failure);
             }
-            this.started();
-            Files.write(
-                this.path,
-                String.format(
-                    "\"%s\";%d%n", name,
-                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
-                ).getBytes(StandardCharsets.UTF_8),
-                StandardOpenOption.APPEND, StandardOpenOption.CREATE
-            );
+            throw ex;
         }
+        this.record(name, start);
+    }
+
+    /**
+     * Appends a row with the time the action has taken.
+     *
+     * @param name Name of the action
+     * @param start Nano time when the action started
+     * @throws IOException If the row can't be written
+     */
+    private void record(final String name, final long start) throws IOException {
+        final File dir = this.path.toFile().getParentFile();
+        if (dir.mkdirs()) {
+            Logger.debug(this, "Directory created: %[file]s", dir);
+        }
+        this.started();
+        Files.write(
+            this.path,
+            String.format(
+                "\"%s\";%d%n", name,
+                TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
+            ).getBytes(StandardCharsets.UTF_8),
+            StandardOpenOption.APPEND, StandardOpenOption.CREATE
+        );
     }
 
     // The rows of an earlier build are of no use here and "target" survives

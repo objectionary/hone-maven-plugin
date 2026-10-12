@@ -112,9 +112,10 @@ fi
 
 # In order to save them "as is", just in case. The previous copy goes first,
 # because "cp -R" puts the source inside a directory that already exists, and
-# a second run without "clean" would otherwise nest one backup in the other:
+# a second run without "clean" would otherwise nest one backup in the other.
+# The "-L" copies the classes, not the link, when "classes" is a symlink:
 rm -rf "${TARGET}/classes-before-hone"
-cp -R "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
+cp -RL "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
 echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -type f -print | wc -l | xargs) files)"
 
 if [ -z "${PHINO_VERSION}" ]; then
@@ -209,7 +210,7 @@ if streams_selected; then
       outdated+=("${classfile}")
       echo "The streams rules require Java 16 bytecode (class version 60), but '${classfile}' is version ${class_version}, so it stays out of the pipeline"
     fi
-  done < <(find "${TARGET}/${CLASSES}" -type f -name '*.class' -print)
+  done < <(find -H "${TARGET}/${CLASSES}" -type f -name '*.class' -print)
   if [ "${#outdated[@]}" -gt 0 ]; then
     EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${outdated[*]}")"
     echo "Excluded ${#outdated[@]} class(es) older than Java 16 from the disassembly, leaving the rest to the streams rules"

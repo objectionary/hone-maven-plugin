@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that a fused `.map(F)` with a null mapper still fails at the
+# call (issue #1219). `Stream.map(null)` throws right away; after
+# `215-recognize-ref-map` the mapper was only added to the state list, so the
+# exception moved to the first element, and with `limit(0)` never came: the
+# pipeline returned `[]`. The rule now null-checks the loaded mapper where the
+# state list is built, which is where the `map` call was.
+#
+# invokedynamic: before = 0 (the mapper is a static field, no lambda);
+# after = 1, the BiConsumer of the fused mapMulti. The runtime line proves the
+# exception is still thrown.
+java: |
+  package fusion;
+  import java.util.*;
+  import java.util.function.*;
+  import java.util.stream.*;
+  public class CRefNull {
+    static Function<Integer, Integer> F = null;
+    static List<Integer> run() {
+      return Stream.of(1, 2).map(F).limit(0).collect(Collectors.toList());
+    }
+    public static void main(String[] args) {
+      String res;
+      try {
+        res = String.valueOf(run());
+      } catch (NullPointerException ex) {
+        res = "npe";
+      }
+      System.out.printf("The result is %s%n", res);
+    }
+  }
+before:
+  invokedynamic: 0
+after:
+  invokedynamic: 1
+log:
+  - "BUILD SUCCESS"
+  - "The result is npe"

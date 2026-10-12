@@ -7,12 +7,14 @@ package org.eolang.hone;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -53,6 +55,30 @@ final class OptimizeMojoSymlinkTest {
             "an empty directory has no classes in it",
             OptimizeMojoSymlinkTest.withoutClasses(target),
             Matchers.is(true)
+        );
+    }
+
+    @Test
+    void refusesClassesLinkedOutsideTheTargetOnDocker(@Mktmp final Path home) throws Exception {
+        final Path target = Files.createDirectories(home.resolve("target"));
+        Files.createSymbolicLink(
+            target.resolve("classes"), Files.createDirectories(home.resolve("build/classes"))
+        );
+        final OptimizeMojo mojo = new OptimizeMojo();
+        final Field dir = AbstractMojo.class.getDeclaredField("target");
+        dir.setAccessible(true);
+        dir.set(mojo, target.toFile());
+        final Field classes = OptimizeMojo.class.getDeclaredField("classes");
+        classes.setAccessible(true);
+        classes.set(mojo, "classes");
+        final Method method = OptimizeMojo.class.getDeclaredMethod("withDocker");
+        method.setAccessible(true);
+        MatcherAssert.assertThat(
+            "classes linked outside of target can't be seen in the container, so the goal must say so (see #1188)",
+            Assertions.assertThrows(
+                InvocationTargetException.class, () -> method.invoke(mojo)
+            ).getCause(),
+            Matchers.instanceOf(IllegalStateException.class)
         );
     }
 

@@ -348,6 +348,9 @@ function rewrite_with_timeout {
     # The killed worker had no chance to remove the temp file of its
     # atomic_write, so it is swept here (see #1038).
     rm -f "${phi}".tmp.* "${pho}".tmp.* "${xo}".tmp.*
+    # The stamp of an earlier run would let a later run take the copied
+    # input for a finished rewrite and skip it (see #1210).
+    rm -f "${xo}.stamp"
     cp "${xi}" "${xo}"
     # The worker was killed before it wrote its row, so the file gets one here,
     # with nothing changed, since the input is what ships (see #1211).

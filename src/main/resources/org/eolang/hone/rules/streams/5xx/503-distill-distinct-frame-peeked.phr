@@ -139,7 +139,7 @@ when:
         - eq: [𝜏-add-op, 'invokevirtual']
         - eq: [𝜏-add-op, 'invokeinterface']
     - matches:
-        - '^\(L[^;]+;\)V$'
+        - '^\((L[^;]+;|\[[^)]+)\)V$'
         - 𝑒-head-signature
     - not:
         matches:
@@ -150,6 +150,7 @@ where:
     function: sed
     args:
       - 𝑒-head-signature
+      - '"s/^\\((\\[[^)]+)\\)V$/$1/g"'
       - '"s/^\\(L(.+);\\)V$/$1/g"'
   - meta: 𝑒-frame-input
     function: sed

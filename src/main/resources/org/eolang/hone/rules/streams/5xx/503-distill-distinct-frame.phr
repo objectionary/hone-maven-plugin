@@ -147,13 +147,14 @@ when:
         - eq: [𝜏-add-op, 'invokevirtual']
         - eq: [𝜏-add-op, 'invokeinterface']
     - matches:
-        - '^\(.*\)L[^;]+;$'
+        - '^\(.*\)(L[^;]+;|\[.+)$'
         - 𝑒-head-signature
 where:
   - meta: 𝑒-frame-item
     function: sed
     args:
       - 𝑒-head-signature
+      - '"s/^\\(.*\\)(\\[.+)$/$1/g"'
       - '"s/^\\(.*\\)L(.+);$/$1/g"'
   - meta: 𝑒-frame-input
     function: sed

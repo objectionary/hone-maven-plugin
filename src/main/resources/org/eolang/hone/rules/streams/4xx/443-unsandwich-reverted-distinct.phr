@@ -41,6 +41,13 @@
 # The box pattern binds `minted` to an expression rather than pinning it, so
 # this rule takes a box whoever minted it — which is what it did before every
 # box carried the binding (#1016).
+#
+# The unbox is a different matter: it must be the plain unwrapping one `214`
+# mints, a `handle 5` call of `intValue`, `longValue` or `doubleValue` on the
+# wrapper of this very stream class. `205` lifts a user's `mapToInt` lambda into
+# the same `Φ.hone.unbox` shape, and collapsing that one deletes the user's
+# mapper, so `boxed().distinct().mapToInt(x -> x * 10)` summed to 6, not 60
+# (#1223). The `when` below checks the owner and the method of the target.
 name: unsandwich-reverted-distinct
 pattern: |
   ⟦
@@ -64,7 +71,13 @@ pattern: |
       class ↦ 𝑒-unbox-class,
       bridge-signature ↦ 𝑒-unbox-bridge,
       static ↦ "true",
-      target ↦ 𝑒-unbox-target
+      target ↦ ⟦
+        handle ↦ 5,
+        class ↦ 𝑒-unbox-owner,
+        method ↦ 𝑒-unbox-method,
+        signature ↦ 𝑒-unbox-signature,
+        is-interface ↦ Φ.false
+      ⟧
     ⟧,
     𝐵-after
   ⟧
@@ -106,6 +119,15 @@ where:
     function: random-tau
 when:
   or:
-    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
-    - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
-    - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-unbox-owner, '"java/lang/Integer"']
+        - eq: [𝑒-unbox-method, '"intValue"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-unbox-owner, '"java/lang/Long"']
+        - eq: [𝑒-unbox-method, '"longValue"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+        - eq: [𝑒-unbox-owner, '"java/lang/Double"']
+        - eq: [𝑒-unbox-method, '"doubleValue"']

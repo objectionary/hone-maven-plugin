@@ -38,7 +38,13 @@ pattern: |
       class ↦ 𝑒-unbox-class,
       bridge-signature ↦ 𝑒-unbox-bridge,
       static ↦ "true",
-      target ↦ 𝑒-unbox-target
+      target ↦ ⟦
+        handle ↦ 5,
+        class ↦ 𝑒-unbox-owner,
+        method ↦ 𝑒-unbox-method,
+        signature ↦ 𝑒-unbox-signature,
+        is-interface ↦ Φ.false
+      ⟧
     ⟧,
     𝐵-after
   ⟧
@@ -83,6 +89,15 @@ where:
     function: random-tau
 when:
   or:
-    - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
-    - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
-    - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
+        - eq: [𝑒-unbox-owner, '"java/lang/Integer"']
+        - eq: [𝑒-unbox-method, '"intValue"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
+        - eq: [𝑒-unbox-owner, '"java/lang/Long"']
+        - eq: [𝑒-unbox-method, '"longValue"']
+    - and:
+        - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+        - eq: [𝑒-unbox-owner, '"java/lang/Double"']
+        - eq: [𝑒-unbox-method, '"doubleValue"']

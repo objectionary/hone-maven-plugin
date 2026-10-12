@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# End-to-end proof that an array item is cast back from the erased Object of a
+# stateful distill (issue #1229). After `skip(1)` the item is an `Object` in the
+# fused body, and the next call takes `[I`; `505` only knew `L...;` arguments,
+# so no `checkcast` was inserted and the class failed verification with
+# "Argument 1: expected [I, but found Ljava/lang/Object;". A `checkcast [I` is
+# now inserted, as for any reference type.
+#
+# invokedynamic: before = the map + the Integer::sum reference = 2;
+# after = the fused mapMulti + the untouched reduce reference = 2.
+java: |
+  package fusion;
+  import java.util.stream.*;
+  public class CArraySkip {
+    static int run() {
+      return Stream.of(new int[] {1}, new int[] {2}, new int[] {3})
+        .skip(1)
+        .map(a -> a[0] * 10)
+        .reduce(0, Integer::sum);
+    }
+    public static void main(String[] args) {
+      System.out.printf("The result is %d%n", run());
+    }
+  }
+before:
+  invokedynamic: 2
+after:
+  invokedynamic: 2
+log:
+  - "BUILD SUCCESS"
+  - "The result is 50"

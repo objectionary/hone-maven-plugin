@@ -100,7 +100,7 @@ result: |
 when:
   and:
     - matches:
-        - '^\((L[^;]+;|[BCDFIJSZ])\)Z$'
+        - '^\((L[^;]+;|[BCDFIJSZ]|\[[^)]+)\)Z$'
         - 𝑒-predicate-signature
 where:
   - meta: 𝑒-frame-item
@@ -116,3 +116,4 @@ where:
       - '"s/^\\(S\\)Z$/short/g"'
       - '"s/^\\(Z\\)Z$/boolean/g"'
       - '"s/^\\(L(.+);\\)Z$/$1/g"'
+      - '"s/^\\((\\[.+)\\)Z$/$1/g"'

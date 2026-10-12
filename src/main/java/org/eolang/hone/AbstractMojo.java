@@ -133,6 +133,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         } else if (this.skipOnWindows && AbstractMojo.windows()) {
             Logger.info(this, "Execution skipped due to hone.skipOnWindows=true");
         } else {
+            this.target = AbstractMojo.targetOrDefault(this.target);
             this.timings = new Timings(this.target.toPath().resolve("hone-timings.csv"));
             try {
                 this.exec();
@@ -192,6 +193,22 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
      * @throws IOException If execution fails
      */
     abstract void exec() throws IOException;
+
+    /**
+     * Add a target directory for invocations that do not have a Maven project.
+     *
+     * @param configured The target directory from Maven
+     * @return The configured target or a local {@code target} directory
+     */
+    static File targetOrDefault(final File configured) {
+        final File target;
+        if (configured == null) {
+            target = new File("target");
+        } else {
+            target = configured;
+        }
+        return target;
+    }
 
     /*
      * There is nothing to run with: no Docker, and no local phino either.

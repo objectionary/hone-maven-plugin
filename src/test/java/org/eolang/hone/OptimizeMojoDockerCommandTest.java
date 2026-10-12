@@ -67,9 +67,24 @@ final class OptimizeMojoDockerCommandTest {
         );
     }
 
-    @SuppressWarnings("unchecked")
-    private static Collection<String> command(final Path home) throws Exception {
+    @Test
+    void takesTheDefaultJeoVersionWhenItIsBlank(@Mktmp final Path home) throws Exception {
         final OptimizeMojo mojo = new OptimizeMojo();
+        OptimizeMojoDockerCommandTest.set(mojo, OptimizeMojo.class, "jeoVersion", "");
+        MatcherAssert.assertThat(
+            "a blank jeo version must fall back to the default, not reach the container empty (see #1191)",
+            OptimizeMojoDockerCommandTest.command(home, mojo),
+            Matchers.not(Matchers.hasItem("JEO_VERSION="))
+        );
+    }
+
+    private static Collection<String> command(final Path home) throws Exception {
+        return OptimizeMojoDockerCommandTest.command(home, new OptimizeMojo());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Collection<String> command(final Path home, final OptimizeMojo mojo)
+        throws Exception {
         OptimizeMojoDockerCommandTest.set(
             mojo, AbstractMojo.class, "target",
             Files.createDirectories(home.resolve("target")).toFile()

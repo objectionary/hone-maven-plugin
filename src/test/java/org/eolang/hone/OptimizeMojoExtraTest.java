@@ -92,6 +92,30 @@ final class OptimizeMojoExtraTest {
     }
 
     @Test
+    void takesRulesFromASymlinkedExtraDirectory(@Mktmp final Path dir) throws Exception {
+        final Path real = Files.createDirectories(dir.resolve("real"));
+        Files.write(real.resolve("one.yml"), "name: one".getBytes(StandardCharsets.UTF_8));
+        Files.createSymbolicLink(dir.resolve("rules-link"), real);
+        final OptimizeMojo mojo = new OptimizeMojo();
+        OptimizeMojoExtraTest.set(mojo, AbstractMojo.class, "basedir", dir.toFile());
+        OptimizeMojoExtraTest.set(
+            mojo, OptimizeMojo.class, "extra", Collections.singletonList("rules-link")
+        );
+        OptimizeMojoExtraTest.set(mojo, OptimizeMojo.class, "extraExtensions", "yml,yaml,phr");
+        final Path extdir = Files.createDirectories(dir.resolve("target/hone-extra"));
+        final Method copy = OptimizeMojo.class.getDeclaredMethod("copyExtras", Path.class);
+        copy.setAccessible(true);
+        copy.invoke(mojo, extdir);
+        try (Stream<Path> files = Files.list(extdir)) {
+            MatcherAssert.assertThat(
+                "rules inside a symlinked directory must be copied",
+                files.map(p -> p.getFileName().toString()).collect(Collectors.toList()),
+                Matchers.contains("0000-one.yml")
+            );
+        }
+    }
+
+    @Test
     void takesRulesFromASubdirectoryOfAnExtraDirectory(@Mktmp final Path dir) throws Exception {
         final Path rules = Files.createDirectories(dir.resolve("src/rules/deeper"));
         Files.write(

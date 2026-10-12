@@ -99,7 +99,7 @@ where:
       - '"s/^J$/4/g"'
       - '"s/^D$/4/g"'
       - '"s/^I$/3/g"'
-      - '"s/^L.+;$/3/g"'
+      - '"s/^(L.+;|\\[.+)$/3/g"'
   - meta: 𝑒-counter-slot
     function: number
     args: [𝑒-counter-slot-str]

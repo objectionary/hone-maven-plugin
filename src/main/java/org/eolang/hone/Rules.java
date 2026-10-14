@@ -120,19 +120,6 @@ final class Rules {
     }
 
     /**
-     * Names of all available rules, as the <code>hone.rules</code> pattern accepts them.
-     *
-     * @return Names without the file extension
-     */
-    private static List<String> names() {
-        final List<String> names = new ArrayList<>(0);
-        for (final String file : Rules.discover()) {
-            names.add(Rules.EXTENSION.matcher(file).replaceFirst(""));
-        }
-        return names;
-    }
-
-    /**
      * Copy all matching rule files to the specified directory.
      *
      * @param dir Destination directory where rule files will be copied
@@ -158,6 +145,14 @@ final class Rules {
                 )
             ).value();
         }
+    }
+
+    private static List<String> names() {
+        final List<String> names = new ArrayList<>(0);
+        for (final String file : Rules.discover()) {
+            names.add(Rules.EXTENSION.matcher(file).replaceFirst(""));
+        }
+        return names;
     }
 
     private boolean matches(final CharSequence name) {

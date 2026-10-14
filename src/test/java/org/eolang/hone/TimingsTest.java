@@ -82,6 +82,7 @@ final class TimingsTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void keepsTheFailureOfTheActionWhenTheTimingFileCannotBeWritten() throws Exception {
         try (Mktemp temp = new Mktemp()) {
             final Path blocker = temp.path().resolve("blocker");

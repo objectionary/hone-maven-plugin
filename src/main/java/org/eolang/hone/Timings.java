@@ -63,10 +63,13 @@ final class Timings {
      * @param action The action to execute and measure
      * @throws IOException If recording the timing fails
      */
+    // Recording must preserve checked exceptions, runtime failures, and errors alike.
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     void through(final String name, final Timings.Action action) throws IOException {
         final long start = System.nanoTime();
         try {
             action.exec();
+            // @checkstyle IllegalCatchCheck (1 line)
         } catch (final IOException | RuntimeException | Error ex) {
             try {
                 this.record(name, start);
@@ -78,13 +81,6 @@ final class Timings {
         this.record(name, start);
     }
 
-    /**
-     * Appends a row with the time the action has taken.
-     *
-     * @param name Name of the action
-     * @param start Nano time when the action started
-     * @throws IOException If the row can't be written
-     */
     private void record(final String name, final long start) throws IOException {
         final File dir = this.path.toFile().getParentFile();
         if (dir.mkdirs()) {

@@ -835,19 +835,19 @@ so `0/27` means "no stream call disappeared", not "nothing was touched".
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 737 | 64255 | 429 | 307s | 0/32 | 0s | 308s |
-| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 156 | 52534 | 400 | 32s | 0/27 | 0s | 32s |
-| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 679 | 68282 | 388 | 77s | 0/24 | 0s | 78s |
-| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 320 | 79083 | 619 | 91s | 0/19 | 0s | 92s |
-| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12853 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
-| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 353 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
-| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 529 | 73500 | 614 | 25s | 0/12 | 0s | 26s |
-| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 217 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
-| [commons-csv](https://github.com/apache/commons-csv/commit/292d0b99f6ebd443fabd8f692b0b9e5a92dc2274) | 306 | 11110 | 20 | 11s | 0/3 | 0s | 10s |
-| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2028 | 104400 | 433 | 870s | 0/34 | 0s | 694s |
+| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 744 | 64255 | 429 | 299s | 0/32 | 0s | 298s |
+| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 155 | 52534 | 400 | 32s | 0/27 | 0s | 32s |
+| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 681 | 68282 | 388 | 79s | 0/24 | 0s | 77s |
+| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 320 | 79083 | 619 | 100s | 0/19 | 0s | 97s |
+| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12844 | 71445 | 486 | 45s | 0/14 | 176s | 0s ⚠️ |
+| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 358 | 31282 | 312 | 15s | 0/12 | 115s | 0s ⚠️ |
+| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 530 | 73500 | 614 | 25s | 0/12 | 0s | 26s |
+| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 219 | 39496 | 541 | 35s | 0/48 | 199s | 0s ⚠️ |
+| [commons-csv](https://github.com/apache/commons-csv/commit/292d0b99f6ebd443fabd8f692b0b9e5a92dc2274) | 307 | 11110 | 20 | 11s | 0/3 | 0s | 11s |
+| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2036 | 104400 | 433 | 748s | 0/34 | 1s | 698s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-09-25 at 08:17,
+on 2026-10-16 at 10:34,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -871,7 +871,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27192081741
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/36103320077
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/38876454906
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

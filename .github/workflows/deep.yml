@@ -11,6 +11,7 @@ name: deep
 concurrency:
   group: deep-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   start-instance:
     runs-on: ubuntu-24.04

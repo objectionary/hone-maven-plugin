@@ -66,6 +66,37 @@ final class OptimizeMojoExtraTest {
     }
 
     @Test
+    void warnsWhenExtraDirectoryGivesNoRules(@Mktmp final Path dir) throws Exception {
+        final Farea farea = new Farea(dir);
+        farea.together(
+            f -> {
+                f.files().file("src/main/java/Foo.java").write(
+                    "class Foo { }".getBytes(StandardCharsets.UTF_8)
+                );
+                f.files().file("src/rules/notes.txt").write(
+                    "not a rule".getBytes(StandardCharsets.UTF_8)
+                );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("alwaysWithDocker", true)
+                    .set("image", "hone-image-that-does-not-exist:0.0.0")
+                    .set("extra", new String[] {"src/rules"});
+                f.execQuiet("process-classes");
+            }
+        );
+        MatcherAssert.assertThat(
+            "an extra directory without rules must be reported, not skipped silently",
+            farea.log().content(),
+            Matchers.containsString("No extra rules")
+        );
+    }
+
+    @Test
     void resolvesRelativeExtraAgainstBasedirNotCwd(@Mktmp final Path dir) throws Exception {
         final Path module = Files.createDirectories(dir.resolve("module"));
         Files.write(
@@ -111,6 +142,32 @@ final class OptimizeMojoExtraTest {
                 "rules inside a symlinked directory must be copied",
                 files.map(p -> p.getFileName().toString()).collect(Collectors.toList()),
                 Matchers.contains("0000-one.yml")
+            );
+        }
+    }
+
+    @Test
+    void takesRulesFromASymlinkedSubdirectoryOfExtras(@Mktmp final Path dir) throws Exception {
+        final Path shared = Files.createDirectories(dir.resolve("shared"));
+        Files.write(shared.resolve("two.yml"), "name: two".getBytes(StandardCharsets.UTF_8));
+        Files.createSymbolicLink(
+            Files.createDirectories(dir.resolve("src/rules")).resolve("linked"), shared
+        );
+        final OptimizeMojo mojo = new OptimizeMojo();
+        OptimizeMojoExtraTest.set(mojo, AbstractMojo.class, "basedir", dir.toFile());
+        OptimizeMojoExtraTest.set(
+            mojo, OptimizeMojo.class, "extra", Collections.singletonList("src/rules")
+        );
+        OptimizeMojoExtraTest.set(mojo, OptimizeMojo.class, "extraExtensions", "yml");
+        final Path extdir = Files.createDirectories(dir.resolve("target/hone-extra"));
+        final Method copy = OptimizeMojo.class.getDeclaredMethod("copyExtras", Path.class);
+        copy.setAccessible(true);
+        copy.invoke(mojo, extdir);
+        try (Stream<Path> files = Files.list(extdir)) {
+            MatcherAssert.assertThat(
+                "rules behind a symlinked subdirectory of an extra directory must be copied",
+                files.map(p -> p.getFileName().toString()).collect(Collectors.toList()),
+                Matchers.contains("0000-two.yml")
             );
         }
     }

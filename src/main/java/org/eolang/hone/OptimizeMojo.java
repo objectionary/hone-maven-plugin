@@ -10,6 +10,7 @@ import com.sun.jna.Native;
 import com.yegor256.Jaxec;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -697,29 +698,41 @@ public final class OptimizeMojo extends AbstractMojo {
             for (final String ext : this.extra) {
                 final Path src = this.basedir.toPath().resolve(ext);
                 if (src.toFile().isDirectory()) {
-                    Logger.info(
-                        this,
-                        "Scanning %[file]s for extra rules (%s)...",
-                        src, this.extraExtensions
-                    );
-                    final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
-                    try (Stream<Path> files = Files.walk(src.toRealPath())) {
-                        final List<Path> yamls = files.filter(Files::isRegularFile).filter(
-                            f -> Arrays.stream(exts).anyMatch(
-                                extn -> f.getFileName().toString().endsWith(
-                                    String.format(".%s", extn.trim())
-                                )
-                            )
-                        ).sorted().collect(Collectors.toList());
-                        for (final Path yaml : yamls) {
-                            this.saveExtra(yaml, extdir);
-                        }
+                    for (final Path yaml : this.extrasIn(src)) {
+                        this.saveExtra(yaml, extdir);
                     }
                 } else {
                     this.saveExtra(src, extdir);
                 }
             }
         }
+    }
+
+    private List<Path> extrasIn(final Path src) throws IOException {
+        Logger.info(
+            this,
+            "Scanning %[file]s for extra rules (%s)...",
+            src, this.extraExtensions
+        );
+        final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
+        final List<Path> yamls;
+        try (Stream<Path> files = Files.walk(src.toRealPath(), FileVisitOption.FOLLOW_LINKS)) {
+            yamls = files.filter(Files::isRegularFile).filter(
+                f -> Arrays.stream(exts).anyMatch(
+                    extn -> f.getFileName().toString().endsWith(
+                        String.format(".%s", extn.trim())
+                    )
+                )
+            ).sorted().collect(Collectors.toList());
+        }
+        if (yamls.isEmpty()) {
+            Logger.warn(
+                this,
+                "No extra rules (%s) found in %[file]s",
+                this.extraExtensions, src
+            );
+        }
+        return yamls;
     }
 
     private static String whoami() {

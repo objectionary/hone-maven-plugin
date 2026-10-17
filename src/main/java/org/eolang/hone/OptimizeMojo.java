@@ -10,6 +10,7 @@ import com.sun.jna.Native;
 import com.yegor256.Jaxec;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -703,7 +704,11 @@ public final class OptimizeMojo extends AbstractMojo {
                         src, this.extraExtensions
                     );
                     final String[] exts = OptimizeMojo.COMMA.split(this.extraExtensions);
-                    try (Stream<Path> files = Files.walk(src.toRealPath())) {
+                    try (
+                        Stream<Path> files = Files.walk(
+                            src.toRealPath(), FileVisitOption.FOLLOW_LINKS
+                        )
+                    ) {
                         final List<Path> yamls = files.filter(Files::isRegularFile).filter(
                             f -> Arrays.stream(exts).anyMatch(
                                 extn -> f.getFileName().toString().endsWith(

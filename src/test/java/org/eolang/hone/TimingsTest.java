@@ -4,12 +4,14 @@
  */
 package org.eolang.hone;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -75,6 +77,35 @@ final class TimingsTest {
                     Matchers.containsString("\"foo\";"),
                     Matchers.containsString(String.format("%n\"bar\";"))
                 )
+            );
+        }
+    }
+
+    @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void keepsTheFailureOfTheActionWhenTheTimingFileCannotBeWritten() throws Exception {
+        try (Mktemp temp = new Mktemp()) {
+            final Path blocker = temp.path().resolve("blocker");
+            Files.write(blocker, "not a directory".getBytes(StandardCharsets.UTF_8));
+            final IOException thrown = Assertions.assertThrows(
+                IOException.class,
+                () -> new Timings(blocker.resolve("timings.csv")).through(
+                    "foo",
+                    () -> {
+                        throw new IOException("action failed");
+                    }
+                ),
+                "The action must fail"
+            );
+            MatcherAssert.assertThat(
+                "The failure of the action must stay the primary one",
+                thrown.getMessage(),
+                Matchers.equalTo("action failed")
+            );
+            MatcherAssert.assertThat(
+                "The failure of the timing file must be attached to it",
+                thrown.getSuppressed().length,
+                Matchers.greaterThan(0)
             );
         }
     }

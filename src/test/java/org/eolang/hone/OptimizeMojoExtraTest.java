@@ -66,6 +66,37 @@ final class OptimizeMojoExtraTest {
     }
 
     @Test
+    void warnsWhenExtraDirectoryGivesNoRules(@Mktmp final Path dir) throws Exception {
+        final Farea farea = new Farea(dir);
+        farea.together(
+            f -> {
+                f.files().file("src/main/java/Foo.java").write(
+                    "class Foo { }".getBytes(StandardCharsets.UTF_8)
+                );
+                f.files().file("src/rules/notes.txt").write(
+                    "not a rule".getBytes(StandardCharsets.UTF_8)
+                );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("alwaysWithDocker", true)
+                    .set("image", "hone-image-that-does-not-exist:0.0.0")
+                    .set("extra", new String[] {"src/rules"});
+                f.execQuiet("process-classes");
+            }
+        );
+        MatcherAssert.assertThat(
+            "an extra directory without rules must be reported, not skipped silently",
+            farea.log().content(),
+            Matchers.containsString("No extra rules")
+        );
+    }
+
+    @Test
     void resolvesRelativeExtraAgainstBasedirNotCwd(@Mktmp final Path dir) throws Exception {
         final Path module = Files.createDirectories(dir.resolve("module"));
         Files.write(

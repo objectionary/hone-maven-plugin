@@ -83,13 +83,6 @@ target/ directory of a Maven project"
   exit 1
 fi
 
-if [ -z "${EO_CACHE}" ]; then
-  echo "The \$EO_CACHE environment variable is not set; make sure you do \
-'docker run' with the '-e EO_CACHE=...' parameter, which points to the \
-directory with EO cache files"
-  exit 1
-fi
-
 if [ ! -e "${TARGET}" ]; then
   echo "There is no '${TARGET}' directory, which most probably means \
 that Docker is misconfigured; the directory must exist even if there are no .class files"
@@ -142,7 +135,6 @@ declare -a opts=(
   '--batch-mode'
   '--no-transfer-progress'
   '-Dfile.encoding=UTF-8'
-  "-Deo.cache=${EO_CACHE}"
 )
 if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
   opts+=("--settings=${WORKDIR}/settings.xml")

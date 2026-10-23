@@ -10,6 +10,7 @@ name: self
 concurrency:
   group: self-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   self:
     timeout-minutes: 15

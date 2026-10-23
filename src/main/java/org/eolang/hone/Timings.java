@@ -63,25 +63,38 @@ final class Timings {
      * @param action The action to execute and measure
      * @throws IOException If recording the timing fails
      */
+    // Recording must preserve checked exceptions, runtime failures, and errors alike.
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     void through(final String name, final Timings.Action action) throws IOException {
         final long start = System.nanoTime();
         try {
             action.exec();
-        } finally {
-            final File dir = this.path.toFile().getParentFile();
-            if (dir.mkdirs()) {
-                Logger.debug(this, "Directory created: %[file]s", dir);
+            // @checkstyle IllegalCatchCheck (1 line)
+        } catch (final IOException | RuntimeException | Error ex) {
+            try {
+                this.record(name, start);
+            } catch (final IOException failure) {
+                ex.addSuppressed(failure);
             }
-            this.started();
-            Files.write(
-                this.path,
-                String.format(
-                    "\"%s\";%d%n", name,
-                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
-                ).getBytes(StandardCharsets.UTF_8),
-                StandardOpenOption.APPEND, StandardOpenOption.CREATE
-            );
+            throw ex;
         }
+        this.record(name, start);
+    }
+
+    private void record(final String name, final long start) throws IOException {
+        final File dir = this.path.toFile().getParentFile();
+        if (dir.mkdirs()) {
+            Logger.debug(this, "Directory created: %[file]s", dir);
+        }
+        this.started();
+        Files.write(
+            this.path,
+            String.format(
+                "\"%s\";%d%n", name,
+                TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
+            ).getBytes(StandardCharsets.UTF_8),
+            StandardOpenOption.APPEND, StandardOpenOption.CREATE
+        );
     }
 
     // The rows of an earlier build are of no use here and "target" survives

@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Build;
@@ -42,14 +41,12 @@ final class SummaryMojoTest {
         );
         final SummaryMojo mojo = new SummaryMojo();
         mojo.target = Files.createDirectories(temp.resolve("target")).toFile();
-        final MavenSession session = new MavenSession(
+        mojo.session = new MavenSession(
             null,
-            (org.eclipse.aether.RepositorySystemSession) null,
             new DefaultMavenExecutionRequest(),
-            (MavenExecutionResult) null
+            (MavenExecutionResult) null,
+            Arrays.asList(client, server)
         );
-        session.setProjects(Arrays.asList(client, server));
-        mojo.session = session;
         mojo.exec();
         MatcherAssert.assertThat(
             "the summary goal must write the report of all projects",

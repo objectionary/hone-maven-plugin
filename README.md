@@ -125,7 +125,8 @@ Phino itself then walks through that list,
 The "small-steps" mode (`<smallSteps>true</smallSteps>`)
   is meant for debugging the rules:
   it invokes `phino rewrite` separately for each rule
-  and saves the intermediate result as `Foo.phi.01`, `Foo.phi.02`, and so on,
+  and saves the intermediate result as `Foo.phi.001`, `Foo.phi.002`, and so on,
+  with the suffix padded to the number of digits in the rule count,
   so that a `diff` between two adjacent files
   reveals exactly which rule changed what.
 

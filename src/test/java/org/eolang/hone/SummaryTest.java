@@ -35,6 +35,8 @@ final class SummaryTest {
                 new Summary(SummaryTest.modules(SummaryTest.modular(temp)), temp).collect()
             ).asString(),
             Matchers.allOf(
+                Matchers.containsString("1/2,"),
+                Matchers.containsString("2/2,"),
                 Matchers.containsString(
                     "/phi/org/eolang/hone/client/Client.phi,/phi-optimized/org/eolang/hone/client/Client.phi,2,4000"
                 ),

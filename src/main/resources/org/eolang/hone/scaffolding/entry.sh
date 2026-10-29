@@ -13,6 +13,40 @@ print_tree() {
   fi
 }
 
+# Save the classes "as is", just in case. A class that is still the very one
+# hone assembled on the previous run, as "remember_assembled" listed it, keeps
+# the copy saved back then, since a second run without "clean" would otherwise
+# take its own output for the original (see #1206). The previous copy is
+# replaced as a whole, because "cp -R" puts the source inside a directory that
+# already exists and would nest one backup in the other. The "-L" copies the
+# classes, not the link, when "classes" is a symlink:
+save_originals() {
+  local saved="${TARGET}/classes-before-hone"
+  local fresh="${saved}.new"
+  local list="${TARGET}/hone/assembled.txt"
+  rm -rf "${fresh}"
+  cp -RL "${TARGET}/${CLASSES}" "${fresh}"
+  if [ -e "${list}" ] && [ -d "${saved}" ]; then
+    (cd "${fresh}" && find . -type f -exec cksum {} +) \
+      | { grep -xF -f "${list}" || true; } \
+      | cut -d ' ' -f 3- \
+      | while IFS= read -r f; do
+        if [ -e "${saved}/${f}" ]; then
+          cp "${saved}/${f}" "${fresh}/${f}"
+        fi
+      done
+  fi
+  rm -rf "${saved}"
+  mv "${fresh}" "${saved}"
+}
+
+# List the classes hone has just assembled, with their checksums, for the
+# "save_originals" of the next run:
+remember_assembled() {
+  mkdir -p "${TARGET}/hone"
+  (cd "${TARGET}/${CLASSES}" && find -L . -type f -exec cksum {} +) > "${TARGET}/hone/assembled.txt"
+}
+
 RP=""
 if command -v realpath >/dev/null 2>&1 && realpath --version >/dev/null 2>&1 && realpath --version 2>&1 | head -1 | grep -q 'GNU coreutils'; then
   RP="realpath"
@@ -110,12 +144,7 @@ after the 'compile' phase is finished"
   exit 1
 fi
 
-# In order to save them "as is", just in case. The previous copy goes first,
-# because "cp -R" puts the source inside a directory that already exists, and
-# a second run without "clean" would otherwise nest one backup in the other.
-# The "-L" copies the classes, not the link, when "classes" is a symlink:
-rm -rf "${TARGET}/classes-before-hone"
-cp -RL "${TARGET}/${CLASSES}" "${TARGET}/classes-before-hone"
+save_originals
 echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -type f -print | wc -l | xargs) files)"
 
 if [ -z "${PHINO_VERSION}" ]; then
@@ -360,3 +389,4 @@ start=$(now)
   mvn "${assemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:assemble"
 )
 record_timing "jeo-maven-plugin:assemble (default-cli)" "$(elapsed "${start}")"
+remember_assembled

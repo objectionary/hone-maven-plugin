@@ -423,7 +423,11 @@ public final class OptimizeMojo extends AbstractMojo {
      *
      * <p>The long syntax is used, because the short {@code host:container}
      * one of {@code --volume} misparses a colon in the host path, which is
-     * legal on Linux and is a part of every Windows drive (see #868, #1193).</p>
+     * legal on Linux and is a part of every Windows drive (see #868, #1193).
+     * The source is written as a quoted CSV field, because Docker CLI parses
+     * the {@code --mount} value as CSV and an unquoted comma in the path
+     * would split the option value (see #1346); inner quotes are doubled
+     * per CSV escaping.</p>
      *
      * @param host The host path
      * @param container The container path
@@ -431,7 +435,8 @@ public final class OptimizeMojo extends AbstractMojo {
      */
     static String mount(final File host, final String container) {
         return String.format(
-            "type=bind,source=%s,target=%s", host.getAbsolutePath(), container
+            "type=bind,source=\"%s\",target=%s",
+            host.getAbsolutePath().replace("\"", "\"\""), container
         );
     }
 

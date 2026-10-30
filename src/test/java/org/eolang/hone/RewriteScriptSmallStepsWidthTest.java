@@ -13,7 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -34,26 +37,19 @@ final class RewriteScriptSmallStepsWidthTest {
     @Test
     void sortsPastNinetyNineRulesInOrder(@Mktmp final Path home) throws IOException {
         final Path phino = home.resolve("phino");
-        Files.write(
-            phino, String.format("#!/usr/bin/env bash%nprintf '0.0.1\\n'%n")
-                .getBytes(StandardCharsets.UTF_8)
-        );
+        Files.write(phino, fakePhino().getBytes(StandardCharsets.UTF_8));
         if (!phino.toFile().setExecutable(true)) {
             throw new IllegalStateException("Can't make the fake phino executable");
         }
         final StringBuilder rules = new StringBuilder();
-        for (int r = 1; r <= 152; ++r) {
-            rules.append(String.format("rules/ssw%03d.phr ", r));
+        for (int rule = 1; rule <= 152; ++rule) {
+            rules.append(String.format("rules/ssw%03d.phr ", rule));
         }
         final Path source = Files.createDirectories(home.resolve("source"));
         Files.write(
             source.resolve("Foo.xmir"), "<xmir/>".getBytes(StandardCharsets.UTF_8)
         );
-        new Jaxec(
-            "bash",
-            Paths.get("src/main/resources/org/eolang/hone/scaffolding/rewrite.sh")
-                .toAbsolutePath().toString()
-        )
+        new Jaxec("bash", rewriteScript())
             .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
             .withEnv("TARGET", home.resolve("target").toString())
             .withEnv("HONE_XMIR_IN", source.toString())
@@ -72,36 +68,46 @@ final class RewriteScriptSmallStepsWidthTest {
             .withEnv("HONE_DEBUG", "false")
             .withEnv("HONE_VERSION", "0.1.0")
             .exec();
-        final StringBuilder expected = new StringBuilder();
-        for (int r = 1; r <= 152; ++r) {
+        final StringBuilder expected = new StringBuilder(152);
+        for (int suffix = 1; suffix <= 152; ++suffix) {
             if (expected.length() > 0) {
                 expected.append(' ');
             }
-            expected.append(String.format("%03d", r));
+            expected.append(String.format("%03d", suffix));
         }
         MatcherAssert.assertThat(
-            "rewrite.sh must size the small-steps suffix width to the rule count itself: "
-                + "with 152 rules the intermediates it creates must sort 001..152, "
-                + "so .007 stays before .099 and .100 right after it (see #1078, #1201)",
+            String.format(
+                "%s %s %s",
+                "rewrite.sh must size the small-steps suffix width to the rule count itself:",
+                "with 152 rules the intermediates it creates must sort 001..152,",
+                "so .007 stays before .099 and .100 right after it (see #1078, #1201)"
+            ),
             RewriteScriptSmallStepsWidthTest.suffixes(home.resolve("optimized")),
             Matchers.equalTo(expected.toString())
         );
     }
 
+    private static String rewriteScript() {
+        return Paths.get(
+            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
+        ).toAbsolutePath().toString();
+    }
+
+    private static String fakePhino() {
+        return String.format("#!/usr/bin/env bash%nprintf '0.0.1\\n'%n");
+    }
+
     private static String suffixes(final Path optimized) throws IOException {
-        final List<String> names = new ArrayList<>();
-        try (
-            java.util.stream.Stream<Path> files = Files.list(optimized)
-        ) {
-            files.map(
-                p -> p.getFileName().toString()
-            ).filter(
-                n -> n.matches(".*\\.phi\\.\\d{3}")
-            ).map(
-                n -> n.substring(n.length() - 3)
-            ).forEach(names::add);
+        final List<String> names = new ArrayList<>(152);
+        try (Stream<Path> files = Files.list(optimized)) {
+            names.addAll(
+                files.map(peek -> peek.getFileName().toString())
+                    .filter(name -> name.matches(".*\\.phi\\.\\d{3}"))
+                    .map(name -> name.substring(name.length() - 3))
+                    .collect(Collectors.toList())
+            );
         }
-        java.util.Collections.sort(names);
+        Collections.sort(names);
         return String.join(" ", names);
     }
 }

@@ -165,10 +165,11 @@ to the point where a production has become unreachable.
   bisect whether phino or jeo introduced the corruption.
 - **GNU coreutils** — `entry.sh` and `rewrite.sh` need GNU `realpath` (or
   `grealpath`) and `parallel`. On macOS: `brew install coreutils parallel`.
-- **`hone.debug=true`** — enables `--log-level=debug` in phino. There is no
+- **`hone.debug=true`** — turns on both the phino debug log
+  (`--log-level=debug`) and the `set -x` trace of the scripts. There is no
   `hone.verbose`: the `VERBOSE` the scripts read comes from
-  `Logger.isDebugEnabled`, so `set -x` and the shell expansions appear only
-  under Maven's own `-X`.
+  `Logger.isDebugEnabled`, so Maven's own `-X` turns on the `verbose`
+  messages alone.
 - **`hone.grep-in`** — pre-filter regex on the XMIR text. The default is built
   from the fifteen stream operator names in `OptimizeMojo.DEFAULT_GREP_IN`, so
   a class calling any of them, `distinct` among the rest, is not skipped; set

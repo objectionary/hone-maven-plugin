@@ -66,7 +66,7 @@ final class PhinoTest {
     void stopsTheProbeWhenInterrupted(@TempDir final Path dir) throws Exception {
         final Path pid = dir.resolve("pid");
         final Phino phino = new Phino(
-            PhinoTest.fake(dir, String.format("echo $$ > %s%nexec sleep 30", pid)).toString()
+            PhinoTest.fake(dir, String.format("echo $$ > \"%s\"%nexec sleep 30", pid)).toString()
         );
         final Thread probe = new Thread(() -> phino.available("1.2.3"));
         probe.start();

@@ -7,6 +7,7 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Locale;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -136,10 +137,13 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
         if (this.skip) {
+            this.dropStaleStatistics();
             Logger.info(this, "Execution skipped due to hone.skip=true");
         } else if (this.skipWithoutDocker && this.helpless()) {
+            this.dropStaleStatistics();
             Logger.info(this, "Execution skipped due to hone.skipWithoutDocker=true");
         } else if (this.skipOnWindows && AbstractMojo.windows()) {
+            this.dropStaleStatistics();
             Logger.info(this, "Execution skipped due to hone.skipOnWindows=true");
         } else {
             this.target = AbstractMojo.targetOrDefault(this.target);
@@ -244,5 +248,15 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         return System.getProperty("os.name")
             .toLowerCase(Locale.ENGLISH)
             .startsWith("win");
+    }
+
+    private void dropStaleStatistics() throws MojoExecutionException {
+        try {
+            Files.deleteIfExists(
+                AbstractMojo.targetOrDefault(this.target).toPath().resolve("hone-statistics.csv")
+            );
+        } catch (final IOException ex) {
+            throw new MojoExecutionException(ex);
+        }
     }
 }

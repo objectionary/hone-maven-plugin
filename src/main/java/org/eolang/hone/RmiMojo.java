@@ -38,10 +38,13 @@ public final class RmiMojo extends AbstractMojo {
             );
         } else {
             try {
-                new Docker(this.sudo).exec(
+                this.timings.through(
                     "rmi",
-                    "--no-prune",
-                    this.image
+                    () -> new Docker(this.sudo).exec(
+                        "rmi",
+                        "--no-prune",
+                        this.image
+                    )
                 );
                 Logger.info(this, "Docker image '%s' was removed", this.image);
             } catch (final IOException ex) {

@@ -413,24 +413,6 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     /**
-     * Make sure a numeric parameter is not below its minimum.
-     *
-     * @param name Property name
-     * @param value Its value
-     * @param min Minimal allowed value
-     */
-    private static void requireAtLeast(final String name, final int value, final int min) {
-        if (value < min) {
-            throw new IllegalStateException(
-                String.format(
-                    "The '%s' parameter must be %d or greater, but it is %d",
-                    name, min, value
-                )
-            );
-        }
-    }
-
-    /**
      * Return the user and group IDs of the current user, using the given C library.
      *
      * @param lib The C library to query for the IDs
@@ -480,6 +462,17 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    private static void requireAtLeast(final String name, final int value, final int min) {
+        if (value < min) {
+            throw new IllegalStateException(
+                String.format(
+                    "The '%s' parameter must be %d or greater, but it is %d",
+                    name, min, value
+                )
+            );
+        }
     }
 
     private boolean withoutClasses() {

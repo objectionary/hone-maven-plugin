@@ -30,32 +30,21 @@ final class OptimizeMojoNumericValidationTest {
 
     @Test
     void rejectsTimeoutBelowFive(@Mktmp final Path home) throws Exception {
-        final IllegalStateException error = OptimizeMojoNumericValidationTest.rejects(
-            home, "timeout", 4
-        );
         MatcherAssert.assertThat(
             "the message must name the property and its minimum",
-            error.getMessage(),
+            OptimizeMojoNumericValidationTest.rejects(home, "timeout", 4).getMessage(),
             Matchers.allOf(
                 Matchers.containsString("hone.timeout"),
                 Matchers.containsString("5")
             )
         );
-        MatcherAssert.assertThat(
-            "the classes directory must stay untouched",
-            home.resolve("target").resolve("classes").toFile().exists(),
-            Matchers.is(false)
-        );
     }
 
     @Test
     void rejectsNonPositiveMaxDepth(@Mktmp final Path home) throws Exception {
-        final IllegalStateException error = OptimizeMojoNumericValidationTest.rejects(
-            home, "maxDepth", 0
-        );
         MatcherAssert.assertThat(
             "the message must name the property and its minimum",
-            error.getMessage(),
+            OptimizeMojoNumericValidationTest.rejects(home, "maxDepth", 0).getMessage(),
             Matchers.allOf(
                 Matchers.containsString("hone.max-depth"),
                 Matchers.containsString("1")
@@ -65,12 +54,9 @@ final class OptimizeMojoNumericValidationTest {
 
     @Test
     void rejectsNonPositiveMaxCycles(@Mktmp final Path home) throws Exception {
-        final IllegalStateException error = OptimizeMojoNumericValidationTest.rejects(
-            home, "maxCycles", 0
-        );
         MatcherAssert.assertThat(
             "the message must name the property and its minimum",
-            error.getMessage(),
+            OptimizeMojoNumericValidationTest.rejects(home, "maxCycles", 0).getMessage(),
             Matchers.allOf(
                 Matchers.containsString("hone.max-cycles"),
                 Matchers.containsString("1")
@@ -80,12 +66,9 @@ final class OptimizeMojoNumericValidationTest {
 
     @Test
     void rejectsNegativeKillGrace(@Mktmp final Path home) throws Exception {
-        final IllegalStateException error = OptimizeMojoNumericValidationTest.rejects(
-            home, "killgrace", -1
-        );
         MatcherAssert.assertThat(
             "the message must name the property and its minimum",
-            error.getMessage(),
+            OptimizeMojoNumericValidationTest.rejects(home, "killgrace", -1).getMessage(),
             Matchers.allOf(
                 Matchers.containsString("hone.kill-grace"),
                 Matchers.containsString("0")
@@ -95,12 +78,9 @@ final class OptimizeMojoNumericValidationTest {
 
     @Test
     void rejectsNegativeThreads(@Mktmp final Path home) throws Exception {
-        final IllegalStateException error = OptimizeMojoNumericValidationTest.rejects(
-            home, "threads", -1
-        );
         MatcherAssert.assertThat(
             "the message must name the property and its minimum",
-            error.getMessage(),
+            OptimizeMojoNumericValidationTest.rejects(home, "threads", -1).getMessage(),
             Matchers.allOf(
                 Matchers.containsString("hone.threads"),
                 Matchers.containsString("0")
@@ -132,7 +112,8 @@ final class OptimizeMojoNumericValidationTest {
         );
         MatcherAssert.assertThat(
             "nothing may be created before the configuration is rejected",
-            home.resolve("target").toFile().exists(),
+            home.resolve("target").toFile().exists()
+                || home.resolve("target").resolve("classes").toFile().exists(),
             Matchers.is(false)
         );
         return error;

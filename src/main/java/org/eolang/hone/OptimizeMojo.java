@@ -536,6 +536,8 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--mount", OptimizeMojo.mount(this.target, tdir),
                 "--mount", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
+                "--env",
+                String.format("HOST_TARGET=%s", this.target.getAbsolutePath()),
                 "--env", String.format("EO_CACHE=%s", cdir),
                 "--env", "WORKDIR=/hone"
             )

@@ -776,7 +776,11 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
                 .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
-                .withEnv("RULES", this.rulesAsString());
+                .withEnv("RULES", this.rulesAsString())
+                // @checkstyle MethodBodyCommentsCheck (1 line)
+                // an inherited JDWP agent would bind the debug port twice (#1350)
+                .withEnv("MAVEN_OPTS", "")
+                .withEnv("MAVEN_DEBUG_OPTS", "");
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());

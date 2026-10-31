@@ -133,6 +133,10 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 # the jar into a fresh temporary directory before every run, which gives them
 # both a new mtime and a new prefix every time and would keep the skip from
 # ever firing (see #1119).
+# The parent computes it and passes it down, because every self-invocation per
+# file would otherwise run this loop and one cksum per rule again (see #1208).
+stamp="${HONE_STAMP}"
+if [ -z "${stamp}" ]; then
 stamp="${PHINO_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
 for rule in "${rules[@]}"; do
   stamp="${stamp}|${rule#*/rules/}"
@@ -140,6 +144,9 @@ for rule in "${rules[@]}"; do
     stamp="${stamp}|$(cksum < "${rule}")"
   fi
 done
+fi
+HONE_STAMP="${stamp}"
+export HONE_STAMP
 
 function rewrite {
   idx=${1}

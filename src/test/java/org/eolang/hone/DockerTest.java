@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 import org.cactoos.text.TextOf;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -116,6 +117,41 @@ final class DockerTest {
 
     @Test
     @Timeout(60L)
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void killsOrphanedContainerWhenTimedOut(@Mktmp final Path temp) throws Exception {
+        final Path log = temp.resolve("calls.log");
+        final Path docker = DockerTest.fakeDocker(temp, log);
+        final IOException thrown = Assertions.assertThrows(
+            IOException.class,
+            () -> new Docker(false, docker.toString(), 1L).exec(
+                "run", "--rm", "alpine:latest", "sleep", "60"
+            )
+        );
+        final String calls = new TextOf(log).asString();
+        final Matcher named = Pattern.compile("--name (\\S+)").matcher(calls);
+        MatcherAssert.assertThat(
+            "the run command must be given a name",
+            named.find(), Matchers.is(true)
+        );
+        MatcherAssert.assertThat(
+            "the timeout must name the deadline the command hit",
+            thrown.getMessage(),
+            Matchers.is(
+                String.format(
+                    "Docker command timed out after 1 seconds: %s run --name %s --rm alpine:latest sleep 60",
+                    docker, named.group(1)
+                )
+            )
+        );
+        MatcherAssert.assertThat(
+            "the orphaned container must be killed by its name after a timeout (see #1195)",
+            calls,
+            Matchers.containsString(String.format("kill %s", named.group(1)))
+        );
+    }
+
+    @Test
+    @Timeout(60L)
     void stopsAKillThatDoesNotFinish(@Mktmp final Path temp) throws Exception {
         final Path pid = temp.resolve("kill.pid");
         final Path docker = temp.resolve("docker");
@@ -125,7 +161,7 @@ final class DockerTest {
                 """
                 #!/usr/bin/env bash
                 if [ "$1" = "kill" ]; then
-                echo $$ > %s
+                echo $$ > "%s"
                 fi
                 exec sleep 3600
                 """,
@@ -180,7 +216,7 @@ final class DockerTest {
             String.format(
                 """
                 #!/usr/bin/env bash
-                echo "$@" >> %s
+                echo "$@" >> "%s"
                 if [ "$1" = "run" ]; then
                 exec sleep 3600
                 fi

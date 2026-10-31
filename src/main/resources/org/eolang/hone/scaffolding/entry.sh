@@ -214,9 +214,15 @@ if streams_selected; then
   if [ "${#outdated[@]}" -gt 0 ]; then
     # jeo reads every entry as a glob, so a "[", "{", "?", "*" or "\" in the
     # project path must be escaped, or the class is not excluded (see #1205).
+    # Maven splits the comma-joined list at every comma before jeo sees it,
+    # so each comma becomes an unescaped "?", which matches exactly that one
+    # character and keeps the list comma-free (see #1347).
+    # shortcut: "?" also matches a sibling differing at the comma, so that
+    # sibling is excluded too and can leave nothing to disassemble, tripping
+    # the "nothing suitable" quit below; upgrade when jeo takes a comma-free list.
     declare -a globs=()
     for classfile in "${outdated[@]}"; do
-      globs+=("$(printf '%s' "${classfile}" | sed 's/[][{}?*\\]/\\&/g')")
+      globs+=("$(printf '%s' "${classfile}" | sed 's/[][{}?*\\]/\\&/g;s/,/?/g')")
     done
     EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${globs[*]}")"
     echo "Excluded ${#outdated[@]} class(es) older than Java 16 from the disassembly, leaving the rest to the streams rules"

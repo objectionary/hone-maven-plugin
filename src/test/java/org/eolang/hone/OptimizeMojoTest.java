@@ -183,9 +183,9 @@ final class OptimizeMojoTest {
     @Test
     void mountsUnixHostPath() {
         MatcherAssert.assertThat(
-            "a plain Unix host path must be mounted as a bind of source to target (see #868)",
+            "a plain Unix host path must be mounted as a CSV-quoted bind of source to target (see #868, #1346)",
             OptimizeMojo.mount(new File("/repo/target"), "/target"),
-            Matchers.equalTo("type=bind,source=/repo/target,target=/target")
+            Matchers.equalTo("type=bind,source=\"/repo/target\",target=/target")
         );
     }
 
@@ -196,7 +196,7 @@ final class OptimizeMojoTest {
             OptimizeMojo.mount(new File("target"), "/target"),
             Matchers.equalTo(
                 String.format(
-                    "type=bind,source=%s,target=/target",
+                    "type=bind,source=\"%s\",target=/target",
                     new File("target").getAbsolutePath()
                 )
             )
@@ -206,9 +206,27 @@ final class OptimizeMojoTest {
     @Test
     void mountsHostPathWithColon() {
         MatcherAssert.assertThat(
-            "a colon in the host path must stay inside the source of the bind (see #1193)",
+            "a colon in the host path must stay inside the CSV-quoted source of the bind (see #1193)",
             OptimizeMojo.mount(new File("/ws/proj:v2/target"), "/target"),
-            Matchers.equalTo("type=bind,source=/ws/proj:v2/target,target=/target")
+            Matchers.equalTo("type=bind,source=\"/ws/proj:v2/target\",target=/target")
+        );
+    }
+
+    @Test
+    void mountsHostPathWithComma() {
+        MatcherAssert.assertThat(
+            "a comma in the host path must not split the CSV bind specification (see #1346)",
+            OptimizeMojo.mount(new File("/tmp/hone/a,b/target"), "/target"),
+            Matchers.equalTo("type=bind,source=\"/tmp/hone/a,b/target\",target=/target")
+        );
+    }
+
+    @Test
+    void mountsHostPathWithQuote() {
+        MatcherAssert.assertThat(
+            "a double quote inside the host path must be doubled per CSV escaping (see #1346)",
+            OptimizeMojo.mount(new File("/tmp/hone/a\"b/target"), "/target"),
+            Matchers.equalTo("type=bind,source=\"/tmp/hone/a\"\"b/target\",target=/target")
         );
     }
 

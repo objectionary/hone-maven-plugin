@@ -372,14 +372,6 @@ public final class OptimizeMojo extends AbstractMojo {
     private String jeoVersion;
 
     /**
-     * EO cache directory.
-     *
-     * @since 0.1.0
-     */
-    @Parameter(property = "hone.cache", defaultValue = "${user.home}/.eo")
-    private File cache;
-
-    /**
      * Ctor.
      */
     public OptimizeMojo() {
@@ -397,9 +389,6 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Target directory %[file]s created", this.target);
         } else {
             Logger.info(this, "Target directory %[file]s already exists", this.target);
-        }
-        if (this.cache.mkdirs()) {
-            Logger.info(this, "Cache directory %[file]s created", this.cache);
         }
         this.optimize();
     }
@@ -527,16 +516,13 @@ public final class OptimizeMojo extends AbstractMojo {
 
     private Collection<String> dockerCommand() throws IOException {
         final String tdir = "/target";
-        final String cdir = "/eo-cache";
         final Collection<String> command = new ArrayList<>(
             Arrays.asList(
                 "run",
                 "--rm",
                 "--init",
                 "--mount", OptimizeMojo.mount(this.target, tdir),
-                "--mount", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
-                "--env", String.format("EO_CACHE=%s", cdir),
                 "--env", "WORKDIR=/hone"
             )
         );
@@ -736,8 +722,6 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
-    // @checkstyle NPathComplexityCheck (200 lines)
-    @SuppressWarnings("PMD.NPathComplexity")
     private void withoutDocker() throws IOException {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
@@ -792,9 +776,6 @@ public final class OptimizeMojo extends AbstractMojo {
                     "EXCLUDES",
                     OptimizeMojo.localPaths(this.target.toString(), this.excludes)
                 );
-            }
-            if (this.cache != null) {
-                jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
             }
             jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();

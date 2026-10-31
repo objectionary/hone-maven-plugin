@@ -9,13 +9,16 @@ import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Arrays;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.hamcrest.io.FileMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Test case for the way {@link OptimizeMojo} creates the EO cache directory.
+ * Test case for the EO cache directory, which {@link OptimizeMojo} created
+ * and bind-mounted on every run, although nothing reads it (see #1190).
  *
  * @since 0.24.0
  */
@@ -24,7 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class OptimizeMojoCacheTest {
 
     @Test
-    void createsCacheDirectoryBeforeMountingIt(@Mktmp final Path dir) throws Exception {
+    void createsNoCacheDirectory(@Mktmp final Path dir) throws Exception {
         final Path cache = dir.resolve("absent-eo-cache");
         new Farea(dir).together(
             f -> {
@@ -45,9 +48,12 @@ final class OptimizeMojoCacheTest {
             }
         );
         MatcherAssert.assertThat(
-            "the cache directory must be created before it is bind-mounted (see #1066)",
-            cache.toFile().isDirectory(),
-            Matchers.is(true)
+            "the goal must reach the docker command and still leave no cache directory behind",
+            Arrays.asList(dir.resolve("target/hone-extra").toFile(), cache.toFile()),
+            Matchers.contains(
+                FileMatchers.anExistingDirectory(),
+                Matchers.not(FileMatchers.anExistingFileOrDirectory())
+            )
         );
     }
 }

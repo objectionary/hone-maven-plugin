@@ -125,7 +125,7 @@ final class DockerTest {
                 """
                 #!/usr/bin/env bash
                 if [ "$1" = "kill" ]; then
-                echo $$ > %s
+                echo $$ > "%s"
                 fi
                 exec sleep 3600
                 """,
@@ -180,7 +180,7 @@ final class DockerTest {
             String.format(
                 """
                 #!/usr/bin/env bash
-                echo "$@" >> %s
+                echo "$@" >> "%s"
                 if [ "$1" = "run" ]; then
                 exec sleep 3600
                 fi

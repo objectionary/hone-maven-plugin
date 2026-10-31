@@ -78,6 +78,20 @@ final class OptimizeMojoDockerCommandTest {
         );
     }
 
+    @Test
+    void passesTheHostTarget(@Mktmp final Path home) throws Exception {
+        MatcherAssert.assertThat(
+            "the container can't learn the host target by itself, so it must be handed in (see #1348)",
+            OptimizeMojoDockerCommandTest.command(home),
+            Matchers.hasItem(
+                String.format(
+                    "HOST_TARGET=%s",
+                    Files.createDirectories(home.resolve("target")).toAbsolutePath()
+                )
+            )
+        );
+    }
+
     private static Collection<String> command(final Path home) throws Exception {
         return OptimizeMojoDockerCommandTest.command(home, new OptimizeMojo());
     }

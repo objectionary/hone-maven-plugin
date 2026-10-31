@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -70,6 +71,121 @@ final class RewriteScriptStatisticsTest {
                 .exec();
             RewriteScriptStatisticsTest.assertFiveColumns(home);
         }
+    }
+
+    @Test
+    void writesHostPathsInsideTheContainer(@Mktmp final Path home) throws IOException {
+        final Path target = Files.createDirectories(home.resolve("target"));
+        final Path host = Files.createDirectories(home.resolve("host"));
+        final Path phis = Files.createDirectories(target.resolve("hone/phi"));
+        final Path phos = Files.createDirectories(target.resolve("hone/phi-optimized"));
+        Files.write(
+            Files.createDirectories(home.resolve("xmir-in")).resolve("Foo.xmir"),
+            "<xmir/>".getBytes(StandardCharsets.UTF_8)
+        );
+        RewriteScriptStatisticsTest.run(home, target, phis, phos, host.toString());
+        final List<String> rows = new ArrayList<>(4);
+        rows.add(RewriteScriptStatisticsTest.row(target));
+        final Path sister = Files.createDirectories(home.resolve("target2/hone/phi"));
+        RewriteScriptStatisticsTest.run(
+            home, target, sister, sister.resolveSibling("phi-optimized"), host.toString()
+        );
+        rows.add(RewriteScriptStatisticsTest.row(target));
+        RewriteScriptStatisticsTest.run(home, target, phis, phos, "");
+        rows.add(RewriteScriptStatisticsTest.row(target));
+        final Path quoted = Files.createDirectories(home.resolve("qu\"oted"));
+        final Path qhost = Files.createDirectories(home.resolve("ho\"st"));
+        RewriteScriptStatisticsTest.run(
+            home, quoted, quoted.resolve("hone/phi"),
+            quoted.resolve("hone/phi-optimized"), qhost.toString()
+        );
+        rows.add(RewriteScriptStatisticsTest.row(quoted));
+        MatcherAssert.assertThat(
+            String.join(
+                " ",
+                "the first row must name the host target instead of the mounted one,",
+                "a path that only starts with the target name must stay untouched,",
+                "an empty host target must leave the row as it is,",
+                "and a quote in the path must be doubled after the mapping (see #1348)"
+            ),
+            rows,
+            Matchers.contains(
+                Matchers.allOf(
+                    Matchers.containsString(host.resolve("hone/phi/Foo.phi").toString()),
+                    Matchers.containsString(
+                        host.resolve("hone/phi-optimized/Foo.phi").toString()
+                    ),
+                    Matchers.not(Matchers.containsString(target.toString()))
+                ),
+                Matchers.allOf(
+                    Matchers.containsString(sister.resolve("Foo.phi").toString()),
+                    Matchers.not(Matchers.containsString(host.toString()))
+                ),
+                Matchers.containsString(phis.resolve("Foo.phi").toString()),
+                Matchers.is(
+                    String.format(
+                        "1/1,\"%s\",\"%s\",0,0",
+                        RewriteScriptStatisticsTest.field(qhost.resolve("hone/phi/Foo.phi")),
+                        RewriteScriptStatisticsTest.field(
+                            qhost.resolve("hone/phi-optimized/Foo.phi")
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    private static String field(final Path path) {
+        return path.toString().replace("\"", "\"\"");
+    }
+
+    private static String script() {
+        return Paths.get(
+            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
+        ).toAbsolutePath().toString();
+    }
+
+    private static void run(
+        final Path home, final Path target, final Path from, final Path into, final String host
+    ) throws IOException {
+        final Path phino = home.resolve("phino");
+        if (!phino.toFile().isFile()) {
+            Files.write(
+                phino,
+                String.format("#!/usr/bin/env bash%nprintf '0.0.1\\n'%n")
+                    .getBytes(StandardCharsets.UTF_8)
+            );
+            if (!phino.toFile().setExecutable(true)) {
+                throw new IllegalStateException("Can't make the fake phino executable");
+            }
+        }
+        new Jaxec("bash", RewriteScriptStatisticsTest.script())
+            .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
+            .withEnv("TARGET", target.toString())
+            .withEnv("HOST_TARGET", host)
+            .withEnv("HONE_XMIR_IN", home.resolve("xmir-in").toString())
+            .withEnv("HONE_FROM", from.toString())
+            .withEnv("HONE_TO", into.toString())
+            .withEnv("HONE_XMIR_OUT", home.resolve("out").toString())
+            .withEnv("HONE_GREP_IN", "NO_MATCH")
+            .withEnv("HONE_RULES", "rules/test.phr")
+            .withEnv("HONE_SMALL_STEPS", "false")
+            .withEnv("HONE_MAX_CYCLES", "1")
+            .withEnv("HONE_MAX_DEPTH", "1")
+            .withEnv("HONE_THREADS", "1")
+            .withEnv("HONE_TIMEOUT", "5")
+            .withEnv("HONE_KILL_GRACE", "1")
+            .withEnv("HONE_STATISTICS", "true")
+            .withEnv("HONE_VERBOSE", "false")
+            .withEnv("HONE_DEBUG", "false")
+            .withEnv("HONE_VERSION", "0.1.0")
+            .exec();
+    }
+
+    private static String row(final Path target) throws IOException {
+        return Files.readAllLines(
+            target.resolve("hone-statistics.csv"), StandardCharsets.UTF_8
+        ).get(1);
     }
 
     private static void assertFiveColumns(final Path home) throws IOException {

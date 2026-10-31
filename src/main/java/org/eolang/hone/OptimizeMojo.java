@@ -536,6 +536,8 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--mount", OptimizeMojo.mount(this.target, tdir),
                 "--mount", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
+                "--env",
+                String.format("HOST_TARGET=%s", this.target.getAbsolutePath()),
                 "--env", String.format("EO_CACHE=%s", cdir),
                 "--env", "WORKDIR=/hone"
             )
@@ -760,6 +762,7 @@ public final class OptimizeMojo extends AbstractMojo {
             new Rules("*").copyTo(temp.path().resolve("rules"));
             Jaxec jaxec = new Jaxec("bash", temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
+                .withEnv("HOST_TARGET", "")
                 .withEnv("PHINO_VERSION", this.phino())
                 .withEnv("HONE_VERSION", this.hone())
                 .withEnv("HONE_STATISTICS", "true")

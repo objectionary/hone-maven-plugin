@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
  * SPDX-License-Identifier: MIT
  */
-package org.eolang.hone.client;
+package org.eolang.hone.common;
 
 public class Common {
     public static void main(String[] args) {

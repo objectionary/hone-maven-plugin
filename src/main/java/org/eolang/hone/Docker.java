@@ -31,7 +31,7 @@ final class Docker {
      * or a stalled pull must fail the build with a clear message instead of
      * hanging forever (see #839).
      */
-    private static final long TIMEOUT = 3600L;
+    private final long timeout;
 
     /**
      * Whether to prepend "sudo" to Docker commands.
@@ -66,8 +66,20 @@ final class Docker {
      * @param bin The Docker executable
      */
     Docker(final boolean root, final String bin) {
+        this(root, bin, 3600L);
+    }
+
+    /**
+     * Creates a Docker executor with a custom command deadline.
+     *
+     * @param root Whether to run Docker commands with sudo
+     * @param bin The Docker executable
+     * @param seconds Deadline for a single command, in seconds
+     */
+    Docker(final boolean root, final String bin, final long seconds) {
         this.sudo = root;
         this.binary = bin;
+        this.timeout = seconds;
     }
 
     /**
@@ -90,7 +102,7 @@ final class Docker {
      * usable and the build failed later inside {@code docker run}.</p>
      *
      * <p>The probe has its own short deadline, because a wedged daemon
-     * must not block the build for the whole {@link #TIMEOUT} before we
+     * must not block the build for the whole {@link #timeout} before we
      * fall back to a local phino (see #1060).</p>
      *
      * @return TRUE if Docker is here
@@ -117,7 +129,7 @@ final class Docker {
      * @throws IOException If the command fails or returns non-zero exit code
      */
     int exec(final Collection<String> args) throws IOException {
-        return this.fire(this.command(args), Docker.TIMEOUT);
+        return this.fire(this.command(args), this.timeout);
     }
 
     private static void drained(final Thread... pumps) throws IOException {

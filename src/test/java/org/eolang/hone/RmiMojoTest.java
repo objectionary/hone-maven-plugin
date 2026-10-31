@@ -11,6 +11,7 @@ import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,30 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @ExtendWith(MktmpResolver.class)
 final class RmiMojoTest {
+
+    @Test
+    void recordsTimingEvenWhenImageIsNotRemoved(@Mktmp final Path dir) throws Exception {
+        new Farea(dir).together(
+            f -> {
+                f.clean();
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution()
+                    .phase("process-classes")
+                    .goals("rmi")
+                    .configuration()
+                    .set("image", "hone-absent-image:0")
+                    .set("alwaysWithDocker", "true");
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "the rmi goal must record its time in hone-timings.csv",
+                    f.files().file("target/hone-timings.csv").content(),
+                    Matchers.containsString("\"rmi\"")
+                );
+            }
+        );
+    }
 
     @Test
     @Tag("deep")

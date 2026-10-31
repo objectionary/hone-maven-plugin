@@ -176,7 +176,7 @@ final class Docker {
         return command;
     }
 
-    private int fire(final List<String> command, final long timeout) throws IOException {
+    private int fire(final List<String> command, final long deadline) throws IOException {
         final long start = System.currentTimeMillis();
         final int pos;
         if (this.sudo) {
@@ -207,7 +207,7 @@ final class Docker {
         stderr.start();
         final boolean done;
         try {
-            done = proc.waitFor(timeout, TimeUnit.SECONDS);
+            done = proc.waitFor(deadline, TimeUnit.SECONDS);
         } catch (final InterruptedException ex) {
             proc.destroyForcibly();
             this.kill(container);
@@ -224,7 +224,7 @@ final class Docker {
             throw new IOException(
                 String.format(
                     "Docker command timed out after %d seconds: %s",
-                    timeout, String.join(" ", command)
+                    deadline, String.join(" ", command)
                 )
             );
         }

@@ -26,38 +26,43 @@ import org.junit.jupiter.api.Test;
 final class EntryScriptExcludesTest {
 
     @Test
-    void matchesTheClassUnderAComma() throws IOException {
-        final String classfile = "/tmp/hone/a,b/target/classes/old/Old.class";
-        final String escaped = EntryScriptExcludesTest.escaped(classfile);
+    void keepsTheCommaOutOfTheList() throws IOException {
         MatcherAssert.assertThat(
             "a comma in the project path must not survive into the comma-joined exclude list",
-            escaped,
+            EntryScriptExcludesTest.escaped("/tmp/hone/a,b/target/classes/old/Old.class"),
             Matchers.not(Matchers.containsString(","))
         );
+    }
+
+    @Test
+    void matchesTheClassUnderAComma() throws IOException {
+        final String classfile = "/tmp/hone/a,b/target/classes/old/Old.class";
         MatcherAssert.assertThat(
             "the comma-free glob must still match the very class it was built from",
-            FileSystems.getDefault().getPathMatcher(String.format("glob:%s", escaped))
-                .matches(Paths.get(classfile)),
+            FileSystems.getDefault().getPathMatcher(
+                String.format("glob:%s", EntryScriptExcludesTest.escaped(classfile))
+            ).matches(Paths.get(classfile)),
             Matchers.is(true)
         );
     }
 
     @Test
-    void keepsEscapingOtherGlobCharacters() throws IOException {
-        final String classfile = "/tmp/hone/a,b[1]/target/classes/old/Old.class";
-        final String escaped = EntryScriptExcludesTest.escaped(classfile);
+    void keepsTheEscapeOfOtherGlobCharacters() throws IOException {
         MatcherAssert.assertThat(
-            "the comma must go, but every other glob character must keep its escape (see #1205)",
-            escaped,
-            Matchers.allOf(
-                Matchers.not(Matchers.containsString(",")),
-                Matchers.containsString("\\[1\\]")
-            )
+            "every glob character beside the comma must keep its escape (see #1205)",
+            EntryScriptExcludesTest.escaped("/tmp/hone/a,b[1]/target/classes/old/Old.class"),
+            Matchers.containsString("\\[1\\]")
         );
+    }
+
+    @Test
+    void matchesTheClassWithABracketAndAComma() throws IOException {
+        final String classfile = "/tmp/hone/a,b[1]/target/classes/old/Old.class";
         MatcherAssert.assertThat(
             "the escaped glob must still match the class with a bracketed directory",
-            FileSystems.getDefault().getPathMatcher(String.format("glob:%s", escaped))
-                .matches(Paths.get(classfile)),
+            FileSystems.getDefault().getPathMatcher(
+                String.format("glob:%s", EntryScriptExcludesTest.escaped(classfile))
+            ).matches(Paths.get(classfile)),
             Matchers.is(true)
         );
     }

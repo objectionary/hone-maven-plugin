@@ -198,6 +198,12 @@ if streams_selected; then
   while IFS= read -r classfile; do
     [ -z "${classfile}" ] && continue
     total_classes=$(( total_classes + 1 ))
+    magic=''
+    if ! read -r magic < <(od -An -tu1 -j0 -N4 "${classfile}" 2> /dev/null) || [ "${magic// /}" != '202254186190' ]; then
+      outdated+=("${classfile}")
+      echo "The file '${classfile}' is not a class file, because it does not start with CAFEBABE, so it stays out of the pipeline"
+      continue
+    fi
     high=''
     low=''
     if ! read -r high low < <(od -An -tu1 -j6 -N2 "${classfile}" 2> /dev/null) || [ -z "${low}" ]; then

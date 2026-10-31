@@ -11,8 +11,12 @@ name: coverage
 concurrency:
   group: coverage-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   coverage:
+    permissions:
+      contents: write
+      pull-requests: write
     timeout-minutes: 180
     runs-on: ubuntu-24.04
     env:

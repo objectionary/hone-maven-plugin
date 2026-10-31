@@ -47,9 +47,11 @@
 # The item is the LAST parameter of the target descriptor, because 316 pushes
 # the captures first and reloads the item on top of them. 112 and 113 admit a
 # capture only from the alphabet "[IJD]" and "L…;", so the parameter list is
-# always "([IJD]|L…;)*L…;" and the class to cast to is its RIGHTMOST reference —
-# the same descriptor walking 112 and 113 do with their own alternation. This is
-# also why 505's guard cannot be repaired by widening it to admit a capture
+# always "([IJD]|L…;)*(L…;|[…)" and the item is either its RIGHTMOST reference
+# or an array — the same descriptor walking 112 and 113 do with their own
+# alternation. An array is the class to cast to as it stands ("[I",
+# "[Ljava/lang/String;"), a reference only after its "L" and ";" come off. This
+# is also why 505's guard cannot be repaired by widening it to admit a capture
 # prefix: "(JLPair;)LPair;" does fail its `^\(L[^;]+;\)` test, but a guard that
 # admitted the prefix still would not fire, since what 505 anchors on — a frame
 # DIRECTLY followed by the call — never occurs once 316 has parked the item.
@@ -64,14 +66,6 @@
 # (which turns each `fetch` into a List.get plus a checkcast), applied at
 # fixpoint: the cast it inserts now sits between the `aload` and the
 # `invokestatic`, so the adjacency does not re-match.
-#
-# @todo #1229:30min Cast an array item in `509-distill-state-item-cast-parked` too.
-#  `505`, `508` and `509-distill-state-item-cast-latch` insert `checkcast [I` and the like
-#  for an array item since #1229, but this rule still requires the LAST parameter of the
-#  next call to be `L...;`, and its `sed` walk drops the trailing `;` of an array of
-#  references and keeps the primitive captures in front of a primitive array. It should
-#  accept `\[[^)]+` as the last parameter, isolate it as one descriptor, and a phino pack
-#  with a parked capture and an `int[]` item should pin it.
 name: distill-state-item-cast-parked
 pattern: |
   ⟦
@@ -118,26 +112,32 @@ result: |
   ⟧
 when:
   and:
-    - matches: ['^\(([IJD]|L[^;]+;)*L[^;]+;\)', 𝑒-invoke-signature]
+    - matches: ['^\(([IJD]|L[^;]+;)*(L[^;]+;|\[[^)]+)\)', 𝑒-invoke-signature]
     - not:
         matches: ['^\(([IJD]|L[^;]+;)*Ljava/lang/Object;\)', 𝑒-invoke-signature]
 where:
   - meta: 𝜏-cast
     function: random-tau
-  # The LAST parameter of the descriptor, which is the item. The walk is over
-  # the descriptor's own delimiters, never over its letters: isolate the
-  # parameter list, drop its final ";", cut everything through the last ";" that
-  # is left (which ends the second-to-last reference capture, if any), and strip
-  # the primitive captures and the "L" off what remains. Searching for the last
-  # "L" instead would find one INSIDE a class name — "Ljava/util/List;" and
-  # "LA$Level;" each carry one — and name the suffix after it instead of the
-  # class, splicing a checkcast onto a type that does not exist.
+  # The LAST parameter of the descriptor, which is the item: a reference
+  # ("L…;") or an array ("["), the only two forms 112 and 113 admit. The walk is
+  # over the descriptor's own delimiters, never over its letters: isolate the
+  # parameter list, then leave it alone if the item is an array, which is one
+  # class descriptor as it stands — "s/;$//" would drop the ";" that ends
+  # "[Ljava/lang/String;" and the cut through the last ";" would then eat the
+  # whole class. Otherwise drop the final ";", cut everything through the last
+  # ";" that is left (which ends the second-to-last reference capture, if any),
+  # keep only the "[…" or "L…" tail, and strip the leading "L". Searching for
+  # the last "L" instead would find one INSIDE a class name —
+  # "Ljava/util/List;" and "LA$Level;" each carry one — and name the suffix
+  # after it instead of the class, splicing a checkcast onto a type that does
+  # not exist.
   - meta: 𝑒-cast-class
     function: sed
     args:
       - 𝑒-invoke-signature
       - '"s/^[(]//"'
       - '"s/[)].*$//"'
-      - '"s/;$//"'
-      - '"s/^.*;//"'
-      - '"s/^[IJD]*L//"'
+      - '"s/^([^[]*);$/$1/"'
+      - '"s/^[^[]*;//"'
+      - '"s/^[IJD]*([[].*|L[^;]*)$/$1/"'
+      - '"s/^L//"'

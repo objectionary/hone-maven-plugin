@@ -7,12 +7,13 @@ package org.eolang.hone;
 import com.yegor256.Jaxec;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.StringTokenizer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -52,12 +53,9 @@ final class RewriteScriptStampOnceTest {
         final Path shim = home.resolve("cksum");
         Files.write(
             shim,
-            String.join(
-                "\n",
-                "#!/usr/bin/env bash",
-                "printf 'called\\n' >> \"${HONE_CKSUM_LOG}\"",
-                String.format("exec %s \"$@\"", RewriteScriptStampOnceTest.real()),
-                ""
+            String.format(
+                "#!/usr/bin/env bash%nprintf 'called\\n' >> \"${HONE_CKSUM_LOG}\"%nexec %s \"$@\"%n",
+                RewriteScriptStampOnceTest.real()
             ).getBytes(StandardCharsets.UTF_8)
         );
         RewriteScriptStampOnceTest.executable(shim);
@@ -86,10 +84,9 @@ final class RewriteScriptStampOnceTest {
             .withEnv("PHINO_VERSION", "0.0.1")
             .withEnv("HONE_CKSUM_LOG", log.toString())
             .exec();
-        final List<String> calls = Files.readAllLines(log, StandardCharsets.UTF_8);
         MatcherAssert.assertThat(
             "cksum must run once per rule in the parent and once for the input seal, not once per rule for every self-invocation per file",
-            calls,
+            Files.readAllLines(log, StandardCharsets.UTF_8),
             Matchers.hasSize(4)
         );
     }
@@ -101,12 +98,20 @@ final class RewriteScriptStampOnceTest {
     }
 
     private static String real() {
-        for (final String dir : System.getenv("PATH").split(":")) {
-            final Path candidate = Paths.get(dir, "cksum");
+        final StringTokenizer dirs = new StringTokenizer(
+            System.getenv("PATH"), File.pathSeparator
+        );
+        String found = null;
+        while (dirs.hasMoreTokens()) {
+            final Path candidate = Paths.get(dirs.nextToken(), "cksum");
             if (Files.isExecutable(candidate)) {
-                return candidate.toString();
+                found = candidate.toString();
+                break;
             }
         }
-        throw new IllegalStateException("Can't find the real cksum in PATH");
+        if (found == null) {
+            throw new IllegalStateException("Can't find the real cksum in PATH");
+        }
+        return found;
     }
 }

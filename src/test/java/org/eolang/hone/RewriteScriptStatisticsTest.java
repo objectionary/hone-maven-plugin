@@ -84,7 +84,7 @@ final class RewriteScriptStatisticsTest {
             "<xmir/>".getBytes(StandardCharsets.UTF_8)
         );
         RewriteScriptStatisticsTest.run(home, target, phis, phos, host.toString());
-        final List<String> rows = new ArrayList<>(3);
+        final List<String> rows = new ArrayList<>(4);
         rows.add(RewriteScriptStatisticsTest.row(target));
         final Path sister = Files.createDirectories(home.resolve("target2/hone/phi"));
         RewriteScriptStatisticsTest.run(
@@ -93,12 +93,20 @@ final class RewriteScriptStatisticsTest {
         rows.add(RewriteScriptStatisticsTest.row(target));
         RewriteScriptStatisticsTest.run(home, target, phis, phos, "");
         rows.add(RewriteScriptStatisticsTest.row(target));
+        final Path quoted = Files.createDirectories(home.resolve("qu\"oted"));
+        final Path qhost = Files.createDirectories(home.resolve("ho\"st"));
+        RewriteScriptStatisticsTest.run(
+            home, quoted, quoted.resolve("hone/phi"),
+            quoted.resolve("hone/phi-optimized"), qhost.toString()
+        );
+        rows.add(RewriteScriptStatisticsTest.row(quoted));
         MatcherAssert.assertThat(
             String.join(
                 " ",
                 "the first row must name the host target instead of the mounted one,",
                 "a path that only starts with the target name must stay untouched,",
-                "and an empty host target must leave the row as it is (see #1348)"
+                "an empty host target must leave the row as it is,",
+                "and a quote in the path must be doubled after the mapping (see #1348)"
             ),
             rows,
             Matchers.contains(
@@ -113,9 +121,28 @@ final class RewriteScriptStatisticsTest {
                     Matchers.containsString(sister.resolve("Foo.phi").toString()),
                     Matchers.not(Matchers.containsString(host.toString()))
                 ),
-                Matchers.containsString(phis.resolve("Foo.phi").toString())
+                Matchers.containsString(phis.resolve("Foo.phi").toString()),
+                Matchers.is(
+                    String.format(
+                        "1/1,\"%s\",\"%s\",0,0",
+                        RewriteScriptStatisticsTest.field(qhost.resolve("hone/phi/Foo.phi")),
+                        RewriteScriptStatisticsTest.field(
+                            qhost.resolve("hone/phi-optimized/Foo.phi")
+                        )
+                    )
+                )
             )
         );
+    }
+
+    private static String field(final Path path) {
+        return path.toString().replace("\"", "\"\"");
+    }
+
+    private static String script() {
+        return Paths.get(
+            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
+        ).toAbsolutePath().toString();
     }
 
     private static void run(
@@ -132,11 +159,7 @@ final class RewriteScriptStatisticsTest {
                 throw new IllegalStateException("Can't make the fake phino executable");
             }
         }
-        new Jaxec(
-            "bash",
-            Paths.get("src/main/resources/org/eolang/hone/scaffolding/rewrite.sh")
-                .toAbsolutePath().toString()
-        )
+        new Jaxec("bash", RewriteScriptStatisticsTest.script())
             .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
             .withEnv("TARGET", target.toString())
             .withEnv("HOST_TARGET", host)

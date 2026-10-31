@@ -294,6 +294,9 @@ public final class OptimizeMojo extends AbstractMojo {
      * the file remains untouched. The timeout doesn't lead to runtime
      * failure but only to the file processing being skipped.</p>
      *
+     * <p>The minimum is 5 seconds, because {@code rewrite.sh} rejects
+     * anything lower.</p>
+     *
      * @since 0.11.0
      */
     @Parameter(property = "hone.timeout", defaultValue = "999")
@@ -388,6 +391,11 @@ public final class OptimizeMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
+        OptimizeMojo.requireAtLeast("hone.timeout", this.timeout, 5);
+        OptimizeMojo.requireAtLeast("hone.max-depth", this.maxDepth, 1);
+        OptimizeMojo.requireAtLeast("hone.max-cycles", this.maxCycles, 1);
+        OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
+        OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
         if (this.withoutClasses() && this.skipIfNoClasses) {
             Files.deleteIfExists(this.target.toPath().resolve("hone-statistics.csv"));
             Logger.info(this, "The directory with classes is absent or empty, skipping");
@@ -454,6 +462,17 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    private static void requireAtLeast(final String name, final int value, final int min) {
+        if (value < min) {
+            throw new IllegalStateException(
+                String.format(
+                    "The '%s' parameter must be %d or greater, but it is %d",
+                    name, min, value
+                )
+            );
+        }
     }
 
     private boolean withoutClasses() {

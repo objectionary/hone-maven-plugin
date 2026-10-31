@@ -217,9 +217,9 @@ if streams_selected; then
     # Maven splits the comma-joined list at every comma before jeo sees it,
     # so each comma becomes an unescaped "?", which matches exactly that one
     # character and keeps the list comma-free (see #1347).
-    # shortcut: "?" also matches a sibling differing at the comma, which can
-    # only skip an optimisation, never rewrite a class that must stay as is;
-    # upgrade when jeo takes more than a comma-separated glob list.
+    # shortcut: "?" also matches a sibling differing at the comma, so that
+    # sibling is excluded too and can leave nothing to disassemble, tripping
+    # the "nothing suitable" quit below; upgrade when jeo takes a comma-free list.
     declare -a globs=()
     for classfile in "${outdated[@]}"; do
       globs+=("$(printf '%s' "${classfile}" | sed 's/[][{}?*\\]/\\&/g;s/,/?/g')")

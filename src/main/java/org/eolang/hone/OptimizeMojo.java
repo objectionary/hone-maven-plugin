@@ -737,6 +737,7 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     // @checkstyle NPathComplexityCheck (200 lines)
+    // @checkstyle CyclomaticComplexityCheck (200 lines)
     @SuppressWarnings("PMD.NPathComplexity")
     private void withoutDocker() throws IOException {
         try (Mktemp temp = new Mktemp()) {
@@ -776,6 +777,8 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
                 .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
+                .withEnv("OFFLINE", Boolean.toString(this.session.isOffline()))
+                .withEnv("LOCAL_REPO", this.session.getLocalRepository().getBasedir())
                 .withEnv("RULES", this.rulesAsString());
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
@@ -795,6 +798,10 @@ public final class OptimizeMojo extends AbstractMojo {
             }
             if (this.cache != null) {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
+            }
+            final File settings = this.session.getRequest().getUserSettingsFile();
+            if (settings != null && settings.exists()) {
+                jaxec = jaxec.withEnv("SETTINGS", settings.getAbsolutePath());
             }
             jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();

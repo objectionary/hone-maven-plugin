@@ -778,8 +778,11 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
                 .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
                 .withEnv("OFFLINE", Boolean.toString(this.session.isOffline()))
-                .withEnv("LOCAL_REPO", this.session.getLocalRepository().getBasedir())
                 .withEnv("RULES", this.rulesAsString());
+            jaxec = jaxec.withEnv(
+                "LOCAL_REPO",
+                this.session.getRequest().getLocalRepositoryPath().getAbsolutePath()
+            );
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());

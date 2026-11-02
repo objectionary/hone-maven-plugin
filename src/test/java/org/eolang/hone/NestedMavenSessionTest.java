@@ -136,8 +136,9 @@ final class NestedMavenSessionTest {
                 Matchers.containsString(
                     ".withEnv(\"OFFLINE\", Boolean.toString(this.session.isOffline()))"
                 ),
+                Matchers.containsString("\"LOCAL_REPO\","),
                 Matchers.containsString(
-                    ".withEnv(\"LOCAL_REPO\", this.session.getLocalRepository().getBasedir()"
+                    "this.session.getRequest().getLocalRepositoryPath().getAbsolutePath()"
                 ),
                 Matchers.containsString(".withEnv(\"SETTINGS\","),
                 Matchers.containsString(

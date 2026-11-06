@@ -414,7 +414,7 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     @Override
-    protected void dropStaleStatistics() throws MojoExecutionException {
+    void dropStaleStatistics() throws MojoExecutionException {
         try {
             Files.deleteIfExists(
                 AbstractMojo.targetOrDefault(this.target).toPath().resolve("hone-statistics.csv")

@@ -203,6 +203,14 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     /**
+     * Drop statistics that the skipped execution would have replaced (see #1349).
+     * @throws MojoExecutionException If the cleanup fails
+     */
+    void dropStaleStatistics() throws MojoExecutionException {
+        Logger.debug(this, "This goal does not drop statistics");
+    }
+
+    /**
      * Execute the specific goal implementation.
      *
      * @throws IOException If execution fails
@@ -247,18 +255,5 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         return System.getProperty("os.name")
             .toLowerCase(Locale.ENGLISH)
             .startsWith("win");
-    }
-
-    /**
-     * Drop statistics that the skipped execution would have replaced.
-     *
-     * <p>Only a goal that writes these statistics overrides this method, so a
-     * skipped pull or rmi does not delete the result of a successful
-     * optimize (see #1349).</p>
-     *
-     * @throws MojoExecutionException If the cleanup fails
-     */
-    protected void dropStaleStatistics() throws MojoExecutionException {
-        // nothing
     }
 }

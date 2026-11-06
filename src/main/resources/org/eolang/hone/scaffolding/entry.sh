@@ -286,27 +286,6 @@ fi
 if [ -n "${EXCLUDES}" ]; then
   disassemble_opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
 fi
-# A class the rules left alone still comes back from a jeo round trip with the
-# attributes XMIR cannot carry dropped, so only the XMIR that differs from what
-# jeo disassembled may be assembled: the rest of the classes keep the bytes
-# javac wrote, because jeo never deletes its output directory (see #1343).
-changed_dir="${TARGET}/hone/unphi-changed"
-tree="${TARGET}/hone/unphi"
-if [ "${SKIP_PHINO}" == 'true' ]; then
-  echo "Skipping the phino step as requested"
-  tree="${TARGET}/hone/jeo-disassemble"
-fi
-rm -rf "${changed_dir}"
-mkdir -p "${changed_dir}"
-while IFS= read -r xmir; do
-  rel="${xmir#"${tree}"/}"
-  if ! cmp -s "${xmir}" "${TARGET}/hone/jeo-disassemble/${rel}"; then
-    mkdir -p "$(dirname "${changed_dir}/${rel}")"
-    cp "${xmir}" "${changed_dir}/${rel}"
-  fi
-done < <(find "${tree}" -name '*.xmir' -type f)
-assemble_opts+=("-Djeo.assemble.sourcesDir=${changed_dir}")
-changed=$(find "${changed_dir}" -name '*.xmir' -type f -print | wc -l | xargs)
 
 timings_csv="${TARGET}/timings.csv"
 mkdir -p "$(dirname "${timings_csv}")"
@@ -368,6 +347,28 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   )
   record_timing "phino:rewrite (default-cli)" "$(elapsed "${start}")"
 fi
+
+# A class the rules left alone still comes back from a jeo round trip with the
+# attributes XMIR cannot carry dropped, so only the XMIR that differs from what
+# jeo disassembled may be assembled: the rest of the classes keep the bytes
+# javac wrote, because jeo never deletes its output directory (see #1343).
+changed_dir="${TARGET}/hone/unphi-changed"
+tree="${TARGET}/hone/unphi"
+if [ "${SKIP_PHINO}" == 'true' ]; then
+  echo "Skipping the phino step as requested"
+  tree="${TARGET}/hone/jeo-disassemble"
+fi
+rm -rf "${changed_dir}"
+mkdir -p "${changed_dir}"
+while IFS= read -r xmir; do
+  rel="${xmir#"${tree}"/}"
+  if ! cmp -s "${xmir}" "${TARGET}/hone/jeo-disassemble/${rel}"; then
+    mkdir -p "$(dirname "${changed_dir}/${rel}")"
+    cp "${xmir}" "${changed_dir}/${rel}"
+  fi
+done < <(find "${tree}" -name '*.xmir' -type f)
+assemble_opts+=("-Djeo.assemble.sourcesDir=${changed_dir}")
+changed=$(find "${changed_dir}" -name '*.xmir' -type f -print | wc -l | xargs)
 
 if [ "${changed}" -gt 0 ]; then
   start=$(now)

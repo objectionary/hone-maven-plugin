@@ -57,44 +57,6 @@ final class RewriteScriptStatisticsTest {
         );
     }
 
-    private static void run(final Path home, final String classes) throws IOException {
-        final Path source = Files.createDirectories(home.resolve("source"));
-        Files.createDirectories(home.resolve("target"));
-        Files.write(
-            source.resolve("Foo.xmir"), "<xmir/>".getBytes(StandardCharsets.UTF_8)
-        );
-        final Path phino = home.resolve("phino");
-        Files.write(
-            phino,
-            String.format("#!/usr/bin/env bash%nprintf '0.0.1\\n'%n")
-                .getBytes(StandardCharsets.UTF_8)
-        );
-        if (!phino.toFile().setExecutable(true)) {
-            throw new IllegalStateException("Can't make the fake phino executable");
-        }
-        new Jaxec("bash", RewriteScriptStatisticsTest.script())
-            .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
-            .withEnv("TARGET", home.resolve("target").toString())
-            .withEnv("CLASSES", classes)
-            .withEnv("HONE_XMIR_IN", source.toString())
-            .withEnv("HONE_FROM", home.resolve("phi").toString())
-            .withEnv("HONE_TO", home.resolve("optimized").toString())
-            .withEnv("HONE_XMIR_OUT", home.resolve("out").toString())
-            .withEnv("HONE_GREP_IN", "NO_MATCH")
-            .withEnv("HONE_RULES", "rules/test.phr")
-            .withEnv("HONE_SMALL_STEPS", "false")
-            .withEnv("HONE_MAX_CYCLES", "1")
-            .withEnv("HONE_MAX_DEPTH", "1")
-            .withEnv("HONE_THREADS", "1")
-            .withEnv("HONE_TIMEOUT", "5")
-            .withEnv("HONE_KILL_GRACE", "1")
-            .withEnv("HONE_STATISTICS", "true")
-            .withEnv("HONE_VERBOSE", "false")
-            .withEnv("HONE_DEBUG", "false")
-            .withEnv("HONE_VERSION", "0.1.0")
-            .exec();
-    }
-
     @Test
     void writesHostPathsInsideTheContainer(@Mktmp final Path home) throws IOException {
         final Path target = Files.createDirectories(home.resolve("target"));
@@ -156,6 +118,45 @@ final class RewriteScriptStatisticsTest {
             )
         );
     }
+
+    private static void run(final Path home, final String classes) throws IOException {
+        final Path source = Files.createDirectories(home.resolve("source"));
+        Files.createDirectories(home.resolve("target"));
+        Files.write(
+            source.resolve("Foo.xmir"), "<xmir/>".getBytes(StandardCharsets.UTF_8)
+        );
+        final Path phino = home.resolve("phino");
+        Files.write(
+            phino,
+            String.format("#!/usr/bin/env bash%nprintf '0.0.1\\n'%n")
+                .getBytes(StandardCharsets.UTF_8)
+        );
+        if (!phino.toFile().setExecutable(true)) {
+            throw new IllegalStateException("Can't make the fake phino executable");
+        }
+        new Jaxec("bash", RewriteScriptStatisticsTest.script())
+            .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
+            .withEnv("TARGET", home.resolve("target").toString())
+            .withEnv("CLASSES", classes)
+            .withEnv("HONE_XMIR_IN", source.toString())
+            .withEnv("HONE_FROM", home.resolve("phi").toString())
+            .withEnv("HONE_TO", home.resolve("optimized").toString())
+            .withEnv("HONE_XMIR_OUT", home.resolve("out").toString())
+            .withEnv("HONE_GREP_IN", "NO_MATCH")
+            .withEnv("HONE_RULES", "rules/test.phr")
+            .withEnv("HONE_SMALL_STEPS", "false")
+            .withEnv("HONE_MAX_CYCLES", "1")
+            .withEnv("HONE_MAX_DEPTH", "1")
+            .withEnv("HONE_THREADS", "1")
+            .withEnv("HONE_TIMEOUT", "5")
+            .withEnv("HONE_KILL_GRACE", "1")
+            .withEnv("HONE_STATISTICS", "true")
+            .withEnv("HONE_VERBOSE", "false")
+            .withEnv("HONE_DEBUG", "false")
+            .withEnv("HONE_VERSION", "0.1.0")
+            .exec();
+    }
+
 
     private static String field(final Path path) {
         return path.toString().replace("\"", "\"\"");

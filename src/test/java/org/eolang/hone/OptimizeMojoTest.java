@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -268,10 +269,6 @@ final class OptimizeMojoTest {
         );
     }
 
-    private static List<String> csv(final String mount) throws IOException {
-        return CSVFormat.DEFAULT.parse(new StringReader(mount)).getRecords().get(0).toList();
-    }
-
     @Test
     void rewritesBothPrefixFormsInLocalPaths() {
         MatcherAssert.assertThat(
@@ -293,6 +290,12 @@ final class OptimizeMojoTest {
             ),
             Matchers.equalTo("/targetfoo/classes,/target-generated/classes")
         );
+    }
+
+    private static List<String> csv(final String mount) throws IOException {
+        try (CSVParser parser = CSVFormat.DEFAULT.parse(new StringReader(mount))) {
+            return parser.getRecords().get(0).toList();
+        }
     }
 
     private static void runWithoutClasses(final Farea fea) throws IOException {

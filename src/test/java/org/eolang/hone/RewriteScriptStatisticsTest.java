@@ -68,12 +68,7 @@ final class RewriteScriptStatisticsTest {
         if (!phino.toFile().setExecutable(true)) {
             throw new IllegalStateException("Can't make the fake phino executable");
         }
-        new Jaxec(
-            "bash",
-            Paths.get(
-                "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
-            ).toAbsolutePath().toString()
-        )
+        new Jaxec("bash", RewriteScriptStatisticsTest.script())
             .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
             .withEnv("TARGET", home.resolve("target").toString())
             .withEnv("CLASSES", classes)
@@ -223,5 +218,11 @@ final class RewriteScriptStatisticsTest {
             rows.get(1).split(",", -1),
             Matchers.arrayWithSize(5)
         );
+    }
+
+    private static String script() {
+        return Paths.get(
+            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
+        ).toAbsolutePath().toString();
     }
 }

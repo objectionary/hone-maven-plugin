@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class EntryScriptBackupTest {
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void keepsBackupOfEachClassesDirectory(@Mktmp final Path temp) throws IOException {
         Files.createDirectories(temp.resolve("classes/foo"));
         Files.write(
@@ -73,18 +74,14 @@ final class EntryScriptBackupTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void rejectsClassesOutsideTarget(@Mktmp final Path temp) throws IOException {
         final Path shared = Files.createDirectories(temp.resolve("shared"));
         Files.write(
             shared.resolve("Keep.class"),
             "keep".getBytes(StandardCharsets.UTF_8)
         );
-        final Result result = new Jaxec(
-            "bash",
-            Paths.get(
-                "src/main/resources/org/eolang/hone/scaffolding/entry.sh"
-            ).toAbsolutePath().toString()
-        )
+        final Result result = new Jaxec("bash", EntryScriptBackupTest.script())
             .withEnv("TARGET", temp.toString())
             .withEnv("EO_CACHE", temp.toString())
             .withEnv("CLASSES", "../shared")
@@ -105,5 +102,11 @@ final class EntryScriptBackupTest {
             shared.resolve("Keep.class").toFile().exists(),
             Matchers.is(true)
         );
+    }
+
+    private static String script() {
+        return Paths.get(
+            "src/main/resources/org/eolang/hone/scaffolding/entry.sh"
+        ).toAbsolutePath().toString();
     }
 }

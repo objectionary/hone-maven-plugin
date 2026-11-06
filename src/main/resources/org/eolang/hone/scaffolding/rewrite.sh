@@ -132,10 +132,13 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 # directory, not by the absolute one, because the host path writes them out of
 # the jar into a fresh temporary directory before every run, which gives them
 # both a new mtime and a new prefix every time and would keep the skip from
-# ever firing (see #1119).
+# ever firing (see #1119). The extra rules are named by their path under the
+# "hone-extra" directory, because the host path copies them into a fresh
+# temporary directory too (see #1186).
 stamp="${PHINO_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
 for rule in "${rules[@]}"; do
-  stamp="${stamp}|${rule#*/rules/}"
+  name="${rule#*/rules/}"
+  stamp="${stamp}|${name#*/hone-extra/}"
   if [ -f "${rule}" ]; then
     stamp="${stamp}|$(cksum < "${rule}")"
   fi

@@ -20,7 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * Test case for the freshness stamp of {@code rewrite.sh}, which was built
  * from the absolute rule paths and their modification times, both of which the
- * host path renews on every run, so the skip could never fire (see #1119).
+ * host path renews on every run, so the skip could never fire (see #1119),
+ * and the same for the extra rules (see #1186).
  *
  * @since 0.30.0
  */
@@ -65,10 +66,31 @@ final class RewriteScriptStampTest {
         );
     }
 
+    @Test
+    void staysTheSameWhenTheExtraRulesMoveToAnotherDirectory(@Mktmp final Path home)
+        throws IOException {
+        MatcherAssert.assertThat(
+            "the same extra rule in another temporary directory must give the same stamp, or a host run with extra rules never skips",
+            RewriteScriptStampTest.stamp(
+                home.resolve("first"), "hone-extra/0000-demo.yml", "name: one", "0.1.0"
+            ),
+            Matchers.equalTo(
+                RewriteScriptStampTest.stamp(
+                    home.resolve("second"), "hone-extra/0000-demo.yml", "name: one", "0.1.0"
+                )
+            )
+        );
+    }
+
     private static String stamp(final Path dir, final String body, final String version)
         throws IOException {
-        final Path rule = Files.createDirectories(dir.resolve("rules/streams"))
-            .resolve("101-demo.phr");
+        return RewriteScriptStampTest.stamp(dir, "rules/streams/101-demo.phr", body, version);
+    }
+
+    private static String stamp(final Path dir, final String path, final String body,
+        final String version) throws IOException {
+        final Path rule = dir.resolve(path);
+        Files.createDirectories(rule.getParent());
         Files.write(rule, body.getBytes(StandardCharsets.UTF_8));
         final String text = new String(
             Files.readAllBytes(

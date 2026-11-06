@@ -416,6 +416,10 @@ public final class OptimizeMojo extends AbstractMojo {
         OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
         OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
         OptimizeMojo.grepPattern(this.grepIn, this.grepMethods);
+        final Path legacy = this.target.toPath().resolve("hone-statistics.csv");
+        if (Files.deleteIfExists(legacy)) {
+            Logger.debug(this, "Statistics of the old name deleted: %[file]s", legacy);
+        }
         if (this.withoutClasses() && this.skipIfNoClasses) {
             Files.deleteIfExists(this.stats());
             Logger.info(this, "The directory with classes is absent or empty, skipping");

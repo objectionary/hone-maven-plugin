@@ -51,10 +51,14 @@ final class CollectorTest {
             home.resolve("hone-summary.csv"),
             CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
         );
+        Files.write(
+            home.resolve("hone-statistics-notes.txt"),
+            CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
+        );
         final List<CSV> found = new ArrayList<>(0);
         Files.walkFileTree(home, new Collector(found, "hone-statistics"));
         MatcherAssert.assertThat(
-            "the summary is named differently, so the walk must leave it alone",
+            "files of other names, even close ones, must be left alone",
             found,
             Matchers.empty()
         );

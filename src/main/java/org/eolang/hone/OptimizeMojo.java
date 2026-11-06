@@ -502,10 +502,15 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     // The name carries CLASSES, so executions for different directories keep
-    // their own rows (see #1344).
+    // their own rows (see #1344). A nested directory is flattened into one
+    // file name, because hone:summary scans the target directory only one
+    // level deep:
     private Path stats() {
         return this.target.toPath().resolve(
-            String.format("hone-statistics-%s.csv", this.classes)
+            String.format(
+                "hone-statistics-%s.csv",
+                this.classes.replace('/', '-').replace('\\', '-')
+            )
         );
     }
 

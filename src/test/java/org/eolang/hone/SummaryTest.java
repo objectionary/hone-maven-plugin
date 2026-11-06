@@ -69,6 +69,22 @@ final class SummaryTest {
     }
 
     @Test
+    void collectsStatisticsOfNestedClassesDirectory(@Mktmp final Path temp) throws Exception {
+        final Path module = Files.createDirectories(temp.resolve("module"));
+        Files.write(
+            module.resolve("hone-statistics-classes-java-main.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
+        );
+        MatcherAssert.assertThat(
+            "statistics of a nested hone.classes directory must reach the report",
+            new TextOf(
+                new Summary(Collections.singletonList(module), temp).collect()
+            ).asString(),
+            Matchers.containsString("Server.phi")
+        );
+    }
+
+    @Test
     void keepsTheReportStableAcrossRepeatedCollections(@Mktmp final Path temp) throws Exception {
         final Path root = SummaryTest.modular(temp);
         final Summary summary = new Summary(

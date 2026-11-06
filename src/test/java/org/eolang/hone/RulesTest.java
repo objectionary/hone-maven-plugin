@@ -6,15 +6,24 @@ package org.eolang.hone;
 
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.Resource;
+import io.github.classgraph.ScanResult;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -190,6 +199,68 @@ final class RulesTest {
     }
 
     @Test
+    @SuppressWarnings(
+        {"PMD.UnitTestContainsTooManyAsserts", "PMD.UnnecessaryLocalRule"}
+    )
+    void keepsTheDiscoveredOrderWhenAJarScanComesUnsorted(@Mktmp final Path temp)
+        throws Exception {
+        final Path jar = temp.resolve("rules.jar");
+        try (
+            JarOutputStream out = new JarOutputStream(
+                Files.newOutputStream(jar)
+            )
+        ) {
+            for (final String name : new String[] {"zz-second.yml", "aa-first.yml"}) {
+                out.putNextEntry(
+                    new JarEntry(String.format("org/eolang/hone/rules/%s", name))
+                );
+                out.write(String.format("name: any%n").getBytes(StandardCharsets.UTF_8));
+                out.closeEntry();
+            }
+        }
+        final List<String> found = new ArrayList<>(0);
+        try (
+            URLClassLoader loader = new URLClassLoader(
+                new URL[] {jar.toUri().toURL()}, null
+            )
+        ) {
+            MatcherAssert.assertThat(
+                "the jar scan must not come back sorted, or the sort in Rules.discover() is not pinned",
+                RulesTest.scanned(loader),
+                Matchers.contains("zz-second.yml", "aa-first.yml")
+            );
+            final ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(loader);
+                new Rules("*").yamls().forEach(found::add);
+            } finally {
+                Thread.currentThread().setContextClassLoader(original);
+            }
+        }
+        MatcherAssert.assertThat(
+            "the rules of the jar written in reverse order must be discovered",
+            found,
+            Matchers.hasItems("aa-first.yml", "zz-second.yml")
+        );
+        final List<String> sorted = new ArrayList<>(found);
+        Collections.sort(sorted);
+        MatcherAssert.assertThat(
+            "the scan must be sorted by Rules.discover(), while its elements are not: a jar gives them in the order they were written",
+            found,
+            Matchers.is(sorted)
+        );
+    }
+
+    @Test
+    void ignoresEmptyPatterns() {
+        MatcherAssert.assertThat(
+            "an empty pattern between commas must be skipped, not indexed",
+            new Rules(",none").yamls(),
+            Matchers.contains("none.yml")
+        );
+    }
+
+    @Test
     void yamlsReturnsSortedList() {
         final Iterable<String> yamls = new Rules("*").yamls();
         String previous = null;
@@ -206,5 +277,22 @@ final class RulesTest {
             }
             previous = yaml;
         }
+    }
+
+    private static List<String> scanned(final ClassLoader loader) {
+        final List<String> names = new ArrayList<>(0);
+        try (
+            ScanResult scan = new ClassGraph()
+                .overrideClassLoaders(loader)
+                .acceptPaths("org/eolang/hone/rules")
+                .scan()
+        ) {
+            for (final Resource res : scan.getAllResources()) {
+                names.add(
+                    res.getPath().replaceFirst("^org/eolang/hone/rules/", "")
+                );
+            }
+        }
+        return names;
     }
 }

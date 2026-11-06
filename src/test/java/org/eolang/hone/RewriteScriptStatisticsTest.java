@@ -157,7 +157,6 @@ final class RewriteScriptStatisticsTest {
             .exec();
     }
 
-
     private static String field(final Path path) {
         return path.toString().replace("\"", "\"\"");
     }

@@ -58,6 +58,24 @@ final class OptimizeMojoDockerCommandTest {
     }
 
     @Test
+    void mountsNoEoCache(@Mktmp final Path home) throws Exception {
+        MatcherAssert.assertThat(
+            "nothing in the image reads an EO cache, so no home directory may be bind-mounted for it (see #1190)",
+            OptimizeMojoDockerCommandTest.command(home),
+            Matchers.not(Matchers.hasItem(Matchers.endsWith("target=/eo-cache")))
+        );
+    }
+
+    @Test
+    void passesNoEoCacheVariable(@Mktmp final Path home) throws Exception {
+        MatcherAssert.assertThat(
+            "entry.sh reads no EO_CACHE, so the container must not get one (see #1190)",
+            OptimizeMojoDockerCommandTest.command(home),
+            Matchers.not(Matchers.hasItem(Matchers.startsWith("EO_CACHE=")))
+        );
+    }
+
+    @Test
     void namesTheImageLast(@Mktmp final Path home) throws Exception {
         final Collection<String> command = OptimizeMojoDockerCommandTest.command(home);
         MatcherAssert.assertThat(
@@ -93,10 +111,6 @@ final class OptimizeMojoDockerCommandTest {
         OptimizeMojoDockerCommandTest.set(mojo, OptimizeMojo.class, "classes", "classes");
         OptimizeMojoDockerCommandTest.set(mojo, OptimizeMojo.class, "rules", "none");
         OptimizeMojoDockerCommandTest.set(mojo, OptimizeMojo.class, "grepIn", ".*");
-        OptimizeMojoDockerCommandTest.set(
-            mojo, OptimizeMojo.class, "cache",
-            Files.createDirectories(home.resolve("cache")).toFile()
-        );
         OptimizeMojoDockerCommandTest.set(mojo, AbstractMojo.class, "image", "hone:latest");
         final Method method = OptimizeMojo.class.getDeclaredMethod("dockerCommand");
         method.setAccessible(true);

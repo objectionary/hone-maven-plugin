@@ -35,9 +35,8 @@ fi
 
 # The name carries CLASSES, so a second execution of the same module for
 # another directory, like test-classes, keeps its own rows (see #1344).
-# shortcut: CLASSES is used as one path segment, so a nested hone.classes
-# would put the CSV into a missing subdirectory; split it when that is needed.
 statistics_csv="${TARGET}/hone-statistics-${CLASSES:-classes}.csv"
+mkdir -p "$(dirname "${statistics_csv}")"
 
 function verbose {
   if [ "${HONE_VERBOSE}" == 'true' ]; then

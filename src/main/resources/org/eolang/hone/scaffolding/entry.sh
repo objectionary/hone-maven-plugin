@@ -214,6 +214,33 @@ function streams_selected {
   return 1
 }
 
+# Put every class except the outdated ones into a comma-free staging
+# directory, linked to the real files. A comma in a class path would otherwise
+# split the comma-joined exclude list before jeo sees it (see #1347), and a
+# wildcard that matches that comma also matches a sibling such as "axb.class".
+function stage_classes {
+  local stage="${1}"
+  local root="${2}"
+  shift 2
+  local classfile
+  local rel
+  local old
+  while IFS= read -r classfile; do
+    local keep=true
+    for old in "$@"; do
+      if [ "${classfile}" == "${old}" ]; then
+        keep=false
+        break
+      fi
+    done
+    if [ "${keep}" == 'true' ]; then
+      rel="${classfile#"${root}"/}"
+      mkdir -p "$(dirname "${stage}/${rel}")"
+      ln -s "$("${RP}" "${classfile}")" "${stage}/${rel}"
+    fi
+  done < <(find -H "${root}" -type f -name '*.class' -print)
+}
+
 # A class below Java 16 cannot receive a mapMulti, which is what #930 asked
 # the guard to prevent. Ending the build was too broad an answer: the "self"
 # profile selects streams/* over this project's own classes, where the
@@ -221,6 +248,8 @@ function streams_selected {
 # every other class from being optimized. The offending classes go into
 # EXCLUDES instead, which reaches jeo as a glob of absolute paths below,
 # so they are never disassembled and the rest of the project still is.
+# When a comma makes that list impossible, the suitable classes are staged.
+disassemble_sources="${TARGET}/${CLASSES}"
 if streams_selected; then
   declare -a outdated=()
   total_classes=0
@@ -247,19 +276,23 @@ if streams_selected; then
     fi
   done < <(find -H "${TARGET}/${CLASSES}" -type f -name '*.class' -print)
   if [ "${#outdated[@]}" -gt 0 ]; then
-    # jeo reads every entry as a glob, so a "[", "{", "?", "*" or "\" in the
-    # project path must be escaped, or the class is not excluded (see #1205).
-    # Maven splits the comma-joined list at every comma before jeo sees it,
-    # so each comma becomes an unescaped "?", which matches exactly that one
-    # character and keeps the list comma-free (see #1347).
-    # shortcut: "?" also matches a sibling differing at the comma, so that
-    # sibling is excluded too and can leave nothing to disassemble, tripping
-    # the "nothing suitable" quit below; upgrade when jeo takes a comma-free list.
-    declare -a globs=()
-    for classfile in "${outdated[@]}"; do
-      globs+=("$(printf '%s' "${classfile}" | sed 's/[][{}?*\\]/\\&/g;s/,/?/g')")
-    done
-    EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${globs[*]}")"
+    if printf '%s\n' "${outdated[@]}" | grep -q ','; then
+      # A comma cannot survive the comma-separated exclude list, and no glob
+      # matches it without also matching a sibling, so the suitable classes
+      # are staged under a comma-free directory instead (see #1347):
+      stage=$(mktemp -d)
+      trap 'rm -rf "${stage}"' EXIT
+      stage_classes "${stage}" "${TARGET}/${CLASSES}" "${outdated[@]}"
+      disassemble_sources="${stage}"
+    else
+      # jeo reads every entry as a glob, so a "[", "{", "?", "*" or "\" in the
+      # project path must be escaped, or the class is not excluded (see #1205).
+      declare -a globs=()
+      for classfile in "${outdated[@]}"; do
+        globs+=("$(printf '%s' "${classfile}" | sed 's/[][{}?*\\]/\\&/g')")
+      done
+      EXCLUDES="${EXCLUDES:+${EXCLUDES},}$(IFS=','; echo "${globs[*]}")"
+    fi
     echo "Excluded ${#outdated[@]} class(es) older than Java 16 from the disassembly, leaving the rest to the streams rules"
   fi
   # When every single .class file just got excluded as pre-Java-16 bytecode,
@@ -297,7 +330,7 @@ rm -rf "${TARGET}/hone/jeo-disassemble"
 
 declare -a disassemble_opts=(
   "${opts[@]}"
-  "-Djeo.disassemble.sourcesDir=${TARGET}/${CLASSES}"
+  "-Djeo.disassemble.sourcesDir=${disassemble_sources}"
   "-Djeo.disassemble.outputDir=${TARGET}/hone/jeo-disassemble"
   "-Djeo.disassemble.mode=debug"
   "-Djeo.disassemble.xmir.modifiers=true"

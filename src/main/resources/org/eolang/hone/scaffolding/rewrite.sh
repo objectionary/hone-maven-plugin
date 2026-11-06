@@ -60,11 +60,23 @@ function statistics_row {
   if [ "${HONE_STATISTICS}" == 'true' ]; then
     local csv="${1}"
     local idx="${2}"
-    local phi="${3//\"/\"\"}"
-    local pho="${4//\"/\"\"}"
+    local phi="${3}"
+    local pho="${4}"
     local changed="${5}"
     local per="${6}"
-    printf '%s,"%s","%s",%s,%s\n' "${idx}" "${phi}" "${pho}" "${changed}" "${per}" >> "${csv}"
+    # Inside the container the target is a mount point, so its paths mean
+    # nothing on the host; map them back to the directory it is mounted from,
+    # which the host hands in as HOST_TARGET, before doubling the quotes, or a
+    # quote in the path breaks both the match and the CSV column (see #1348).
+    if [ -n "${HOST_TARGET}" ]; then
+      case "${phi}" in
+        "${TARGET}"/*) phi="${HOST_TARGET}/${phi#"${TARGET}"/}" ;;
+      esac
+      case "${pho}" in
+        "${TARGET}"/*) pho="${HOST_TARGET}/${pho#"${TARGET}"/}" ;;
+      esac
+    fi
+    printf '%s,"%s","%s",%s,%s\n' "${idx}" "${phi//\"/\"\"}" "${pho//\"/\"\"}" "${changed}" "${per}" >> "${csv}"
   fi
 }
 
@@ -132,10 +144,13 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 # directory, not by the absolute one, because the host path writes them out of
 # the jar into a fresh temporary directory before every run, which gives them
 # both a new mtime and a new prefix every time and would keep the skip from
-# ever firing (see #1119).
+# ever firing (see #1119). The extra rules are named by their path under the
+# "hone-extra" directory, because the host path copies them into a fresh
+# temporary directory too (see #1186).
 stamp="${PHINO_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
 for rule in "${rules[@]}"; do
-  stamp="${stamp}|${rule#*/rules/}"
+  name="${rule#*/rules/}"
+  stamp="${stamp}|${name#*/hone-extra/}"
   if [ -f "${rule}" ]; then
     stamp="${stamp}|$(cksum < "${rule}")"
   fi

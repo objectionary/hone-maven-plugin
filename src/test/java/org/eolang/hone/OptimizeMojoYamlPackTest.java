@@ -123,10 +123,12 @@ final class OptimizeMojoYamlPackTest {
             input,
             String.format("%s%n", raw).getBytes(StandardCharsets.UTF_8)
         );
-        final List<String> cmd = new ArrayList<>(rules.size() + 4);
+        final List<String> cmd = new ArrayList<>(rules.size() + 6);
         cmd.add("phino");
         cmd.add("rewrite");
         cmd.add("--sweet");
+        cmd.add("--max-cycles");
+        cmd.add("1");
         for (final String rule : rules) {
             final Path resolved = root.resolve(rule);
             if (!Files.exists(resolved)) {

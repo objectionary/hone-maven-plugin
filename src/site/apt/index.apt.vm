@@ -27,6 +27,9 @@ Hone Maven Plugin
             <goal>optimize</goal>
             <goal>rmi</goal>
           </goals>
+          <configuration>
+            <rules>streams/*</rules>
+          </configuration>
         </execution>
       </executions>
     </plugin>

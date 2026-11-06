@@ -77,6 +77,7 @@ supports_streams() {
 apply_hone() {
   local base=$1
   local cdir module
+  honed=0
   while IFS= read -r -d '' cdir; do
     module=$(dirname "$(dirname "${cdir}")")
     if ! supports_streams "${module}"; then
@@ -84,11 +85,12 @@ apply_hone() {
       continue
     fi
     echo "applying hone in ${module}"
-    mvn -ntp -B -q --batch-mode -f "${module}" \
+    mvn -ntp -B --batch-mode -f "${module}" \
       "org.eolang:hone-maven-plugin:${version}:build" \
       "org.eolang:hone-maven-plugin:${version}:optimize" \
       -Dhone.rules='streams/*' \
       -Dhone.phino-version="${phino}" || return 1
+    honed=1
   done < <(find "${base}" -type d -path '*/target/classes' -print0)
 }
 
@@ -162,8 +164,12 @@ if [ "${rc}" -ne 0 ]; then
   rm -rf "${dir}"
   exit 1
 fi
-count=$(count_optimized "${dir}")
-row="${row},${total},${count},${hone_seconds}"
+if [ "${honed}" -eq 0 ]; then
+  row="${row},${total},skipped,skipped"
+else
+  count=$(count_optimized "${dir}")
+  row="${row},${total},${count},${hone_seconds}"
+fi
 echo "warming up the test runner for honed ${repo}"
 timeout "${budget}" mvn "${flags[@]}" -f "${dir}" initialize surefire:test || true
 start=$(date +%s)

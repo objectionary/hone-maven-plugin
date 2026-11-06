@@ -7,7 +7,6 @@ package org.eolang.hone;
 import com.jcabi.log.Logger;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Locale;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -250,13 +249,16 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
             .startsWith("win");
     }
 
-    private void dropStaleStatistics() throws MojoExecutionException {
-        try {
-            Files.deleteIfExists(
-                AbstractMojo.targetOrDefault(this.target).toPath().resolve("hone-statistics.csv")
-            );
-        } catch (final IOException ex) {
-            throw new MojoExecutionException(ex);
-        }
+    /**
+     * Drop statistics that the skipped execution would have replaced.
+     *
+     * <p>Only a goal that writes these statistics overrides this method, so a
+     * skipped pull or rmi does not delete the result of a successful
+     * optimize (see #1349).</p>
+     *
+     * @throws MojoExecutionException If the cleanup fails
+     */
+    protected void dropStaleStatistics() throws MojoExecutionException {
+        // nothing
     }
 }

@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -410,6 +411,17 @@ public final class OptimizeMojo extends AbstractMojo {
             Logger.info(this, "Cache directory %[file]s created", this.cache);
         }
         this.optimize();
+    }
+
+    @Override
+    protected void dropStaleStatistics() throws MojoExecutionException {
+        try {
+            Files.deleteIfExists(
+                AbstractMojo.targetOrDefault(this.target).toPath().resolve("hone-statistics.csv")
+            );
+        } catch (final IOException ex) {
+            throw new MojoExecutionException(ex);
+        }
     }
 
     /**

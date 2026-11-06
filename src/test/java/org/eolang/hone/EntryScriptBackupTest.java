@@ -43,7 +43,7 @@ final class EntryScriptBackupTest {
             "test".getBytes(StandardCharsets.UTF_8)
         );
         final Matcher matcher = Pattern.compile(
-            "rm -rf \"\\$\\{TARGET\\}/\\S*before-hone\"\\ncp -RL[^\\n]*\\n[^\\n]*\\n"
+            "save_originals\\(\\) \\{.*?\\n\\}", Pattern.DOTALL
         ).matcher(
             new String(
                 Files.readAllBytes(
@@ -53,10 +53,10 @@ final class EntryScriptBackupTest {
             )
         );
         if (!matcher.find()) {
-            throw new IllegalStateException("No backup block in entry.sh");
+            throw new IllegalStateException("No save_originals function in entry.sh");
         }
         for (final String classes : new String[] {"classes", "test-classes"}) {
-            new Jaxec("bash", "-c", matcher.group())
+            new Jaxec("bash", "-c", String.format("%s%nsave_originals", matcher.group()))
                 .withEnv("TARGET", temp.toString())
                 .withEnv("CLASSES", classes)
                 .exec();

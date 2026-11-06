@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 final class EntryScriptChangedClassesTest {
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void assemblesOnlyChangedXmir(@Mktmp final Path temp) throws IOException {
         EntryScriptChangedClassesTest.write(
             temp.resolve("hone/jeo-disassemble/a/A.xmir"), "<a/>"
@@ -58,7 +59,7 @@ final class EntryScriptChangedClassesTest {
         MatcherAssert.assertThat(
             "the count must tell entry.sh that two classes changed",
             result,
-            Matchers.containsString("changed=2\n")
+            Matchers.containsString(String.format("changed=2%n"))
         );
         MatcherAssert.assertThat(
             "jeo must read the filtered directory, or the unchanged classes come back rewritten",
@@ -78,6 +79,7 @@ final class EntryScriptChangedClassesTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void assemblesNothingWhenNoXmirChanged(@Mktmp final Path temp) throws IOException {
         EntryScriptChangedClassesTest.write(
             temp.resolve("hone/jeo-disassemble/a/A.xmir"), "<a/>"
@@ -86,7 +88,7 @@ final class EntryScriptChangedClassesTest {
         MatcherAssert.assertThat(
             "the count must be zero, so entry.sh skips assembly altogether",
             EntryScriptChangedClassesTest.result(temp, false),
-            Matchers.containsString("changed=0\n")
+            Matchers.containsString(String.format("changed=0%n"))
         );
         MatcherAssert.assertThat(
             "nothing changed, so jeo:assemble must not be called at all",
@@ -101,6 +103,7 @@ final class EntryScriptChangedClassesTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void keepsEverythingWhenPhinoIsSkipped(@Mktmp final Path temp) throws IOException {
         EntryScriptChangedClassesTest.write(
             temp.resolve("hone/jeo-disassemble/a/A.xmir"), "<a/>"
@@ -108,7 +111,7 @@ final class EntryScriptChangedClassesTest {
         MatcherAssert.assertThat(
             "without the rules the disassembled XMIR equals itself, so nothing may be assembled",
             EntryScriptChangedClassesTest.result(temp, true),
-            Matchers.containsString("changed=0\n")
+            Matchers.containsString(String.format("changed=0%n"))
         );
         MatcherAssert.assertThat(
             "nothing may be copied out of the disassembled tree when phino is skipped",
@@ -128,14 +131,8 @@ final class EntryScriptChangedClassesTest {
         final Path phino = home.resolve("phino");
         Files.write(
             phino,
-            String.join(
-                "\n",
-                "#!/usr/bin/env bash",
-                "cat \"${@: -1}\"",
-                "case \" $* \" in",
-                "  *\" --output=xmir \"*) printf '<!-- reprinted -->' ;;",
-                "esac",
-                ""
+            String.format(
+                "#!/usr/bin/env bash%ncat \"${@: -1}\"%ncase \" $* \" in%n  *\" --output=xmir \"*) printf '<!-- reprinted -->' ;;%nesac%n"
             ).getBytes(StandardCharsets.UTF_8)
         );
         if (!phino.toFile().setExecutable(true)) {
@@ -143,7 +140,11 @@ final class EntryScriptChangedClassesTest {
         }
         Files.write(home.resolve("simple.phr"), "rule".getBytes(StandardCharsets.UTF_8));
         final Path input = home.resolve("in.xmir");
-        Files.write(input, "<xmir pretty=\"jeo\"/>\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(
+            input,
+            String.format("<xmir pretty=\"jeo\"/>%n")
+                .getBytes(StandardCharsets.UTF_8)
+        );
         new Jaxec(
             "bash",
             "-c",
@@ -170,6 +171,7 @@ final class EntryScriptChangedClassesTest {
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void filtersOnlyAfterTheXmirIsProduced() throws IOException {
         final String script = new String(
             Files.readAllBytes(
@@ -252,9 +254,9 @@ final class EntryScriptChangedClassesTest {
             );
         }
         return String.join(
-            "\n",
-            String.join("\n", lines.subList(start, count + 1)),
-            String.join("\n", lines.subList(guard, end + 1))
+            System.lineSeparator(),
+            String.join(System.lineSeparator(), lines.subList(start, count + 1)),
+            String.join(System.lineSeparator(), lines.subList(guard, end + 1))
         );
     }
 

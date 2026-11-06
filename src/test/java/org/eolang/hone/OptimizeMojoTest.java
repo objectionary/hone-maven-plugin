@@ -11,10 +11,13 @@ import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import org.apache.commons.csv.CSVFormat;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -185,7 +188,7 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "a plain Unix host path must be mounted as a CSV-quoted bind of source to target (see #868, #1346)",
             OptimizeMojo.mount(new File("/repo/target"), "/target"),
-            Matchers.equalTo("type=bind,source=\"/repo/target\",target=/target")
+            Matchers.equalTo("type=bind,\"source=/repo/target\",target=/target")
         );
     }
 
@@ -196,7 +199,7 @@ final class OptimizeMojoTest {
             OptimizeMojo.mount(new File("target"), "/target"),
             Matchers.equalTo(
                 String.format(
-                    "type=bind,source=\"%s\",target=/target",
+                    "type=bind,\"source=%s\",target=/target",
                     new File("target").getAbsolutePath()
                 )
             )
@@ -208,7 +211,7 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "a colon in the host path must stay inside the CSV-quoted source of the bind (see #1193)",
             OptimizeMojo.mount(new File("/ws/proj:v2/target"), "/target"),
-            Matchers.equalTo("type=bind,source=\"/ws/proj:v2/target\",target=/target")
+            Matchers.equalTo("type=bind,\"source=/ws/proj:v2/target\",target=/target")
         );
     }
 
@@ -217,7 +220,7 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "a comma in the host path must not split the CSV bind specification (see #1346)",
             OptimizeMojo.mount(new File("/tmp/hone/a,b/target"), "/target"),
-            Matchers.equalTo("type=bind,source=\"/tmp/hone/a,b/target\",target=/target")
+            Matchers.equalTo("type=bind,\"source=/tmp/hone/a,b/target\",target=/target")
         );
     }
 
@@ -226,8 +229,47 @@ final class OptimizeMojoTest {
         MatcherAssert.assertThat(
             "a double quote inside the host path must be doubled per CSV escaping (see #1346)",
             OptimizeMojo.mount(new File("/tmp/hone/a\"b/target"), "/target"),
-            Matchers.equalTo("type=bind,source=\"/tmp/hone/a\"\"b/target\",target=/target")
+            Matchers.equalTo("type=bind,\"source=/tmp/hone/a\"\"b/target\",target=/target")
         );
+    }
+
+    @Test
+    void parsesAPlainMountAsThreeCsvFields() throws IOException {
+        MatcherAssert.assertThat(
+            "Docker's CSV parser must see source and target as separate fields",
+            OptimizeMojoTest.csv(OptimizeMojo.mount(new File("/repo/target"), "/target")),
+            Matchers.contains("type=bind", "source=/repo/target", "target=/target")
+        );
+    }
+
+    @Test
+    void parsesACommaInTheSourceAsOneCsvField() throws IOException {
+        MatcherAssert.assertThat(
+            "a comma in the source must stay inside one CSV field, or Docker sees extra options",
+            OptimizeMojoTest.csv(
+                OptimizeMojo.mount(new File("/tmp/hone/a,b/target"), "/target")
+            ),
+            Matchers.contains(
+                "type=bind", "source=/tmp/hone/a,b/target", "target=/target"
+            )
+        );
+    }
+
+    @Test
+    void parsesADoubledQuoteInTheSource() throws IOException {
+        MatcherAssert.assertThat(
+            "a doubled quote must come back as one quote inside the source field",
+            OptimizeMojoTest.csv(
+                OptimizeMojo.mount(new File("/tmp/hone/a\"b/target"), "/target")
+            ),
+            Matchers.contains(
+                "type=bind", "source=/tmp/hone/a\"b/target", "target=/target"
+            )
+        );
+    }
+
+    private static List<String> csv(final String mount) throws IOException {
+        return CSVFormat.DEFAULT.parse(new StringReader(mount)).getRecords().get(0).toList();
     }
 
     @Test

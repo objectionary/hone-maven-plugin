@@ -42,7 +42,7 @@ final class RewriteScriptStatisticsTest {
     @Test
     @SuppressWarnings("JTCOP.RuleAssertionMessage")
     void writesOneStatisticsFilePerClassesDirectory(@Mktmp final Path home) throws IOException {
-        for (final String classes : new String[] {"classes", "test-classes"}) {
+        for (final String classes : new String[] {"classes", "test-classes", "classes/java/main"}) {
             RewriteScriptStatisticsTest.run(home, classes);
             RewriteScriptStatisticsTest.assertFiveColumns(
                 home.resolve(String.format("target/hone-statistics-%s.csv", classes))

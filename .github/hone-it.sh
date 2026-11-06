@@ -84,7 +84,7 @@ apply_hone() {
       continue
     fi
     echo "applying hone in ${module}"
-    mvn -ntp -B -q --batch-mode -f "${module}" \
+    mvn -ntp -B --batch-mode -f "${module}" \
       "org.eolang:hone-maven-plugin:${version}:build" \
       "org.eolang:hone-maven-plugin:${version}:optimize" \
       -Dhone.rules='streams/*' \

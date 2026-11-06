@@ -41,7 +41,14 @@ final class OptimizeMojoSkipTest {
     void rewritesChangedClass(@Mktmp final Path temp) throws IOException {
         MatcherAssert.assertThat(
             "a class whose bytes changed must be rewritten again",
-            this.twice(temp, "printf '<xmir time=\"1\"/>' > hone/jeo-disassemble/A.xmir; printf 'changed' > classes/A.class"),
+            this.twice(
+                temp,
+                String.join(
+                    "; ",
+                    "printf '<xmir time=\"1\"/>' > hone/jeo-disassemble/A.xmir",
+                    "printf 'changed' > classes/A.class"
+                )
+            ),
             Matchers.equalTo("6")
         );
     }

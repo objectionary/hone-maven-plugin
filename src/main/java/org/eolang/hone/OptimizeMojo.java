@@ -294,6 +294,9 @@ public final class OptimizeMojo extends AbstractMojo {
      * the file remains untouched. The timeout doesn't lead to runtime
      * failure but only to the file processing being skipped.</p>
      *
+     * <p>The minimum is 5 seconds, because {@code rewrite.sh} rejects
+     * anything lower.</p>
+     *
      * @since 0.11.0
      */
     @Parameter(property = "hone.timeout", defaultValue = "999")
@@ -388,6 +391,11 @@ public final class OptimizeMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
+        OptimizeMojo.requireAtLeast("hone.timeout", this.timeout, 5);
+        OptimizeMojo.requireAtLeast("hone.max-depth", this.maxDepth, 1);
+        OptimizeMojo.requireAtLeast("hone.max-cycles", this.maxCycles, 1);
+        OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
+        OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
         if (this.withoutClasses() && this.skipIfNoClasses) {
             Files.deleteIfExists(this.target.toPath().resolve("hone-statistics.csv"));
             Logger.info(this, "The directory with classes is absent or empty, skipping");
@@ -454,6 +462,17 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    private static void requireAtLeast(final String name, final int value, final int min) {
+        if (value < min) {
+            throw new IllegalStateException(
+                String.format(
+                    "The '%s' parameter must be %d or greater, but it is %d",
+                    name, min, value
+                )
+            );
+        }
     }
 
     private boolean withoutClasses() {
@@ -536,6 +555,8 @@ public final class OptimizeMojo extends AbstractMojo {
                 "--mount", OptimizeMojo.mount(this.target, tdir),
                 "--mount", OptimizeMojo.mount(this.cache, cdir),
                 "--env", String.format("TARGET=%s", tdir),
+                "--env",
+                String.format("HOST_TARGET=%s", this.target.getAbsolutePath()),
                 "--env", String.format("EO_CACHE=%s", cdir),
                 "--env", "WORKDIR=/hone"
             )
@@ -760,6 +781,7 @@ public final class OptimizeMojo extends AbstractMojo {
             new Rules("*").copyTo(temp.path().resolve("rules"));
             Jaxec jaxec = new Jaxec("bash", temp.path().resolve("entry.sh").toString())
                 .withEnv("TARGET", this.target.toString())
+                .withEnv("HOST_TARGET", "")
                 .withEnv("PHINO_VERSION", this.phino())
                 .withEnv("HONE_VERSION", this.hone())
                 .withEnv("HONE_STATISTICS", "true")
@@ -776,7 +798,11 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("THREADS", Integer.toString(this.threads))
                 .withEnv("TIMEOUT", Integer.toString(this.timeout))
                 .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
-                .withEnv("RULES", this.rulesAsString());
+                .withEnv("RULES", this.rulesAsString())
+                // @checkstyle MethodBodyCommentsCheck (1 line)
+                // an inherited JDWP agent would bind the debug port twice (#1350)
+                .withEnv("MAVEN_OPTS", "")
+                .withEnv("MAVEN_DEBUG_OPTS", "");
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());

@@ -93,7 +93,7 @@
     <dependency>
       <groupId>io.github.classgraph</groupId>
       <artifactId>classgraph</artifactId>
-      <version>4.8.197</version>
+      <version>4.8.200</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -145,7 +145,7 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
-      <version>3.9.16</version>
+      <version>3.10.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -403,7 +403,7 @@
           <plugin>
             <groupId>com.qulice</groupId>
             <artifactId>qulice-maven-plugin</artifactId>
-            <version>0.36.0</version>
+            <version>0.36.1</version>
             <configuration>
               <excludes>
                 <!--

@@ -223,10 +223,4 @@ final class RewriteScriptStatisticsTest {
             Matchers.arrayWithSize(5)
         );
     }
-
-    private static String script() {
-        return Paths.get(
-            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
-        ).toAbsolutePath().toString();
-    }
 }

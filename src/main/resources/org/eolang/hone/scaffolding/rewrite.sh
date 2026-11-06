@@ -60,11 +60,23 @@ function statistics_row {
   if [ "${HONE_STATISTICS}" == 'true' ]; then
     local csv="${1}"
     local idx="${2}"
-    local phi="${3//\"/\"\"}"
-    local pho="${4//\"/\"\"}"
+    local phi="${3}"
+    local pho="${4}"
     local changed="${5}"
     local per="${6}"
-    printf '%s,"%s","%s",%s,%s\n' "${idx}" "${phi}" "${pho}" "${changed}" "${per}" >> "${csv}"
+    # Inside the container the target is a mount point, so its paths mean
+    # nothing on the host; map them back to the directory it is mounted from,
+    # which the host hands in as HOST_TARGET, before doubling the quotes, or a
+    # quote in the path breaks both the match and the CSV column (see #1348).
+    if [ -n "${HOST_TARGET}" ]; then
+      case "${phi}" in
+        "${TARGET}"/*) phi="${HOST_TARGET}/${phi#"${TARGET}"/}" ;;
+      esac
+      case "${pho}" in
+        "${TARGET}"/*) pho="${HOST_TARGET}/${pho#"${TARGET}"/}" ;;
+      esac
+    fi
+    printf '%s,"%s","%s",%s,%s\n' "${idx}" "${phi//\"/\"\"}" "${pho//\"/\"\"}" "${changed}" "${per}" >> "${csv}"
   fi
 }
 

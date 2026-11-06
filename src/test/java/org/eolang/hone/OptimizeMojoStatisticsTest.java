@@ -158,8 +158,12 @@ final class OptimizeMojoStatisticsTest {
                     String.format(
                         "%s,\"%s\",\"%s\",%d",
                         "1/1",
-                        "/target/hone/phi/statistics/StatisticsFromDocker.phi",
-                        "/target/hone/phi-optimized/statistics/StatisticsFromDocker.phi",
+                        fea.files().file(
+                            "target/hone/phi/statistics/StatisticsFromDocker.phi"
+                        ).path(),
+                        fea.files().file(
+                            "target/hone/phi-optimized/statistics/StatisticsFromDocker.phi"
+                        ).path(),
                         0
                     )
                 )

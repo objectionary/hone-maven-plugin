@@ -4,7 +4,6 @@
  */
 package org.eolang.hone;
 
-import java.io.IOException;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -18,19 +17,32 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public final class DisabledWithoutDockerCondition implements ExecutionCondition {
 
     /**
+     * The Docker to probe.
+     */
+    private final Docker docker;
+
+    /**
      * Public ctor, for JUnit to call reflectively.
      */
     public DisabledWithoutDockerCondition() {
-        // nothing to initialize
+        this(new Docker());
+    }
+
+    /**
+     * Ctor.
+     *
+     * @param dkr The Docker to probe
+     */
+    DisabledWithoutDockerCondition(final Docker dkr) {
+        this.docker = dkr;
     }
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext ctx) {
-        ConditionEvaluationResult result;
-        try {
-            new Docker().exec("ps");
+        final ConditionEvaluationResult result;
+        if (this.docker.available()) {
             result = ConditionEvaluationResult.enabled("Docker is available");
-        } catch (final IOException ex) {
+        } else {
             result = ConditionEvaluationResult.disabled("Docker is not available");
         }
         return result;

@@ -737,7 +737,6 @@ public final class OptimizeMojo extends AbstractMojo {
     }
 
     // @checkstyle NPathComplexityCheck (200 lines)
-    // @checkstyle CyclomaticComplexityCheck (200 lines)
     @SuppressWarnings("PMD.NPathComplexity")
     private void withoutDocker() throws IOException {
         try (Mktemp temp = new Mktemp()) {
@@ -759,29 +758,26 @@ public final class OptimizeMojo extends AbstractMojo {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
-            Jaxec jaxec = new Jaxec("bash", temp.path().resolve("entry.sh").toString())
-                .withEnv("TARGET", this.target.toString())
-                .withEnv("PHINO_VERSION", this.phino())
-                .withEnv("HONE_VERSION", this.hone())
-                .withEnv("HONE_STATISTICS", "true")
-                .withEnv("DEBUG", Boolean.toString(this.debug))
-                .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
-                .withEnv("CLASSES", this.classes)
-                .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
-                .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
-                .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
-                .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
-                .withEnv("GREP_IN", this.grepIn)
-                .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
-                .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
-                .withEnv("THREADS", Integer.toString(this.threads))
-                .withEnv("TIMEOUT", Integer.toString(this.timeout))
-                .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
-                .withEnv("OFFLINE", Boolean.toString(this.session.isOffline()))
-                .withEnv("RULES", this.rulesAsString());
-            jaxec = jaxec.withEnv(
-                "LOCAL_REPO",
-                this.session.getRequest().getLocalRepositoryPath().getAbsolutePath()
+            Jaxec jaxec = this.session(
+                new Jaxec("bash", temp.path().resolve("entry.sh").toString())
+                    .withEnv("TARGET", this.target.toString())
+                    .withEnv("PHINO_VERSION", this.phino())
+                    .withEnv("HONE_VERSION", this.hone())
+                    .withEnv("HONE_STATISTICS", "true")
+                    .withEnv("DEBUG", Boolean.toString(this.debug))
+                    .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
+                    .withEnv("CLASSES", this.classes)
+                    .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
+                    .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
+                    .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
+                    .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
+                    .withEnv("GREP_IN", this.grepIn)
+                    .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
+                    .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
+                    .withEnv("THREADS", Integer.toString(this.threads))
+                    .withEnv("TIMEOUT", Integer.toString(this.timeout))
+                    .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
+                    .withEnv("RULES", this.rulesAsString())
             );
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
@@ -802,13 +798,29 @@ public final class OptimizeMojo extends AbstractMojo {
             if (this.cache != null) {
                 jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
             }
-            final File settings = this.session.getRequest().getUserSettingsFile();
-            if (settings != null && settings.exists()) {
-                jaxec = jaxec.withEnv("SETTINGS", settings.getAbsolutePath());
-            }
             jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();
         }
+    }
+
+    /**
+     * Pass the outer Maven session settings to the nested Maven runs.
+     *
+     * @param input The command to extend
+     * @return The same command with the session environment
+     */
+    private Jaxec session(final Jaxec input) {
+        Jaxec jaxec = input
+            .withEnv("OFFLINE", Boolean.toString(this.session.isOffline()))
+            .withEnv(
+                "LOCAL_REPO",
+                this.session.getRequest().getLocalRepositoryPath().getAbsolutePath()
+            );
+        final File settings = this.session.getRequest().getUserSettingsFile();
+        if (settings != null && settings.exists()) {
+            jaxec = jaxec.withEnv("SETTINGS", settings.getAbsolutePath());
+        }
+        return jaxec;
     }
 
     private String jeo() throws IOException {

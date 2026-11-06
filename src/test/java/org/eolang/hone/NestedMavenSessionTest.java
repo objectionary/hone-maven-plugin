@@ -131,7 +131,7 @@ final class NestedMavenSessionTest {
         );
         MatcherAssert.assertThat(
             "withoutDocker() must hand the session values to entry.sh, or the nested mvn runs with the defaults",
-            source.substring(source.indexOf("private void withoutDocker()")),
+            source.substring(source.indexOf("private Jaxec session(")),
             Matchers.allOf(
                 Matchers.containsString(
                     ".withEnv(\"OFFLINE\", Boolean.toString(this.session.isOffline()))"
@@ -145,6 +145,14 @@ final class NestedMavenSessionTest {
                     "this.session.getRequest().getUserSettingsFile()"
                 )
             )
+        );
+        MatcherAssert.assertThat(
+            "withoutDocker() must call the session helper",
+            source.substring(
+                source.indexOf("private void withoutDocker()"),
+                source.indexOf("private Jaxec session(")
+            ),
+            Matchers.containsString("this.session(")
         );
     }
 

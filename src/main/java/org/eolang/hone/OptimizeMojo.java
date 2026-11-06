@@ -829,16 +829,9 @@ public final class OptimizeMojo extends AbstractMojo {
         }
     }
 
-    /**
-     * Pass the outer Maven session settings to the nested Maven runs.
-     *
-     * @param input The command to extend
-     * @return The same command with the session environment
-     */
     private Jaxec session(final Jaxec input) {
         Jaxec jaxec = input
-            .withEnv("OFFLINE", Boolean.toString(this.session.isOffline()))
-            .withEnv(
+            .withEnv("OFFLINE", Boolean.toString(this.session.isOffline())).withEnv(
                 "LOCAL_REPO",
                 this.session.getRequest().getLocalRepositoryPath().getAbsolutePath()
             );

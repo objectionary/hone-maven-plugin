@@ -146,6 +146,16 @@ final class NestedMavenSessionTest {
                 )
             )
         );
+    }
+
+    @Test
+    void callsSessionHelperInWithoutDocker() throws IOException {
+        final String source = new String(
+            Files.readAllBytes(
+                Paths.get("src/main/java/org/eolang/hone/OptimizeMojo.java")
+            ),
+            StandardCharsets.UTF_8
+        );
         MatcherAssert.assertThat(
             "withoutDocker() must call the session helper",
             source.substring(

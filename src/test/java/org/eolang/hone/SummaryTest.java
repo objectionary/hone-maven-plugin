@@ -46,6 +46,29 @@ final class SummaryTest {
     }
 
     @Test
+    void collectsTwoStatisticsFilesOfOneModule(@Mktmp final Path temp) throws Exception {
+        final Path module = Files.createDirectories(temp.resolve("module"));
+        Files.write(
+            module.resolve("hone-statistics-classes.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
+        );
+        Files.write(
+            module.resolve("hone-statistics-test-classes.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-client.csv")).asBytes()
+        );
+        MatcherAssert.assertThat(
+            "statistics of two hone.classes executions of one module must both reach the report",
+            new TextOf(
+                new Summary(Collections.singletonList(module), temp).collect()
+            ).asString(),
+            Matchers.allOf(
+                Matchers.containsString("Server.phi"),
+                Matchers.containsString("Client.phi")
+            )
+        );
+    }
+
+    @Test
     void keepsTheReportStableAcrossRepeatedCollections(@Mktmp final Path temp) throws Exception {
         final Path root = SummaryTest.modular(temp);
         final Summary summary = new Summary(

@@ -7,6 +7,7 @@ package org.eolang.hone;
 import com.yegor256.Jaxec;
 import com.yegor256.Mktmp;
 import com.yegor256.MktmpResolver;
+import com.yegor256.Result;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -67,6 +68,41 @@ final class EntryScriptBackupTest {
         MatcherAssert.assertThat(
             "the backup of the test classes must be its own directory (see #1344)",
             temp.resolve("test-classes-before-hone/foo/MainTest.class").toFile().exists(),
+            Matchers.is(true)
+        );
+    }
+
+    @Test
+    void rejectsClassesOutsideTarget(@Mktmp final Path temp) throws IOException {
+        final Path shared = Files.createDirectories(temp.resolve("shared"));
+        Files.write(
+            shared.resolve("Keep.class"),
+            "keep".getBytes(StandardCharsets.UTF_8)
+        );
+        final Result result = new Jaxec(
+            "bash",
+            Paths.get(
+                "src/main/resources/org/eolang/hone/scaffolding/entry.sh"
+            ).toAbsolutePath().toString()
+        )
+            .withEnv("TARGET", temp.toString())
+            .withEnv("EO_CACHE", temp.toString())
+            .withEnv("CLASSES", "../shared")
+            .withCheck(false)
+            .exec();
+        MatcherAssert.assertThat(
+            "a classes directory outside the target must be refused (see #1344)",
+            result.code(),
+            Matchers.is(1)
+        );
+        MatcherAssert.assertThat(
+            "the refusal must name the variable to fix",
+            result.stdout(),
+            Matchers.containsString("CLASSES")
+        );
+        MatcherAssert.assertThat(
+            "nothing outside the target may be removed",
+            shared.resolve("Keep.class").toFile().exists(),
             Matchers.is(true)
         );
     }

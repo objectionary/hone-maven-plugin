@@ -53,7 +53,8 @@ final class Collector extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(
         final Path file, final BasicFileAttributes attrs
     ) throws IOException {
-        if (file.getFileName().toString().startsWith(this.stats)
+        final String name = file.getFileName().toString();
+        if (name.startsWith(this.stats) && name.endsWith(".csv")
             && this.seen.add(file.toRealPath())) {
             this.found.add(new CSV(file));
         }

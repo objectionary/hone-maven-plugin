@@ -130,6 +130,14 @@ that Docker is misconfigured; the directory must exist even if there are no .cla
   exit 1
 fi
 
+if [ -z "${CLASSES}" ] || [ "${CLASSES}" = '.' ] || [ "${CLASSES}" = '..' ] \
+  || [ "${CLASSES}" != "$(basename "${CLASSES}")" ]; then
+  echo "The \$CLASSES environment variable must be a single directory name \
+inside '${TARGET}', but it is '${CLASSES}'; hone.classes must not point \
+outside the target directory"
+  exit 1
+fi
+
 if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \

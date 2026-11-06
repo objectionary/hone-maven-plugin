@@ -42,7 +42,9 @@ Just add this to your `pom.xml` file (you must have [Docker] installed too):
 The plugin will do exactly the following:
 
 1. Take Bytecode `.class` files from the `target/classes/` directory and copy
-all of them to the `target/classes-before-hone/` directory (as a backup).
+all of them to the `target/classes-before-hone/` directory (as a backup). When
+`hone.classes` names another directory, the backup is named
+`target/<hone.classes>-before-hone/`.
 1. Using [jeo-maven-plugin],
 transform `.class` files to
 `.xmir` [format][XMIR],

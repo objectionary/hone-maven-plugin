@@ -21,7 +21,7 @@ print_tree() {
 # already exists and would nest one backup in the other. The "-L" copies the
 # classes, not the link, when "classes" is a symlink:
 save_originals() {
-  local saved="${TARGET}/classes-before-hone"
+  local saved="${TARGET}/${CLASSES}-before-hone"
   local fresh="${saved}.new"
   local list="${TARGET}/hone/assembled.txt"
   rm -rf "${fresh}"
@@ -145,7 +145,7 @@ after the 'compile' phase is finished"
 fi
 
 save_originals
-echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -type f -print | wc -l | xargs) files)"
+echo "The binaries before hone are saved in '${TARGET}/${CLASSES}-before-hone' ($(find "${TARGET}/${CLASSES}-before-hone" -type f -print | wc -l | xargs) files)"
 
 if [ -z "${PHINO_VERSION}" ]; then
   echo "PHINO_VERSION is not set"

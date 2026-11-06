@@ -239,7 +239,8 @@ function rewrite {
     # Nothing a rule produced, so the output stays the very XMIR jeo printed:
     # phino's own printer drifts from it, the class would then look changed to
     # the assembly filter and lose the attributes XMIR cannot carry (see #1343).
-    cp "${xi}" "${xo}"
+    # Atomic, so a torn copy cannot be trusted under the stamp written below.
+    atomic_write "${xo}" cat "${xi}"
   else
     changed=$(diff "${phi}" "${pho}" | awk '/^>/ { a++ } /^</ { d++ } END { print (a > d ? a : d) + 0 }' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"

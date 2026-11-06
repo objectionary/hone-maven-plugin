@@ -59,47 +59,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
     void keepsStatisticsOfOtherClassesDirectories(@Mktmp final Path home) throws Exception {
-        new Farea(home).together(
-            f -> {
-                f.clean();
-                for (final String name : new String[] {
-                    "hone-statistics.csv",
-                    "hone-statistics-classes.csv",
-                    "hone-statistics-test-classes.csv",
-                }) {
-                    f.files().file(String.format("target/%s", name)).write(
-                        "stale statistics".getBytes(StandardCharsets.UTF_8)
-                    );
-                }
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("process-classes")
-                    .goals("optimize")
-                    .configuration()
-                    .set("classes", "test-classes");
-                f.exec("process-classes");
-                MatcherAssert.assertThat(
-                    "statistics of the execution that was skipped must not survive",
-                    Files.exists(
-                        home.resolve("target/hone-statistics-test-classes.csv")
-                    ),
-                    Matchers.is(false)
-                );
-                MatcherAssert.assertThat(
-                    "statistics of another classes directory must survive (see #1344)",
-                    Files.exists(home.resolve("target/hone-statistics-classes.csv")),
-                    Matchers.is(true)
-                );
-                MatcherAssert.assertThat(
-                    "statistics written under the old name must not survive (see #1344)",
-                    Files.exists(home.resolve("target/hone-statistics.csv")),
-                    Matchers.is(false)
-                );
-            }
-        );
+        new Farea(home).together(OptimizeMojoTest::runSkippedForTestClasses);
     }
 
     @Test
@@ -276,6 +238,43 @@ final class OptimizeMojoTest {
                 "/home/user/project/target", "/targetfoo/classes", "/target-generated/classes"
             ),
             Matchers.equalTo("/targetfoo/classes,/target-generated/classes")
+        );
+    }
+
+    private static void runSkippedForTestClasses(final Farea fea) throws IOException {
+        fea.clean();
+        for (final String name : new String[] {
+            "hone-statistics.csv",
+            "hone-statistics-classes.csv",
+            "hone-statistics-test-classes.csv",
+        }) {
+            fea.files().file(String.format("target/%s", name)).write(
+                "stale statistics".getBytes(StandardCharsets.UTF_8)
+            );
+        }
+        fea.build()
+            .plugins()
+            .appendItself()
+            .execution("default")
+            .phase("process-classes")
+            .goals("optimize")
+            .configuration()
+            .set("classes", "test-classes");
+        fea.exec("process-classes");
+        MatcherAssert.assertThat(
+            "statistics of the execution that was skipped must not survive",
+            fea.files().file("target/hone-statistics-test-classes.csv").exists(),
+            Matchers.is(false)
+        );
+        MatcherAssert.assertThat(
+            "statistics of another classes directory must survive (see #1344)",
+            fea.files().file("target/hone-statistics-classes.csv").exists(),
+            Matchers.is(true)
+        );
+        MatcherAssert.assertThat(
+            "statistics written under the old name must not survive (see #1344)",
+            fea.files().file("target/hone-statistics.csv").exists(),
+            Matchers.is(false)
         );
     }
 

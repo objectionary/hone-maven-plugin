@@ -501,12 +501,8 @@ public final class OptimizeMojo extends AbstractMojo {
         return without;
     }
 
-    /**
-     * Statistics file of this classes directory, so that executions for
-     * different directories keep their own rows (see #1344).
-     *
-     * @return The path to the statistics CSV
-     */
+    // The name carries CLASSES, so executions for different directories keep
+    // their own rows (see #1344).
     private Path stats() {
         return this.target.toPath().resolve(
             String.format("hone-statistics-%s.csv", this.classes)

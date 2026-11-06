@@ -33,7 +33,8 @@ final class CollectorTest {
             CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
         );
         Files.write(
-            Files.createDirectories(home.resolve("two")).resolve("hone-statistics-test-classes.csv"),
+            Files.createDirectories(home.resolve("two"))
+                .resolve("hone-statistics-test-classes.csv"),
             CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
         );
         final List<CSV> found = new ArrayList<>(0);

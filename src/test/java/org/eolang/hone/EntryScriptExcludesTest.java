@@ -25,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * excluded, and its {@code Stream.mapMulti} failed on Java 8 (see #1347).
  * A wildcard that matches the comma also matches a sibling such as
  * {@code axb.class}, so such classes are staged instead.
- *
  * @since 0.33.0
  */
 @ExtendWith(MktmpResolver.class)
@@ -154,7 +153,8 @@ final class EntryScriptExcludesTest {
             StandardCharsets.UTF_8
         );
         final int start = text.indexOf("function stage_classes {");
-        return text.substring(start, text.indexOf("\n}\n", start) + 2);
+        final String end = String.format("%n}%n");
+        return text.substring(start, text.indexOf(end, start) + end.length());
     }
 
     private static String escaped(final String classfile) throws IOException {

@@ -137,7 +137,8 @@ fi
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
 # A fingerprint of everything that changes the result of a rewrite, except the
-# input file itself: the Phino version, rules, their content, and the options.
+# input file itself: the Hone, jeo and Phino versions, rules, their content, and
+# the options.
 # It is stored next to the output and compared on the next run, so an edited rule or a
 # changed option is not skipped (see #943). The rules are fingerprinted by
 # content, not by modification time, and named by their path under the rules
@@ -151,7 +152,7 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 # file would otherwise run this loop and one cksum per rule again (see #1208).
 stamp="${HONE_STAMP}"
 if [ -z "${stamp}" ]; then
-stamp="${PHINO_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
+stamp="${PHINO_VERSION}|${JEO_VERSION}|${HONE_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
 for rule in "${rules[@]}"; do
   name="${rule#*/rules/}"
   stamp="${stamp}|${name#*/hone-extra/}"

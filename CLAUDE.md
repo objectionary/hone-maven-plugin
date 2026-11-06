@@ -192,9 +192,10 @@ to the point where a production has become unreachable.
   methods with one name in one class. `711` then reverts an invokedynamic
   through the wrong wrapper and the class dies at link time with
   `LambdaConversionException` (see #777).
-- Do not hand-edit `.class` files in `target/classes-before-hone/`. That
-  directory is the backup the plugin makes before mutation; it is the only way
-  to recover the pre-optimization bytecode without recompiling.
+- Do not hand-edit `.class` files in `target/<hone.classes>-before-hone/`
+  (`target/classes-before-hone/` by default). That directory is the backup the
+  plugin makes before mutation; it is the only way to recover the
+  pre-optimization bytecode without recompiling.
 - Do not introduce a rule whose `result` contains constructs that
   `jeo:assemble` cannot translate back to bytecode. It is easy to invent
   𝜑-calculus that jeo cannot lower; verify roundtripping by running the

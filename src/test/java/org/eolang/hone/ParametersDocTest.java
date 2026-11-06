@@ -15,7 +15,9 @@ import org.junit.jupiter.api.Test;
 /**
  * Test case for the parameters {@code CLAUDE.md} documents, which named a
  * {@code hone.verbose} that does not exist and described a default of
- * {@code hone.grep-in} made of two names instead of fifteen (see #1075).
+ * {@code hone.grep-in} made of two names instead of fifteen (see #1075), and
+ * which sent the reader to Maven's {@code -X} for a {@code set -x} trace that
+ * {@code hone.debug} already turns on (see #1353).
  *
  * @since 0.30.0
  */
@@ -30,6 +32,21 @@ final class ParametersDocTest {
             Matchers.allOf(
                 Matchers.not(Matchers.containsString("`hone.debug=true` and `hone.verbose`")),
                 Matchers.containsString("Logger.isDebugEnabled")
+            )
+        );
+    }
+
+    @Test
+    void tracesOnlyWhenDebugIsOn() throws IOException {
+        MatcherAssert.assertThat(
+            "hone.debug turns the shell trace on and Maven's -X only the verbose messages, so the doc must not swap the two (see #1353)",
+            ParametersDocTest.doc(),
+            Matchers.allOf(
+                Matchers.containsString("turns on both the phino debug log"),
+                Matchers.containsString("-X` turns on the `verbose`"),
+                Matchers.containsString("`set -x` trace"),
+                Matchers.containsString("--log-level=debug"),
+                Matchers.not(Matchers.containsString("appear only"))
             )
         );
     }

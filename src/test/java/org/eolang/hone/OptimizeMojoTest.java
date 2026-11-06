@@ -63,7 +63,7 @@ final class OptimizeMojoTest {
         new Farea(home).together(
             f -> {
                 f.clean();
-                f.files().file("target/hone-statistics.csv").write(
+                f.files().file("target/hone-statistics-classes.csv").write(
                     "stale statistics".getBytes(StandardCharsets.UTF_8)
                 );
                 f.build()
@@ -75,7 +75,7 @@ final class OptimizeMojoTest {
                 f.exec("process-classes");
                 MatcherAssert.assertThat(
                     "statistics from a previous run must not survive a skipped optimization",
-                    Files.exists(home.resolve("target/hone-statistics.csv")),
+                    Files.exists(home.resolve("target/hone-statistics-classes.csv")),
                     Matchers.is(false)
                 );
             }

@@ -28,7 +28,7 @@ final class Collector extends SimpleFileVisitor<Path> {
     private final List<CSV> found;
 
     /**
-     * The statistics file name to look for.
+     * The prefix of the statistics file names to look for.
      */
     private final String stats;
 
@@ -41,7 +41,7 @@ final class Collector extends SimpleFileVisitor<Path> {
      * Ctor.
      *
      * @param found Where to put the found CSVs
-     * @param stats The statistics file name to look for
+     * @param stats The prefix of the statistics file names to look for
      */
     Collector(final List<CSV> found, final String stats) {
         this.found = found;
@@ -53,7 +53,7 @@ final class Collector extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(
         final Path file, final BasicFileAttributes attrs
     ) throws IOException {
-        if (this.stats.equals(file.getFileName().toString())
+        if (file.getFileName().toString().startsWith(this.stats)
             && this.seen.add(file.toRealPath())) {
             this.found.add(new CSV(file));
         }

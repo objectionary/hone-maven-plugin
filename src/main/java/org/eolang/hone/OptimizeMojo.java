@@ -397,7 +397,7 @@ public final class OptimizeMojo extends AbstractMojo {
         OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
         OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
         if (this.withoutClasses() && this.skipIfNoClasses) {
-            Files.deleteIfExists(this.target.toPath().resolve("hone-statistics.csv"));
+            Files.deleteIfExists(this.stats());
             Logger.info(this, "The directory with classes is absent or empty, skipping");
             return;
         }
@@ -497,9 +497,21 @@ public final class OptimizeMojo extends AbstractMojo {
         return without;
     }
 
+    /**
+     * Statistics file of this classes directory, so that executions for
+     * different directories keep their own rows (see #1344).
+     *
+     * @return The path to the statistics CSV
+     */
+    private Path stats() {
+        return this.target.toPath().resolve(
+            String.format("hone-statistics-%s.csv", this.classes)
+        );
+    }
+
     private void optimize() throws IOException {
         final long start = System.currentTimeMillis();
-        final Path stats = this.target.toPath().resolve("hone-statistics.csv");
+        final Path stats = this.stats();
         if (Files.deleteIfExists(stats)) {
             Logger.debug(this, "Statistics of the previous run deleted: %[file]s", stats);
         }

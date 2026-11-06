@@ -31,6 +31,26 @@ final class RewriteScriptStatisticsTest {
     @Test
     @SuppressWarnings("JTCOP.RuleAssertionMessage")
     void writesFiveColumnsForExcludedAndFreshFiles(@Mktmp final Path home) throws IOException {
+        for (int run = 0; run < 2; ++run) {
+            RewriteScriptStatisticsTest.run(home, "classes");
+            RewriteScriptStatisticsTest.assertFiveColumns(
+                home.resolve("target/hone-statistics-classes.csv")
+            );
+        }
+    }
+
+    @Test
+    @SuppressWarnings("JTCOP.RuleAssertionMessage")
+    void writesOneStatisticsFilePerClassesDirectory(@Mktmp final Path home) throws IOException {
+        for (final String classes : new String[] {"classes", "test-classes"}) {
+            RewriteScriptStatisticsTest.run(home, classes);
+            RewriteScriptStatisticsTest.assertFiveColumns(
+                home.resolve(String.format("target/hone-statistics-%s.csv", classes))
+            );
+        }
+    }
+
+    private static void run(final Path home, final String classes) throws IOException {
         final Path source = Files.createDirectories(home.resolve("source"));
         Files.createDirectories(home.resolve("target"));
         Files.write(
@@ -45,32 +65,32 @@ final class RewriteScriptStatisticsTest {
         if (!phino.toFile().setExecutable(true)) {
             throw new IllegalStateException("Can't make the fake phino executable");
         }
-        final String script = Paths.get(
-            "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
-        ).toAbsolutePath().toString();
-        for (int run = 0; run < 2; ++run) {
-            new Jaxec("bash", script)
-                .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
-                .withEnv("TARGET", home.resolve("target").toString())
-                .withEnv("HONE_XMIR_IN", source.toString())
-                .withEnv("HONE_FROM", home.resolve("phi").toString())
-                .withEnv("HONE_TO", home.resolve("optimized").toString())
-                .withEnv("HONE_XMIR_OUT", home.resolve("out").toString())
-                .withEnv("HONE_GREP_IN", "NO_MATCH")
-                .withEnv("HONE_RULES", "rules/test.phr")
-                .withEnv("HONE_SMALL_STEPS", "false")
-                .withEnv("HONE_MAX_CYCLES", "1")
-                .withEnv("HONE_MAX_DEPTH", "1")
-                .withEnv("HONE_THREADS", "1")
-                .withEnv("HONE_TIMEOUT", "5")
-                .withEnv("HONE_KILL_GRACE", "1")
-                .withEnv("HONE_STATISTICS", "true")
-                .withEnv("HONE_VERBOSE", "false")
-                .withEnv("HONE_DEBUG", "false")
-                .withEnv("HONE_VERSION", "0.1.0")
-                .exec();
-            RewriteScriptStatisticsTest.assertFiveColumns(home);
-        }
+        new Jaxec(
+            "bash",
+            Paths.get(
+                "src/main/resources/org/eolang/hone/scaffolding/rewrite.sh"
+            ).toAbsolutePath().toString()
+        )
+            .withEnv("PATH", String.format("%s:%s", home, System.getenv("PATH")))
+            .withEnv("TARGET", home.resolve("target").toString())
+            .withEnv("CLASSES", classes)
+            .withEnv("HONE_XMIR_IN", source.toString())
+            .withEnv("HONE_FROM", home.resolve("phi").toString())
+            .withEnv("HONE_TO", home.resolve("optimized").toString())
+            .withEnv("HONE_XMIR_OUT", home.resolve("out").toString())
+            .withEnv("HONE_GREP_IN", "NO_MATCH")
+            .withEnv("HONE_RULES", "rules/test.phr")
+            .withEnv("HONE_SMALL_STEPS", "false")
+            .withEnv("HONE_MAX_CYCLES", "1")
+            .withEnv("HONE_MAX_DEPTH", "1")
+            .withEnv("HONE_THREADS", "1")
+            .withEnv("HONE_TIMEOUT", "5")
+            .withEnv("HONE_KILL_GRACE", "1")
+            .withEnv("HONE_STATISTICS", "true")
+            .withEnv("HONE_VERBOSE", "false")
+            .withEnv("HONE_DEBUG", "false")
+            .withEnv("HONE_VERSION", "0.1.0")
+            .exec();
     }
 
     @Test
@@ -184,14 +204,12 @@ final class RewriteScriptStatisticsTest {
 
     private static String row(final Path target) throws IOException {
         return Files.readAllLines(
-            target.resolve("hone-statistics.csv"), StandardCharsets.UTF_8
+            target.resolve("hone-statistics-classes.csv"), StandardCharsets.UTF_8
         ).get(1);
     }
 
-    private static void assertFiveColumns(final Path home) throws IOException {
-        final List<String> rows = Files.readAllLines(
-            home.resolve("target/hone-statistics.csv"), StandardCharsets.UTF_8
-        );
+    private static void assertFiveColumns(final Path stats) throws IOException {
+        final List<String> rows = Files.readAllLines(stats, StandardCharsets.UTF_8);
         MatcherAssert.assertThat(
             "the statistics report must contain the header and one processed file",
             rows,

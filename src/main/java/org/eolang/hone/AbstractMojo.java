@@ -204,6 +204,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
 
     /**
      * Drop statistics that the skipped execution would have replaced (see #1349).
+     *
      * @throws MojoExecutionException If the cleanup fails
      */
     void dropStaleStatistics() throws MojoExecutionException {

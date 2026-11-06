@@ -396,8 +396,12 @@ public final class OptimizeMojo extends AbstractMojo {
         OptimizeMojo.requireAtLeast("hone.max-cycles", this.maxCycles, 1);
         OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
         OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
+        final Path legacy = this.target.toPath().resolve("hone-statistics.csv");
+        if (Files.deleteIfExists(legacy)) {
+            Logger.debug(this, "Statistics of the old name deleted: %[file]s", legacy);
+        }
         if (this.withoutClasses() && this.skipIfNoClasses) {
-            Files.deleteIfExists(this.target.toPath().resolve("hone-statistics.csv"));
+            Files.deleteIfExists(this.stats());
             Logger.info(this, "The directory with classes is absent or empty, skipping");
             return;
         }
@@ -497,9 +501,22 @@ public final class OptimizeMojo extends AbstractMojo {
         return without;
     }
 
+    // The name carries CLASSES, so executions for different directories keep
+    // their own rows (see #1344). A nested directory is flattened into one
+    // file name, because hone:summary scans the target directory only one
+    // level deep:
+    private Path stats() {
+        return this.target.toPath().resolve(
+            String.format(
+                "hone-statistics-%s.csv",
+                this.classes.replace('/', '-').replace('\\', '-')
+            )
+        );
+    }
+
     private void optimize() throws IOException {
         final long start = System.currentTimeMillis();
-        final Path stats = this.target.toPath().resolve("hone-statistics.csv");
+        final Path stats = this.stats();
         if (Files.deleteIfExists(stats)) {
             Logger.debug(this, "Statistics of the previous run deleted: %[file]s", stats);
         }

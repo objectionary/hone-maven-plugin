@@ -155,9 +155,15 @@ function rewrite {
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
   mark="${xo}.stamp"
-  # The input is compared by its content, not by its modification time,
-  # because jeo:disassemble writes it again on every run (see #1032).
-  seal="${stamp}|$(cksum < "${xi}")"
+  # The seal comes from the class file, not from the XMIR: jeo never writes the
+  # same XMIR twice, its "time" attribute and label names change every run (see #1338).
+  cls="${TARGET}/${HONE_CLASSES}/${xi#"${HONE_XMIR_IN}"/}"
+  cls="${cls%.xmir}.class"
+  if [ -f "${cls}" ]; then
+    seal="${stamp}|$(cksum < "${cls}")"
+  else
+    seal="${stamp}|$(cksum < "${xi}")"
+  fi
   fresh=false
   if [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${seal}" ] && [ -f "${xo}" ]; then
     if [ ! -f "${phi}" ]; then

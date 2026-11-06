@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * excluded, and its {@code Stream.mapMulti} failed on Java 8 (see #1347).
  * A wildcard that matches the comma also matches a sibling such as
  * {@code axb.class}, so such classes are staged instead.
+ *
  * @since 0.33.0
  */
 @ExtendWith(MktmpResolver.class)

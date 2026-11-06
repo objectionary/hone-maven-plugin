@@ -278,20 +278,35 @@ if [ "${SKIP_VERIFICATION}" == 'true' ]; then
   echo "Assembled bytecode won't be verified, because of skipVerification=true"
   assemble_opts+=("-Djeo.assemble.skip.verification=true")
 fi
-# Only the disassembly is filtered. The assemble goal has no such parameters,
-# and it does not need them: it takes back what the disassembly left behind.
+# Only the disassembly takes the includes and excludes; assembly is filtered by
+# the changed-XMIR directory below.
 if [ -n "${INCLUDES}" ]; then
   disassemble_opts+=("-Djeo.disassemble.includes=${INCLUDES}")
 fi
 if [ -n "${EXCLUDES}" ]; then
   disassemble_opts+=("-Djeo.disassemble.excludes=${EXCLUDES}")
 fi
+# A class the rules left alone still comes back from a jeo round trip with the
+# attributes XMIR cannot carry dropped, so only the XMIR that differs from what
+# jeo disassembled may be assembled: the rest of the classes keep the bytes
+# javac wrote, because jeo never deletes its output directory (see #1343).
+changed_dir="${TARGET}/hone/unphi-changed"
+tree="${TARGET}/hone/unphi"
 if [ "${SKIP_PHINO}" == 'true' ]; then
   echo "Skipping the phino step as requested"
-  assemble_opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/jeo-disassemble")
-else
-  assemble_opts+=("-Djeo.assemble.sourcesDir=${TARGET}/hone/unphi")
+  tree="${TARGET}/hone/jeo-disassemble"
 fi
+rm -rf "${changed_dir}"
+mkdir -p "${changed_dir}"
+while IFS= read -r xmir; do
+  rel="${xmir#"${tree}"/}"
+  if ! cmp -s "${xmir}" "${TARGET}/hone/jeo-disassemble/${rel}"; then
+    mkdir -p "$(dirname "${changed_dir}/${rel}")"
+    cp "${xmir}" "${changed_dir}/${rel}"
+  fi
+done < <(find "${tree}" -name '*.xmir' -type f)
+assemble_opts+=("-Djeo.assemble.sourcesDir=${changed_dir}")
+changed=$(find "${changed_dir}" -name '*.xmir' -type f -print | wc -l | xargs)
 
 timings_csv="${TARGET}/timings.csv"
 mkdir -p "$(dirname "${timings_csv}")"
@@ -354,9 +369,13 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   record_timing "phino:rewrite (default-cli)" "$(elapsed "${start}")"
 fi
 
-start=$(now)
-(
-  set -x
-  mvn "${assemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:assemble"
-)
-record_timing "jeo-maven-plugin:assemble (default-cli)" "$(elapsed "${start}")"
+if [ "${changed}" -gt 0 ]; then
+  start=$(now)
+  (
+    set -x
+    mvn "${assemble_opts[@]}" "org.eolang:jeo-maven-plugin:${JEO_VERSION}:assemble"
+  )
+  record_timing "jeo-maven-plugin:assemble (default-cli)" "$(elapsed "${start}")"
+else
+  echo "None of the classes changed, so they stay as they were compiled"
+fi

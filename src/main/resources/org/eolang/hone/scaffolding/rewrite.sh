@@ -36,7 +36,7 @@ fi
 # The name carries CLASSES, so a second execution of the same module for
 # another directory, like test-classes, keeps its own rows (see #1344). A
 # nested directory is flattened, because hone:summary scans one level deep:
-statistics_csv="${TARGET}/hone-statistics-$(printf '%s' "${CLASSES:-classes}" | tr '/\\' '--').csv"
+statistics_csv="${TARGET}/hone-statistics-$(printf '%s' "${CLASSES:-classes}" | tr "/" "-" | tr "\\\\" "-").csv"
 
 function verbose {
   if [ "${HONE_VERBOSE}" == 'true' ]; then

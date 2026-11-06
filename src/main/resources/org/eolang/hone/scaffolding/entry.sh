@@ -371,6 +371,7 @@ if [ "${SKIP_PHINO}" != 'true' ]; then
   export HONE_RULES="${RULES}"
   export HONE_GREP_IN="${GREP_IN}"
   export HONE_XMIR_IN="${TARGET}/hone/jeo-disassemble"
+  export HONE_CLASSES="${CLASSES}"
   export HONE_FROM="${TARGET}/hone/phi"
   export HONE_TO="${TARGET}/hone/phi-optimized"
   export HONE_XMIR_OUT="${TARGET}/hone/unphi"

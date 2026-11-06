@@ -45,7 +45,11 @@ final class RewriteScriptStatisticsTest {
         for (final String classes : new String[] {"classes", "test-classes", "classes/java/main"}) {
             RewriteScriptStatisticsTest.run(home, classes);
             RewriteScriptStatisticsTest.assertFiveColumns(
-                home.resolve(String.format("target/hone-statistics-%s.csv", classes))
+                home.resolve(
+                    String.format(
+                        "target/hone-statistics-%s.csv", classes.replace('/', '-')
+                    )
+                )
             );
         }
         RewriteScriptStatisticsTest.assertFiveColumns(

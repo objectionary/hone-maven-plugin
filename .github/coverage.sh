@@ -40,8 +40,14 @@ table=$(
       amark=""
       [ "${bbuild}" = "pass" ] || bmark=" ⚠️"
       [ "${abuild}" = "pass" ] || amark=" ⚠️"
-      printf '| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %ss%s | %s/%s | %ss | %ss%s |\n' \
-        "${name}" "${repo}" "${sha}" "${forks}" "${loc}" "${total}" "${btime}" "${bmark}" "${modified}" "${streams}" "${htime}" "${atime}" "${amark}"
+      edits="${modified}/${streams}"
+      hone="${htime}s"
+      if [ "${modified}" = "skipped" ]; then
+        edits="skipped"
+        hone="skipped"
+      fi
+      printf '| [%s](https://github.com/%s/commit/%s) | %s | %s | %s | %ss%s | %s | %s | %ss%s |\n' \
+        "${name}" "${repo}" "${sha}" "${forks}" "${loc}" "${total}" "${btime}" "${bmark}" "${edits}" "${hone}" "${atime}" "${amark}"
     else
       printf '| [%s](https://github.com/%s/commit/%s) | %s | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |\n' \
         "${name}" "${repo}" "${sha}" "${forks}"

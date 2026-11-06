@@ -58,7 +58,8 @@ rule, how to test, and what to avoid*.
    latest release on Central, whose own rules live inside its jar, so the rule
    just written under `src/main/resources/.../rules/` is never loaded.
 
-   Inspect `target/hone/phi-optimized/...phi.NN` files to verify the delta.
+   Inspect `target/hone/phi-optimized/...phi.NNN` files (the suffix width follows
+   the rule count) to verify the delta.
 4. **Add a single-rule unit test** under `src/test/phino/` (a `.yml` pack
    named after the rule) with a minimal input and the expected output.
 5. **Add or update an end-to-end YAML** in
@@ -82,8 +83,8 @@ phino rewrite --max-cycles 1 --max-depth 500 --sweet \
 
 The rewritten expression is printed on stdout. In small-steps mode
 (`<smallSteps>true</smallSteps>` or `-Dhone.small-steps=true`) `rewrite.sh`
-calls phino once per rule and saves `Foo.phi.01`, `Foo.phi.02`, … in
-`target/hone/phi-optimized/`; `diff Foo.phi.07 Foo.phi.08` then shows exactly
+calls phino once per rule and saves `Foo.phi.001`, `Foo.phi.002`, … in
+`target/hone/phi-optimized/`; `diff Foo.phi.007 Foo.phi.008` then shows exactly
 what rule `nnn` did — the canonical way to bisect a misbehaving rule.
 
 ## How to extend beyond `streams/`
@@ -164,10 +165,11 @@ to the point where a production has become unreachable.
   bisect whether phino or jeo introduced the corruption.
 - **GNU coreutils** — `entry.sh` and `rewrite.sh` need GNU `realpath` (or
   `grealpath`) and `parallel`. On macOS: `brew install coreutils parallel`.
-- **`hone.debug=true`** — enables `--log-level=debug` in phino. There is no
+- **`hone.debug=true`** — turns on both the phino debug log
+  (`--log-level=debug`) and the `set -x` trace of the scripts. There is no
   `hone.verbose`: the `VERBOSE` the scripts read comes from
-  `Logger.isDebugEnabled`, so `set -x` and the shell expansions appear only
-  under Maven's own `-X`.
+  `Logger.isDebugEnabled`, so Maven's own `-X` turns on the `verbose`
+  messages alone.
 - **`hone.grep-in`** — pre-filter regex on the XMIR text. The default is built
   from the fifteen stream operator names in `OptimizeMojo.DEFAULT_GREP_IN`, so
   a class calling any of them, `distinct` among the rest, is not skipped; set

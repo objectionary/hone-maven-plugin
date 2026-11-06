@@ -18,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.tools.ToolProvider;
 import org.hamcrest.MatcherAssert;
@@ -295,24 +294,29 @@ final class RandomPipelineOptimizationTest {
             fea.log(),
             RequisiteMatcher.SUCCESS
         );
-        int rewritten = 0;
+        int fused = 0;
         for (int seed = 0; seed < pipelines; ++seed) {
             final String klass = String.format("random/P%04d.class", seed);
-            if (!Arrays.equals(
+            final String after = new String(
                 Files.readAllBytes(home.resolve("target/classes").resolve(klass)),
+                StandardCharsets.ISO_8859_1
+            );
+            final String before = new String(
                 Files.readAllBytes(
                     home.resolve("target/classes-before-hone").resolve(klass)
-                )
-            )) {
-                rewritten += 1;
+                ),
+                StandardCharsets.ISO_8859_1
+            );
+            if (after.contains("mapMulti") && !before.contains("mapMulti")) {
+                fused += 1;
             }
         }
         MatcherAssert.assertThat(
             String.format(
-                "at least one of the %d pipelines must be rewritten, or the experiment proves nothing",
+                "at least one of the %d pipelines must gain a mapMulti from fusion, or the experiment proves nothing",
                 pipelines
             ),
-            rewritten,
+            fused,
             Matchers.greaterThan(0)
         );
         final List<String> broken = new ArrayList<>(0);

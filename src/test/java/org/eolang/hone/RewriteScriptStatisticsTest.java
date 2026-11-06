@@ -48,6 +48,9 @@ final class RewriteScriptStatisticsTest {
                 home.resolve(String.format("target/hone-statistics-%s.csv", classes))
             );
         }
+        RewriteScriptStatisticsTest.assertFiveColumns(
+            home.resolve("target/hone-statistics-classes.csv")
+        );
     }
 
     private static void run(final Path home, final String classes) throws IOException {

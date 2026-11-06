@@ -59,16 +59,19 @@ final class OptimizeMojoTest {
     }
 
     @Test
-    void removesOnlyStatisticsOfItsClassesDirectory(@Mktmp final Path home) throws Exception {
+    void keepsStatisticsOfOtherClassesDirectories(@Mktmp final Path home) throws Exception {
         new Farea(home).together(
             f -> {
                 f.clean();
-                f.files().file("target/hone-statistics-classes.csv").write(
-                    "stale statistics".getBytes(StandardCharsets.UTF_8)
-                );
-                f.files().file("target/hone-statistics-test-classes.csv").write(
-                    "stale statistics".getBytes(StandardCharsets.UTF_8)
-                );
+                for (final String name : new String[] {
+                    "hone-statistics.csv",
+                    "hone-statistics-classes.csv",
+                    "hone-statistics-test-classes.csv",
+                }) {
+                    f.files().file(String.format("target/%s", name)).write(
+                        "stale statistics".getBytes(StandardCharsets.UTF_8)
+                    );
+                }
                 f.build()
                     .plugins()
                     .appendItself()
@@ -89,6 +92,11 @@ final class OptimizeMojoTest {
                     "statistics of another classes directory must survive (see #1344)",
                     Files.exists(home.resolve("target/hone-statistics-classes.csv")),
                     Matchers.is(true)
+                );
+                MatcherAssert.assertThat(
+                    "statistics written under the old name must not survive (see #1344)",
+                    Files.exists(home.resolve("target/hone-statistics.csv")),
+                    Matchers.is(false)
                 );
             }
         );

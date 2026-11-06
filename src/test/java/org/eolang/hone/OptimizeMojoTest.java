@@ -59,6 +59,42 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    void removesOnlyStatisticsOfItsClassesDirectory(@Mktmp final Path home) throws Exception {
+        new Farea(home).together(
+            f -> {
+                f.clean();
+                f.files().file("target/hone-statistics-classes.csv").write(
+                    "stale statistics".getBytes(StandardCharsets.UTF_8)
+                );
+                f.files().file("target/hone-statistics-test-classes.csv").write(
+                    "stale statistics".getBytes(StandardCharsets.UTF_8)
+                );
+                f.build()
+                    .plugins()
+                    .appendItself()
+                    .execution("default")
+                    .phase("process-classes")
+                    .goals("optimize")
+                    .configuration()
+                    .set("classes", "test-classes");
+                f.exec("process-classes");
+                MatcherAssert.assertThat(
+                    "statistics of the execution that was skipped must not survive",
+                    Files.exists(
+                        home.resolve("target/hone-statistics-test-classes.csv")
+                    ),
+                    Matchers.is(false)
+                );
+                MatcherAssert.assertThat(
+                    "statistics of another classes directory must survive (see #1344)",
+                    Files.exists(home.resolve("target/hone-statistics-classes.csv")),
+                    Matchers.is(true)
+                );
+            }
+        );
+    }
+
+    @Test
     void removesStaleStatisticsWhenSkippingWithoutClasses(@Mktmp final Path home) throws Exception {
         new Farea(home).together(
             f -> {

@@ -69,8 +69,8 @@ final class SummaryTest {
         final Path dir = SummaryTest.modular(temp);
         final Summary summary = new Summary(SummaryTest.modules(dir), dir);
         summary.collect();
-        Files.deleteIfExists(dir.resolve("server/hone-statistics.csv"));
-        Files.deleteIfExists(dir.resolve("client/hone-statistics.csv"));
+        Files.deleteIfExists(dir.resolve("server/hone-statistics-classes.csv"));
+        Files.deleteIfExists(dir.resolve("client/hone-statistics-classes.csv"));
         MatcherAssert.assertThat(
             "stale report shouldn't remain if no statistics are found",
             summary.collect().toFile().exists(),
@@ -84,7 +84,7 @@ final class SummaryTest {
             Files.createSymbolicLink(
                 temp.resolve("linked"),
                 Files.createDirectories(temp.resolve("real"))
-            ).resolve("hone-statistics.csv"),
+            ).resolve("hone-statistics-classes.csv"),
             new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
         );
         MatcherAssert.assertThat(
@@ -99,7 +99,7 @@ final class SummaryTest {
     @Test
     void keepsStatisticsOfSingleModule(@Mktmp final Path temp) throws Exception {
         final Path own = Files.createDirectories(temp.resolve("target"))
-            .resolve("hone-statistics.csv");
+            .resolve("hone-statistics-classes.csv");
         Files.write(
             own,
             new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
@@ -115,7 +115,7 @@ final class SummaryTest {
     @Test
     void countsSymlinkedModuleOnce(@Mktmp final Path temp) throws Exception {
         Files.write(
-            Files.createDirectories(temp.resolve("server")).resolve("hone-statistics.csv"),
+            Files.createDirectories(temp.resolve("server")).resolve("hone-statistics-classes.csv"),
             new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
         );
         Files.createSymbolicLink(temp.resolve("linked"), temp.resolve("server"));
@@ -150,12 +150,12 @@ final class SummaryTest {
         throws Exception {
         final Path target = Files.createDirectories(temp.resolve("target"));
         Files.write(
-            target.resolve("hone-statistics.csv"),
+            target.resolve("hone-statistics-classes.csv"),
             new BytesOf(new ResourceOf("csv/hone-statistics-client.csv")).asBytes()
         );
         Files.write(
             Files.createDirectories(target.resolve("it/modular/server/target"))
-                .resolve("hone-statistics.csv"),
+                .resolve("hone-statistics-classes.csv"),
             new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
         );
         MatcherAssert.assertThat(
@@ -175,11 +175,11 @@ final class SummaryTest {
         Files.createDirectories(root.resolve("server"));
         Files.createDirectories(root.resolve("client"));
         Files.write(
-            root.resolve("server/hone-statistics.csv"),
+            root.resolve("server/hone-statistics-classes.csv"),
             new BytesOf(new ResourceOf("csv/hone-statistics-server.csv")).asBytes()
         );
         Files.write(
-            root.resolve("client/hone-statistics.csv"),
+            root.resolve("client/hone-statistics-classes.csv"),
             new BytesOf(new ResourceOf("csv/hone-statistics-client.csv")).asBytes()
         );
         return root;

@@ -174,9 +174,9 @@ to the point where a production has become unreachable.
   from the fifteen stream operator names in `OptimizeMojo.DEFAULT_GREP_IN`, so
   a class calling any of them, `distinct` among the rest, is not skipped; set
   it to `.*` to disable.
-- **`target/hone-statistics.csv` and `target/timings.csv`** — produced by
-  `rewrite.sh` and `entry.sh`; useful for spotting rules that fire on many
-  lines or files that take disproportionate time.
+- **`target/hone-statistics-<hone.classes>.csv` and `target/timings.csv`** —
+  produced by `rewrite.sh` and `entry.sh`; useful for spotting rules that fire
+  on many lines or files that take disproportionate time.
 
 ## What not to do
 

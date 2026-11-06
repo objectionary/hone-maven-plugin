@@ -214,6 +214,7 @@ final class EntryScriptChangedClassesTest {
                     "now() { printf '0\\n'; }",
                     "elapsed() { printf '0\\n'; }",
                     "record_timing() { :; }",
+                    "remember_assembled() { :; }",
                     "%3$s",
                     "{ printf 'changed=%%s\\n' \"${changed}\"; printf '%%s\\n' \"${assemble_opts[@]}\"; } > result.txt"
                 ),

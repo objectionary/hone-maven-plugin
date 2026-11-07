@@ -6,6 +6,7 @@ package org.eolang.hone;
 
 import com.jcabi.log.Logger;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -37,6 +38,22 @@ import org.cactoos.text.TextOf;
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresProject = false)
 public final class BuildMojo extends AbstractMojo {
+
+    /**
+     * How many times a failing {@code docker build} is attempted.
+     *
+     * <p>A build pulls its base image over the network, so a registry that
+     * times out is worth another try. A rejected Dockerfile is not, and
+     * nothing here can tell the two apart, which is why the wait below is
+     * long enough that three attempts do not cost a permanent failure much
+     * more than one (see #1003).</p>
+     */
+    static final int ATTEMPTS = 3;
+
+    /**
+     * How long to wait between two attempts.
+     */
+    static final Duration DELAY = Duration.ofSeconds(15L);
 
     /**
      * Shall we use buildx?
@@ -113,7 +130,9 @@ public final class BuildMojo extends AbstractMojo {
                 "build",
                 () -> new IoChecked<>(
                     new Retry<>(
-                        (Scalar<Object>) () -> new Docker(this.sudo).exec(args)
+                        (Scalar<Object>) () -> new Docker(this.sudo).exec(args),
+                        BuildMojo.ATTEMPTS,
+                        BuildMojo.DELAY
                     )
                 ).value()
             );

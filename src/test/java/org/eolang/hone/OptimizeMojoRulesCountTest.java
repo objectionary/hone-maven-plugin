@@ -28,7 +28,7 @@ final class OptimizeMojoRulesCountTest {
     void countsEveryRuleOfTheList() throws IOException {
         MatcherAssert.assertThat(
             "all three rules must be counted and listed one per line",
-            this.summary("a.yml b.yml c.yml"),
+            this.summary(String.join(System.lineSeparator(), "a.yml", "b.yml", "c.yml")),
             Matchers.allOf(
                 Matchers.containsString("Using the following 3 rules:"),
                 Matchers.containsString("\ta.yml"),
@@ -49,7 +49,7 @@ final class OptimizeMojoRulesCountTest {
 
     private String summary(final String rules) throws IOException {
         final Matcher matcher = Pattern.compile(
-            "printf 'Using the following.*?\\n\\n",
+            "rule_count=\\$\\(printf.*?done <<< \\\"\\$\\{RULES\\}\\\"\\n",
             Pattern.DOTALL
         ).matcher(
             new String(

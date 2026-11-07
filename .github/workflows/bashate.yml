@@ -21,6 +21,7 @@ name: bashate
 concurrency:
   group: bashate-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   bashate:
     timeout-minutes: 15

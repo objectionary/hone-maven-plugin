@@ -13,6 +13,7 @@ name: ort
 concurrency:
   group: ort-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   ort:
     timeout-minutes: 15

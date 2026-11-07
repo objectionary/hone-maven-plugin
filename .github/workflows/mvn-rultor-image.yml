@@ -15,6 +15,7 @@ name: mvn-on-rultor-image
 concurrency:
   group: mvn-rultor-image-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   mvn:
     strategy:

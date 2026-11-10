@@ -31,15 +31,31 @@ final class OptimizeMojoSkipTest {
     @Test
     void skipsUnchangedClassOnSecondRun(@Mktmp final Path temp) throws IOException {
         MatcherAssert.assertThat(
-            "a class that did not change since the previous run must be skipped",
-            this.twice(temp, "printf '<xmir/>' > hone/jeo-disassemble/A.xmir"),
-            Matchers.containsString("skipping transformation for 1/1")
+            "a class that did not change since the previous run must be skipped, even when jeo writes another XMIR",
+            this.twice(temp, "printf '<xmir time=\"2\"/>' > hone/jeo-disassemble/A.xmir"),
+            Matchers.equalTo("3")
+        );
+    }
+
+    @Test
+    void rewritesChangedClass(@Mktmp final Path temp) throws IOException {
+        MatcherAssert.assertThat(
+            "a class whose bytes changed must be rewritten again",
+            this.twice(
+                temp,
+                String.join(
+                    "; ",
+                    "printf '<xmir time=\"1\"/>' > hone/jeo-disassemble/A.xmir",
+                    "printf 'changed' > classes/A.class"
+                )
+            ),
+            Matchers.equalTo("6")
         );
     }
 
     @Test
     void dropsOutputOfClassThatIsGone(@Mktmp final Path temp) throws IOException {
-        this.twice(temp, "printf '<xmir/>' > hone/jeo-disassemble/B.xmir");
+        this.twice(temp, "printf '<xmir time=\"2\"/>' > hone/jeo-disassemble/B.xmir");
         MatcherAssert.assertThat(
             "the output of a class that is no longer disassembled must not survive",
             temp.resolve("hone/unphi/A.xmir").toFile().exists(),
@@ -52,17 +68,19 @@ final class OptimizeMojoSkipTest {
         Files.write(
             phino,
             String.format(
-                "#!/usr/bin/env bash%n[ \"${1}\" == '--version' ] && echo 0.0.1 && exit%ncat \"${@: -1}\"%n"
+                "#!/usr/bin/env bash%n[ \"${1}\" == '--version' ] && echo 0.0.1 && exit%necho \"${@: -1}\" >> \"${TARGET}/pass.log\"%ncat \"${@: -1}\"%n"
             ).getBytes(StandardCharsets.UTF_8)
         );
         if (!phino.toFile().setExecutable(true)) {
             throw new IllegalStateException("Can't make the fake phino executable");
         }
         Files.write(home.resolve("simple.phr"), "rule".getBytes(StandardCharsets.UTF_8));
+        Files.createDirectories(home.resolve("classes"));
+        Files.write(home.resolve("classes/A.class"), "class A".getBytes(StandardCharsets.UTF_8));
         Files.createDirectories(home.resolve("hone/jeo-disassemble"));
         Files.write(
             home.resolve("hone/jeo-disassemble/A.xmir"),
-            "<xmir/>".getBytes(StandardCharsets.UTF_8)
+            "<xmir time=\"1\"/>".getBytes(StandardCharsets.UTF_8)
         );
         final Matcher matcher = Pattern.compile("rm -rf \"\\$\\{TARGET\\}/hone/[^\\n]*\\n").matcher(
             new String(
@@ -75,7 +93,7 @@ final class OptimizeMojoSkipTest {
         if (!matcher.find()) {
             throw new IllegalStateException("No clearing of the pipeline directories in entry.sh");
         }
-        return new Jaxec(
+        new Jaxec(
             "bash", "-c",
             String.format(
                 String.join(
@@ -84,6 +102,7 @@ final class OptimizeMojoSkipTest {
                     "cd %1$s",
                     "export PATH=%1$s:${PATH} TARGET=%1$s HONE_RULES=%1$s/simple.phr",
                     "export HONE_XMIR_IN=hone/jeo-disassemble HONE_XMIR_OUT=hone/unphi",
+                    "export HONE_CLASSES=classes",
                     "export HONE_FROM=hone/phi HONE_TO=hone/phi-optimized HONE_THREADS=1",
                     "export HONE_MAX_CYCLES=1 HONE_MAX_DEPTH=1 HONE_SMALL_STEPS=false",
                     "export HONE_STATISTICS=false HONE_VERBOSE=false HONE_DEBUG=false HONE_TIMEOUT=5",
@@ -99,6 +118,7 @@ final class OptimizeMojoSkipTest {
                 matcher.group(),
                 between
             )
-        ).exec().stdout();
+        ).exec();
+        return String.valueOf(Files.readAllLines(home.resolve("pass.log")).size());
     }
 }

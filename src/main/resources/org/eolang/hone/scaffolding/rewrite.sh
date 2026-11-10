@@ -137,7 +137,8 @@ fi
 IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 
 # A fingerprint of everything that changes the result of a rewrite, except the
-# input file itself: the Phino version, rules, their content, and the options.
+# input file itself: the Hone, jeo and Phino versions, rules, their content, and
+# the options.
 # It is stored next to the output and compared on the next run, so an edited rule or a
 # changed option is not skipped (see #943). The rules are fingerprinted by
 # content, not by modification time, and named by their path under the rules
@@ -147,7 +148,7 @@ IFS=' ' read -r -a rules <<< "${HONE_RULES}"
 # ever firing (see #1119). The extra rules are named by their path under the
 # "hone-extra" directory, because the host path copies them into a fresh
 # temporary directory too (see #1186).
-stamp="${PHINO_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
+stamp="${PHINO_VERSION}|${JEO_VERSION}|${HONE_VERSION}|${HONE_GREP_IN}|${HONE_SMALL_STEPS}|${HONE_MAX_CYCLES}|${HONE_MAX_DEPTH}"
 for rule in "${rules[@]}"; do
   name="${rule#*/rules/}"
   stamp="${stamp}|${name#*/hone-extra/}"
@@ -170,9 +171,15 @@ function rewrite {
   mkdir -p "$(dirname "${pho}")"
   mkdir -p "$(dirname "${xo}")"
   mark="${xo}.stamp"
-  # The input is compared by its content, not by its modification time,
-  # because jeo:disassemble writes it again on every run (see #1032).
-  seal="${stamp}|$(cksum < "${xi}")"
+  # The seal comes from the class file, not from the XMIR: jeo never writes the
+  # same XMIR twice, its "time" attribute and label names change every run (see #1338).
+  cls="${TARGET}/${HONE_CLASSES}/${xi#"${HONE_XMIR_IN}"/}"
+  cls="${cls%.xmir}.class"
+  if [ -f "${cls}" ]; then
+    seal="${stamp}|$(cksum < "${cls}")"
+  else
+    seal="${stamp}|$(cksum < "${xi}")"
+  fi
   fresh=false
   if [ -f "${mark}" ] && [ "$(cat "${mark}")" == "${seal}" ] && [ -f "${xo}" ]; then
     if [ ! -f "${phi}" ]; then

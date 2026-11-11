@@ -158,7 +158,14 @@
       <groupId>org.eclipse.sisu</groupId>
       <artifactId>org.eclipse.sisu.plexus</artifactId>
       <version>1.1.0</version>
-      <scope>provided</scope>
+      <scope>test</scope>
+      <!--
+      Needed only by SummaryMojoTest: the MavenSession constructor it
+      calls takes a PlexusContainer. maven-core brings it in transitively,
+      but qulice resolves its type-checking classpath from the directly
+      declared dependencies only, so it must be declared here too. The
+      plugin goals themselves never touch it.
+      -->
     </dependency>
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>

@@ -258,11 +258,16 @@ function rewrite {
   changed=0
   if cmp -s "${phi}" "${pho}"; then
     echo "No changes in ${idx} $(basename "${pho}"): ${s_size}, ${s_lines} lines, ${per} lps"
+    # Nothing a rule produced, so the output stays the very XMIR jeo printed:
+    # phino's own printer drifts from it, the class would then look changed to
+    # the assembly filter and lose the attributes XMIR cannot carry (see #1343).
+    # Atomic, so a torn copy cannot be trusted under the stamp written below.
+    atomic_write "${xo}" cat "${xi}"
   else
     changed=$(diff "${phi}" "${pho}" | awk '/^>/ { a++ } /^</ { d++ } END { print (a > d ? a : d) + 0 }' || true)
     echo "Modified ${idx} $(basename "${phi}") (${s_size}): ${changed}/${s_lines} lines changed, ${per} lps"
+    atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
   fi
-  atomic_write "${xo}" phino rewrite "${phinopts[@]}" --output=xmir --omit-listing --omit-comments "${pho}"
   # The row goes in only once the output is written, so a file that runs out
   # of time in the last step gets the row of the timeout branch, with nothing
   # changed, and not this one (see #1211).

@@ -136,10 +136,13 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     public final void execute() throws MojoExecutionException {
         StaticLoggerBinder.getSingleton().setMavenLog(this.getLog());
         if (this.skip) {
+            this.dropStaleStatistics();
             Logger.info(this, "Execution skipped due to hone.skip=true");
         } else if (this.skipWithoutDocker && this.helpless()) {
+            this.dropStaleStatistics();
             Logger.info(this, "Execution skipped due to hone.skipWithoutDocker=true");
         } else if (this.skipOnWindows && AbstractMojo.windows()) {
+            this.dropStaleStatistics();
             Logger.info(this, "Execution skipped due to hone.skipOnWindows=true");
         } else {
             this.target = AbstractMojo.targetOrDefault(this.target);
@@ -197,6 +200,15 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
             );
         }
         return version;
+    }
+
+    /**
+     * Drop statistics that the skipped execution would have replaced (see #1349).
+     *
+     * @throws MojoExecutionException If the cleanup fails
+     */
+    void dropStaleStatistics() throws MojoExecutionException {
+        Logger.debug(this, "This goal does not drop statistics");
     }
 
     /**

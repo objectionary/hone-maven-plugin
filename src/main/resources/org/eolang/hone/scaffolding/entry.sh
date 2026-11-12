@@ -173,9 +173,18 @@ declare -a opts=(
   '-Dfile.encoding=UTF-8'
   "-Deo.cache=${EO_CACHE}"
 )
-if [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
+if [ -n "${SETTINGS}" ] && [ -e "${SETTINGS}" ]; then
+  opts+=("--settings=${SETTINGS}")
+  echo "Using Maven settings file at ${SETTINGS}"
+elif [ -n "${WORKDIR}" ] && [ -e "${WORKDIR}/settings.xml" ]; then
   opts+=("--settings=${WORKDIR}/settings.xml")
   echo "Using Maven settings file at ${WORKDIR}"
+fi
+if [ "${OFFLINE}" == 'true' ]; then
+  opts+=('--offline')
+fi
+if [ -n "${LOCAL_REPO}" ]; then
+  opts+=("-Dmaven.repo.local=${LOCAL_REPO}")
 fi
 echo "Using JEO version ${JEO_VERSION}"
 

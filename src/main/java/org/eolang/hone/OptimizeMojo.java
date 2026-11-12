@@ -779,30 +779,32 @@ public final class OptimizeMojo extends AbstractMojo {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
-            Jaxec jaxec = new Jaxec("bash", temp.path().resolve("entry.sh").toString())
-                .withEnv("TARGET", this.target.toString())
-                .withEnv("HOST_TARGET", "")
-                .withEnv("PHINO_VERSION", this.phino())
-                .withEnv("HONE_VERSION", this.hone())
-                .withEnv("HONE_STATISTICS", "true")
-                .withEnv("DEBUG", Boolean.toString(this.debug))
-                .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
-                .withEnv("CLASSES", this.classes)
-                .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
-                .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
-                .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
-                .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
-                .withEnv("GREP_IN", this.grepIn)
-                .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
-                .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
-                .withEnv("THREADS", Integer.toString(this.threads))
-                .withEnv("TIMEOUT", Integer.toString(this.timeout))
-                .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
-                .withEnv("RULES", this.rulesAsString())
-                // @checkstyle MethodBodyCommentsCheck (1 line)
-                // an inherited JDWP agent would bind the debug port twice (#1350)
-                .withEnv("MAVEN_OPTS", "")
-                .withEnv("MAVEN_DEBUG_OPTS", "");
+            Jaxec jaxec = this.session(
+                new Jaxec("bash", temp.path().resolve("entry.sh").toString())
+                    .withEnv("TARGET", this.target.toString())
+                    .withEnv("HOST_TARGET", "")
+                    .withEnv("PHINO_VERSION", this.phino())
+                    .withEnv("HONE_VERSION", this.hone())
+                    .withEnv("HONE_STATISTICS", "true")
+                    .withEnv("DEBUG", Boolean.toString(this.debug))
+                    .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
+                    .withEnv("CLASSES", this.classes)
+                    .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
+                    .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
+                    .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
+                    .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
+                    .withEnv("GREP_IN", this.grepIn)
+                    .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
+                    .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
+                    .withEnv("THREADS", Integer.toString(this.threads))
+                    .withEnv("TIMEOUT", Integer.toString(this.timeout))
+                    .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
+                    .withEnv("RULES", this.rulesAsString())
+                    // @checkstyle MethodBodyCommentsCheck (1 line)
+                    // an inherited JDWP agent would bind the debug port twice (#1350)
+                    .withEnv("MAVEN_OPTS", "")
+                    .withEnv("MAVEN_DEBUG_OPTS", "")
+            );
             if (this.extra != null && !this.extra.isEmpty()) {
                 this.copyExtras(temp.path().resolve("hone-extra"));
                 jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
@@ -825,6 +827,19 @@ public final class OptimizeMojo extends AbstractMojo {
             jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
             jaxec.exec();
         }
+    }
+
+    private Jaxec session(final Jaxec input) {
+        Jaxec jaxec = input
+            .withEnv("OFFLINE", Boolean.toString(this.session.isOffline())).withEnv(
+                "LOCAL_REPO",
+                this.session.getRequest().getLocalRepositoryPath().getAbsolutePath()
+            );
+        final File settings = this.session.getRequest().getUserSettingsFile();
+        if (settings != null && settings.exists()) {
+            jaxec = jaxec.withEnv("SETTINGS", settings.getAbsolutePath());
+        }
+        return jaxec;
     }
 
     private String jeo() throws IOException {

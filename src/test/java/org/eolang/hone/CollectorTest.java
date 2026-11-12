@@ -29,15 +29,16 @@ final class CollectorTest {
     @Test
     void takesEveryStatisticsFileItWalks(@Mktmp final Path home) throws Exception {
         Files.write(
-            Files.createDirectories(home.resolve("one")).resolve("hone-statistics.csv"),
+            Files.createDirectories(home.resolve("one")).resolve("hone-statistics-classes.csv"),
             CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
         );
         Files.write(
-            Files.createDirectories(home.resolve("two")).resolve("hone-statistics.csv"),
+            Files.createDirectories(home.resolve("two"))
+                .resolve("hone-statistics-test-classes.csv"),
             CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
         );
         final List<CSV> found = new ArrayList<>(0);
-        Files.walkFileTree(home, new Collector(found, "hone-statistics.csv"));
+        Files.walkFileTree(home, new Collector(found, "hone-statistics"));
         MatcherAssert.assertThat(
             "both statistics files must be taken",
             found,
@@ -51,10 +52,14 @@ final class CollectorTest {
             home.resolve("hone-summary.csv"),
             CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
         );
+        Files.write(
+            home.resolve("hone-statistics-notes.txt"),
+            CollectorTest.csv().getBytes(StandardCharsets.UTF_8)
+        );
         final List<CSV> found = new ArrayList<>(0);
-        Files.walkFileTree(home, new Collector(found, "hone-statistics.csv"));
+        Files.walkFileTree(home, new Collector(found, "hone-statistics"));
         MatcherAssert.assertThat(
-            "the summary is named differently, so the walk must leave it alone",
+            "files of other names, even close ones, must be left alone",
             found,
             Matchers.empty()
         );

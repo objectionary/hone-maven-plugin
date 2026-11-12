@@ -21,7 +21,7 @@ print_tree() {
 # already exists and would nest one backup in the other. The "-L" copies the
 # classes, not the link, when "classes" is a symlink:
 save_originals() {
-  local saved="${TARGET}/classes-before-hone"
+  local saved="${TARGET}/${CLASSES}-before-hone"
   local fresh="${saved}.new"
   local list="${TARGET}/hone/assembled.txt"
   rm -rf "${fresh}"
@@ -130,6 +130,15 @@ that Docker is misconfigured; the directory must exist even if there are no .cla
   exit 1
 fi
 
+case "${CLASSES}" in
+  ''|.|..|/*|../*|*/..|*/../*)
+    echo "The \$CLASSES environment variable must point inside '${TARGET}', \
+but it is '${CLASSES}'; hone.classes must not be empty or point outside the \
+target directory"
+    exit 1
+    ;;
+esac
+
 if [ ! -e "${TARGET}/${CLASSES}" ]; then
   echo "There is no '${TARGET}/${CLASSES}' directory, which most probably means \
 that the project has not been compiled yet; make sure you use 'hone-maven-plugin' \
@@ -145,7 +154,7 @@ after the 'compile' phase is finished"
 fi
 
 save_originals
-echo "The binaries before hone are saved in '${TARGET}/classes-before-hone' ($(find "${TARGET}/classes-before-hone" -type f -print | wc -l | xargs) files)"
+echo "The binaries before hone are saved in '${TARGET}/${CLASSES}-before-hone' ($(find "${TARGET}/${CLASSES}-before-hone" -type f -print | wc -l | xargs) files)"
 
 if [ -z "${PHINO_VERSION}" ]; then
   echo "PHINO_VERSION is not set"

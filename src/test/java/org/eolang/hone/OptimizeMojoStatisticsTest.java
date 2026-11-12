@@ -91,7 +91,7 @@ final class OptimizeMojoStatisticsTest {
         fea.exec("process-classes");
         MatcherAssert.assertThat(
             "a statistics file must be created and the content of the statistics file must be correct",
-            fea.files().file("target/hone-statistics.csv").content(),
+            fea.files().file("target/hone-statistics-classes.csv").content(),
             Matchers.allOf(
                 Matchers.containsString("ID,Before,After,Changed,LinesPerSec"),
                 Matchers.containsString(
@@ -151,7 +151,7 @@ final class OptimizeMojoStatisticsTest {
         fea.exec("process-classes");
         MatcherAssert.assertThat(
             "a statistics file mus be created and the content of statistics file must be correct",
-            fea.files().file("target/hone-statistics.csv").content(),
+            fea.files().file("target/hone-statistics-classes.csv").content(),
             Matchers.allOf(
                 Matchers.containsString("ID,Before,After,Changed,LinesPerSec"),
                 Matchers.containsString(

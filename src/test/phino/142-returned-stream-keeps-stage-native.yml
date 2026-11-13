@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# 142 keeps a count-preserving stage native when the stream it builds is
+# returned from the method, which 101 recorded on the `areturn` (#1122). The
+# caller may end it with a `count()` the JVM elides, so fusing the map into a
+# mapMulti could make its lambda run where it never ran before.
+#
+# The first expectation spells every binding out, which pins that the mark was
+# appended and nothing else moved; the second pins the stamped `areturn` as left
+# the way this rule found it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/1xx/142-returned-stream-keeps-stage-native.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op-map ↦ ⟦
+        φ ↦ Φ.hone.lambda,
+        class ↦ "fusion/X",
+        method ↦ "apply",
+        interface ↦ "()Ljava/util/function/Function;",
+        lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;",
+        bridge-signature ↦ "(Ljava/lang/String;)Ljava/lang/Integer;",
+        static ↦ "true",
+        opcode ↦ "invokestatic",
+        target ↦ ⟦ handle ↦ 6, class ↦ "fusion/X", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/String;)Ljava/lang/Integer;", is-interface ↦ Φ.false ⟧,
+        stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "map", signature ↦ "(Ljava/util/function/Function;)Ljava/util/stream/Stream;" ⟧
+      ⟧,
+      op-return ↦ ⟦
+        φ ↦ Φ.jeo.opcode.areturn,
+        escapes ↦ Φ.true
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ φ ↦ Φ.hone.lambda, class ↦ "fusion/X", method ↦ "apply", interface ↦ "()Ljava/util/function/Function;", lambda-signature ↦ "(Ljava/lang/Object;)Ljava/lang/Object;", bridge-signature ↦ "(Ljava/lang/String;)Ljava/lang/Integer;", static ↦ "true", opcode ↦ "invokestatic", target ↦ 𝑒-t, stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "map", signature ↦ 𝑒-g ⟧, reverted ↦ Φ.true ⟧
+  - ⟦ φ ↦ Φ.jeo.opcode.areturn, escapes ↦ Φ.true ⟧

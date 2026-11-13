@@ -21,6 +21,7 @@ name: qulice
 concurrency:
   group: qulice-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   qulice:
     timeout-minutes: 15

@@ -15,6 +15,7 @@ name: smoke
 concurrency:
   group: smoke-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   smoke:
     timeout-minutes: 30

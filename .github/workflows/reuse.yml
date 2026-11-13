@@ -13,6 +13,7 @@ name: reuse
 concurrency:
   group: reuse-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   reuse:
     timeout-minutes: 15

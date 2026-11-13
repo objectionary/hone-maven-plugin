@@ -10,8 +10,11 @@ name: site
 concurrency:
   group: site-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   site:
+    permissions:
+      contents: write
     timeout-minutes: 15
     runs-on: ubuntu-24.04
     steps:

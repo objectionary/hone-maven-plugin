@@ -98,8 +98,7 @@ RUN mkdir -p /hone/.m2 \
   && find /hone/.m2 -name "_remote.repositories" -delete \
   && find /hone/.m2 -name "*.sha1" -delete
 
-ENV MAVEN_OPTS=-Xmx16g
-ENV JAVA_OPTS=-Xmx16g
+ENV MAVEN_OPTS=-XX:MaxRAMPercentage=75
 
 COPY entry.sh ./
 RUN chmod a+x entry.sh

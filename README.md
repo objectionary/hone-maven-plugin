@@ -118,10 +118,11 @@ In the default "big-steps" mode,
   the `rewrite.sh` script invokes `phino rewrite` once per `.phi` file
   and passes every selected rule on the same command line
   as a sequence of `--rule=` arguments in their alphabetical order.
-Phino itself then walks through that list,
-  trying each rule against every position in the expression tree
-  and re-trying until no rule matches anymore,
-  capped by the `maxDepth` and `maxCycles` parameters.
+Phino itself then applies each rule in that list to its own fixpoint,
+  once, in file-name order,
+  with `maxDepth` capping how deep in the expression tree a rule is applied.
+With `hone.max-cycles` above its default of one,
+  the whole set keeps walking until nothing changes anymore.
 The "small-steps" mode (`<smallSteps>true</smallSteps>`)
   is meant for debugging the rules:
   it invokes `phino rewrite` separately for each rule

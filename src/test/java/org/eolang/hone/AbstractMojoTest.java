@@ -18,17 +18,26 @@ import org.junit.jupiter.api.Test;
 final class AbstractMojoTest {
 
     @Test
-    void usesLocalTargetWithoutMavenProject() {
+    void usesAbsoluteLocalTargetWithoutMavenProject() {
         MatcherAssert.assertThat(
-            "a goal without Maven project must still have a target directory for timings",
+            "a goal without a Maven project must absolutize the target, since entry.sh chdirs",
             AbstractMojo.targetOrDefault(null),
-            Matchers.equalTo(new File("target"))
+            Matchers.equalTo(new File("target").getAbsoluteFile())
+        );
+    }
+
+    @Test
+    void absolutizesConfiguredRelativeTarget() {
+        MatcherAssert.assertThat(
+            "a relative -Dhone.target must be absolutized for entry.sh as well",
+            AbstractMojo.targetOrDefault(new File("target/custom")).isAbsolute(),
+            Matchers.is(true)
         );
     }
 
     @Test
     void preservesConfiguredTarget() {
-        final File target = new File("build-output");
+        final File target = new File("build-output").getAbsoluteFile();
         MatcherAssert.assertThat(
             "a configured Maven target must remain the timings directory",
             AbstractMojo.targetOrDefault(target),

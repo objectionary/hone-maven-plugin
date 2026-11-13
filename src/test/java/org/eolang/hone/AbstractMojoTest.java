@@ -6,6 +6,9 @@ package org.eolang.hone;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -29,9 +32,9 @@ final class AbstractMojoTest {
     @Test
     void absolutizesConfiguredRelativeTarget() {
         MatcherAssert.assertThat(
-            "a relative -Dhone.target must be absolutized for entry.sh as well",
-            AbstractMojo.targetOrDefault(new File("target/custom")).isAbsolute(),
-            Matchers.is(true)
+            "the helper is total: the configured directory must survive, only its prefix changes",
+            AbstractMojo.targetOrDefault(new File("target/custom")),
+            Matchers.equalTo(new File("target/custom").getAbsoluteFile())
         );
     }
 
@@ -42,6 +45,24 @@ final class AbstractMojoTest {
             "a configured Maven target must remain the timings directory",
             AbstractMojo.targetOrDefault(target),
             Matchers.equalTo(target)
+        );
+    }
+
+    @Test
+    void appliesTargetOrDefaultOnExecute() throws IOException {
+        MatcherAssert.assertThat(
+            "without this line the configured target never reaches the helper, and TARGET stays relative",
+            AbstractMojoTest.source("org/eolang/hone/AbstractMojo.java"),
+            Matchers.containsString("this.target = AbstractMojo.targetOrDefault(this.target);")
+        );
+    }
+
+    @Test
+    void passesAbsoluteTargetToEntryScript() throws IOException {
+        MatcherAssert.assertThat(
+            "entry.sh chdirs before resolving TARGET, so it must get an absolute path even if the helper is bypassed",
+            AbstractMojoTest.source("org/eolang/hone/OptimizeMojo.java"),
+            Matchers.containsString(".withEnv(\"TARGET\", this.target.getAbsolutePath())")
         );
     }
 
@@ -61,6 +82,12 @@ final class AbstractMojoTest {
             "the phino version must be consistent across multiple calls",
             mojo.phino(),
             Matchers.equalTo(mojo.phino())
+        );
+    }
+
+    private static String source(final String name) throws IOException {
+        return new String(
+            Files.readAllBytes(Paths.get("src/main/java", name)), StandardCharsets.UTF_8
         );
     }
 

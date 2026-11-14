@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -171,7 +172,6 @@ public final class OptimizeMojo extends AbstractMojo {
      * @checkstyle MemberNameCheck (6 lines)
      */
     @Parameter(property = "hone.grep-in")
-    @SuppressWarnings("PMD.ImmutableField")
     private String grepIn;
 
     /**
@@ -336,20 +336,6 @@ public final class OptimizeMojo extends AbstractMojo {
     private int killgrace;
 
     /**
-     * How many threads to use for rewriting?
-     *
-     * <p>By default, it is set to zero, which means the number of threads
-     * will be set to the number of CPUs on the machine. This is normally
-     * the most efficient choice for large projects. Set it to {@code 1}
-     * to disable parallelism, or to any positive value to cap the number
-     * of worker threads.</p>
-     *
-     * @since 0.11.0
-     */
-    @Parameter(property = "hone.threads", defaultValue = "0")
-    private int threads;
-
-    /**
      * The list of all file extensions for the extra rules.
      *
      * @since 0.5.0
@@ -405,6 +391,24 @@ public final class OptimizeMojo extends AbstractMojo {
      * Ctor.
      */
     public OptimizeMojo() {
+        this("phino", "mvn", "parallel", "docker");
+    }
+
+    /**
+     * Ctor with custom tool executables.
+     *
+     * @param phino Phino executable
+     * @param mvn Maven executable
+     * @param parallel GNU Parallel executable
+     * @param docker Docker executable
+     */
+    OptimizeMojo(
+        final String phino,
+        final String mvn,
+        final String parallel,
+        final String docker
+    ) {
+        super(phino, mvn, parallel, docker);
         this.grepIn = OptimizeMojo.DEFAULT_GREP_IN;
     }
 
@@ -577,7 +581,7 @@ public final class OptimizeMojo extends AbstractMojo {
         this.timings.through(
             "optimize",
             () -> {
-                if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
+                if (this.alwaysWithDocker || !this.hostReady()) {
                     this.withDocker();
                 } else {
                     this.withoutDocker();
@@ -612,7 +616,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 )
             );
         }
-        new Docker(this.sudo).exec(this.dockerCommand());
+        this.docker().exec(this.dockerCommand());
     }
 
     private Collection<String> dockerCommand() throws IOException {
@@ -831,8 +835,6 @@ public final class OptimizeMojo extends AbstractMojo {
         );
     }
 
-    // @checkstyle NPathComplexityCheck (200 lines)
-    @SuppressWarnings("PMD.NPathComplexity")
     private void withoutDocker() throws IOException {
         try (Mktemp temp = new Mktemp()) {
             final String[] files = {
@@ -853,52 +855,87 @@ public final class OptimizeMojo extends AbstractMojo {
                 temp.path().resolve(file).toFile().setExecutable(true);
             }
             new Rules("*").copyTo(temp.path().resolve("rules"));
-            Jaxec jaxec = new Jaxec("bash", temp.path().resolve("entry.sh").toString())
-                .withEnv("TARGET", this.target.getAbsolutePath())
-                .withEnv("HOST_TARGET", "")
-                .withEnv("PHINO_VERSION", this.phino())
-                .withEnv("HONE_VERSION", this.hone())
-                .withEnv("HONE_STATISTICS", "true")
-                .withEnv("DEBUG", Boolean.toString(this.debug))
-                .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
-                .withEnv("CLASSES", this.classes)
-                .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
-                .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
-                .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
-                .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
-                .withEnv("GREP_IN", OptimizeMojo.grepPattern(this.grepIn, this.grepMethods))
-                .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
-                .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
-                .withEnv("THREADS", Integer.toString(this.threads))
-                .withEnv("TIMEOUT", Integer.toString(this.timeout))
-                .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
-                .withEnv("RULES", this.rulesAsString())
-                // @checkstyle MethodBodyCommentsCheck (1 line)
-                // an inherited JDWP agent would bind the debug port twice (#1350)
-                .withEnv("MAVEN_OPTS", "")
-                .withEnv("MAVEN_DEBUG_OPTS", "");
-            if (this.extra != null && !this.extra.isEmpty()) {
-                this.copyExtras(temp.path().resolve("hone-extra"));
-                jaxec = jaxec.withEnv("EXTRA", temp.path().resolve("hone-extra").toString());
-            }
-            if (this.includes != null && this.includes.length > 0) {
-                jaxec = jaxec.withEnv(
-                    "INCLUDES",
-                    OptimizeMojo.localPaths(this.target.toString(), this.includes)
-                );
-            }
-            if (this.excludes != null && this.excludes.length > 0) {
-                jaxec = jaxec.withEnv(
-                    "EXCLUDES",
-                    OptimizeMojo.localPaths(this.target.toString(), this.excludes)
-                );
-            }
-            if (this.cache != null) {
-                jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
-            }
-            jaxec = jaxec.withEnv("JEO_VERSION", this.jeo());
-            jaxec.exec();
+            this.withHostEnv(
+                new Jaxec("bash", temp.path().resolve("entry.sh").toString())
+                    .withEnv("TARGET", this.target.getAbsolutePath())
+                    .withEnv("HOST_TARGET", "")
+                    .withEnv("PHINO_VERSION", this.phino())
+                    .withEnv("HONE_VERSION", this.hone())
+                    .withEnv("HONE_STATISTICS", "true")
+                    .withEnv("DEBUG", Boolean.toString(this.debug))
+                    .withEnv("VERBOSE", Boolean.toString(Logger.isDebugEnabled(this)))
+                    .withEnv("CLASSES", this.classes)
+                    .withEnv("SMALL_STEPS", Boolean.toString(this.smallSteps))
+                    .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
+                    .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
+                    .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
+                    .withEnv("GREP_IN", OptimizeMojo.grepPattern(this.grepIn, this.grepMethods))
+                    .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
+                    .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
+                    .withEnv("THREADS", Integer.toString(this.threads))
+                    .withEnv("TIMEOUT", Integer.toString(this.timeout))
+                    .withEnv("KILL_GRACE", Integer.toString(this.killgrace))
+                    .withEnv("RULES", this.rulesAsString())
+                    // @checkstyle MethodBodyCommentsCheck (1 line)
+                    // an inherited JDWP agent would bind the debug port twice (#1350)
+                    .withEnv("MAVEN_OPTS", "")
+                    .withEnv("MAVEN_DEBUG_OPTS", ""),
+                temp.path()
+            ).exec();
         }
+    }
+
+    private Jaxec withHostEnv(final Jaxec base, final Path temp) throws IOException {
+        Jaxec jaxec = base;
+        if (this.extra != null && !this.extra.isEmpty()) {
+            this.copyExtras(temp.resolve("hone-extra"));
+            jaxec = jaxec.withEnv("EXTRA", temp.resolve("hone-extra").toString());
+        }
+        if (this.includes != null && this.includes.length > 0) {
+            jaxec = jaxec.withEnv(
+                "INCLUDES",
+                OptimizeMojo.localPaths(this.target.toString(), this.includes)
+            );
+        }
+        if (this.excludes != null && this.excludes.length > 0) {
+            jaxec = jaxec.withEnv(
+                "EXCLUDES",
+                OptimizeMojo.localPaths(this.target.toString(), this.excludes)
+            );
+        }
+        if (this.cache != null) {
+            jaxec = jaxec.withEnv("EO_CACHE", this.cache.getAbsolutePath());
+        }
+        final String path = OptimizeMojo.augmentedPath(
+            this.phinoPath(), this.mvnPath()
+        );
+        if (!path.isEmpty()) {
+            jaxec = jaxec.withEnv("PATH", path);
+        }
+        return jaxec.withEnv("JEO_VERSION", this.jeo());
+    }
+
+    private static String augmentedPath(final String phino, final String mvn) {
+        final List<String> dirs = new ArrayList<>(2);
+        final Path pdir = Paths.get(phino).getParent();
+        if (pdir != null) {
+            dirs.add(pdir.toAbsolutePath().toString());
+        }
+        final Path mdir = Paths.get(mvn).getParent();
+        if (mdir != null && !mdir.equals(pdir)) {
+            dirs.add(mdir.toAbsolutePath().toString());
+        }
+        final String result;
+        if (dirs.isEmpty()) {
+            result = "";
+        } else {
+            final String current = System.getenv("PATH");
+            if (current != null && !current.isEmpty()) {
+                dirs.add(current);
+            }
+            result = String.join(File.pathSeparator, dirs);
+        }
+        return result;
     }
 
     private String jeo() throws IOException {

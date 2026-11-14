@@ -10,6 +10,8 @@ import com.yegor256.MktmpResolver;
 import com.yegor256.farea.Farea;
 import com.yegor256.farea.RequisiteMatcher;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -46,6 +48,47 @@ final class RmiMojoTest {
                     Matchers.containsString("\"rmi\"")
                 );
             }
+        );
+    }
+
+    @Test
+    void removesImageWhenParallelIsMissing(@Mktmp final Path dir) throws Exception {
+        final Path log = dir.resolve("docker.log");
+        final RmiMojo mojo = new RmiMojo(
+            AbstractMojoTest.fakeTool(dir, "phino", new RmiMojo().phino(), 0).toString(),
+            AbstractMojoTest.fakeTool(dir, "mvn", "Apache Maven 3.9", 0).toString(),
+            dir.resolve("missing-parallel").toString(),
+            AbstractMojoTest.recordingDocker(dir, log).toString()
+        );
+        mojo.target = dir.resolve("target").toFile();
+        mojo.session = AbstractMojoTest.mavenSession();
+        mojo.image = "local-only/hone:test";
+        mojo.execute();
+        MatcherAssert.assertThat(
+            "rmi must invoke docker when parallel is missing and threads=0",
+            new String(Files.readAllBytes(log), StandardCharsets.UTF_8),
+            Matchers.containsString("rmi --no-prune local-only/hone:test")
+        );
+    }
+
+    @Test
+    void skipsRmiWhenParallelIsMissingAndThreadsIsOne(@Mktmp final Path dir) throws Exception {
+        final Path log = dir.resolve("docker.log");
+        final RmiMojo mojo = new RmiMojo(
+            AbstractMojoTest.fakeTool(dir, "phino", new RmiMojo().phino(), 0).toString(),
+            AbstractMojoTest.fakeTool(dir, "mvn", "Apache Maven 3.9", 0).toString(),
+            dir.resolve("missing-parallel").toString(),
+            AbstractMojoTest.recordingDocker(dir, log).toString()
+        );
+        mojo.target = dir.resolve("target").toFile();
+        mojo.session = AbstractMojoTest.mavenSession();
+        mojo.image = "local-only/hone:test";
+        mojo.threads = 1;
+        mojo.execute();
+        MatcherAssert.assertThat(
+            "rmi must skip docker when parallel is missing and hone.threads=1",
+            Files.exists(log),
+            Matchers.is(false)
         );
     }
 

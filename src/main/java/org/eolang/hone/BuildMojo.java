@@ -60,15 +60,33 @@ public final class BuildMojo extends AbstractMojo {
      * Ctor.
      */
     public BuildMojo() {
-        // nothing
+        this("phino", "mvn", "parallel", "docker");
+    }
+
+    /**
+     * Ctor with custom tool executables.
+     *
+     * @param phino Phino executable
+     * @param mvn Maven executable
+     * @param parallel GNU Parallel executable
+     * @param docker Docker executable
+     * @checkstyle ParameterNumberCheck (6 lines)
+     */
+    BuildMojo(
+        final String phino,
+        final String mvn,
+        final String parallel,
+        final String docker
+    ) {
+        super(phino, mvn, parallel, docker);
     }
 
     @Override
     public void exec() throws IOException {
-        if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
+        if (!this.alwaysWithDocker && this.hostReady()) {
             Logger.info(
                 this,
-                "The executable 'phino' is available, no need to build Docker image '%s'",
+                "The host tools are available, no need to build Docker image '%s'",
                 this.image
             );
             return;
@@ -113,7 +131,7 @@ public final class BuildMojo extends AbstractMojo {
                 "build",
                 () -> new IoChecked<>(
                     new Retry<>(
-                        (Scalar<Object>) () -> new Docker(this.sudo).exec(args)
+                        (Scalar<Object>) () -> this.docker().exec(args)
                     )
                 ).value()
             );

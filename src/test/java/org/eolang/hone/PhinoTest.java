@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -86,6 +87,28 @@ final class PhinoTest {
             "an interrupted probe must not leave phino running (see #1243)",
             proc.isAlive(),
             Matchers.is(false)
+        );
+    }
+
+    @Test
+    void probesStdoutWhenCommandSucceeds(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "probe must return trimmed stdout when the command exits with zero",
+            Phino.probe(
+                PhinoTest.fake(dir, String.format("echo 'GNU parallel 20240222'%nexit 0"))
+                    .toString(),
+                3L
+            ),
+            Matchers.equalTo(Optional.of("GNU parallel 20240222"))
+        );
+    }
+
+    @Test
+    void returnsEmptyProbeWhenCommandFails(@TempDir final Path dir) throws Exception {
+        MatcherAssert.assertThat(
+            "probe must return empty when the command exits with non-zero status",
+            Phino.probe(PhinoTest.fake(dir, "exit 2").toString(), 3L),
+            Matchers.equalTo(Optional.empty())
         );
     }
 

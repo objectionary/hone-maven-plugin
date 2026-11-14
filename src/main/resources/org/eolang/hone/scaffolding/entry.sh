@@ -281,7 +281,9 @@ printf 'Using Java: %s\n' "$(java --version | head -1)"
 
 printf 'Using Maven: %s\n' "$(mvn --version | head -1)"
 
-printf 'Using GNU Parallel: %s\n' "$(parallel --version | head -1)"
+if command -v parallel >/dev/null 2>&1; then
+  printf 'Using GNU Parallel: %s\n' "$(parallel --version | head -1)"
+fi
 
 printf 'Using the following %d rules:\n\t%b\n' \
   "$(printf '%s' "${RULES}" | wc -w)" \

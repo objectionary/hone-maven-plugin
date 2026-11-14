@@ -65,10 +65,10 @@ public final class BuildMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
+        if (!this.alwaysWithDocker && this.hostReady()) {
             Logger.info(
                 this,
-                "The executable 'phino' is available, no need to build Docker image '%s'",
+                "The host tools are available, no need to build Docker image '%s'",
                 this.image
             );
             return;

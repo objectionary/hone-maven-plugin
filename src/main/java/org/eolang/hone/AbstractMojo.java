@@ -200,6 +200,35 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     /**
+     * Check whether all host tools required to run without Docker are
+     * available.
+     *
+     * @return TRUE if {@code phino} and {@code mvn} are available
+     * @throws IOException If reading the phino version fails
+     */
+    protected boolean hostReady() throws IOException {
+        return this.hostReady(false);
+    }
+
+    /**
+     * Check whether all host tools required to run without Docker are
+     * available.
+     *
+     * @param parallel Whether GNU Parallel is also required
+     * @return TRUE if all required host tools are available
+     * @throws IOException If reading the phino version fails
+     */
+    protected boolean hostReady(final boolean parallel) throws IOException {
+        final boolean ready;
+        if (parallel) {
+            ready = AbstractMojo.toolsReady(new Phino(), this.phino(), "mvn", "parallel");
+        } else {
+            ready = AbstractMojo.toolsReady(new Phino(), this.phino(), "mvn");
+        }
+        return ready;
+    }
+
+    /**
      * Execute the specific goal implementation.
      *
      * @throws IOException If execution fails
@@ -222,17 +251,46 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         return target;
     }
 
+    /**
+     * Check whether the given host tool executables are available.
+     *
+     * @param phino Phino probe
+     * @param expected Expected phino version
+     * @param tools Additional executables to probe with {@code --version}
+     * @return TRUE if all required host tools are available
+     */
+    static boolean toolsReady(
+        final Phino phino,
+        final String expected,
+        final String... tools
+    ) {
+        boolean ready = phino.available(expected);
+        for (final String tool : tools) {
+            if (!ready) {
+                break;
+            }
+            ready = Phino.probe(tool, 10L).isPresent();
+        }
+        if (ready) {
+            Logger.info(
+                AbstractMojo.class,
+                "All required host tools are available, no need to use Docker"
+            );
+        }
+        return ready;
+    }
+
     /*
-     * There is nothing to run with: no Docker, and no local phino either.
+     * There is nothing to run with: no Docker, and no local host tools either.
      * Every goal here takes the local phino when Docker is absent and the
-     * executable is of the version we expect, so the lack of Docker alone
+     * host tools are available, so the lack of Docker alone
      * is not a reason to skip anymore.
      */
     private boolean helpless() throws MojoExecutionException {
         boolean nothing = !new Docker(this.sudo).available();
         if (nothing && !this.alwaysWithDocker) {
             try {
-                nothing = !new Phino().available(this.phino());
+                nothing = !this.hostReady();
             } catch (final IOException ex) {
                 throw new MojoExecutionException(ex);
             }

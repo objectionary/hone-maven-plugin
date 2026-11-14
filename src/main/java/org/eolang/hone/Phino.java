@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -52,11 +53,46 @@ final class Phino {
      * @return TRUE if available
      */
     boolean available(final String expected) {
-        boolean available = false;
+        final Optional<String> output = Phino.probe(this.executable, 3L);
+        final boolean match;
+        if (output.isPresent()) {
+            final String version = output.get();
+            if (version.equals(expected)) {
+                Logger.info(
+                    this,
+                    "The 'phino' executable found (%s)",
+                    version
+                );
+                match = true;
+            } else {
+                Logger.info(
+                    this,
+                    "The 'phino' executable is found, but its version (%s) is not equal to the expected one (%s); you can upgrade it via 'cabal update && cabal install --overwrite-policy=always phino-%s' (see https://github.com/objectionary/phino for details)",
+                    version, expected, expected
+                );
+                match = false;
+            }
+        } else {
+            match = false;
+        }
+        return match;
+    }
+
+    /**
+     * Probe whether an executable runs {@code --version} cleanly within the
+     * deadline.
+     *
+     * <p>Both streams of the probe are read. A process that writes more to
+     * stderr than the pipe holds blocks on the write and never exits.</p>
+     *
+     * @param executable The executable to run
+     * @param timeout Deadline in seconds
+     * @return Trimmed stdout when exit code is zero, empty otherwise
+     */
+    static Optional<String> probe(final String executable, final long timeout) {
+        Optional<String> result = Optional.empty();
         try {
-            final Process proc = new ProcessBuilder(
-                this.executable, "--version"
-            ).start();
+            final Process proc = new ProcessBuilder(executable, "--version").start();
             final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
             final Thread pump = new Thread(
                 () -> Phino.pump(stdout, proc.getInputStream())
@@ -70,7 +106,7 @@ final class Phino {
             errs.start();
             final boolean probed;
             try {
-                probed = proc.waitFor(3L, TimeUnit.SECONDS);
+                probed = proc.waitFor(timeout, TimeUnit.SECONDS);
             } catch (final InterruptedException ex) {
                 proc.destroyForcibly();
                 proc.getInputStream().close();
@@ -80,7 +116,17 @@ final class Phino {
             if (probed) {
                 pump.join();
                 errs.join();
-                available = Phino.version(proc, stdout, expected, this);
+                if (proc.exitValue() == 0) {
+                    result = Optional.of(
+                        new String(stdout.toByteArray(), StandardCharsets.UTF_8).trim()
+                    );
+                } else {
+                    Logger.info(
+                        Phino.class,
+                        "The '%s --version' probe exited with %d, we must use Docker",
+                        executable, proc.exitValue()
+                    );
+                }
             } else {
                 proc.destroyForcibly();
                 proc.getInputStream().close();
@@ -88,20 +134,21 @@ final class Phino {
                 pump.join(TimeUnit.SECONDS.toMillis(1L));
                 errs.join(TimeUnit.SECONDS.toMillis(1L));
                 Logger.info(
-                    this,
-                    "The 'phino --version' probe timed out, we must use Docker"
+                    Phino.class,
+                    "The '%s --version' probe timed out, we must use Docker",
+                    executable
                 );
             }
         } catch (final IOException ex) {
             Logger.info(
-                this,
-                "The 'phino' executable not found, we must use Docker: %s",
-                ex.getMessage()
+                Phino.class,
+                "The '%s' executable not found, we must use Docker: %s",
+                executable, ex.getMessage()
             );
         } catch (final InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
-        return available;
+        return result;
     }
 
     private static void pump(final ByteArrayOutputStream stdout, final InputStream input) {
@@ -117,35 +164,9 @@ final class Phino {
         } catch (final IOException ex) {
             Logger.debug(
                 Phino.class,
-                "Reading of the 'phino' probe stream stopped: %s",
+                "Reading of the probe stream stopped: %s",
                 ex.getMessage()
             );
         }
-    }
-
-    private static boolean version(
-        final Process proc, final ByteArrayOutputStream stdout,
-        final String expected, final Phino self
-    ) {
-        final boolean match;
-        final String version = new String(
-            stdout.toByteArray(), StandardCharsets.UTF_8
-        ).trim();
-        if (proc.exitValue() == 0 && version.equals(expected)) {
-            Logger.info(
-                self,
-                "The 'phino' executable found (%s), no need to use Docker",
-                version
-            );
-            match = true;
-        } else {
-            Logger.info(
-                self,
-                "The 'phino' executable is found, but its version (%s) is not equal to the expected one (%s); you can upgrade it via 'cabal update && cabal install --overwrite-policy=always phino-%s' (see https://github.com/objectionary/phino for details)",
-                version, expected, expected
-            );
-            match = false;
-        }
-        return match;
     }
 }

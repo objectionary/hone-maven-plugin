@@ -506,7 +506,7 @@ public final class OptimizeMojo extends AbstractMojo {
         this.timings.through(
             "optimize",
             () -> {
-                if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
+                if (this.alwaysWithDocker || !this.hostReady(this.threads != 1)) {
                     this.withDocker();
                 } else {
                     this.withoutDocker();

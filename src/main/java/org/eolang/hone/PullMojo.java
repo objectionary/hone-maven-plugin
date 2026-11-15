@@ -33,7 +33,7 @@ public final class PullMojo extends AbstractMojo {
 
     @Override
     public void exec() throws IOException {
-        if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
+        if (this.alwaysWithDocker || !this.hostReady()) {
             this.timings.through(
                 "pull",
                 () -> new Docker(this.sudo).exec(

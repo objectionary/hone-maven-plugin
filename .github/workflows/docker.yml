@@ -15,6 +15,7 @@ name: docker
 concurrency:
   group: docker-${{ github.ref }}
   cancel-in-progress: true
+permissions: read-all
 jobs:
   docker:
     timeout-minutes: 30

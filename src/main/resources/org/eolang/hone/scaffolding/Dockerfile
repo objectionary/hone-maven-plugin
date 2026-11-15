@@ -25,8 +25,8 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-ARG GHC=9.6.7
-ARG CABAL=3.12.1.0
+ARG GHC=9.10.3
+ARG CABAL=3.18.2.0
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 ENV PATH="/root/.ghcup/bin:${PATH}"
@@ -72,7 +72,7 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Maven (smaller footprint)
-ENV MAVEN_VERSION=3.9.9
+ENV MAVEN_VERSION=3.9.16
 ENV MAVEN_HOME=/opt/maven
 ENV PATH="${MAVEN_HOME}/bin:${PATH}"
 RUN wget --quiet "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \

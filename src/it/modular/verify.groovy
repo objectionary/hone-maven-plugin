@@ -29,9 +29,9 @@ assert server.toFile().text.contains("Server.phi");
 def main = new File(basedir, 'target/hone-summary.csv').toPath();
 assert Files.exists(main): "File 'target/hone-summary.csv' does not exist";
 assert Files.readAllLines(main).size() == 4: "header and three lines";
-assert main.toFile().text.contains("Common.phi");
-assert main.toFile().text.contains("Client.phi");
-assert main.toFile().text.contains("Server.phi");
+assert main.toFile().text.contains("org/eolang/hone/common/Common.phi");
+assert main.toFile().text.contains("org/eolang/hone/client/Client.phi");
+assert main.toFile().text.contains("org/eolang/hone/server/Server.phi");
 
 assert log =~ /Optimized \d+\/1 files/: "per-module 'Optimized X/1 files' must appear in log";
 assert log =~ /Optimized \d+\/3 files/: "summary 'Optimized X/3 files' must appear in log";

@@ -48,11 +48,11 @@ jobs:
       # found" and the whole job is red in under a second (see #813).
       - name: install-maven
         env:
-          MAVEN_VERSION: 3.9.11
+          MAVEN_VERSION: 3.9.16
           # The SHA-512 Apache publishes next to the archive, pinned here so
           # that the digest is reviewed in this repo instead of fetched from
           # the same host that serves the bytes it vouches for.
-          MAVEN_SHA512: bcfe4fe305c962ace56ac7b5fc7a08b87d5abd8b7e89027ab251069faebee516b0ded8961445d6d91ec1985dfe30f8153268843c89aa392733d1a3ec956c9978
+          MAVEN_SHA512: 831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6
         run: |
           if command -v mvn > /dev/null; then
             mvn --version

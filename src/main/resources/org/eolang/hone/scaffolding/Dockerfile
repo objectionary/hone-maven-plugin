@@ -72,7 +72,7 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Maven (smaller footprint)
-ENV MAVEN_VERSION=3.9.9
+ENV MAVEN_VERSION=3.9.16
 ENV MAVEN_HOME=/opt/maven
 ENV PATH="${MAVEN_HOME}/bin:${PATH}"
 RUN wget --quiet "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \

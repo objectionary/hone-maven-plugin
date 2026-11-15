@@ -94,7 +94,7 @@ result: |
 where:
   - meta: 𝜏-distinct
     function: random-tau
-  - meta: 𝑒-signature
+  - meta: 𝑒-expected-signature
     function: concat
     args: ['"()L"', 𝑒-stream-class, '";"']
 when:
@@ -103,3 +103,5 @@ when:
         - eq: [𝑒-stream-class, '"java/util/stream/IntStream"']
         - eq: [𝑒-stream-class, '"java/util/stream/LongStream"']
         - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
+having:
+  eq: [𝑒-signature, 𝑒-expected-signature]

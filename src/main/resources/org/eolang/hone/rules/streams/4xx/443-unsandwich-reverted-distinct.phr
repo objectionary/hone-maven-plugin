@@ -109,7 +109,7 @@ where:
       - '"s/^java\\/util\\/stream\\/IntStream$/I/g"'
       - '"s/^java\\/util\\/stream\\/LongStream$/J/g"'
       - '"s/^java\\/util\\/stream\\/DoubleStream$/D/g"'
-  - meta: 𝑒-unbox-bridge
+  - meta: 𝑒-expected-unbox-bridge
     function: concat
     args: ['"(L"', 𝑒-wrapper, '";)"', 𝑒-primitive]
   - meta: 𝑒-native-signature
@@ -131,3 +131,5 @@ when:
         - eq: [𝑒-stream-class, '"java/util/stream/DoubleStream"']
         - eq: [𝑒-unbox-owner, '"java/lang/Double"']
         - eq: [𝑒-unbox-method, '"doubleValue"']
+having:
+  eq: [𝑒-unbox-bridge, 𝑒-expected-unbox-bridge]

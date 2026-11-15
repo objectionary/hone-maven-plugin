@@ -207,10 +207,14 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
     abstract void exec() throws IOException;
 
     /**
-     * Add a target directory for invocations that do not have a Maven project.
+     * Add an absolute target directory for invocations that do not have a
+     * Maven project.
+     *
+     * <p>The result must be absolute because {@code entry.sh} changes into
+     * its own temporary directory before resolving {@code TARGET}.</p>
      *
      * @param configured The target directory from Maven
-     * @return The configured target or a local {@code target} directory
+     * @return The configured target or a local {@code target} directory, absolute
      */
     static File targetOrDefault(final File configured) {
         final File target;
@@ -219,7 +223,7 @@ abstract class AbstractMojo extends org.apache.maven.plugin.AbstractMojo {
         } else {
             target = configured;
         }
-        return target;
+        return target.getAbsoluteFile();
     }
 
     /*

@@ -25,8 +25,8 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-ARG GHC=9.6.7
-ARG CABAL=3.12.1.0
+ARG GHC=9.10.3
+ARG CABAL=3.18.2.0
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 ENV PATH="/root/.ghcup/bin:${PATH}"

@@ -157,7 +157,7 @@
     <dependency>
       <groupId>org.eclipse.sisu</groupId>
       <artifactId>org.eclipse.sisu.plexus</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.2</version>
       <scope>test</scope>
       <!--
       Needed only by SummaryMojoTest: the MavenSession constructor it

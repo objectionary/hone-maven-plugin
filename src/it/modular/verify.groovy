@@ -33,7 +33,7 @@ assert main.toFile().text.contains("org/eolang/hone/common/Common.phi");
 assert main.toFile().text.contains("org/eolang/hone/client/Client.phi");
 assert main.toFile().text.contains("org/eolang/hone/server/Server.phi");
 
-assert log =~ /Optimized \d+\/1 files/: "per-module 'Optimized X/1 files' must appear in log";
-assert log =~ /Optimized \d+\/3 files/: "summary 'Optimized X/3 files' must appear in log";
+assert log =~ /Optimized 1\/1 files/: "per-module 'Optimized 1/1 files' must appear in log";
+assert log =~ /Optimized 3\/3 files/: "summary 'Optimized 3/3 files' must appear in log";
 
 true

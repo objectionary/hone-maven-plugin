@@ -53,6 +53,7 @@ final class OptimizeMojoSavedCountTest {
             "three class files in three nested directories must be counted as three",
             new Jaxec("bash", "-c", matcher.group())
                 .withEnv("TARGET", temp.toString())
+                .withEnv("CLASSES", "classes")
                 .exec()
                 .stdout(),
             Matchers.containsString("(3 files)")

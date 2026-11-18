@@ -836,19 +836,19 @@ so `0/27` means "no stream call disappeared", not "nothing was touched".
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 737 | 64255 | 429 | 307s | skipped | skipped | 308s |
-| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 156 | 52534 | 400 | 32s | skipped | skipped | 32s |
-| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 679 | 68282 | 388 | 77s | skipped | skipped | 78s |
-| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 320 | 79083 | 619 | 91s | skipped | skipped | 92s |
-| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12853 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
-| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 353 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
-| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 529 | 73500 | 614 | 25s | skipped | skipped | 26s |
-| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 217 | ? | ? | ? ⚠️ | ?/? | ? | ? ⚠️ |
-| [commons-csv](https://github.com/apache/commons-csv/commit/292d0b99f6ebd443fabd8f692b0b9e5a92dc2274) | 306 | 11110 | 20 | 11s | skipped | skipped | 10s |
-| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2028 | 104400 | 433 | 870s | skipped | skipped | 694s |
+| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 780 | 64255 | 429 | 302s | skipped | skipped | 303s |
+| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 162 | 52534 | 400 | 32s | skipped | skipped | 33s |
+| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 686 | 68282 | 388 | 80s | skipped | skipped | 78s |
+| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 339 | 79083 | 619 | 91s | skipped | skipped | 91s |
+| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12823 | 71445 | 486 | 49s | 0/14 | 70s | 0s ⚠️ |
+| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 362 | 31282 | 312 | 16s | 0/12 | 45s | 0s ⚠️ |
+| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 540 | 73500 | 614 | 28s | skipped | skipped | 28s |
+| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 220 | 39496 | 541 | 38s | 0/48 | 87s | 0s ⚠️ |
+| [commons-csv](https://github.com/apache/commons-csv/commit/292d0b99f6ebd443fabd8f692b0b9e5a92dc2274) | 315 | 11110 | 20 | 12s | skipped | skipped | 11s |
+| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2064 | 104400 | 433 | 534s | skipped | skipped | 469s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-09-25 at 08:17,
+on 2026-11-18 at 09:24,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -875,7 +875,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/27192081741
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/36103320077
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/44263425207
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

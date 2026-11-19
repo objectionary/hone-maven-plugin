@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
@@ -37,9 +38,11 @@ public final class SummaryMojo extends AbstractMojo {
     public void exec() throws IOException {
         Logger.info(this, "Collecting summary build statistics...");
         final Path stats = new Summary(
-            this.session.getProjects().stream()
-                .map(project -> Paths.get(project.getBuild().getDirectory()))
-                .collect(Collectors.toList()),
+            Stream.concat(
+                Stream.of(this.target.toPath()),
+                this.session.getProjects().stream()
+                    .map(project -> Paths.get(project.getBuild().getDirectory()))
+            ).collect(Collectors.toList()),
             Files.createDirectories(this.target.toPath())
         ).collect();
         if (stats.toFile().exists()) {

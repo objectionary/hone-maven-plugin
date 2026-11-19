@@ -9,6 +9,7 @@ import com.yegor256.MktmpResolver;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
@@ -56,6 +57,62 @@ final class SummaryMojoTest {
                 Matchers.containsString("org/eolang/hone/server/Server.phi"),
                 Matchers.containsString("1/2,"),
                 Matchers.containsString("2/2,")
+            )
+        );
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void collectsStatisticsOfCustomTarget(@Mktmp final Path temp) throws Exception {
+        final MavenProject demo = new MavenProject();
+        final Build build = new Build();
+        build.setDirectory(Files.createDirectories(temp.resolve("target")).toString());
+        demo.getModel().setBuild(build);
+        final Path output = Files.createDirectories(temp.resolve("hone-output"));
+        Files.write(
+            output.resolve("hone-statistics.csv"),
+            new BytesOf(new ResourceOf("csv/hone-statistics-client.csv")).asBytes()
+        );
+        final SummaryMojo mojo = new SummaryMojo();
+        mojo.target = output.toFile();
+        mojo.session = new MavenSession(
+            null,
+            new DefaultMavenExecutionRequest(),
+            (MavenExecutionResult) null,
+            Collections.singletonList(demo)
+        );
+        mojo.exec();
+        MatcherAssert.assertThat(
+            "the summary goal must read the statistics from the configured hone.target",
+            new TextOf(output.resolve("hone-summary.csv")).asString(),
+            Matchers.allOf(
+                Matchers.containsString("org/eolang/hone/client/Client.phi"),
+                Matchers.containsString("1/1,")
+            )
+        );
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void countsStatisticsOfDefaultTargetOnce(@Mktmp final Path temp) throws Exception {
+        final MavenProject client = SummaryMojoTest.project(
+            temp, "client", "csv/hone-statistics-client.csv"
+        );
+        final SummaryMojo mojo = new SummaryMojo();
+        mojo.target = temp.resolve("client").toFile();
+        mojo.session = new MavenSession(
+            null,
+            new DefaultMavenExecutionRequest(),
+            (MavenExecutionResult) null,
+            Collections.singletonList(client)
+        );
+        mojo.exec();
+        MatcherAssert.assertThat(
+            "the summary goal must not count twice the statistics of a target that is also the build directory",
+            new TextOf(temp.resolve("client/hone-summary.csv")).asString(),
+            Matchers.allOf(
+                Matchers.containsString("1/1,"),
+                Matchers.not(Matchers.containsString("1/2,"))
             )
         );
     }

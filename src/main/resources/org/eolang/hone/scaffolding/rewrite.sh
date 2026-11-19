@@ -394,7 +394,7 @@ function grep_in_check {
   # Verify a grep-in pattern against a file. The exit code mirrors grep -E:
   # 0 = the pattern matched, 1 = no match, 2 = the pattern is invalid.
   local rc=0
-  grep -qE "${1}" "${2}" || rc=$?
+  grep -qE -e "${1}" -- "${2}" || rc=$?
   return "${rc}"
 }
 

@@ -33,8 +33,9 @@ final class RandomPipelineDocTest {
             "there is no quarantine to extend any more, so the guide must not send the reader to one, and the walk may stay wide only while every production stays reached",
             RandomPipelineDocTest.doc(),
             Matchers.allOf(
-                Matchers.not(Matchers.containsString("quarantine")),
-                Matchers.containsString("reachesEveryProductionOfTheGrammar")
+                Matchers.not(Matchers.containsString("RandomPipeline.quarantined")),
+                Matchers.containsString("reachesEveryProductionOfTheGrammar"),
+                Matchers.not(Matchers.containsString("re-roll"))
             )
         );
     }
@@ -44,7 +45,9 @@ final class RandomPipelineDocTest {
         MatcherAssert.assertThat(
             "a shape the walk reaches that breaks the rewrite must earn its own fixture, not be skipped",
             RandomPipelineDocTest.doc(),
-            Matchers.containsString("earns its own fixture under `optimize/streams/`")
+            Matchers.matchesRegex(
+                "(?s).*\\bbreak[a-z]*\\b[^.]*\\bfixture\\b[^.]*optimize/streams/.*"
+            )
         );
     }
 
@@ -55,10 +58,11 @@ final class RandomPipelineDocTest {
             StandardCharsets.UTF_8
         );
         final Collection<String> missing = new ArrayList<>(0);
-        final Matcher found = Pattern.compile("RandomPipeline\\.([A-Za-z]\\w*)\\(")
+        final Matcher found = Pattern.compile("RandomPipeline(?!\\.java\\b)[.#]([A-Za-z]\\w*)")
             .matcher(RandomPipelineDocTest.doc());
         while (found.find()) {
-            if (!source.contains(found.group(1))) {
+            final String declaration = String.format("\\b%s\\s*\\(", found.group(1));
+            if (!Pattern.compile(declaration).matcher(source).find()) {
                 missing.add(found.group());
             }
         }

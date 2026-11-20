@@ -175,6 +175,24 @@ public final class OptimizeMojo extends AbstractMojo {
     private String grepIn;
 
     /**
+     * Names of the methods to grep XMIR files for.
+     *
+     * <p>A readable alternative to {@link #grepIn}: instead of writing
+     * the hex-byte regular expression by hand, list the names of the methods
+     * and the plugin builds the pattern from them, the same way it builds
+     * the default one. This is the same filter as the example above:</p>
+     *
+     * <pre>-Dhone.grep-methods=filter,map</pre>
+     *
+     * <p>It can't be used together with a custom {@code grep-in}.</p>
+     *
+     * @since 0.33.0
+     * @checkstyle MemberNameCheck (6 lines)
+     */
+    @Parameter(property = "hone.grep-methods")
+    private List<String> grepMethods;
+
+    /**
      * Skip phino entirely.
      *
      * <p>If this is set to {@code true}, phino is not
@@ -397,6 +415,7 @@ public final class OptimizeMojo extends AbstractMojo {
         OptimizeMojo.requireAtLeast("hone.max-cycles", this.maxCycles, 1);
         OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
         OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
+        OptimizeMojo.grepPattern(this.grepIn, this.grepMethods);
         if (this.withoutClasses() && this.skipIfNoClasses) {
             Files.deleteIfExists(this.target.toPath().resolve("hone-statistics.csv"));
             Logger.info(this, "The directory with classes is absent or empty, skipping");
@@ -479,6 +498,41 @@ public final class OptimizeMojo extends AbstractMojo {
                 paths
             )
         );
+    }
+
+    /**
+     * The grep-in pattern to give to the scripts.
+     *
+     * <p>Without method names, it is the configured {@code grep-in}. With them,
+     * it is the pattern {@link Greppable} builds from these names, unless
+     * {@code grep-in} was changed too, since then it is not clear which of the
+     * two filters the user wants.</p>
+     *
+     * @param pattern The configured {@code grep-in} pattern
+     * @param methods The configured method names, or NULL if there are none
+     * @return The pattern for {@code grep -E}
+     */
+    static String grepPattern(final String pattern, final List<String> methods) {
+        final List<String> names = new ArrayList<>(0);
+        if (methods != null) {
+            for (final String method : methods) {
+                final String name = method.trim();
+                if (!name.isEmpty()) {
+                    names.add(name);
+                }
+            }
+        }
+        final String result;
+        if (names.isEmpty()) {
+            result = pattern;
+        } else if (OptimizeMojo.DEFAULT_GREP_IN.equals(pattern)) {
+            result = new Greppable(names.toArray(new String[0])).toString();
+        } else {
+            throw new IllegalStateException(
+                "The 'hone.grep-in' and 'hone.grep-methods' parameters can't be set together"
+            );
+        }
+        return result;
     }
 
     private static void requireAtLeast(final String name, final int value, final int min) {
@@ -643,7 +697,10 @@ public final class OptimizeMojo extends AbstractMojo {
         );
         command.addAll(
             Arrays.asList(
-                "--env", String.format("GREP_IN=%s", this.grepIn)
+                "--env",
+                String.format(
+                    "GREP_IN=%s", OptimizeMojo.grepPattern(this.grepIn, this.grepMethods)
+                )
             )
         );
         command.addAll(
@@ -809,7 +866,7 @@ public final class OptimizeMojo extends AbstractMojo {
                 .withEnv("SKIP_PHINO", Boolean.toString(this.skipPhino))
                 .withEnv("SKIP_IF_NOT_SUITABLE", Boolean.toString(this.skipIfNotSuitable))
                 .withEnv("SKIP_VERIFICATION", Boolean.toString(this.skipVerification))
-                .withEnv("GREP_IN", this.grepIn)
+                .withEnv("GREP_IN", OptimizeMojo.grepPattern(this.grepIn, this.grepMethods))
                 .withEnv("MAX_DEPTH", Integer.toString(this.maxDepth))
                 .withEnv("MAX_CYCLES", Integer.toString(this.maxCycles))
                 .withEnv("THREADS", Integer.toString(this.threads))

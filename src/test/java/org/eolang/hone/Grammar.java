@@ -20,8 +20,8 @@ import java.util.Random;
  * it walks. Nothing here is {@code findAny}: the value a pipeline prints has to
  * be the same on every run, or it cannot be an oracle. Nothing here says
  * {@code parallel()} either, because that is a property of a pipeline and not of
- * a step in it — the walk appends it once, at the end, where it means the same
- * thing as it would anywhere else.</p>
+ * a step in it — the walk puts it in once, in front of a step it picks, or turns
+ * a collection source into its {@code parallelStream()}.</p>
  *
  * <p>Four roles beyond the plain ones: a {@code peek} counts the traversal, a
  * {@code self} reads {@code this} and is drawn only in an instance frame, a

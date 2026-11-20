@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.tools.ToolProvider;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -128,7 +129,7 @@ final class RandomPipelineOptimizationTest {
         final List<String> raced = new ArrayList<>(0);
         for (int seed = 0; seed < 500; ++seed) {
             final String java = new RandomPipeline(seed).java("raced", "X");
-            if (java.contains(".parallel()")
+            if ((java.contains(".parallel()") || java.contains(".parallelStream()"))
                 && (java.contains("SUM[0] +=") || java.contains("throw boom("))) {
                 raced.add(java);
             }
@@ -151,6 +152,39 @@ final class RandomPipelineOptimizationTest {
         }
         MatcherAssert.assertThat(
             "some pipelines must go parallel, or the rules that revert fusion are never tried",
+            raced,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
+    void reachesStepsBehindParallel() {
+        final Pattern behind = Pattern.compile("\\.parallel\\(\\)\\R\\s*\\.[^\\n]*\\R\\s*\\.");
+        final List<String> raced = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("raced", "X");
+            if (behind.matcher(java).find()) {
+                raced.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some pipelines must have an operation behind parallel(), or rules 223, 225 and 227 are never tried (see #1202)",
+            raced,
+            Matchers.not(Matchers.empty())
+        );
+    }
+
+    @Test
+    void reachesParallelStreamSources() {
+        final List<String> raced = new ArrayList<>(0);
+        for (int seed = 0; seed < 500; ++seed) {
+            final String java = new RandomPipeline(seed).java("raced", "X");
+            if (java.contains(".parallelStream()")) {
+                raced.add(java);
+            }
+        }
+        MatcherAssert.assertThat(
+            "some pipelines must start parallel from a collection, or parallelStream() is never tried (see #1202)",
             raced,
             Matchers.not(Matchers.empty())
         );

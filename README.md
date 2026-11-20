@@ -838,19 +838,19 @@ so `0/27` means "no stream call disappeared", not "nothing was touched".
 <!-- coverage_begin -->
 | Repository | Forks | LoC | Classes | Before | Edits | Hone | After |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 781 | 64255 | 429 | 309s | skipped | skipped | 308s |
-| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 162 | 52534 | 400 | 32s | skipped | skipped | 33s |
-| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 686 | 68282 | 388 | 78s | skipped | skipped | 78s |
-| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 339 | 79083 | 619 | 107s | skipped | skipped | 95s |
-| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12823 | 71445 | 486 | 49s | 0/14 | 69s | 0s ⚠️ |
-| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 362 | 31282 | 312 | 15s | 0/12 | 46s | 0s ⚠️ |
-| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 540 | 73500 | 614 | 27s | skipped | skipped | 27s |
-| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 220 | 39496 | 541 | 39s | 0/48 | 87s | 0s ⚠️ |
+| [commons-io](https://github.com/apache/commons-io/commit/cf5f9a20c3dd83251d930386fed226368e61c0e7) | 785 | 64255 | 429 | 304s | skipped | skipped | 313s |
+| [commons-configuration](https://github.com/apache/commons-configuration/commit/6ef60965b273110bd83068312420c32421fef11d) | 162 | 52534 | 400 | 32s | skipped | skipped | 32s |
+| [vavr](https://github.com/vavr-io/vavr/commit/3af14df99c6a99ecd984e516d5f5294335cfbe84) | 686 | 68282 | 388 | 78s | skipped | skipped | 81s |
+| [commons-compress](https://github.com/apache/commons-compress/commit/493575e0dd82ccb8f55cbba2da12fb0df1a7e191) | 339 | 79083 | 619 | 105s | skipped | skipped | 94s |
+| [mybatis-3](https://github.com/mybatis/mybatis-3/commit/d3802feff2bef6122bd65c07782b00e4ceb6c99b) | 12820 | 71445 | 486 | 49s | 0/14 | 68s | 0s ⚠️ |
+| [json-schema-validator](https://github.com/networknt/json-schema-validator/commit/2276a17e117c8977eacac2dcef04908939463bed) | 363 | 31282 | 312 | 16s | 0/12 | 43s | 0s ⚠️ |
+| [commons-collections](https://github.com/apache/commons-collections/commit/b533ad6c0527027ba08d9a9891b09d7eaf1af98e) | 540 | 73500 | 614 | 27s | skipped | skipped | 26s |
+| [mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql/commit/7de4d498aef25e95025cda0f98d472a59d32a398) | 220 | 39496 | 541 | 40s | 0/48 | 87s | 0s ⚠️ |
 | [commons-csv](https://github.com/apache/commons-csv/commit/292d0b99f6ebd443fabd8f692b0b9e5a92dc2274) | 315 | 11110 | 20 | 11s | skipped | skipped | 11s |
-| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2064 | 104400 | 433 | 533s | skipped | skipped | 565s |
+| [commons-lang](https://github.com/apache/commons-lang/commit/f51d0615d034ae997611ac01fd4c79823122372b) | 2065 | 104400 | 433 | 468s | skipped | skipped | 539s |
 
 The results were calculated in [this GHA job][coverage-gha]
-on 2026-11-18 at 15:55,
+on 2026-11-20 at 10:15,
 on Linux with 4 CPUs.
 <!-- coverage_end -->
 
@@ -877,7 +877,7 @@ that we use, are defined in the `pom.xml` file.
 
 [EO]: https://github.com/objectionary/eo
 [benchmark-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/44489698778
-[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/44324851701
+[coverage-gha]: https://github.com/objectionary/hone-maven-plugin/actions/runs/44705708909
 [bytecode]: https://en.wikipedia.org/wiki/Java_bytecode
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
 [Maven]: https://maven.apache.org/

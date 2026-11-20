@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 /**
  * A random Java class with one stream pipeline in it.
@@ -56,10 +57,12 @@ import java.util.Random;
  *
  * <p>Two properties of the pipeline as a whole are picked last, once the walk
  * knows where it ended. A pipeline may go {@code parallel()}, which no rule may
- * fuse a {@code skip} or a {@code distinct} through — {@code 222}–{@code 225}
+ * fuse a {@code skip} or a {@code distinct} through — {@code 222}–{@code 227}
  * revert exactly that — and which is offered only when nothing counts the
  * traversal and the terminal reduces no floating point, so that what the class
- * prints stays the same on every run. And a terminal may return nothing at all:
+ * prints stays the same on every run. The call may stand in front of any step,
+ * since a rule sees the operators on one side of it only, or the source may be
+ * a {@code parallelStream()} with no such call at all. And a terminal may return nothing at all:
  * a {@code forEach} that accumulates, whose only oracle is the number the peek
  * line carries.</p>
  *
@@ -248,6 +251,12 @@ final class RandomPipeline {
     private static final List<String> FLOATS = Arrays.asList("dbox", "reals");
 
     /**
+     * A source that streams one of the collections of the class, which may
+     * become its {@code parallelStream()} when the pipeline goes parallel.
+     */
+    private static final Pattern COLLECTION = Pattern.compile("[A-Z]+\\.stream\\(\\)");
+
+    /**
      * Who holds the method the pipeline sits in.
      */
     private static final List<String> HOLDERS = Arrays.asList("static", "instance");
@@ -341,7 +350,9 @@ final class RandomPipeline {
      * frame|holder|guard. The frame is picked before anything else because it
      * decides which roles the walk may draw from.
      * Seven is the largest number of intermediate operations one pipeline
-     * gets, and one walk in five goes parallel, when it is allowed to.
+     * gets, and one walk in five goes parallel, when it is allowed to. Where it
+     * goes parallel is drawn after everything else, so a walk that stays
+     * sequential draws exactly what it drew before parallel() could move.
      */
     private static List<String> walk(final Grammar grammar, final Random rnd) {
         final String holder =
@@ -375,10 +386,56 @@ final class RandomPipeline {
         final String end = grammar.terminal(domain, observed, rnd);
         if (RandomPipeline.raceable(end, observed, domain)
             && rnd.nextInt(5) == 0) {
-            steps.add(String.join("|", domain, "race", "parallel()"));
+            RandomPipeline.race(steps, rnd);
         }
         steps.add(end);
         return steps;
+    }
+
+    /*
+     * Make the pipeline parallel, at a place the walk picks.
+     * Java does not care where parallel() stands, the whole pipeline goes
+     * parallel either way, but a phino rule sees an operator on one side of it
+     * only, which is why the reverts come in pairs (222/223, 224/225, 226/227).
+     * So parallel() goes in front of any intermediate step, or right before
+     * the terminal, and a source that streams a collection turns, every other
+     * time, into its parallelStream() instead, the one way to start parallel
+     * with no call to parallel() at all (see #1202).
+     */
+    private static void race(final List<String> steps, final Random rnd) {
+        final String[] source = steps.get(1).split("\\|", 3);
+        if (RandomPipeline.COLLECTION.matcher(source[2]).matches() && rnd.nextBoolean()) {
+            steps.set(
+                1,
+                String.join(
+                    "|", source[0], source[1],
+                    source[2].replace(".stream()", ".parallelStream()")
+                )
+            );
+        } else {
+            final int place = 2 + rnd.nextInt(steps.size() - 1);
+            steps.add(
+                place,
+                String.join(
+                    "|", RandomPipeline.landed(steps.get(place - 1)), "race", "parallel()"
+                )
+            );
+        }
+    }
+
+    /*
+     * The domain a pipeline is in right after the given line of its walk,
+     * which is the domain the line starts in, unless the line is a turn.
+     */
+    private static String landed(final String line) {
+        final String[] parts = line.split("\\|", 3);
+        final String domain;
+        if ("turn".equals(parts[1])) {
+            domain = parts[2].substring(parts[2].lastIndexOf('|') + 1);
+        } else {
+            domain = parts[0];
+        }
+        return domain;
     }
 
     /*

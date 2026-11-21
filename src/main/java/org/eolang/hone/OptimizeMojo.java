@@ -416,7 +416,7 @@ public final class OptimizeMojo extends AbstractMojo {
         OptimizeMojo.requireAtLeast("hone.kill-grace", this.killgrace, 0);
         OptimizeMojo.requireAtLeast("hone.threads", this.threads, 0);
         OptimizeMojo.grepPattern(this.grepIn, this.grepMethods);
-        final Path legacy = this.target.toPath().resolve("hone-statistics.csv");
+        final Path legacy = this.legacy();
         if (Files.deleteIfExists(legacy)) {
             Logger.debug(this, "Statistics of the old name deleted: %[file]s", legacy);
         }
@@ -439,9 +439,8 @@ public final class OptimizeMojo extends AbstractMojo {
     @Override
     void dropStaleStatistics() throws MojoExecutionException {
         try {
-            Files.deleteIfExists(
-                AbstractMojo.targetOrDefault(this.target).toPath().resolve("hone-statistics.csv")
-            );
+            Files.deleteIfExists(this.legacy());
+            Files.deleteIfExists(this.stats());
         } catch (final IOException ex) {
             throw new MojoExecutionException(ex);
         }
@@ -577,12 +576,18 @@ public final class OptimizeMojo extends AbstractMojo {
     // file name, because hone:summary scans the target directory only one
     // level deep:
     private Path stats() {
-        return this.target.toPath().resolve(
+        return AbstractMojo.targetOrDefault(this.target).toPath().resolve(
             String.format(
                 "hone-statistics-%s.csv",
                 this.classes.replace('/', '-').replace('\\', '-')
             )
         );
+    }
+
+    // Statistics written before #1344 renamed them after hone.classes:
+    private Path legacy() {
+        return AbstractMojo.targetOrDefault(this.target).toPath()
+            .resolve("hone-statistics.csv");
     }
 
     private void optimize() throws IOException {

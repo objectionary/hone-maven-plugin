@@ -93,29 +93,9 @@ final class OptimizeMojoTest {
     }
 
     @Test
+    @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "JTCOP.RuleAssertionMessage"})
     void removesStaleStatisticsWhenSkippingOnFlag(@Mktmp final Path home) throws Exception {
-        new Farea(home).together(
-            f -> {
-                f.clean();
-                f.files().file("target/hone-statistics.csv").write(
-                    "stale statistics".getBytes(StandardCharsets.UTF_8)
-                );
-                f.build()
-                    .plugins()
-                    .appendItself()
-                    .execution("default")
-                    .phase("process-classes")
-                    .goals("optimize")
-                    .configuration()
-                    .set("skip", true);
-                f.exec("process-classes");
-                MatcherAssert.assertThat(
-                    "statistics from a previous run must not survive an optimization skipped by the skip flag",
-                    Files.exists(home.resolve("target/hone-statistics.csv")),
-                    Matchers.is(false)
-                );
-            }
-        );
+        new Farea(home).together(OptimizeMojoTest::runSkippedOnFlag);
     }
 
     @Test
@@ -353,6 +333,40 @@ final class OptimizeMojoTest {
     private static List<String> csv(final String mount) throws IOException {
         try (CSVParser parser = CSVFormat.DEFAULT.parse(new StringReader(mount))) {
             return parser.getRecords().get(0).toList();
+        }
+    }
+
+    private static void runSkippedOnFlag(final Farea fea) throws IOException {
+        fea.clean();
+        for (final String name : new String[] {
+            "hone-statistics.csv",
+            "hone-statistics-classes.csv",
+        }) {
+            fea.files().file(String.format("target/%s", name)).write(
+                "stale statistics".getBytes(StandardCharsets.UTF_8)
+            );
+        }
+        fea.build()
+            .plugins()
+            .appendItself()
+            .execution("default")
+            .phase("process-classes")
+            .goals("optimize")
+            .configuration()
+            .set("skip", true);
+        fea.exec("process-classes");
+        for (final String name : new String[] {
+            "hone-statistics.csv",
+            "hone-statistics-classes.csv",
+        }) {
+            MatcherAssert.assertThat(
+                String.format(
+                    "the %s of a previous run must not survive an optimization skipped by the skip flag (see #1344)",
+                    name
+                ),
+                fea.files().file(String.format("target/%s", name)).exists(),
+                Matchers.is(false)
+            );
         }
     }
 

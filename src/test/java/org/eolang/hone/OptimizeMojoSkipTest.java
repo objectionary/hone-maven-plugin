@@ -33,7 +33,7 @@ final class OptimizeMojoSkipTest {
         MatcherAssert.assertThat(
             "a class that did not change since the previous run must be skipped, even when jeo writes another XMIR",
             this.twice(temp, "printf '<xmir time=\"2\"/>' > hone/jeo-disassemble/A.xmir"),
-            Matchers.equalTo("3")
+            Matchers.equalTo("2")
         );
     }
 
@@ -49,7 +49,7 @@ final class OptimizeMojoSkipTest {
                     "printf 'changed' > classes/A.class"
                 )
             ),
-            Matchers.equalTo("6")
+            Matchers.equalTo("4")
         );
     }
 

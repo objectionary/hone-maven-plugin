@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A plain filter behind a CAPTURING filter, the shape #1423 reports. 113 lifts
+# `filter(n -> n != cut)`, with `cut` a captured argument, to a
+# Φ.hone.cp-filter carrying `state-acc`, `body-acc` and `captures` ahead of
+# `class`, so 281 never matched it and no Φ.hone.dup was spliced in front of
+# the filter behind it. 401 fused the two anyway, the second predicate ate the
+# only copy of the item, and jeo refused the distill: "Cannot pop operand off
+# an empty stack". It is the capturing-filter twin of the capturing map of
+# #821 and the capturing dropWhile of #981, and the fix is the same one more
+# name in 283's alternation. The reverse order, a plain filter first and the
+# capturing one behind it, and two capturing filters in a row never broke.
+#
+# Two pipelines, a count and a forEach: 5, 2, 9, 2, 7, 1, 8 without the 9 and
+# with the odd ones gone leaves 2, 2, 8. invokedynamic drops from 5 (the two
+# pairs of predicates and the forEach consumer) to 3: one Stream.mapMulti per
+# pipeline, plus the consumer, which captures `out` and stays native. The two
+# `ifne` of the predicates' own bodies grow to 6 with the guards lowered
+# into the distills. The printed line is the real assertion: without the dup
+# there is no class to run.
+java: |
+  package closure;
+  import java.util.stream.Stream;
+  public class CFilterFilter {
+    static long kept(final int cut) {
+      return Stream.of(5, 2, 9, 2, 7, 1, 8)
+        .filter(n -> n != cut)
+        .filter(n -> n % 2 == 0)
+        .count();
+    }
+    static String shown(final int cut) {
+      final StringBuilder out = new StringBuilder();
+      Stream.of(5, 2, 9, 2, 7, 1, 8)
+        .filter(n -> n != cut)
+        .filter(n -> n % 2 == 0)
+        .forEach(n -> out.append(n).append(' '));
+      return out.toString().trim();
+    }
+    public static void main(final String... args) {
+      System.out.printf("The result is %d/%s%n", kept(9), shown(9));
+    }
+  }
+log:
+  - "Modified 1/1 CFilterFilter.phi"
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is 3/2 2 8"
+before:
+  invokedynamic: 5
+  ifne: 2
+after:
+  invokedynamic: 3
+  ifne: 6

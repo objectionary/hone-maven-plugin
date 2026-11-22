@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A plain filter behind a filter over an OBJECT predicate, the twin of
+# closure-filter-filter.yml (#1423). 215 lifts `filter(new Odd())` to a
+# Φ.hone.named-filter, which 317 folds into a guard that opens with its own
+# `dup` and leaves the one copy of the item it kept. 281 never matched it, so
+# no Φ.hone.dup was spliced in front of the lambda filter behind it, the
+# lambda's predicate ate that copy, and jeo refused the distill with "Cannot
+# pop operand off an empty stack". The reverse order never broke.
+#
+# 5, 2, 9, 2, 7, 1, 8 keeps its odd 5, 9, 7, 1, and three of them are greater
+# than 4. Odd itself mentions no stream method, so only NFilterFilter.phi is
+# rewritten. The one invokedynamic left is the Stream.mapMulti dispatch that
+# replaces the lambda predicate, and the two `ifne` are the two guards in the
+# distill.
+java: |
+  package named;
+  import java.util.function.Predicate;
+  import java.util.stream.Stream;
+  public class NFilterFilter {
+    static long kept() {
+      return Stream.of(5, 2, 9, 2, 7, 1, 8)
+        .filter(new Odd())
+        .filter(n -> n > 4)
+        .count();
+    }
+    public static void main(final String... args) {
+      System.out.printf("The result is %d%n", kept());
+    }
+    static final class Odd implements Predicate<Integer> {
+      @Override
+      public boolean test(final Integer n) {
+        return n % 2 == 1;
+      }
+    }
+  }
+log:
+  - "No grep-in match for 1/2 NFilterFilter$Odd.xmir"
+  - "Modified 2/2 NFilterFilter.phi"
+  - "Finished rewriting 2 file"
+  - "BUILD SUCCESS"
+  - "The result is 3"
+before:
+  invokedynamic: 1
+  ifne: 0
+after:
+  invokedynamic: 1
+  ifne: 2

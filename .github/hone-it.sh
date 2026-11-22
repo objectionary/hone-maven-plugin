@@ -74,6 +74,46 @@ supports_streams() {
   return 0
 }
 
+# Make Maven fetch remote metadata afresh instead of trusting what the shared
+# local repository remembers about its last check. Maven caches the
+# maven-metadata.xml of every remote repository together with the timestamp of
+# the last lookup, and, on a failed lookup, a marker that stops it from trying
+# again until the update policy allows (a day by default). One transient
+# failure to fetch the metadata therefore poisons every later Maven process
+# that shares this cache, including the ones of the next projects in the
+# coverage job and, via the restored Actions cache, the next jobs: they fail
+# with "No versions available for ... within specified range" long after the
+# network problem is gone, which is exactly how mybatis-3 and
+# mybatis-dynamic-sql died in their warm-up build before hone even started,
+# on the "[1.81,1.82)" version range that BouncyCastle declares inside its own
+# 1.81 POM and JGit (pulled by git-commit-id-maven-plugin) inherits (see
+# #1340). This metadata is a pure cache: deleting it, with its bookkeeping,
+# costs nothing but a few small downloads, while artifacts stay untouched.
+fresh_metadata() {
+  local m2="${HOME}/.m2/repository"
+  test -d "${m2}" || return 0
+  find "${m2}" -type f \
+    \( -name 'maven-metadata*' \
+    -o -name 'resolver-status.properties' \
+    -o -name '*.lastUpdated' \) -delete
+}
+
+warm_up_build() {
+  fresh_metadata
+  rc=0
+  timeout "${budget}" mvn "${flags[@]}" -f "${dir}" test || rc=$?
+}
+
+# Apply hone to every module of the checked-out project whose target bytecode
+# the streams rules can rewrite. The assembled bytecode is verified by jeo
+# after the rewrite, but that verifier only sees the classes it assembles: it
+# knows nothing about the dependency jars of the project, so any rewritten
+# method that touches a type from a dependency, like Jackson's JsonNode in
+# networknt/json-schema-validator, fails the whole run with
+# ClassNotFoundException instead of a verdict on the bytecode (jeo#1763).
+# Here we skip that verification and let the post-hone "initialize
+# surefire:test" run be the verdict: if a rule produced unloadable bytecode,
+# the tests crash with a VerifyError and the row reports it in build_after.
 apply_hone() {
   local base=$1
   local cdir module
@@ -89,7 +129,8 @@ apply_hone() {
       "org.eolang:hone-maven-plugin:${version}:build" \
       "org.eolang:hone-maven-plugin:${version}:optimize" \
       -Dhone.rules='streams/*' \
-      -Dhone.phino-version="${phino}" || return 1
+      -Dhone.phino-version="${phino}" \
+      -Dhone.skip-verification=true || return 1
     honed=1
   done < <(find "${base}" -type d -path '*/target/classes' -print0)
 }
@@ -129,8 +170,7 @@ fi
 
 row="${repo},${sha}"
 echo "warming up and building ${repo}"
-rc=0
-timeout "${budget}" mvn "${flags[@]}" -f "${dir}" test || rc=$?
+warm_up_build
 streams=$(count_streams "${dir}" || true)
 streams=${streams:-0}
 echo "classes referencing java.util.stream in ${repo}: ${streams}"

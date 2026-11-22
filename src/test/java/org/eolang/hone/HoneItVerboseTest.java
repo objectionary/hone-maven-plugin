@@ -66,6 +66,15 @@ final class HoneItVerboseTest {
         );
     }
 
+    @Test
+    void skipsJeoVerificationThatCannotSeeDependencies(@Mktmp final Path home) throws IOException {
+        MatcherAssert.assertThat(
+            "the hone call must skip jeo's post-assemble verification, which only knows the classes it assembles and fails on every rewritten method that touches a type from a dependency (jeo#1763); the post-hone test run stays the verdict",
+            HoneItVerboseTest.args(home),
+            Matchers.hasItem("-Dhone.skip-verification=true")
+        );
+    }
+
     private static List<String> args(final Path home) throws IOException {
         HoneItVerboseTest.hone(home);
         return Arrays.asList(

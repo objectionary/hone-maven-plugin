@@ -56,25 +56,19 @@ final class HoneItWarmUpTest {
         Files.write(repo.resolve("dep-1.0.jar"), new byte[1]);
         Files.write(repo.resolve("_remote.repositories"), new byte[1]);
         HoneItWarmUpTest.warmUp(home);
-        for (final String name : poisoned) {
-            MatcherAssert.assertThat(
-                String.format(
-                    "the stale metadata bookkeeping '%s' must be deleted before the warm-up build, or one failed lookup poisons the whole coverage job",
-                    name
-                ),
-                repo.resolve(name).toFile().exists(),
-                Matchers.is(false)
-            );
-        }
         MatcherAssert.assertThat(
-            "the purged artifacts themselves must stay untouched",
-            repo.resolve("dep-1.0.jar").toFile().exists(),
-            Matchers.is(true)
+            "every stale metadata bookkeeping file must be deleted before the warm-up build, or one failed lookup poisons the whole coverage job",
+            Arrays.stream(poisoned)
+                .filter(name -> repo.resolve(name).toFile().exists())
+                .count(),
+            Matchers.is(0L)
         );
+        HoneItWarmUpTest.expectKept(repo.resolve("dep-1.0.jar"));
+        HoneItWarmUpTest.expectKept(repo.resolve("_remote.repositories"));
     }
 
     @Test
-    void runsMavenTestOnTheProject(@Mktmp final Path home) throws IOException {
+    void runsMavenOnTheCheckedOutProject(@Mktmp final Path home) throws IOException {
         HoneItWarmUpTest.warmUp(home);
         MatcherAssert.assertThat(
             "the warm-up build must stay a 'mvn test' call on the checked-out project with the configured flags",
@@ -96,6 +90,17 @@ final class HoneItWarmUpTest {
                 ).trim()
             ),
             Matchers.not(Matchers.is(0))
+        );
+    }
+
+    private static void expectKept(final Path file) {
+        MatcherAssert.assertThat(
+            String.format(
+                "'%s' is not metadata bookkeeping and must stay untouched",
+                file
+            ),
+            file.toFile().exists(),
+            Matchers.is(true)
         );
     }
 
@@ -124,7 +129,9 @@ final class HoneItWarmUpTest {
         final Path timeout = bin.resolve("timeout");
         Files.write(
             timeout,
-            "#!/usr/bin/env bash\nshift\nexec \"$@\"\n".getBytes(StandardCharsets.UTF_8)
+            String.format(
+                "#!/usr/bin/env bash%nshift%nexec \"$@\"%n"
+            ).getBytes(StandardCharsets.UTF_8)
         );
         Files.setPosixFilePermissions(timeout, PosixFilePermissions.fromString("rwx------"));
         Files.createDirectories(home.resolve("proj"));

@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The eighth name in 283's alternation (#1423). 317 folds a named filter into
+# a guard that opens with its own `dup` and leaves the one copy it kept, so a
+# plain filter behind it needs a throwaway copy of its own; without it
+# `filter(new Odd()).filter(n -> n > 4)` died with "Cannot pop operand off an
+# empty stack". The pragma 215 mints puts `class` directly behind `φ`, as the
+# named map does, so 𝐵-first-head binds nothing and 𝐵-first-rest absorbs the
+# `make` run and the type fields behind it.
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/2xx/283-insert-dup-before-filter-after-stateful.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.named-filter,
+        class ↦ "named/X",
+        make ↦ ⟦
+          m1 ↦ ⟦ φ ↦ Φ.jeo.opcode.new, i1 ↦ "Odd" ⟧,
+          m2 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          m3 ↦ ⟦ φ ↦ Φ.jeo.opcode.invokespecial, i2 ↦ "Odd", i3 ↦ "<init>", i4 ↦ "()V", i5 ↦ Φ.false ⟧
+        ⟧,
+        bridge-input ↦ "Ljava/lang/Object;",
+        bridge-output ↦ "Ljava/lang/Integer;",
+        accepted ↦ "Ljava/lang/Object;",
+        returned ↦ "Ljava/lang/Integer;",
+        static ↦ "true"
+      ⟧,
+      op2 ↦ ⟦
+        φ ↦ Φ.hone.o-filter,
+        opcode ↦ "invokestatic",
+        class ↦ "named/X",
+        bridge-input ↦ "Ljava/lang/Integer;",
+        bridge-output ↦ "Z",
+        accepted ↦ "Ljava/lang/Integer;",
+        returned ↦ "Z",
+        static ↦ "true",
+        target ↦ ⟦
+          handle ↦ 6,
+          class ↦ "named/X",
+          method ↦ "lambda$main$0",
+          signature ↦ "(Ljava/lang/Integer;)Z",
+          is-interface ↦ Φ.false
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-head, 𝜏-named ↦ ⟦ φ ↦ Φ.hone.named-filter, 𝐵-named ⟧, 𝜏-dup ↦ ⟦ φ ↦ Φ.hone.dup, opcode ↦ "dup", class ↦ "named/X" ⟧, 𝜏-filter ↦ ⟦ φ ↦ Φ.hone.o-filter, 𝐵-filter ⟧, 𝐵-tail ⟧

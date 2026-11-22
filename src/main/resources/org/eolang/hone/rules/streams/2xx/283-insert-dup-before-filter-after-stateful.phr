@@ -63,6 +63,21 @@
 # `class` directly behind `φ`, so 𝐵-first-head binds the empty run the way it
 # does for a distinct, and 𝐵-first-rest swallows the mapper's own class, the
 # four type fields and the static flag that follow.
+#
+# The capturing filter is the seventh (#1423), the twin of the capturing
+# dropWhile: 113 mints a Φ.hone.cp-filter with the same `state-acc`,
+# `body-acc` and `captures` ahead of `class`, so 281 never matches it and
+# 𝐵-first-head absorbs them here. A filter guard that passes leaves the one
+# copy of the item it kept, so a plain filter behind it would eat that copy and
+# reach the keep label empty: "Cannot pop operand off an empty stack" in the
+# distill. `filter(n -> n != cut).filter(n -> n % 2 == 0)`, with `cut`
+# captured, is the shape; streams/closure-filter-filter.yml runs it.
+#
+# The filter over an object predicate is the eighth, the twin of the named map.
+# 215 mints a Φ.hone.named-filter with `class` directly behind `φ`, and 317 folds
+# it into a guard that opens with its own `dup` and leaves the one copy it kept,
+# so a plain filter behind `filter(new Odd())` met the same empty stack.
+# streams/named-filter-filter.yml runs it.
 name: insert-dup-before-filter-after-stateful
 pattern: |
   ⟦
@@ -121,6 +136,8 @@ when:
         - eq: [𝜏-one, 'dropWhile']
         - eq: [𝜏-one, 'c-map']
         - eq: [𝜏-one, 'cp-dropWhile']
+        - eq: [𝜏-one, 'cp-filter']
+        - eq: [𝜏-one, 'named-filter']
         - eq: [𝜏-one, 'named-map']
     - or:
         - eq: [𝜏-two, 'o-filter']

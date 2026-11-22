@@ -15,8 +15,10 @@
 # make, and the same one 314 and 316 make behind them.
 #
 # Because the folded body opens with its own `dup`, a named filter needs no
-# Φ.hone.dup spliced in front of it and is therefore absent from 281 and 283 —
-# exactly as the capturing filter 113 lifts is.
+# Φ.hone.dup spliced in front of it, so 281 and 283 never name it as the
+# filter behind a producer. As the producer in front of another filter it
+# leaves the one copy it kept, just as the capturing filter 113 lifts does, so
+# 283 names it there (#1423).
 #
 # A capturing constructor is taken whatever its arguments weigh, and the twin's
 # header carries the argument for why (#1029): the `new`/`dup`/args/`<init>` run

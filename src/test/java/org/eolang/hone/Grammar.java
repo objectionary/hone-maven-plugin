@@ -131,7 +131,7 @@ final class Grammar {
         "ints|turn|mapToObj(n -> n / 2.0)|dbox",
         "ints|turn|mapToObj(Integer::toString)|words",
         "ints|end|*sum()",
-        "ints|end|*reduce(1, (a, b) -> a + b)",
+        "ints|end|*reduce(0, (a, b) -> a + b)",
         "ints|end|*average().orElse(0.0)",
         "ints|end|*max().orElse(0)",
         "ints|end|*min().orElse(0)",

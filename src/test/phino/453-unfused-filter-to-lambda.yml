@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# An object-stream filter that never fused: 304 wrapped the predicate into a
+# distill, 413 gave it the `dup` its predicate eats, and after the fuse pass
+# the body still carries nothing but the guard, the call to the predicate and
+# 304's own branch, return, label and frame item. 501/503 would lower it to a
+# `mapMulti` over a fresh wrapper for no fusion benefit, so it goes back to
+# the `Φ.hone.lambda` 201 consumed and 701 lowers it to the very
+# `Stream.filter` javac emitted (#1218).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/453-unfused-filter-to-lambda.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/String;",
+        bridge-output ↦ "Ljava/lang/String;",
+        start ↦ "dup",
+        accepted ↦ "Ljava/lang/String;",
+        returned ↦ "Ljava/lang/String;",
+        static ↦ "true",
+        state ↦ ⟦⟧,
+        body ↦ ⟦
+          b0 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          b1 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i2 ↦ "Foo",
+            i3 ↦ "lambda$main$0",
+            i4 ↦ "(Ljava/lang/String;)Z",
+            i5 ↦ Φ.false
+          ⟧,
+          b2 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.ifne,
+            i2 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L3049512" ⟧
+          ⟧,
+          b3 ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+          b4 ↦ ⟦ φ ↦ Φ.jeo.label, i1 ↦ "L3049512" ⟧,
+          b5 ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, method ↦ "test", interface ↦ "()Ljava/util/function/Predicate;", lambda-signature ↦ "(Ljava/lang/Object;)Z", bridge-signature ↦ "(Ljava/lang/String;)Z", 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$0", signature ↦ "(Ljava/lang/String;)Z", is-interface ↦ Φ.false ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "filter", signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;" ⟧, 𝐵-c ⟧
+  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-a, reverted ↦ Φ.true, 𝐵-b ⟧

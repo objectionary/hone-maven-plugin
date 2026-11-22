@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# A peek that never fused: 309's distill is still just the `dup` 309 emitted
+# (a peek opens its own body with it, so 413 never visits) followed by the
+# one call to the `lambda$…` consumer. 501 would lower it to a `mapMulti`
+# over a fresh wrapper for no fusion benefit, so it goes back to the
+# `Φ.hone.lambda` 207 consumed and 701 lowers it to the very `Stream.peek`
+# javac emitted (#1218).
+rules:
+  - src/main/resources/org/eolang/hone/rules/streams/4xx/453-unfused-peek-to-lambda.phr
+input: |
+  ⟦
+    body ↦ ⟦
+      op1 ↦ ⟦
+        φ ↦ Φ.hone.distill,
+        class ↦ "Foo",
+        bridge-input ↦ "Ljava/lang/String;",
+        bridge-output ↦ "Ljava/lang/String;",
+        start ↦ "peek",
+        accepted ↦ "Ljava/lang/String;",
+        returned ↦ "Ljava/lang/String;",
+        static ↦ "true",
+        state ↦ ⟦⟧,
+        body ↦ ⟦
+          b0 ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+          b1 ↦ ⟦
+            φ ↦ Φ.jeo.opcode.invokestatic,
+            i2 ↦ "Foo",
+            i3 ↦ "lambda$main$2",
+            i4 ↦ "(Ljava/lang/String;)V",
+            i5 ↦ Φ.false
+          ⟧
+        ⟧
+      ⟧
+    ⟧
+  ⟧
+expected:
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, method ↦ "accept", interface ↦ "()Ljava/util/function/Consumer;", lambda-signature ↦ "(Ljava/lang/Object;)V", bridge-signature ↦ "(Ljava/lang/String;)V", 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, target ↦ ⟦ handle ↦ 6, class ↦ "Foo", method ↦ "lambda$main$2", signature ↦ "(Ljava/lang/String;)V", is-interface ↦ Φ.false ⟧, 𝐵-c ⟧
+  - ⟦ 𝐵-a, φ ↦ Φ.hone.lambda, 𝐵-b, stream ↦ ⟦ class ↦ "java/util/stream/Stream", method ↦ "peek", signature ↦ "(Ljava/util/function/Consumer;)Ljava/util/stream/Stream;" ⟧, 𝐵-c ⟧
+  - ⟦ φ ↦ Φ.hone.lambda, 𝐵-a, reverted ↦ Φ.true, 𝐵-b ⟧

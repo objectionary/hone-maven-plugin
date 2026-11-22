@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a `Stream.filter` that never fused — the analogue of
+# `453-unfused-map-to-lambda` for the predicate operator (#1218). 201 folds
+# every object-stream filter into a p-filter, 304 wraps it into a distill in
+# the hope that a neighbour joins it, and 413 gives the guard the `dup` its
+# predicate eats; when the neighbours are all barriers (a `limit`, a
+# `sorted`, a terminal), the distill leaves the fuse pass still carrying
+# nothing but the one call to the predicate and the guard around it, and
+# 501/503 would lower it into a `mapMulti` over a fresh `distill_N` method:
+# one operation in, one operation out, plus a wrapper call and a sink the
+# original did not have.
+#
+# The shape matched here is exactly what 304 and 413 leave when nothing
+# fused: a stateless, static filter distill whose body is the `dup` guard,
+# the single `invokestatic` of a `lambda$…` predicate, the `ifne`/`return`
+# pair over 304's label and 304's frame item, and no more (closed body, no
+# 𝐵-rest). A filter that found a neighbour carries the neighbour's opcodes
+# too, so none of those can match.
+#
+# ORDER MATTERS: it runs after 401 (every object operator has collapsed into
+# one distill), after 411/421/422 (the ends are aligned) and after 413 (the
+# guard is already inside the body, and `start` reads "dup"). By 453 nothing
+# else will be added to the body, so a body of six is a filter that stayed
+# alone.
+#
+# What goes back is the `Φ.hone.lambda` 201 consumed, so 701 lowers it to the
+# original `invokedynamic` + `Stream.filter`. The lambda carries the
+# `reverted ↦ Φ.true` marker: 201's pattern is closed on the ten bindings 111
+# mints, so the eleventh stops it recognising this filter a second time and
+# the 201 -> 304 -> 453 cycle cannot spin on a run with more than one cycle.
+# The `o-filter` sibling of 304 (305) is not reverted here: as #1227
+# documents, no producer of a `Φ.hone.o-filter` fires on real bytecode, so
+# the shape cannot occur.
+name: unfused-filter-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    start ↦ "dup",
+    accepted ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-bridge-input,
+    static ↦ "true",
+    state ↦ ⟦⟧,
+    body ↦ ⟦
+      𝜏-guard ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-guard-op ⟧,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      𝜏-branch ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.label,
+          i1 ↦ 𝑒-label
+        ⟧
+      ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep ↦ ⟦
+        φ ↦ Φ.jeo.label,
+        i1 ↦ 𝑒-label
+      ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "test",
+    interface ↦ "()Ljava/util/function/Predicate;",
+    lambda-signature ↦ "(Ljava/lang/Object;)Z",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ "invokestatic",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "filter",
+      signature ↦ "(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"
+    ⟧,
+    reverted ↦ Φ.true
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - matches: ['^(L.+;|\[.+)$', 𝑒-bridge-input]
+    - or:
+        - eq: [𝜏-guard-op, 'dup']
+        - eq: [𝜏-guard-op, 'dup2']
+where:
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-bridge-input, '")Z"']

@@ -18,7 +18,7 @@ jobs:
       contents: write
       pull-requests: write
     timeout-minutes: 180
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       LC_ALL: en_US.UTF-8
       LANG: en_US.UTF-8

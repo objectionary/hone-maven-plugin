@@ -147,12 +147,11 @@ you add to the grammar, keep the printed lines a function of the seed alone —
 floating-point reduction closes the pipeline, because a class that prints
 differently on two sequential runs is not an oracle, it is a flake.
 
-A handful of shapes are quarantined in `RandomPipeline.quarantined()`, each
-named by the issue that owns it: a walk that reaches one is re-rolled from a
-derived seed, so the suite stays a net for regressions instead of a standing
-failure. Delete a clause the day its issue closes and the walk widens again —
-`reachesEveryProductionOfTheGrammar` proves no clause has narrowed the grammar
-to the point where a production has become unreachable.
+The walk steps around none of the shapes the rewrite is known to break: a
+shape it reaches that breaks one earns its own fixture under `optimize/streams/`
+once the defect is understood, instead of being skipped.
+`reachesEveryProductionOfTheGrammar` proves every production in the grammar is
+reached by some seed, so the walk may stay that wide.
 
 ## Tools to keep on hand
 

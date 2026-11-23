@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Reverts a `Stream.peek` that never fused — the analogue of
+# `453-unfused-map-to-lambda` for the side-effecting operator (#1218). 207
+# folds every object-stream peek into a `Φ.hone.peek` and 309 wraps it into a
+# distill whose body is the `dup` (keep the element for the next stage)
+# followed by the one `invokestatic` of the `lambda$…` consumer; when its
+# neighbours are all barriers (a `limit`, a `sorted`, a terminal), the distill
+# leaves the fuse pass unchanged, and 501 would lower it into a `mapMulti`
+# over a fresh `distill_N` method: one operation in, one operation out, plus
+# a wrapper call and a sink the original did not have.
+#
+# Unlike the filter, a peek never meets 413: its body already opens with the
+# `dup` 309 emitted, so `start` still reads "peek" here. The shape matched is
+# closed (two body bindings, no 𝐵-rest), so a peek that found a neighbour —
+# whose body carries the neighbour's opcodes too — is left for 502 to lower.
+#
+# What goes back is the `Φ.hone.lambda` 207 consumed, so 701 lowers it to the
+# original `invokedynamic` + `Stream.peek`. The lambda carries the
+# `reverted ↦ Φ.true` marker: 207's pattern is closed on the ten bindings 111
+# mints, so the eleventh stops it recognising this peek a second time and the
+# 207 -> 309 -> 453 cycle cannot spin on a run with more than one cycle.
+name: unfused-peek-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-bridge-input,
+    bridge-output ↦ 𝑒-bridge-input,
+    start ↦ "peek",
+    accepted ↦ 𝑒-bridge-input,
+    returned ↦ 𝑒-bridge-input,
+    static ↦ "true",
+    state ↦ ⟦⟧,
+    body ↦ ⟦
+      𝜏-dup ↦ ⟦ φ ↦ Φ.jeo.opcode.dup ⟧,
+      𝜏-consumer ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "accept",
+    interface ↦ "()Ljava/util/function/Consumer;",
+    lambda-signature ↦ "(Ljava/lang/Object;)V",
+    bridge-signature ↦ 𝑒-bridge-signature,
+    static ↦ "true",
+    opcode ↦ "invokestatic",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ "java/util/stream/Stream",
+      method ↦ "peek",
+      signature ↦ "(Ljava/util/function/Consumer;)Ljava/util/stream/Stream;"
+    ⟧,
+    reverted ↦ Φ.true
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - matches: ['^(L.+;|\[.+)$', 𝑒-bridge-input]
+where:
+  - meta: 𝑒-bridge-signature
+    function: concat
+    args: ['"("', 𝑒-bridge-input, '")V"']

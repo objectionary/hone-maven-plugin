@@ -346,9 +346,13 @@ A `distill` that nothing fused into is not worth lowering:
   the original operation did not have.
 Rules `441-` and `442-` put a lone `distinct` and a lone `skip` back,
   `452-` a lone `mapToObj` crossing,
-  and `453-unfused-map-to-lambda` with its primitive sibling
+  `453-unfused-map-to-lambda` with its primitive sibling
   a lone `map`, whose body is still the single call to its lambda,
-  so stage 7 emits it as the `map` it was (#1128).
+  and `453-unfused-filter-to-lambda` with its primitive and peek siblings
+  a lone `filter` or a lone `peek`, whose body is still the guard and the
+  single call to its lambda,
+  so stage 7 emits each of them as the operator it was
+  (#1128, #1218).
 
 **Stage 5 (rules `501-` and `511-`): emit a single `mapMulti` call.**
 At this point each fused `distill` is one big anonymous function

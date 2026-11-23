@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# Filters and peeks with nothing to fuse into. 201/203/207 fold them into
+# their pragmas, 304/309 wrap those into distills, and when the neighbours
+# are all barriers the distills leave the fuse pass alone — but 501 used to
+# lower each of them to a `mapMulti` over a fresh `distill_N` method anyway:
+# one operation in, one operation out, plus a wrapper call and a sink the
+# original did not have (#1218).
+#
+# The new 453 rules give each one back as the lambda the pipeline consumed,
+# so 701 lowers it to the very call javac emitted. Four pipelines, each with
+# a lone stage behind a `limit()`:
+#
+#   * f     — an object `filter`. [2, 3, 4, 5, 6].
+#   * p     — a lone `peek` whose consumer appends to a static list, proving
+#             the lambda still runs. [1, 2, 3, 4, 5].
+#   * longs — a `LongStream.filter` (its guard is a two-slot `dup2`). 7.
+#   * ints  — an `IntStream.filter`. 14.
+java: |
+  package lone;
+  import java.util.ArrayList;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  import java.util.stream.IntStream;
+  import java.util.stream.LongStream;
+  public class X {
+    private static final List<Integer> SIDE = new ArrayList<>();
+    public static void main(String[] a) {
+      List<Integer> l = List.of(1, 2, 3, 4, 5, 6);
+      List<Integer> f = l.stream()
+        .filter(x -> x > 1)
+        .limit(5)
+        .collect(Collectors.toList());
+      List<Integer> p = l.stream()
+        .peek(x -> SIDE.add(x))
+        .limit(5)
+        .collect(Collectors.toList());
+      long longs = LongStream.rangeClosed(1L, 4L)
+        .filter(n -> n > 2L)
+        .limit(5)
+        .sum();
+      int ints = IntStream.range(0, 6)
+        .filter(x -> x > 1)
+        .limit(5)
+        .sum();
+      System.out.printf("The result is %s/%s/%d/%d%n", f, p, longs, ints);
+      if (!SIDE.equals(List.of(1, 2, 3, 4, 5))) {
+        throw new IllegalStateException("peek never ran: " + SIDE);
+      }
+    }
+  }
+log:
+  - "Finished rewriting 1 file"
+  - "BUILD SUCCESS"
+  - "The result is [2, 3, 4, 5, 6]/[1, 2, 3, 4, 5]/7/14"
+# Nothing fused, so nothing may change: every stage stays itself with its own
+# `invokedynamic`, and no `mapMulti`, `distill_N` method or `accept` call
+# arrives. Without the 453 reverts each of the four stages would come out as
+# a `mapMulti`, adding one invokeinterface (the sink's `accept`) to the
+# optimized class.
+before:
+  invokedynamic: 5
+  invokeinterface: 16
+  invokestatic: 20
+after:
+  invokedynamic: 5
+  invokeinterface: 16
+  invokestatic: 20

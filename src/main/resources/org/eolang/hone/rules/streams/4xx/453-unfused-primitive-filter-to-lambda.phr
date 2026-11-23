@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 Objectionary.com
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+# The primitive sibling of `453-unfused-filter-to-lambda` (#1218); its header
+# carries the argument. An `IntStream.filter`, `LongStream.filter` or
+# `DoubleStream.filter` is first lifted into an object p-filter wrapped in the
+# box/unbox sandwich the 2xx transforms mint around it, 306 folds it into a
+# distill, 411 swallows the sandwich, and 413 prepends the `dup` (a `dup2`
+# for a `long` or a `double`) its predicate eats. When nothing fused into it,
+# its body is still just the guard, the single `invokestatic` of the `(X)Z`
+# lambda, the `ifne`/`return` pair over 304's label and 304's frame item —
+# and lowering it would turn `.filter(n -> n > 1)` into a `mapMulti` over a
+# `distill_N` wrapper.
+#
+# What goes back is the `Φ.hone.lambda` the pipeline consumed, rebuilt from
+# the primitive alone: the `XPredicate` interface, its `test` method and the
+# `X` stream signature, exactly the quartets 203 pins. 201's pattern is
+# closed on the ten bindings 111 mints, so the `reverted ↦ Φ.true` marker
+# stops the pipeline lifting the filter again; 701 lowers the marked lambda
+# all the same.
+name: unfused-primitive-filter-to-lambda
+pattern: |
+  ⟦
+    φ ↦ Φ.hone.distill,
+    class ↦ 𝑒-class,
+    bridge-input ↦ 𝑒-primitive,
+    bridge-output ↦ 𝑒-primitive,
+    start ↦ "dup",
+    accepted ↦ 𝑒-primitive,
+    returned ↦ 𝑒-primitive,
+    static ↦ "true",
+    state ↦ ⟦⟧,
+    body ↦ ⟦
+      𝜏-guard ↦ ⟦ φ ↦ Φ.jeo.opcode.𝜏-guard-op ⟧,
+      𝜏-predicate ↦ ⟦
+        φ ↦ Φ.jeo.opcode.invokestatic,
+        i2 ↦ 𝑒-target-class,
+        i3 ↦ 𝑒-target-method,
+        i4 ↦ 𝑒-target-signature,
+        i5 ↦ 𝑒-target-is-interface
+      ⟧,
+      𝜏-branch ↦ ⟦
+        φ ↦ Φ.jeo.opcode.ifne,
+        i2 ↦ ⟦
+          φ ↦ Φ.jeo.label,
+          i1 ↦ 𝑒-label
+        ⟧
+      ⟧,
+      𝜏-return ↦ ⟦ φ ↦ Φ.jeo.opcode.return ⟧,
+      𝜏-keep ↦ ⟦
+        φ ↦ Φ.jeo.label,
+        i1 ↦ 𝑒-label
+      ⟧,
+      𝜏-frame ↦ ⟦ φ ↦ Φ.hone.frame-item ⟧
+    ⟧
+  ⟧
+result: |
+  ⟦
+    φ ↦ Φ.hone.lambda,
+    class ↦ 𝑒-class,
+    method ↦ "test",
+    interface ↦ 𝑒-interface,
+    lambda-signature ↦ 𝑒-target-signature,
+    bridge-signature ↦ 𝑒-target-signature,
+    static ↦ "true",
+    opcode ↦ "invokestatic",
+    target ↦ ⟦
+      handle ↦ 6,
+      class ↦ 𝑒-target-class,
+      method ↦ 𝑒-target-method,
+      signature ↦ 𝑒-target-signature,
+      is-interface ↦ 𝑒-target-is-interface
+    ⟧,
+    stream ↦ ⟦
+      class ↦ 𝑒-stream-class,
+      method ↦ "filter",
+      signature ↦ 𝑒-stream-signature
+    ⟧,
+    reverted ↦ Φ.true
+  ⟧
+when:
+  and:
+    - matches: ['lambda\$.+', 𝑒-target-method]
+    - or:
+        - and:
+            - eq: [𝑒-primitive, '"I"']
+            - eq: [𝑒-target-signature, '"(I)Z"']
+        - and:
+            - eq: [𝑒-primitive, '"J"']
+            - eq: [𝑒-target-signature, '"(J)Z"']
+        - and:
+            - eq: [𝑒-primitive, '"D"']
+            - eq: [𝑒-target-signature, '"(D)Z"']
+    - or:
+        - eq: [𝜏-guard-op, 'dup']
+        - eq: [𝜏-guard-op, 'dup2']
+where:
+  - meta: 𝑒-flavour
+    function: sed
+    args:
+      - 𝑒-primitive
+      - '"s/I/Int/g"'
+      - '"s/J/Long/g"'
+      - '"s/D/Double/g"'
+  - meta: 𝑒-interface
+    function: concat
+    args: ['"()Ljava/util/function/"', 𝑒-flavour, '"Predicate;"']
+  - meta: 𝑒-operator
+    function: concat
+    args: ['"Ljava/util/function/"', 𝑒-flavour, '"Predicate;"']
+  - meta: 𝑒-stream-class
+    function: concat
+    args: ['"java/util/stream/"', 𝑒-flavour, '"Stream"']
+  - meta: 𝑒-stream-signature
+    function: concat
+    args: ['"("', 𝑒-operator, '")L"', 𝑒-stream-class, '";"']

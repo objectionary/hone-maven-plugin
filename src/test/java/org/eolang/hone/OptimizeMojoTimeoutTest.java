@@ -37,7 +37,7 @@ final class OptimizeMojoTimeoutTest {
         try (Mktemp temp = new Mktemp()) {
             MatcherAssert.assertThat(
                 "a file that ran out of time must get one statistics row, with nothing changed (see #1211)",
-                OptimizeMojoTimeoutTest.timeout(temp.path(), "cat hone-statistics.csv"),
+                OptimizeMojoTimeoutTest.timeout(temp.path(), "cat hone-statistics-classes.csv"),
                 Matchers.equalTo(String.format("1/1,\"a/a.phi\",\"b/a.phi\",0,0%n"))
             );
         }

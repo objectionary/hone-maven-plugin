@@ -28,15 +28,33 @@ public final class PullMojo extends AbstractMojo {
      * Ctor.
      */
     public PullMojo() {
-        // nothing
+        this("phino", "mvn", "parallel", "docker");
+    }
+
+    /**
+     * Ctor with custom tool executables.
+     *
+     * @param phino Phino executable
+     * @param mvn Maven executable
+     * @param parallel GNU Parallel executable
+     * @param docker Docker executable
+     * @checkstyle ParameterNumberCheck (6 lines)
+     */
+    PullMojo(
+        final String phino,
+        final String mvn,
+        final String parallel,
+        final String docker
+    ) {
+        super(phino, mvn, parallel, docker);
     }
 
     @Override
     public void exec() throws IOException {
-        if (this.alwaysWithDocker || !new Phino().available(this.phino())) {
+        if (this.alwaysWithDocker || !this.hostReady()) {
             this.timings.through(
                 "pull",
-                () -> new Docker(this.sudo).exec(
+                () -> this.docker().exec(
                     "pull",
                     this.image
                 )

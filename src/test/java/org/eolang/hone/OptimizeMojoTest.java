@@ -16,7 +16,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.hamcrest.MatcherAssert;
@@ -149,6 +152,37 @@ final class OptimizeMojoTest {
                 StandardCharsets.UTF_8
             ),
             Matchers.containsString("<goal>help</goal>")
+        );
+    }
+
+    @Test
+    void selectsDockerWhenParallelIsMissing(@Mktmp final Path dir) throws Exception {
+        final Path log = dir.resolve("docker.log");
+        final OptimizeMojo mojo = OptimizeMojoTest.preparedMojo(dir, log, 0);
+        mojo.execute();
+        MatcherAssert.assertThat(
+            "optimize must fall back to docker when parallel is missing and threads=0",
+            new String(Files.readAllBytes(log), StandardCharsets.UTF_8),
+            Matchers.containsString("run ")
+        );
+    }
+
+    @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void retainsHostExecutionWhenParallelIsMissingAndThreadsIsOne(@Mktmp final Path dir)
+        throws Exception {
+        final Path log = dir.resolve("docker.log");
+        final OptimizeMojo mojo = OptimizeMojoTest.preparedMojo(dir, log, 1);
+        mojo.execute();
+        MatcherAssert.assertThat(
+            "optimize must not invoke docker when parallel is missing and hone.threads=1",
+            Files.exists(log),
+            Matchers.is(false)
+        );
+        MatcherAssert.assertThat(
+            "host optimization must finish without parallel when hone.threads=1",
+            Files.exists(dir.resolve("target/hone/unphi/Foo.xmir")),
+            Matchers.is(true)
         );
     }
 
@@ -348,6 +382,70 @@ final class OptimizeMojoTest {
         try (CSVParser parser = CSVFormat.DEFAULT.parse(new StringReader(mount))) {
             return parser.getRecords().get(0).toList();
         }
+    }
+
+    private static OptimizeMojo preparedMojo(
+        final Path dir, final Path log, final int threads
+    ) throws Exception {
+        Files.write(
+            Files.createDirectories(dir.resolve("target/classes")).resolve("Foo.class"),
+            new byte[] {1, 2, 3}
+        );
+        final OptimizeMojo mojo = new OptimizeMojo(
+            AbstractMojoTest.fakeTool(dir, "phino", new OptimizeMojo().phino(), 0).toString(),
+            OptimizeMojoTest.fakeMvn(dir).toString(),
+            dir.resolve("missing-parallel").toString(),
+            AbstractMojoTest.recordingDocker(dir, log).toString()
+        );
+        mojo.target = dir.resolve("target").toFile();
+        mojo.basedir = dir.toFile();
+        mojo.session = AbstractMojoTest.mavenSession();
+        mojo.image = "local-only/hone:test";
+        mojo.threads = threads;
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "classes", "classes");
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "rules", "none");
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "timeout", 999);
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "maxDepth", 500);
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "maxCycles", 1);
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "killgrace", 10);
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "skipIfNoClasses", true);
+        AbstractMojoTest.setField(mojo, OptimizeMojo.class, "skipIfNotSuitable", true);
+        AbstractMojoTest.setField(
+            mojo, OptimizeMojo.class, "cache", dir.resolve("cache").toFile()
+        );
+        return mojo;
+    }
+
+    private static Path fakeMvn(final Path dir) throws IOException {
+        final Path script = dir.resolve("mvn");
+        Files.write(
+            script,
+            String.join(
+                String.format(Locale.ROOT, "%n"),
+                "#!/bin/sh",
+                "for arg in \"$@\"; do",
+                "  case \"$arg\" in",
+                "    --version) echo 'Apache Maven 3.9'; exit 0 ;;",
+                "    -Djeo.disassemble.outputDir=*)",
+                "      out=\"${arg#-Djeo.disassemble.outputDir=}\"",
+                "      mkdir -p \"$out\"",
+                "      printf '<object/>\\n' > \"$out/Foo.xmir\"",
+                "      ;;",
+                "  esac",
+                "done",
+                "exit 0",
+                ""
+            ).getBytes(StandardCharsets.UTF_8)
+        );
+        Files.setPosixFilePermissions(
+            script,
+            EnumSet.of(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE
+            )
+        );
+        return script;
     }
 
     private static void runWithoutClasses(final Farea fea) throws IOException {

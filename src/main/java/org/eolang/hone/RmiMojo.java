@@ -25,12 +25,30 @@ public final class RmiMojo extends AbstractMojo {
      * Ctor.
      */
     public RmiMojo() {
-        // nothing
+        this("phino", "mvn", "parallel", "docker");
+    }
+
+    /**
+     * Ctor with custom tool executables.
+     *
+     * @param phino Phino executable
+     * @param mvn Maven executable
+     * @param parallel GNU Parallel executable
+     * @param docker Docker executable
+     * @checkstyle ParameterNumberCheck (6 lines)
+     */
+    RmiMojo(
+        final String phino,
+        final String mvn,
+        final String parallel,
+        final String docker
+    ) {
+        super(phino, mvn, parallel, docker);
     }
 
     @Override
     public void exec() throws IOException {
-        if (!this.alwaysWithDocker && new Phino().available(this.phino())) {
+        if (!this.alwaysWithDocker && this.hostReady()) {
             Logger.info(
                 this,
                 "Docker image '%s' was probably NOT built, that's why not removed either",
@@ -40,7 +58,7 @@ public final class RmiMojo extends AbstractMojo {
             try {
                 this.timings.through(
                     "rmi",
-                    () -> new Docker(this.sudo).exec(
+                    () -> this.docker().exec(
                         "rmi",
                         "--no-prune",
                         this.image

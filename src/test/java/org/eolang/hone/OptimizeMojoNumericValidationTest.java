@@ -95,7 +95,7 @@ final class OptimizeMojoNumericValidationTest {
         OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "maxDepth", 1);
         OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "maxCycles", 1);
         OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "killgrace", 0);
-        OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "threads", 0);
+        OptimizeMojoNumericValidationTest.set(mojo, AbstractMojo.class, "threads", 0);
         Assertions.assertDoesNotThrow(
             mojo::exec,
             "values exactly on the boundary must be accepted"
@@ -106,7 +106,13 @@ final class OptimizeMojoNumericValidationTest {
         final Path home, final String param, final int value
     ) throws Exception {
         final OptimizeMojo mojo = OptimizeMojoNumericValidationTest.mojo(home);
-        OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, param, value);
+        final Class<?> owner;
+        if ("threads".equals(param)) {
+            owner = AbstractMojo.class;
+        } else {
+            owner = OptimizeMojo.class;
+        }
+        OptimizeMojoNumericValidationTest.set(mojo, owner, param, value);
         final IllegalStateException error = Assertions.assertThrows(
             IllegalStateException.class, mojo::exec
         );
@@ -130,7 +136,7 @@ final class OptimizeMojoNumericValidationTest {
         OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "maxDepth", 500);
         OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "maxCycles", 1);
         OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "killgrace", 10);
-        OptimizeMojoNumericValidationTest.set(mojo, OptimizeMojo.class, "threads", 0);
+        OptimizeMojoNumericValidationTest.set(mojo, AbstractMojo.class, "threads", 0);
         return mojo;
     }
 
